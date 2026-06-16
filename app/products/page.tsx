@@ -24,6 +24,7 @@ const getProducts = unstable_cache(async (): Promise<Product[]> => {
       stock: true,
       popularity: true,
       unit: true,
+      isFeatured: true,
       category: { select: { name: true } }
     },
     orderBy: [{ popularity: "desc" }, { createdAt: "desc" }]
@@ -42,7 +43,8 @@ const getProducts = unstable_cache(async (): Promise<Product[]> => {
     description: product.description,
     stock: product.stock,
     popularity: product.popularity,
-    unit: product.unit
+    unit: product.unit,
+    isFeatured: product.isFeatured
   }));
 }, ["public-products"], { revalidate: 30, tags: ["products"] });
 

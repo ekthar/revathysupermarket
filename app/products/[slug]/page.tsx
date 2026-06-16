@@ -35,7 +35,8 @@ async function getProduct(slug: string): Promise<Product | undefined> {
     description: dbProduct.description,
     stock: dbProduct.stock,
     popularity: dbProduct.popularity,
-    unit: dbProduct.unit
+    unit: dbProduct.unit,
+    isFeatured: dbProduct.isFeatured
   };
 }
 

@@ -63,7 +63,8 @@ export function ProductManagementForm() {
       ...(discountPrice ? { discountPrice: Number(discountPrice) } : {}),
       stock: Number(formData.get("stock")),
       image: String(formData.get("image") ?? "").trim() || undefined,
-      description: String(formData.get("description") ?? "")
+      description: String(formData.get("description") ?? ""),
+      isFeatured: formData.get("isFeatured") === "on"
     };
 
     const response = await fetch("/api/admin/products", {
@@ -104,6 +105,10 @@ export function ProductManagementForm() {
       <Input name="discountPrice" placeholder="Discount price" type="number" min="1" step="1" className="h-12 rounded-2xl" />
       <Input name="stock" placeholder="Stock" type="number" min="0" step="1" required className="h-12 rounded-2xl" />
       <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Cloudflare R2 image URL or leave blank" type="url" className="h-12 rounded-2xl" />
+      <label className="flex min-h-12 items-center justify-between rounded-2xl border border-lime-fresh/40 bg-lime-fresh/10 px-4 md:col-span-3">
+        <span className="text-sm font-black text-primary">Feature this product on homepage</span>
+        <input name="isFeatured" type="checkbox" className="h-5 w-5 accent-primary" />
+      </label>
       <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-primary/40 bg-primary/5 p-4 text-center md:col-span-3">
         <ImagePlus className="h-7 w-7 text-primary" />
         <span className="mt-2 text-sm font-black">{isUploading ? "Uploading image" : "Tap to upload product image"}</span>

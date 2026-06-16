@@ -101,7 +101,13 @@ export function AdminOrdersClient({ orders }: { orders: AdminOrder[] }) {
         {filtered.length === 0 ? (
           <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">No orders found.</div>
         ) : filtered.map((order) => (
-          <article key={order.id} className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+          <article
+            key={order.id}
+            className={cn(
+              "rounded-[1.75rem] border bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5",
+              order.status === "CANCELLED" ? "border-red-200 bg-red-50/90 dark:border-red-500/30 dark:bg-red-950/25" : "border-white/70"
+            )}
+          >
             <div className="flex flex-wrap justify-between gap-4">
               <div>
                 <h3 className="font-display text-2xl font-bold">#{order.orderNumber}</h3>
@@ -110,7 +116,7 @@ export function AdminOrdersClient({ orders }: { orders: AdminOrder[] }) {
               </div>
               <div className="text-right">
                 <p className="text-xl font-black">{formatCurrency(order.total)}</p>
-                <p className="mt-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{statusLabels[order.status]}</p>
+                <p className={cn("mt-1 rounded-full px-3 py-1 text-xs font-black", order.status === "CANCELLED" ? "bg-red-600 text-white" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</p>
               </div>
             </div>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:flex">

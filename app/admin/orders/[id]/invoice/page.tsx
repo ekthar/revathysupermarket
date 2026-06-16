@@ -1,7 +1,9 @@
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
-import { SITE, statusLabels } from "@/lib/constants";
+import { statusLabels } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
+import { calculateInclusiveGst, gstBusinessName } from "@/lib/billing";
+import { getStoreSettings } from "@/lib/store-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -12,14 +14,18 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
     include: { items: true }
   });
   if (!order) notFound();
+  const settings = await getStoreSettings();
+  const gst = calculateInclusiveGst(Number(order.total), settings.gstRatePercent);
 
   return (
     <main className="mx-auto max-w-3xl bg-white px-6 py-10 text-slate-900">
       <div className="flex justify-between border-b pb-6">
         <div>
-          <h1 className="font-display text-3xl font-black">{SITE.name}</h1>
-          <p className="mt-1 text-sm">{SITE.address}</p>
-          <p className="text-sm">{SITE.phone}</p>
+          <h1 className="font-display text-3xl font-black">{settings.storeName}</h1>
+          <p className="mt-1 text-sm">{settings.address}</p>
+          <p className="text-sm">{settings.phone}</p>
+          {settings.gstin && <p className="text-sm">GSTIN: {settings.gstin}</p>}
+          {settings.gstBusinessName && <p className="text-sm">GST business: {gstBusinessName(settings)}</p>}
         </div>
         <div className="text-right">
           <p className="text-sm font-bold">Invoice</p>
@@ -61,7 +67,23 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       </table>
       <div className="mt-6 flex justify-end">
         <div className="w-64 rounded-xl bg-slate-100 p-4">
-          <div className="flex justify-between font-black">
+          <div className="flex justify-between text-sm">
+            <span>Taxable value</span>
+            <span>{formatCurrency(gst.taxableValue)}</span>
+          </div>
+          {gst.rate > 0 && (
+            <>
+              <div className="mt-1 flex justify-between text-sm">
+                <span>CGST</span>
+                <span>{formatCurrency(gst.cgst)}</span>
+              </div>
+              <div className="mt-1 flex justify-between text-sm">
+                <span>SGST</span>
+                <span>{formatCurrency(gst.sgst)}</span>
+              </div>
+            </>
+          )}
+          <div className="mt-3 flex justify-between border-t border-slate-300 pt-3 font-black">
             <span>Total</span>
             <span>{formatCurrency(Number(order.total))}</span>
           </div>

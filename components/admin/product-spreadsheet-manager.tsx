@@ -10,10 +10,10 @@ import { useToast } from "@/components/toast-provider";
 import type { AdminProduct } from "@/components/admin/admin-products-client";
 
 type SheetProduct = AdminProduct & { changed?: boolean; rowError?: string };
-type FilterMode = "all" | "low" | "inactive" | "missing-image" | "offer";
+type FilterMode = "all" | "low" | "inactive" | "missing-image" | "offer" | "featured";
 type EditableKey = "name" | "category" | "price" | "discountPrice" | "stock" | "unit" | "image" | "description";
 type SheetColumn = {
-  key: "isActive" | EditableKey | "slug";
+  key: "isActive" | "isFeatured" | EditableKey | "slug";
   label: string;
   type?: "checkbox" | "number";
   readonly?: boolean;
@@ -21,6 +21,7 @@ type SheetColumn = {
 
 const columns: SheetColumn[] = [
   { key: "isActive", label: "Active", type: "checkbox" },
+  { key: "isFeatured", label: "Featured", type: "checkbox" },
   { key: "name", label: "Product Name" },
   { key: "category", label: "Category" },
   { key: "price", label: "Price", type: "number" },
@@ -49,7 +50,8 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
     total: products.length,
     active: products.filter((product) => product.isActive).length,
     low: products.filter((product) => product.isActive && product.stock <= 15).length,
-    inactive: products.filter((product) => !product.isActive).length
+    inactive: products.filter((product) => !product.isActive).length,
+    featured: products.filter((product) => product.isFeatured).length
   }), [products]);
 
   const filteredProducts = products.filter((product) => {
@@ -57,6 +59,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
     if (filter === "inactive") return !product.isActive;
     if (filter === "missing-image") return !product.image;
     if (filter === "offer") return Boolean(product.discountPrice);
+    if (filter === "featured") return product.isFeatured;
     return true;
   });
 
@@ -89,6 +92,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
       id: product.id,
       slug: product.slug,
       active: product.isActive,
+      featured: product.isFeatured,
       name: product.name,
       category: product.category,
       price: product.price,
@@ -187,7 +191,8 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
           ["Total", health.total],
           ["Active", health.active],
           ["Low stock", health.low],
-          ["Inactive", health.inactive]
+          ["Inactive", health.inactive],
+          ["Featured", health.featured]
         ].map(([label, value]) => (
           <div key={label} className="rounded-2xl bg-muted p-3">
             <p className="text-[10px] font-black uppercase text-muted-foreground">{label}</p>
@@ -202,7 +207,8 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
           ["low", "Low stock"],
           ["inactive", "Inactive"],
           ["missing-image", "Missing image"],
-          ["offer", "Has offer"]
+          ["offer", "Has offer"],
+          ["featured", "Featured"]
         ].map(([key, label]) => (
           <button
             key={key}
@@ -261,7 +267,12 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
                 {columns.map((column) => (
                   <td key={column.key} className="border-b border-border px-2 py-2 align-top">
                     {column.type === "checkbox" ? (
-                      <input type="checkbox" checked={product.isActive} onChange={(event) => updateCell(product.id, "isActive", event.target.checked)} className="h-5 w-5 accent-primary" />
+                      <input
+                        type="checkbox"
+                        checked={Boolean(product[column.key as "isActive" | "isFeatured"])}
+                        onChange={(event) => updateCell(product.id, column.key as "isActive" | "isFeatured", event.target.checked)}
+                        className="h-5 w-5 accent-primary"
+                      />
                     ) : column.readonly ? (
                       <span className="block max-w-44 truncate text-xs text-muted-foreground">{product.slug ?? product.id}</span>
                     ) : (

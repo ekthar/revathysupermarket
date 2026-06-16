@@ -18,6 +18,7 @@ export default async function AdminProductsPage() {
       stock: true,
       unit: true,
       isActive: true,
+      isFeatured: true,
       category: { select: { name: true } }
     },
     orderBy: { createdAt: "desc" }
@@ -33,7 +34,8 @@ export default async function AdminProductsPage() {
         image: product.image,
         description: product.description,
         unit: product.unit,
-        isActive: product.isActive
+        isActive: product.isActive,
+        isFeatured: product.isFeatured
       }));
 
   return (

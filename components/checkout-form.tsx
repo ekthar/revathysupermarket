@@ -14,6 +14,7 @@ import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { isServiceablePincode, serviceablePincodes } from "@/lib/delivery";
 import type { StoreSettings } from "@/lib/store-settings";
+import { OrderBillCard } from "@/components/order-bill-card";
 
 type CheckoutState = {
   customerName: string;
@@ -62,6 +63,7 @@ export function CheckoutForm({
   const [form, setForm] = useState(initialState);
   const [message, setMessage] = useState("");
   const [whatsappUrl, setWhatsappUrl] = useState("");
+  const [placedOrderId, setPlacedOrderId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationState, setLocationState] = useState<LocationState>("idle");
   const [showManualLocation, setShowManualLocation] = useState(false);
@@ -146,7 +148,7 @@ export function CheckoutForm({
         })
       });
 
-      const data = await readApiResponse<{ error?: string; orderNumber?: string; whatsappUrl?: string }>(response);
+      const data = await readApiResponse<{ error?: string; orderId?: string; orderNumber?: string; whatsappUrl?: string }>(response);
       setIsSubmitting(false);
 
       if (!response.ok) {
@@ -156,12 +158,13 @@ export function CheckoutForm({
       }
 
       clearCart();
+      if (data.orderId) setPlacedOrderId(data.orderId);
       if (data.whatsappUrl) {
         setWhatsappUrl(data.whatsappUrl);
         window.open(data.whatsappUrl, "_blank", "noopener,noreferrer");
       }
       showToast("Order placed successfully", "success");
-      setMessage(`Order #${data.orderNumber} placed. WhatsApp is opening with the order details.`);
+      setMessage(`Order #${data.orderNumber} placed. Your bill is ready below.`);
     } catch {
       setIsSubmitting(false);
       setMessage("Order could not be placed. Please check your connection and try again.");
@@ -293,6 +296,7 @@ export function CheckoutForm({
             Open WhatsApp order message
           </a>
         )}
+        {placedOrderId && <OrderBillCard orderId={placedOrderId} whatsappUrl={whatsappUrl} />}
         <Button className="mt-5 w-full" size="lg" disabled={!canSubmit}>
           <Send className="h-4 w-4" />
           {isSubmitting ? "Placing order" : "Place order"}

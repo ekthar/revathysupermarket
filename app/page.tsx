@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowRight, Bike, Clock, MapPin, ShieldCheck, Sparkles, Star } from "lucide-react";
+import { ArrowRight, Bike, Clock, CreditCard, MapPin, MessageCircle, ReceiptText, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
@@ -14,14 +14,49 @@ const defaultHeroImage = "https://images.unsplash.com/photo-1542838132-92c533004
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const [settings, activeBanner] = await Promise.all([
+  const [settings, activeBanner, dbFeatured] = await Promise.all([
     getStoreSettings(),
     prisma.banner.findFirst({
       where: { isActive: true },
       orderBy: { createdAt: "desc" },
       select: { title: true, subtitle: true, image: true, href: true }
-    }).catch(() => null)
+    }).catch(() => null),
+    prisma.product.findMany({
+      where: { isActive: true, isFeatured: true },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        description: true,
+        image: true,
+        price: true,
+        discountPrice: true,
+        stock: true,
+        popularity: true,
+        unit: true,
+        isFeatured: true,
+        category: { select: { name: true } }
+      },
+      orderBy: [{ popularity: "desc" }, { createdAt: "desc" }],
+      take: 8
+    }).catch(() => [])
   ]);
+  const featuredProducts = dbFeatured.length > 0
+    ? dbFeatured.map((product) => ({
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        category: product.category.name as (typeof products)[number]["category"],
+        price: Number(product.price),
+        discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
+        image: product.image,
+        description: product.description,
+        stock: product.stock,
+        popularity: product.popularity,
+        unit: product.unit,
+        isFeatured: product.isFeatured
+      }))
+    : bestSellers;
   const heroImage = activeBanner?.image || defaultHeroImage;
   const heroTitle = activeBanner?.title || "Fresh Groceries Delivered To Your Doorstep";
   const heroSubtitle = activeBanner?.subtitle || "Premium fruits, vegetables, dairy, snacks, and essentials from Revathy Supermarket. Pay safely by COD or UPI on delivery.";
@@ -52,13 +87,13 @@ export default async function HomePage() {
                 <Link href="/cart">View cart</Link>
               </Button>
             </div>
-            <div className="mt-7 grid grid-cols-3 gap-2 rounded-[1.5rem] border border-white/20 bg-white/12 p-2 backdrop-blur-xl">
+            <div className="mt-7 grid grid-cols-3 gap-2 rounded-[1.5rem] border border-white/30 bg-white/16 p-2 backdrop-blur-xl">
               {[
                 ["50+", "Products"],
                 [`${settings.deliveryRadiusKm} KM`, "Delivery"],
                 ["COD", "Payment"]
               ].map(([value, label]) => (
-                <div key={label} className="rounded-2xl bg-white/10 px-3 py-3 text-center">
+                <div key={label} className="rounded-2xl bg-white/18 px-3 py-3 text-center shadow-sm">
                   <p className="font-display text-lg font-black">{value}</p>
                   <p className="mt-1 text-[11px] font-bold text-white/70">{label}</p>
                 </div>
@@ -72,13 +107,13 @@ export default async function HomePage() {
             { icon: ShieldCheck, title: "Pay on Delivery", text: "Choose COD or UPI when groceries arrive." },
             { icon: Clock, title: "Manual Care", text: "Store staff verify, pack, and process every order." }
           ].map((item) => (
-            <div key={item.title} className="glass flex items-center gap-4 rounded-[1.5rem] p-4 text-white shadow-premium md:block md:p-5">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-lime-fresh/18">
-                <item.icon className="h-6 w-6 text-lime-fresh" />
+            <div key={item.title} className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-white/95 p-4 text-slate-950 shadow-premium backdrop-blur md:block md:p-5 dark:border-white/10 dark:bg-slate-900/92 dark:text-white">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+                <item.icon className="h-6 w-6 text-primary" />
               </span>
               <div>
                 <h2 className="font-display text-base font-bold md:mt-4 md:text-xl">{item.title}</h2>
-                <p className="mt-1 text-xs leading-5 text-white/75 md:mt-2 md:text-sm">{item.text}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600 md:mt-2 md:text-sm dark:text-white/70">{item.text}</p>
               </div>
             </div>
           ))}
@@ -116,12 +151,12 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-5">
             <div>
-              <Badge>Best selling products</Badge>
-              <h2 className="mt-3 font-display text-3xl font-black leading-tight">Local favorites</h2>
+              <Badge>Featured products</Badge>
+              <h2 className="mt-3 font-display text-3xl font-black leading-tight">Picked by the store</h2>
             </div>
           </div>
           <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {bestSellers.map((product) => (
+            {featuredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
@@ -130,19 +165,22 @@ export default async function HomePage() {
 
       <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-2 lg:px-8">
         <div className="space-y-6">
-          <Badge>Customer reviews</Badge>
-          <h2 className="font-display text-3xl font-black leading-tight">Trusted for fresh daily shopping</h2>
-          {["Fresh vegetables and quick delivery.", "The staff called to confirm substitutions. Very helpful.", "UPI on delivery makes ordering simple."].map((review) => (
-            <div key={review} className="rounded-[1.5rem] border border-white/70 bg-card/90 p-5 shadow-soft dark:border-white/10">
+          <Badge>Why shop with Revathy</Badge>
+          <h2 className="font-display text-3xl font-black leading-tight">Clear ordering, local care, useful bills</h2>
+          {[
+            { icon: Bike, title: `${settings.deliveryRadiusKm} KM service area`, text: "Checkout verifies pincode and live GPS before the order is submitted." },
+            { icon: CreditCard, title: "COD and UPI on delivery", text: "No online payment gateway. Pay safely when groceries arrive." },
+            { icon: ReceiptText, title: settings.gstRatePercent > 0 ? "GST bill available" : "Clean order bill", text: settings.gstin ? `Bills include GSTIN ${settings.gstin}.` : "Every order gets a downloadable bill and print/PDF option." },
+            { icon: MessageCircle, title: "WhatsApp support", text: "Send a clean order confirmation to the store after checkout." }
+          ].map((item) => (
+            <div key={item.title} className="rounded-[1.5rem] border border-white/70 bg-card/90 p-5 shadow-soft dark:border-white/10">
               <div className="flex items-center gap-3">
                 <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-fresh/20">
-                  <Sparkles className="h-5 w-5 text-primary" />
+                  <item.icon className="h-5 w-5 text-primary" />
                 </span>
-                <div className="flex text-lime-fresh">
-                  {Array.from({ length: 5 }).map((_, index) => <Star key={index} className="h-4 w-4 fill-current" />)}
-                </div>
+                <p className="font-black">{item.title}</p>
               </div>
-              <p className="mt-3 font-medium">{review}</p>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.text}</p>
             </div>
           ))}
         </div>

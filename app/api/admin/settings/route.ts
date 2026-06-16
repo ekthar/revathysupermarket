@@ -15,7 +15,10 @@ const settingsSchema = z.object({
     .min(1),
   googleMapsUrl: z.string().trim().optional().default(""),
   instagramUrl: z.string().trim().optional().default(""),
-  facebookUrl: z.string().trim().optional().default("")
+  facebookUrl: z.string().trim().optional().default(""),
+  gstin: z.string().trim().optional().default(""),
+  gstRatePercent: z.coerce.number().min(0).max(28).default(0),
+  gstBusinessName: z.string().trim().optional().default("")
 });
 
 async function requireAdmin() {

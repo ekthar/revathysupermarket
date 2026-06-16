@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { Edit3, Eye, EyeOff, Minus, Package, Plus, Save, Search, Trash2, X } from "lucide-react";
+import { Edit3, Eye, EyeOff, Minus, Package, Plus, Save, Search, Sparkles, Trash2, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -24,6 +24,7 @@ export type AdminProduct = {
   description: string;
   unit?: string;
   isActive: boolean;
+  isFeatured: boolean;
 };
 
 type ProductResponse = {
@@ -34,6 +35,7 @@ type ProductResponse = {
 const tabs = [
   { key: "all", label: "All" },
   { key: "active", label: "Active" },
+  { key: "featured", label: "Featured" },
   { key: "low", label: "Low stock" },
   { key: "inactive", label: "Inactive" }
 ] as const;
@@ -55,6 +57,7 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
       const matchesTab =
         tab === "all" ||
         (tab === "active" && product.isActive) ||
+        (tab === "featured" && product.isFeatured) ||
         (tab === "inactive" && !product.isActive) ||
         (tab === "low" && product.isActive && product.stock <= 15);
       return matchesQuery && matchesTab;
@@ -185,6 +188,7 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
                 <div className="min-w-0">
                   <p className="truncate text-[10px] font-black uppercase text-primary">{product.category}</p>
                   <h3 className="line-clamp-2 font-black leading-5">{product.name}</h3>
+                  {product.isFeatured && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-lime-fresh/25 px-2 py-1 text-[10px] font-black text-primary"><Sparkles className="h-3 w-3" /> Featured</p>}
                   <p className="mt-1 text-sm font-bold">{formatCurrency(product.discountPrice ?? product.price)}</p>
                 </div>
                 <button
@@ -279,7 +283,8 @@ function EditProductModal({
     image: product.image ?? "",
     description: product.description,
     unit: product.unit ?? "1 pc",
-    isActive: product.isActive
+    isActive: product.isActive,
+    isFeatured: product.isFeatured
   });
   const [saving, setSaving] = useState(false);
 
@@ -321,7 +326,8 @@ function EditProductModal({
       image: payload.image,
       description: payload.description,
       unit: payload.unit,
-      isActive: payload.isActive
+      isActive: payload.isActive,
+      isFeatured: payload.isFeatured
     });
   }
 
@@ -390,6 +396,10 @@ function EditProductModal({
           <label className="flex items-center justify-between rounded-2xl border border-border p-4">
             <span className="font-bold">Visible in customer shop</span>
             <input type="checkbox" checked={form.isActive} onChange={(event) => update("isActive", event.target.checked)} className="h-5 w-5 accent-primary" />
+          </label>
+          <label className="flex items-center justify-between rounded-2xl border border-lime-fresh/40 bg-lime-fresh/10 p-4">
+            <span className="font-bold">Feature on homepage</span>
+            <input type="checkbox" checked={form.isFeatured} onChange={(event) => update("isFeatured", event.target.checked)} className="h-5 w-5 accent-primary" />
           </label>
           <Button disabled={saving} className="h-12 w-full">
             <Save className="h-4 w-4" />

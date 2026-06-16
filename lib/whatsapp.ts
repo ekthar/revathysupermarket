@@ -3,34 +3,21 @@ import { formatCurrency } from "@/lib/utils";
 
 type WhatsAppOrder = {
   orderNumber: string;
-  customerName: string;
-  phone: string;
-  whatsapp: string;
-  address: string;
   total: number;
-  items: Array<{ name: string; quantity: number; price: number }>;
+  billUrl?: string;
 };
 
 export function buildWhatsAppMessage(order: WhatsAppOrder) {
   const lines = [
-    `Hello Revathy Supermarket, I have placed Order #${order.orderNumber}.`,
-    "",
-    `Customer: ${order.customerName}`,
-    `Phone: ${order.phone}`,
-    `WhatsApp: ${order.whatsapp}`,
-    `Address: ${order.address}`,
-    "",
-    "Products:",
-    ...order.items.map(
-      (item) => `- ${item.name} x ${item.quantity} = ${formatCurrency(item.price * item.quantity)}`
-    ),
+    `Hello Revathy Supermarket, I have placed Order #${order.orderNumber}. Please find my order bill attached/shared.`,
     "",
     `Total: ${formatCurrency(order.total)}`
   ];
+  if (order.billUrl) lines.push(`Bill: ${order.billUrl}`);
 
   return lines.join("\n");
 }
 
-export function buildWhatsAppUrl(order: WhatsAppOrder) {
-  return `https://wa.me/${SITE.whatsapp}?text=${encodeURIComponent(buildWhatsAppMessage(order))}`;
+export function buildWhatsAppUrl(order: WhatsAppOrder, whatsappNumber = SITE.whatsapp) {
+  return `https://wa.me/${whatsappNumber.replace(/\D/g, "")}?text=${encodeURIComponent(buildWhatsAppMessage(order))}`;
 }

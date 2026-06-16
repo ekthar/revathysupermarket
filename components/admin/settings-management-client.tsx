@@ -137,6 +137,18 @@ export function SettingsManagementClient({
         <Input value={form.googleMapsUrl} onChange={(event) => update("googleMapsUrl", event.target.value)} placeholder="Google Maps place link" className="h-12 rounded-2xl md:col-span-2" />
         <Input value={form.instagramUrl} onChange={(event) => update("instagramUrl", event.target.value)} placeholder="Instagram URL" className="h-12 rounded-2xl" />
         <Input value={form.facebookUrl} onChange={(event) => update("facebookUrl", event.target.value)} placeholder="Facebook URL" className="h-12 rounded-2xl" />
+        <div className="mt-2 flex items-center gap-3 border-t border-border pt-4 md:col-span-2">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-fresh/20 text-primary">
+            %
+          </span>
+          <div>
+            <h4 className="font-display text-xl font-black">GST billing</h4>
+            <p className="text-xs font-bold text-muted-foreground">Prices stay inclusive. Bills show taxable value, CGST, and SGST.</p>
+          </div>
+        </div>
+        <Input value={form.gstBusinessName} onChange={(event) => update("gstBusinessName", event.target.value)} placeholder="GST business name" className="h-12 rounded-2xl" />
+        <Input value={form.gstin} onChange={(event) => update("gstin", event.target.value.toUpperCase())} placeholder="GSTIN" className="h-12 rounded-2xl" />
+        <Input value={form.gstRatePercent} onChange={(event) => update("gstRatePercent", Number(event.target.value))} type="number" min="0" max="28" step="0.01" placeholder="GST rate %" className="h-12 rounded-2xl" />
         <Button className="md:col-span-2" disabled={isPending}>
           <Save className="h-4 w-4" />
           Save settings

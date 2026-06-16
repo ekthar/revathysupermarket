@@ -101,6 +101,7 @@ model Product {
   popularity    Int         @default(0)
   unit          String
   isActive      Boolean     @default(true)
+  isFeatured    Boolean     @default(false)
   categoryId    String
   category      Category    @relation(fields: [categoryId], references: [id])
   orderItems    OrderItem[]
@@ -108,6 +109,7 @@ model Product {
   updatedAt     DateTime    @updatedAt
 
   @@index([isActive])
+  @@index([isFeatured])
   @@index([categoryId])
   @@index([popularity])
   @@index([createdAt])

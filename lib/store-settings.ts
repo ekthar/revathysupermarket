@@ -13,6 +13,9 @@ export type StoreSettings = {
   googleMapsUrl: string;
   instagramUrl: string;
   facebookUrl: string;
+  gstin: string;
+  gstRatePercent: number;
+  gstBusinessName: string;
 };
 
 export const defaultStoreSettings: StoreSettings = {
@@ -24,7 +27,10 @@ export const defaultStoreSettings: StoreSettings = {
   serviceablePincodes: serviceablePincodes(),
   googleMapsUrl: "",
   instagramUrl: "",
-  facebookUrl: ""
+  facebookUrl: "",
+  gstin: "",
+  gstRatePercent: 0,
+  gstBusinessName: SITE.name
 };
 
 function parseRadius(value?: string) {
@@ -41,6 +47,11 @@ function parsePincodes(value?: string) {
   return pincodes.length > 0 ? pincodes : defaultStoreSettings.serviceablePincodes;
 }
 
+function parseGstRate(value?: string) {
+  const rate = Number(value);
+  return Number.isFinite(rate) && rate >= 0 ? Math.min(rate, 28) : defaultStoreSettings.gstRatePercent;
+}
+
 async function readStoreSettings(): Promise<StoreSettings> {
   const settings = await prisma.setting.findMany().catch(() => []);
   const byKey = new Map(settings.map((setting) => [setting.key, setting.value]));
@@ -54,7 +65,10 @@ async function readStoreSettings(): Promise<StoreSettings> {
     serviceablePincodes: parsePincodes(byKey.get("serviceablePincodes")),
     googleMapsUrl: byKey.get("googleMapsUrl") ?? "",
     instagramUrl: byKey.get("instagramUrl") ?? "",
-    facebookUrl: byKey.get("facebookUrl") ?? ""
+    facebookUrl: byKey.get("facebookUrl") ?? "",
+    gstin: byKey.get("gstin") ?? "",
+    gstRatePercent: parseGstRate(byKey.get("gstRatePercent")),
+    gstBusinessName: byKey.get("gstBusinessName") ?? byKey.get("storeName") ?? defaultStoreSettings.gstBusinessName
   };
 }
 
@@ -77,7 +91,10 @@ export async function saveStoreSettings(settings: StoreSettings) {
     ["serviceablePincodes", settings.serviceablePincodes.join(", ")],
     ["googleMapsUrl", settings.googleMapsUrl],
     ["instagramUrl", settings.instagramUrl],
-    ["facebookUrl", settings.facebookUrl]
+    ["facebookUrl", settings.facebookUrl],
+    ["gstin", settings.gstin],
+    ["gstRatePercent", String(settings.gstRatePercent)],
+    ["gstBusinessName", settings.gstBusinessName || settings.storeName]
   ];
 
   await prisma.$transaction(

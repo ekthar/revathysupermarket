@@ -57,7 +57,8 @@ export async function POST(request: Request) {
         stock: parsed.data.stock,
         categoryId: category.id,
         unit: parsed.data.unit?.trim() || "1 pc",
-        isActive: parsed.data.isActive ?? true
+        isActive: parsed.data.isActive ?? true,
+        isFeatured: parsed.data.isFeatured ?? false
       }
     });
 
@@ -87,6 +88,7 @@ export async function GET() {
       popularity: true,
       unit: true,
       isActive: true,
+      isFeatured: true,
       createdAt: true,
       category: { select: { name: true } }
     },

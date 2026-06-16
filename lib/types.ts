@@ -21,6 +21,7 @@ export type Product = {
   stock: number;
   popularity: number;
   unit: string;
+  isFeatured?: boolean;
 };
 
 export type CartItem = Product & {

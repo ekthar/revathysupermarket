@@ -1,7 +1,6 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { statusLabels, orderStatuses } from "@/lib/constants";
-import { formatCurrency } from "@/lib/utils";
+import { CustomerOrdersClient, type CustomerOrder } from "@/components/dashboard/customer-orders-client";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +13,19 @@ export default async function DashboardPage() {
         orderBy: { createdAt: "desc" }
       })
     : [];
+  const plainOrders: CustomerOrder[] = orders.map((order) => ({
+    id: order.id,
+    orderNumber: order.orderNumber,
+    status: order.status,
+    total: Number(order.total),
+    createdAt: order.createdAt.toISOString(),
+    items: order.items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      quantity: item.quantity,
+      price: Number(item.price)
+    }))
+  }));
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -22,41 +34,8 @@ export default async function DashboardPage() {
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">My orders</h1>
         <p className="mt-2 text-sm text-muted-foreground">Follow every order from received to delivered.</p>
       </section>
-      <div className="mt-6 grid gap-4 sm:gap-6">
-        {orders.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border p-10 text-center">
-            <h2 className="font-display text-2xl font-bold">No orders yet</h2>
-            <p className="mt-2 text-muted-foreground">Your grocery orders will appear here.</p>
-          </div>
-        ) : (
-          orders.map((order) => {
-            const activeIndex = orderStatuses.indexOf(order.status);
-            return (
-              <article key={order.id} className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
-                <div className="flex flex-wrap justify-between gap-4">
-                  <div>
-                    <h2 className="font-display text-2xl font-bold">Order #{order.orderNumber}</h2>
-                    <p className="text-sm text-muted-foreground">{order.items.length} items</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-black">{formatCurrency(Number(order.total))}</p>
-                    <p className="mt-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{statusLabels[order.status]}</p>
-                  </div>
-                </div>
-                <div className="mt-6 grid gap-3 md:grid-cols-6">
-                  {orderStatuses.filter((status) => status !== "CANCELLED").map((status, index) => (
-                    <div key={status} className="flex items-center gap-3 md:block">
-                      <span className={index <= activeIndex ? "flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-black text-white" : "flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-black"}>
-                        {index + 1}
-                      </span>
-                      <p className="mt-0 text-xs font-bold md:mt-2">{statusLabels[status]}</p>
-                    </div>
-                  ))}
-                </div>
-              </article>
-            );
-          })
-        )}
+      <div className="mt-6">
+        <CustomerOrdersClient initialOrders={plainOrders} />
       </div>
     </main>
   );

@@ -5,7 +5,6 @@ import { calculateDistanceKm } from "@/lib/distance";
 import { rateLimit } from "@/lib/rate-limit";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { checkoutSchema } from "@/lib/validations";
-import { SITE } from "@/lib/constants";
 import { isServiceablePincode } from "@/lib/delivery";
 import { getStoreSettingsForApi } from "@/lib/store-settings";
 
@@ -110,20 +109,10 @@ export async function POST(request: Request) {
       }).catch(() => null);
     }
 
-    const address = `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`;
     const whatsappUrl = buildWhatsAppUrl({
       orderNumber: order.orderNumber,
-      customerName: order.customerName,
-      phone: order.phone,
-      whatsapp: order.whatsapp,
-      address,
-      total: Number(order.total),
-      items: order.items.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: Number(item.price)
-      }))
-    });
+      total: Number(order.total)
+    }, settings.whatsapp);
 
     return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber, whatsappUrl });
   } catch (error) {
@@ -162,7 +151,25 @@ export async function GET() {
       },
       orderBy: { createdAt: "desc" }
     });
-    return NextResponse.json({ orders });
+    return NextResponse.json({
+      orders: orders.map((order) => ({
+        ...order,
+        latitude: Number(order.latitude),
+        longitude: Number(order.longitude),
+        distanceKm: Number(order.distanceKm),
+        subtotal: Number(order.subtotal),
+        total: Number(order.total),
+        createdAt: order.createdAt.toISOString(),
+        items: order.items.map((item) => ({
+          ...item,
+          price: Number(item.price)
+        })),
+        statusEvents: order.statusEvents.map((event) => ({
+          ...event,
+          createdAt: event.createdAt.toISOString()
+        }))
+      }))
+    });
   } catch (error) {
     console.error("Order list failed", error);
     return NextResponse.json({ error: "Orders could not be loaded." }, { status: 500 });

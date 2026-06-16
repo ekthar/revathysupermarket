@@ -6,6 +6,7 @@ export type ProductSheetRow = {
   id?: string;
   slug?: string;
   active?: boolean;
+  featured?: boolean;
   name: string;
   category: string;
   price: number;
@@ -20,6 +21,7 @@ export const productSheetColumns = [
   "id",
   "slug",
   "active",
+  "featured",
   "name",
   "category",
   "price",
@@ -32,6 +34,7 @@ export const productSheetColumns = [
 
 export function normalizeProductSheetRow(input: Record<string, unknown>): ProductSheetRow {
   const activeValue = input.active ?? input.Active ?? input.isActive ?? input["Is Active"];
+  const featuredValue = input.featured ?? input.Featured ?? input.isFeatured ?? input["Is Featured"];
   const discountValue = input.discountPrice ?? input["Discount Price"] ?? input.discount_price;
   const image = String(input.image ?? input.Image ?? "").trim();
 
@@ -42,6 +45,10 @@ export function normalizeProductSheetRow(input: Record<string, unknown>): Produc
       typeof activeValue === "boolean"
         ? activeValue
         : !["false", "0", "no", "inactive"].includes(String(activeValue ?? "true").trim().toLowerCase()),
+    featured:
+      typeof featuredValue === "boolean"
+        ? featuredValue
+        : ["true", "1", "yes", "featured"].includes(String(featuredValue ?? "false").trim().toLowerCase()),
     name: String(input.name ?? input.Name ?? input["Product Name"] ?? "").trim(),
     category: String(input.category ?? input.Category ?? "").trim(),
     price: Number(input.price ?? input.Price),
@@ -122,7 +129,8 @@ export async function upsertProductSheetRows(rows: ProductSheetRow[]) {
       unit: row.unit || "1 pc",
       image,
       description: row.description,
-      isActive: row.active ?? true
+      isActive: row.active ?? true,
+      isFeatured: row.featured ?? false
     };
 
     if (existing) {

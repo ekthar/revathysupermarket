@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-24 z-[80] mx-auto flex max-w-md flex-col gap-2 px-4 sm:bottom-6">
+      <div className="safe-toast-stack pointer-events-none fixed inset-x-0 z-[88] mx-auto flex max-w-md flex-col gap-2 px-4 sm:left-auto sm:right-4 sm:mx-0 sm:w-[min(420px,calc(100vw-2rem))] sm:px-0">
         <AnimatePresence initial={false}>
           {toasts.map((toast) => {
             const Icon = icons[toast.tone];
@@ -52,10 +52,10 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 12, scale: 0.96 }}
                 className={cn(
-                  "pointer-events-auto flex items-center gap-3 rounded-2xl border bg-card/95 p-3 text-sm font-bold shadow-[0_18px_50px_-24px_rgba(15,23,42,0.75)] backdrop-blur-xl",
-                  toast.tone === "success" && "border-primary/20 text-primary",
-                  toast.tone === "error" && "border-red-200 text-red-600",
-                  toast.tone === "info" && "border-border text-foreground"
+                  "glass-panel pointer-events-auto flex items-center gap-3 rounded-2xl p-3 text-sm font-bold",
+                  toast.tone === "success" && "border-primary/25 bg-primary/10 text-primary dark:bg-primary/15",
+                  toast.tone === "error" && "border-red-300/60 bg-red-50/95 text-red-600 dark:border-red-500/35 dark:bg-red-950/80 dark:text-red-200",
+                  toast.tone === "info" && "text-foreground"
                 )}
               >
                 <Icon className="h-5 w-5 shrink-0" />

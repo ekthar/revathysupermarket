@@ -17,9 +17,9 @@ export function LocationMap({ deliveryRadiusKm = SITE.deliveryRadiusKm }: { deli
         referrerPolicy="no-referrer-when-downgrade"
         className="h-full min-h-80 w-full border-0"
       />
-      <div className="absolute inset-x-3 bottom-3 rounded-[1.5rem] border border-white/70 bg-white/92 p-3 shadow-[0_18px_55px_-32px_rgba(15,23,42,0.7)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/90">
+      <div className="glass-panel absolute inset-x-3 bottom-3 rounded-[1.5rem] p-3">
         <p className="text-sm font-black text-slate-950 dark:text-white">{SITE.name}</p>
-        <p className="mt-1 text-xs font-semibold text-slate-500">Delivery within {deliveryRadiusKm} KM only</p>
+        <p className="mt-1 text-xs font-semibold text-muted-foreground">Delivery within {deliveryRadiusKm} KM only</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Button asChild variant="outline" size="sm" className="rounded-2xl">
             <a href={openUrl} target="_blank" rel="noreferrer">

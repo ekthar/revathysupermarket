@@ -119,33 +119,33 @@ export function OrderBillCard({ orderId, whatsappUrl }: { orderId: string; whats
     <motion.section
       initial={{ opacity: 0, y: 24, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="mt-5 overflow-hidden rounded-[1.75rem] border border-primary/20 bg-[linear-gradient(180deg,#fffaf0,#ffffff)] p-4 shadow-premium"
+      className="mt-5 overflow-hidden rounded-[1.75rem] border border-primary/20 bg-[linear-gradient(180deg,#fffaf0,#ffffff)] p-4 text-slate-800 shadow-premium dark:border-white/10 dark:bg-none dark:bg-card dark:text-slate-100"
     >
       <div className="rounded-[1.35rem] bg-primary p-4 text-white">
         <p className="text-xs font-black uppercase text-lime-fresh">Order bill</p>
         <h3 className="mt-1 font-display text-2xl font-black">#{bill.order.orderNumber}</h3>
         <p className="mt-1 text-sm text-white/80">{statusLabels[bill.order.status]}</p>
       </div>
-      <div className="mt-4 grid gap-3 text-sm text-slate-700">
+      <div className="mt-4 grid gap-3 text-sm text-slate-700 dark:text-slate-200">
         <div>
-          <p className="font-black text-slate-950">{bill.store.name}</p>
+          <p className="font-black text-slate-950 dark:text-white">{bill.store.name}</p>
           <p>{bill.store.address}</p>
           {bill.store.gstin && <p>GSTIN: {bill.store.gstin}</p>}
         </div>
-        <div className="rounded-2xl bg-slate-50 p-3">
-          <p className="font-black text-slate-950">{bill.order.customerName}</p>
+        <div className="rounded-2xl bg-slate-50 p-3 dark:bg-white/[0.08]">
+          <p className="font-black text-slate-950 dark:text-white">{bill.order.customerName}</p>
           <p>{bill.order.phone} | {bill.order.whatsapp}</p>
           <p>{bill.order.address}</p>
         </div>
         <div className="grid gap-2">
           {bill.order.items.map((item) => (
-            <div key={item.id} className="flex justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-3">
+            <div key={item.id} className="flex justify-between gap-3 rounded-2xl border border-slate-100 bg-white p-3 dark:border-white/10 dark:bg-white/[0.07]">
               <span className="font-bold">{item.name} x {item.quantity}</span>
               <span className="font-black">{formatCurrency(item.amount)}</span>
             </div>
           ))}
         </div>
-        <div className="rounded-2xl bg-slate-50 p-3">
+        <div className="rounded-2xl bg-slate-50 p-3 dark:bg-white/[0.08]">
           <div className="flex justify-between"><span>Taxable value</span><span>{formatCurrency(bill.gst.taxableValue)}</span></div>
           {bill.gst.rate > 0 && (
             <>
@@ -153,7 +153,7 @@ export function OrderBillCard({ orderId, whatsappUrl }: { orderId: string; whats
               <div className="mt-1 flex justify-between"><span>SGST</span><span>{formatCurrency(bill.gst.sgst)}</span></div>
             </>
           )}
-          <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-slate-950">
+          <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-slate-950 dark:border-white/10 dark:text-white">
             <span>Total</span>
             <span>{formatCurrency(bill.order.total)}</span>
           </div>

@@ -19,7 +19,7 @@ export function MobileBottomNav() {
   const { totalItems } = useCart();
 
   return (
-    <nav className="fixed inset-x-3 bottom-3 z-50 rounded-[1.75rem] border border-white/50 bg-white/90 p-2 shadow-[0_24px_70px_-28px_rgba(15,23,42,0.65)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/88 md:hidden">
+    <nav className="glass-nav fixed inset-x-3 bottom-3 z-50 rounded-[1.75rem] p-2 md:hidden">
       <div className="grid grid-cols-5 gap-1">
         {items.map((item) => {
           const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
@@ -28,7 +28,7 @@ export function MobileBottomNav() {
               key={item.href}
               href={item.href}
               className={cn(
-                "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-bold text-slate-500 transition",
+                "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-bold text-muted-foreground transition",
                 active && "bg-primary text-white shadow-[0_12px_30px_-18px_rgba(15,138,95,0.9)]"
               )}
             >

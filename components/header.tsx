@@ -33,8 +33,8 @@ export function Header() {
   }, [reduceMotion, totalItems]);
 
   return (
-    <header className="sticky top-0 z-40 border-b border-emerald-950/5 bg-[#fffdf7]/92 backdrop-blur-2xl dark:border-white/10 dark:bg-slate-950/88">
-      <div className="mx-auto flex h-[4.75rem] max-w-7xl items-center justify-between gap-2 px-3 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-40 border-b border-emerald-950/5 bg-transparent px-2 pt-2 backdrop-blur-none dark:border-white/10">
+      <div className="glass-nav mx-auto flex h-[4.75rem] max-w-7xl items-center justify-between gap-2 rounded-[1.65rem] px-3 sm:px-6 lg:px-8">
         <Link href="/" className="relative flex min-w-0 items-center gap-2.5 sm:gap-3">
           <motion.span
             whileTap={{ scale: 0.94 }}
@@ -61,7 +61,7 @@ export function Header() {
                     animate={{ opacity: [0, 1, 1, 0], x: [0, 58 + index * 18, 132 + index * 16], y: [0, -18 - index * 4, 4], scale: [0.6, 1, 0.65], rotate: [-20, 10, 40] }}
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.85, delay: index * 0.08, ease: "easeInOut" }}
-                    className="absolute flex h-6 w-6 items-center justify-center rounded-full bg-white shadow-lg"
+                    className="absolute flex h-6 w-6 items-center justify-center rounded-full bg-card text-foreground shadow-lg ring-1 ring-border"
                   >
                     <item.icon className={`h-3.5 w-3.5 ${item.className}`} />
                   </motion.span>
@@ -81,7 +81,7 @@ export function Header() {
           <div className="hidden sm:block">
             <ThemeToggle />
           </div>
-          <Button asChild variant="outline" size="icon" title="Account" className="h-10 w-10 rounded-2xl bg-white/80 sm:h-11 sm:w-11">
+          <Button asChild variant="outline" size="icon" title="Account" className="h-10 w-10 rounded-2xl bg-card/80 backdrop-blur sm:h-11 sm:w-11">
             <Link href="/login">
               <UserRound className="h-4 w-4" />
             </Link>

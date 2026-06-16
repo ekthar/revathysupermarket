@@ -42,14 +42,14 @@ export function ProductGrid({ items = products }: { items?: Product[] }) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="sticky top-[4.5rem] z-30 -mx-4 border-y border-white/70 bg-background/90 px-4 py-3 shadow-[0_20px_45px_-40px_rgba(15,23,42,0.8)] backdrop-blur-xl dark:border-white/10 sm:static sm:mx-0 sm:rounded-[1.75rem] sm:border sm:bg-card/90 sm:p-4 sm:shadow-soft md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+      <div className="glass-panel sticky top-[5.25rem] z-30 -mx-4 px-4 py-3 sm:static sm:mx-0 sm:rounded-[1.75rem] sm:p-4 md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search groceries"
-            className="h-12 rounded-2xl border-white/70 bg-white/90 pl-11 shadow-sm dark:border-white/10 dark:bg-slate-900/90"
+            className="h-12 rounded-2xl border-border bg-background/85 pl-11 shadow-sm"
           />
         </label>
         <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 md:hidden">
@@ -62,7 +62,7 @@ export function ProductGrid({ items = products }: { items?: Product[] }) {
               key={item}
               type="button"
               onClick={() => setCategory(item)}
-              className={category === item ? "h-9 shrink-0 rounded-full bg-primary px-4 text-xs font-black text-white" : "h-9 shrink-0 rounded-full border border-border bg-card px-4 text-xs font-black"}
+              className={category === item ? "h-9 shrink-0 rounded-full bg-primary px-4 text-xs font-black text-white" : "h-9 shrink-0 rounded-full border border-border bg-card/80 px-4 text-xs font-black text-foreground"}
             >
               {item}
             </button>
@@ -124,11 +124,11 @@ export function ProductGrid({ items = products }: { items?: Product[] }) {
             initial={{ opacity: 0, y: 24, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            className="fixed inset-x-4 bottom-20 z-40 mx-auto max-w-md sm:bottom-6"
+            className="fixed inset-x-4 bottom-[5.8rem] z-40 mx-auto max-w-md sm:bottom-6"
           >
             <Link
               href="/cart"
-              className="flex items-center justify-between rounded-[1.35rem] bg-slate-950 p-3 text-white shadow-[0_20px_55px_-26px_rgba(15,23,42,0.9)]"
+              className="flex items-center justify-between rounded-[1.35rem] bg-slate-950 p-3 text-white shadow-[0_20px_55px_-26px_rgba(15,23,42,0.9)] ring-1 ring-white/10 dark:bg-primary"
             >
               <span className="flex items-center gap-3">
                 <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lime-fresh text-slate-950">

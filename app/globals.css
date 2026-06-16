@@ -55,6 +55,30 @@ body::selection {
   backdrop-filter: blur(18px);
 }
 
+.glass-panel {
+  background: color-mix(in srgb, hsl(var(--card)) 88%, transparent);
+  border: 1px solid color-mix(in srgb, hsl(var(--border)) 74%, transparent);
+  box-shadow: 0 24px 70px -38px rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(22px);
+}
+
+.glass-nav {
+  background: color-mix(in srgb, hsl(var(--card)) 82%, transparent);
+  border: 1px solid color-mix(in srgb, hsl(var(--border)) 70%, transparent);
+  box-shadow: 0 20px 70px -40px rgba(15, 23, 42, 0.72);
+  backdrop-filter: blur(24px) saturate(1.18);
+}
+
+.safe-toast-stack {
+  bottom: calc(11.25rem + env(safe-area-inset-bottom));
+}
+
+@media (min-width: 640px) {
+  .safe-toast-stack {
+    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+}
+
 .no-scrollbar {
   scrollbar-width: none;
 }

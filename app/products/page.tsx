@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import { ProductGrid } from "@/components/product-grid";
 import { prisma } from "@/lib/prisma";
 import { products as fallbackProducts } from "@/lib/products";
@@ -9,12 +10,22 @@ export const metadata: Metadata = {
   description: "Search and order fresh groceries from Revathy Supermarket in Neyyattinkara."
 };
 
-export const dynamic = "force-dynamic";
-
-async function getProducts(): Promise<Product[]> {
+const getProducts = unstable_cache(async (): Promise<Product[]> => {
   const dbProducts = await prisma.product.findMany({
     where: { isActive: true },
-    include: { category: true },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      image: true,
+      price: true,
+      discountPrice: true,
+      stock: true,
+      popularity: true,
+      unit: true,
+      category: { select: { name: true } }
+    },
     orderBy: [{ popularity: "desc" }, { createdAt: "desc" }]
   }).catch(() => []);
 
@@ -33,7 +44,7 @@ async function getProducts(): Promise<Product[]> {
     popularity: product.popularity,
     unit: product.unit
   }));
-}
+}, ["public-products"], { revalidate: 30, tags: ["products"] });
 
 export default async function ProductsPage() {
   const products = await getProducts();

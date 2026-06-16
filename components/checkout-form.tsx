@@ -9,6 +9,8 @@ import { useCart } from "@/components/cart/cart-provider";
 import { calculateDistanceKm } from "@/lib/distance";
 import { SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
+import { readApiResponse } from "@/lib/client-api";
+import { useToast } from "@/components/toast-provider";
 
 type CheckoutState = {
   customerName: string;
@@ -40,8 +42,10 @@ const initialState: CheckoutState = {
 
 export function CheckoutForm() {
   const { items, subtotal, clearCart } = useCart();
+  const { showToast } = useToast();
   const [form, setForm] = useState(initialState);
   const [message, setMessage] = useState("");
+  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const distance = useMemo(() => {
@@ -76,41 +80,54 @@ export function CheckoutForm() {
     setMessage("");
     if (items.length === 0) {
       setMessage("Your cart is empty.");
+      showToast("Your cart is empty", "error");
       return;
     }
     if (isOutsideRadius) {
       setMessage("Sorry, delivery is currently available only within 5 KM of Revathy Supermarket.");
+      showToast("Delivery is available only within 5 KM", "error");
       return;
     }
 
     setIsSubmitting(true);
-    const response = await fetch("/api/orders", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        ...form,
-        latitude: Number(form.latitude),
-        longitude: Number(form.longitude),
-        items: items.map((item) => ({
-          productId: item.id,
-          name: item.name,
-          quantity: item.quantity,
-          price: item.discountPrice ?? item.price
-        }))
-      })
-    });
+    try {
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...form,
+          latitude: Number(form.latitude),
+          longitude: Number(form.longitude),
+          items: items.map((item) => ({
+            productId: item.id,
+            name: item.name,
+            quantity: item.quantity,
+            price: item.discountPrice ?? item.price
+          }))
+        })
+      });
 
-    const data = await response.json();
-    setIsSubmitting(false);
+      const data = await readApiResponse<{ error?: string; orderNumber?: string; whatsappUrl?: string }>(response);
+      setIsSubmitting(false);
 
-    if (!response.ok) {
-      setMessage(data.error ?? "Order could not be placed.");
-      return;
+      if (!response.ok) {
+        setMessage(data.error ?? "Order could not be placed.");
+        showToast(data.error ?? "Order could not be placed", "error");
+        return;
+      }
+
+      clearCart();
+      if (data.whatsappUrl) {
+        setWhatsappUrl(data.whatsappUrl);
+        window.open(data.whatsappUrl, "_blank", "noopener,noreferrer");
+      }
+      showToast("Order placed successfully", "success");
+      setMessage(`Order #${data.orderNumber} placed. WhatsApp is opening with the order details.`);
+    } catch {
+      setIsSubmitting(false);
+      setMessage("Order could not be placed. Please check your connection and try again.");
+      showToast("Order could not be placed", "error");
     }
-
-    clearCart();
-    window.open(data.whatsappUrl, "_blank", "noopener,noreferrer");
-    setMessage(`Order #${data.orderNumber} placed. WhatsApp is opening with the order details.`);
   }
 
   return (
@@ -183,6 +200,16 @@ export function CheckoutForm() {
           </div>
         </div>
         {message && <p className="mt-4 rounded-xl bg-muted p-3 text-sm font-medium">{message}</p>}
+        {whatsappUrl && (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 block rounded-xl bg-lime-fresh p-3 text-center text-sm font-black text-slate-950"
+          >
+            Open WhatsApp order message
+          </a>
+        )}
         <Button className="mt-5 w-full" size="lg" disabled={isSubmitting || isOutsideRadius || items.length === 0}>
           <Send className="h-4 w-4" />
           {isSubmitting ? "Placing order" : "Place order"}

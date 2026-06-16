@@ -1,18 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { Plus, ShoppingCart } from "lucide-react";
-import { motion } from "framer-motion";
+import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "@/components/product-image";
+import { useToast } from "@/components/toast-provider";
 
 export function ProductCard({ product }: { product: Product }) {
-  const { addItem } = useCart();
+  const { addItem, items, updateQuantity } = useCart();
+  const { showToast } = useToast();
   const price = product.discountPrice ?? product.price;
+  const cartItem = items.find((item) => item.id === product.id);
+
+  function add() {
+    addItem(product);
+    showToast(`${product.name} added to cart`, "success");
+  }
 
   return (
     <motion.article
@@ -50,16 +58,50 @@ export function ProductCard({ product }: { product: Product }) {
               {product.stock > 0 ? "In stock" : "Out of stock"}
             </p>
           </div>
-          <Button
-            size="icon"
-            disabled={product.stock <= 0}
-            onClick={() => addItem(product)}
-            title={`Add ${product.name}`}
-            className="h-10 w-10 shrink-0 rounded-2xl sm:h-11 sm:w-11"
-          >
-            <Plus className="h-4 w-4 sm:hidden" />
-            <ShoppingCart className="hidden h-4 w-4 sm:block" />
-          </Button>
+          <AnimatePresence mode="wait" initial={false}>
+            {cartItem ? (
+              <motion.div
+                key="quantity"
+                initial={{ opacity: 0, scale: 0.92 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.92 }}
+                className="flex h-10 shrink-0 items-center overflow-hidden rounded-2xl border border-primary/20 bg-primary text-white shadow-[0_14px_28px_-18px_rgba(15,138,95,0.9)] sm:h-11"
+              >
+                <button
+                  type="button"
+                  className="flex h-full w-9 items-center justify-center active:bg-black/10"
+                  onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
+                  title={`Reduce ${product.name}`}
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="min-w-6 text-center text-sm font-black">{cartItem.quantity}</span>
+                <button
+                  type="button"
+                  className="flex h-full w-9 items-center justify-center active:bg-black/10"
+                  onClick={() => {
+                    updateQuantity(product.id, cartItem.quantity + 1);
+                    showToast("Quantity updated", "success");
+                  }}
+                  title={`Add one more ${product.name}`}
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </motion.div>
+            ) : (
+              <Button
+                key="add"
+                size="icon"
+                disabled={product.stock <= 0}
+                onClick={add}
+                title={`Add ${product.name}`}
+                className="h-10 w-10 shrink-0 rounded-2xl sm:h-11 sm:w-11"
+              >
+                <Plus className="h-4 w-4 sm:hidden" />
+                <ShoppingCart className="hidden h-4 w-4 sm:block" />
+              </Button>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     </motion.article>

@@ -6,20 +6,15 @@ import { ImagePlus, Plus, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/toast-provider";
+import { readApiResponse } from "@/lib/client-api";
 import { categories } from "@/lib/products";
 
-async function readResponse(response: Response) {
-  const text = await response.text();
-  if (!text) return {};
-  try {
-    return JSON.parse(text) as { error?: string; product?: { name?: string }; url?: string };
-  } catch {
-    return { error: text };
-  }
-}
+type ProductFormResponse = { error?: string; product?: { name?: string }; url?: string };
 
 export function ProductManagementForm() {
   const router = useRouter();
+  const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [message, setMessage] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -35,11 +30,12 @@ export function ProductManagementForm() {
       method: "POST",
       body: formData
     });
-    const data = await readResponse(response);
+    const data = await readApiResponse<ProductFormResponse>(response);
     setIsUploading(false);
 
     if (!response.ok) {
       setMessage(data.error ?? "Image upload failed. Paste an image URL instead.");
+      showToast(data.error ?? "Image upload failed", "error");
       return;
     }
 
@@ -50,6 +46,7 @@ export function ProductManagementForm() {
 
     setImageUrl(data.url);
     setMessage("Image uploaded. Add the product when the details are ready.");
+    showToast("Image uploaded", "success");
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -74,17 +71,19 @@ export function ProductManagementForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    const data = await readResponse(response);
+    const data = await readApiResponse<ProductFormResponse>(response);
     setIsSubmitting(false);
 
     if (!response.ok) {
       setMessage(data.error ?? "Product could not be added. Please check the details.");
+      showToast(data.error ?? "Product could not be added", "error");
       return;
     }
 
     form.reset();
     setImageUrl("");
     setMessage(`Product added: ${data.product?.name ?? payload.name}`);
+    showToast(`Product added: ${data.product?.name ?? payload.name}`, "success");
     router.refresh();
   }
 

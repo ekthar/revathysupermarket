@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { FileText, Phone, Search, Send } from "lucide-react";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { statusLabels } from "@/lib/constants";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type AdminOrder = {
   id: string;
@@ -19,17 +19,38 @@ type AdminOrder = {
 };
 
 export function AdminOrdersClient({ orders }: { orders: AdminOrder[] }) {
+  const [localOrders, setLocalOrders] = useState(orders);
   const [query, setQuery] = useState("");
+  const [tab, setTab] = useState<"all" | "new" | "pending" | "packing" | "delivered">("all");
+
+  const counts = useMemo(() => ({
+    all: localOrders.length,
+    new: localOrders.filter((order) => order.status === "ORDER_RECEIVED").length,
+    pending: localOrders.filter((order) => !["DELIVERED", "CANCELLED"].includes(order.status)).length,
+    packing: localOrders.filter((order) => order.status === "PACKING").length,
+    delivered: localOrders.filter((order) => order.status === "DELIVERED").length
+  }), [localOrders]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    if (!needle) return orders;
-    return orders.filter((order) =>
-      [order.orderNumber, order.customerName, order.phone, order.address]
+    return localOrders.filter((order) => {
+      const matchesTab =
+        tab === "all" ||
+        (tab === "new" && order.status === "ORDER_RECEIVED") ||
+        (tab === "pending" && !["DELIVERED", "CANCELLED"].includes(order.status)) ||
+        (tab === "packing" && order.status === "PACKING") ||
+        (tab === "delivered" && order.status === "DELIVERED");
+      const matchesQuery = !needle || [order.orderNumber, order.customerName, order.phone, order.address]
         .join(" ")
         .toLowerCase()
-        .includes(needle)
-    );
-  }, [orders, query]);
+        .includes(needle);
+      return matchesTab && matchesQuery;
+    });
+  }, [localOrders, query, tab]);
+
+  function updateOrderStatus(orderId: string, status: keyof typeof statusLabels) {
+    setLocalOrders((current) => current.map((order) => (order.id === orderId ? { ...order, status } : order)));
+  }
 
   return (
     <>
@@ -54,6 +75,27 @@ export function AdminOrdersClient({ orders }: { orders: AdminOrder[] }) {
             placeholder="Search order number, customer, phone"
           />
         </label>
+        <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
+          {[
+            ["all", "All", counts.all],
+            ["new", "New", counts.new],
+            ["pending", "Pending", counts.pending],
+            ["packing", "Packing", counts.packing],
+            ["delivered", "Delivered", counts.delivered]
+          ].map(([key, label, count]) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => setTab(key as typeof tab)}
+              className={cn(
+                "h-10 shrink-0 rounded-full px-4 text-xs font-black transition active:scale-[0.98]",
+                tab === key ? "bg-primary text-white" : "border border-white/70 bg-white/80 text-foreground dark:border-white/10 dark:bg-slate-900"
+              )}
+            >
+              {label} {count}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="mt-5 grid gap-4">
         {filtered.length === 0 ? (
@@ -93,7 +135,7 @@ export function AdminOrdersClient({ orders }: { orders: AdminOrder[] }) {
                 </li>
               ))}
             </ul>
-            <OrderStatusForm orderId={order.id} currentStatus={order.status} />
+            <OrderStatusForm orderId={order.id} currentStatus={order.status} onStatusChange={(status) => updateOrderStatus(order.id, status)} />
           </article>
         ))}
       </div>

@@ -5,7 +5,27 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminOrdersPage() {
   const orders = await prisma.order.findMany({
-    include: { items: true },
+    select: {
+      id: true,
+      orderNumber: true,
+      customerName: true,
+      phone: true,
+      whatsapp: true,
+      houseName: true,
+      street: true,
+      landmark: true,
+      pincode: true,
+      total: true,
+      status: true,
+      items: {
+        select: {
+          id: true,
+          name: true,
+          quantity: true,
+          price: true
+        }
+      }
+    },
     orderBy: { createdAt: "desc" },
     take: 50
   }).catch(() => []);

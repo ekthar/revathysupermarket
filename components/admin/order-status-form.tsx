@@ -5,6 +5,8 @@ import { useState } from "react";
 import { CheckCircle2, Clock, PackageCheck, PackageOpen, Truck, XCircle } from "lucide-react";
 import { statusLabels } from "@/lib/constants";
 import { cn } from "@/lib/utils";
+import { readApiResponse } from "@/lib/client-api";
+import { useToast } from "@/components/toast-provider";
 
 const quickStatuses = [
   { value: "ACCEPTED", label: "Accept", icon: CheckCircle2 },
@@ -15,20 +17,41 @@ const quickStatuses = [
   { value: "CANCELLED", label: "Cancel", icon: XCircle }
 ] as const;
 
-export function OrderStatusForm({ orderId, currentStatus }: { orderId: string; currentStatus: string }) {
+export function OrderStatusForm({
+  orderId,
+  currentStatus,
+  onStatusChange
+}: {
+  orderId: string;
+  currentStatus: string;
+  onStatusChange?: (status: keyof typeof statusLabels) => void;
+}) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [status, setStatus] = useState(currentStatus);
   const [loading, setLoading] = useState(false);
 
   async function update(nextStatus: string) {
+    const previous = status;
     setLoading(true);
     setStatus(nextStatus);
-    await fetch(`/api/admin/orders/${orderId}`, {
+    onStatusChange?.(nextStatus as keyof typeof statusLabels);
+    const response = await fetch(`/api/admin/orders/${orderId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: nextStatus })
     });
+    const data = await readApiResponse<{ error?: string }>(response);
     setLoading(false);
+
+    if (!response.ok) {
+      setStatus(previous);
+      onStatusChange?.(previous as keyof typeof statusLabels);
+      showToast(data.error ?? "Status update failed", "error");
+      return;
+    }
+
+    showToast(`Order marked ${statusLabels[nextStatus as keyof typeof statusLabels]}`, "success");
     router.refresh();
   }
 

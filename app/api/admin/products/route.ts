@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations";
@@ -55,10 +56,12 @@ export async function POST(request: Request) {
         discountPrice: parsed.data.discountPrice,
         stock: parsed.data.stock,
         categoryId: category.id,
-        unit: "1 pc"
+        unit: parsed.data.unit?.trim() || "1 pc",
+        isActive: parsed.data.isActive ?? true
       }
     });
 
+    revalidateTag("products");
     return NextResponse.json({ product });
   } catch (error) {
     console.error("Product create failed", error);
@@ -71,6 +74,23 @@ export async function POST(request: Request) {
 
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const products = await prisma.product.findMany({ include: { category: true }, orderBy: { createdAt: "desc" } });
+  const products = await prisma.product.findMany({
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      description: true,
+      image: true,
+      price: true,
+      discountPrice: true,
+      stock: true,
+      popularity: true,
+      unit: true,
+      isActive: true,
+      createdAt: true,
+      category: { select: { name: true } }
+    },
+    orderBy: { createdAt: "desc" }
+  });
   return NextResponse.json({ products });
 }

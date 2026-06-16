@@ -1,11 +1,11 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
+import { ProductImage } from "@/components/product-image";
 
 export function CartPageClient() {
   const { items, subtotal, removeItem, updateQuantity } = useCart();
@@ -34,7 +34,7 @@ export function CartPageClient() {
           {items.map((item) => (
             <article key={item.id} className="grid grid-cols-[92px_1fr] gap-3 rounded-[1.5rem] border border-white/70 bg-card/95 p-3 shadow-soft dark:border-white/10 sm:grid-cols-[120px_1fr_auto] sm:gap-4 sm:p-4">
               <div className="relative aspect-square overflow-hidden rounded-[1.15rem] bg-muted">
-                <Image src={item.image} alt={item.name} fill className="object-cover" />
+                <ProductImage src={item.image} alt={item.name} />
               </div>
               <div className="min-w-0">
                 <p className="truncate text-[10px] font-black uppercase text-primary sm:text-xs">{item.category}</p>

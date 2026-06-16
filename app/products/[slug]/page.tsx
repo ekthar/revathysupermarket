@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ProductDetailActions } from "@/components/product-detail-actions";
 import { ProductCard } from "@/components/product-card";
@@ -9,6 +8,7 @@ import { formatCurrency } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import type { Product } from "@/lib/types";
 import { safeProductImageUrl } from "@/lib/image";
+import { ProductImage } from "@/components/product-image";
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -84,7 +84,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       />
       <section className="grid gap-8 lg:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted shadow-soft">
-          <Image src={safeProductImageUrl(product.image)} alt={product.name} fill priority className="object-cover" />
+          <ProductImage src={product.image} alt={product.name} />
         </div>
         <div className="flex flex-col justify-center">
           <Badge>{product.category}</Badge>

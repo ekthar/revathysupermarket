@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Plus, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
@@ -8,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
-import { safeProductImageUrl } from "@/lib/image";
 import type { Product } from "@/lib/types";
+import { ProductImage } from "@/components/product-image";
 
 export function ProductCard({ product }: { product: Product }) {
   const { addItem } = useCart();
@@ -22,13 +21,7 @@ export function ProductCard({ product }: { product: Product }) {
     >
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-[1.08] overflow-hidden bg-muted sm:aspect-[4/3]">
-          <Image
-            src={safeProductImageUrl(product.image)}
-            alt={product.name}
-            fill
-            className="object-cover transition duration-500 group-hover:scale-105"
-            sizes="(max-width: 768px) 50vw, 25vw"
-          />
+          <ProductImage src={product.image} alt={product.name} className="transition duration-500 group-hover:scale-105" />
           <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-slate-950/45 to-transparent" />
           {product.discountPrice && (
             <Badge className="absolute left-2.5 top-2.5 bg-lime-fresh px-2 py-0.5 text-[10px] text-slate-950 sm:left-3 sm:top-3 sm:px-3 sm:py-1 sm:text-xs">

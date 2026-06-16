@@ -13,7 +13,14 @@ async function requireAdmin() {
 export async function POST(request: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const parsed = productSchema.safeParse(await request.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid product details." }, { status: 400 });
+  if (!parsed.success) {
+    const issue = parsed.error.issues[0];
+    const field = issue?.path.join(".");
+    return NextResponse.json(
+      { error: field ? `${field}: ${issue.message}` : "Invalid product details." },
+      { status: 400 }
+    );
+  }
   if (!isAllowedProductImageUrl(parsed.data.image)) {
     return NextResponse.json(
       { error: "Use a valid HTTPS image URL from Unsplash or Cloudflare R2. Do not paste an admin page URL." },

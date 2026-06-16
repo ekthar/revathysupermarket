@@ -42,15 +42,14 @@ export function ProductManagementForm() {
     setIsSubmitting(true);
     setMessage("");
     const formData = new FormData(event.currentTarget);
+    const discountPrice = String(formData.get("discountPrice") ?? "").trim();
     const payload = {
       name: String(formData.get("name") ?? ""),
       category: String(formData.get("category") ?? ""),
       price: Number(formData.get("price")),
-      discountPrice: formData.get("discountPrice")
-        ? Number(formData.get("discountPrice"))
-        : undefined,
+      ...(discountPrice ? { discountPrice: Number(discountPrice) } : {}),
       stock: Number(formData.get("stock")),
-      image: String(formData.get("image") ?? ""),
+      image: String(formData.get("image") ?? "").trim(),
       description: String(formData.get("description") ?? "")
     };
 

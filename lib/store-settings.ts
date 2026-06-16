@@ -29,7 +29,7 @@ export const defaultStoreSettings: StoreSettings = {
 
 function parseRadius(value?: string) {
   const radius = Number(value);
-  return Number.isFinite(radius) && radius > 0 ? Math.min(radius, 25) : defaultStoreSettings.deliveryRadiusKm;
+  return Number.isFinite(radius) && radius > 0 ? Math.min(radius, 50) : defaultStoreSettings.deliveryRadiusKm;
 }
 
 function parsePincodes(value?: string) {

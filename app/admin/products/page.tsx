@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { ProductManagementForm } from "@/components/admin/product-management-form";
 import { AdminProductsClient, type AdminProduct } from "@/components/admin/admin-products-client";
+import { ProductSpreadsheetManager } from "@/components/admin/product-spreadsheet-manager";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +39,7 @@ export default async function AdminProductsPage() {
   return (
     <div>
       <ProductManagementForm />
+      <ProductSpreadsheetManager products={products} />
       <AdminProductsClient products={products} />
     </div>
   );

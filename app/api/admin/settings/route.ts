@@ -9,7 +9,7 @@ const settingsSchema = z.object({
   address: z.string().min(3),
   phone: z.string().min(6),
   whatsapp: z.string().min(6),
-  deliveryRadiusKm: z.coerce.number().min(1).max(25),
+  deliveryRadiusKm: z.coerce.number().min(1).max(50),
   serviceablePincodes: z
     .array(z.string().regex(/^\d{6}$/))
     .min(1),

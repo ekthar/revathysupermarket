@@ -8,6 +8,7 @@ import { getProductBySlug, products } from "@/lib/products";
 import { formatCurrency } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import type { Product } from "@/lib/types";
+import { safeProductImageUrl } from "@/lib/image";
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -48,7 +49,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     openGraph: {
       title: product.name,
       description: product.description,
-      images: [product.image]
+      images: [safeProductImageUrl(product.image)]
     }
   };
 }
@@ -70,7 +71,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
             "@context": "https://schema.org",
             "@type": "Product",
             name: product.name,
-            image: product.image,
+            image: safeProductImageUrl(product.image),
             description: product.description,
             offers: {
               "@type": "Offer",
@@ -83,7 +84,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       />
       <section className="grid gap-8 lg:grid-cols-2">
         <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted shadow-soft">
-          <Image src={product.image} alt={product.name} fill priority className="object-cover" />
+          <Image src={safeProductImageUrl(product.image)} alt={product.name} fill priority className="object-cover" />
         </div>
         <div className="flex flex-col justify-center">
           <Badge>{product.category}</Badge>

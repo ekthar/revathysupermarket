@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
+import { safeProductImageUrl } from "@/lib/image";
 import type { Product } from "@/lib/types";
 
 export function ProductCard({ product }: { product: Product }) {
@@ -22,7 +23,7 @@ export function ProductCard({ product }: { product: Product }) {
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-[1.08] overflow-hidden bg-muted sm:aspect-[4/3]">
           <Image
-            src={product.image}
+            src={safeProductImageUrl(product.image)}
             alt={product.name}
             fill
             className="object-cover transition duration-500 group-hover:scale-105"

@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
+import { isAllowedProductImageUrl } from "@/lib/image";
 
 async function requireAdmin() {
   const session = await auth();
@@ -13,6 +14,12 @@ export async function POST(request: Request) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const parsed = productSchema.safeParse(await request.json());
   if (!parsed.success) return NextResponse.json({ error: "Invalid product details." }, { status: 400 });
+  if (!isAllowedProductImageUrl(parsed.data.image)) {
+    return NextResponse.json(
+      { error: "Use a valid HTTPS image URL from Unsplash or Cloudflare R2. Do not paste an admin page URL." },
+      { status: 400 }
+    );
+  }
 
   const category = await prisma.category.upsert({
     where: { slug: slugify(parsed.data.category) },

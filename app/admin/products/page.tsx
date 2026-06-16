@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { products as fallbackProducts } from "@/lib/products";
 import { formatCurrency } from "@/lib/utils";
 import { ProductManagementForm } from "@/components/admin/product-management-form";
+import { safeProductImageUrl } from "@/lib/image";
 
 export const dynamic = "force-dynamic";
 
@@ -60,7 +61,7 @@ export default async function AdminProductsPage() {
         {products.map((product) => (
           <article key={product.id} className="grid grid-cols-[84px_1fr] gap-3 rounded-[1.5rem] border border-white/70 bg-card/95 p-3 shadow-soft dark:border-white/10">
             <div className="relative aspect-square overflow-hidden rounded-[1.15rem] bg-muted">
-              <Image src={product.image} alt={product.name} fill className="object-cover" />
+              <Image src={safeProductImageUrl(product.image)} alt={product.name} fill className="object-cover" />
             </div>
             <div className="min-w-0">
               <p className="truncate text-[10px] font-black uppercase text-primary">{product.category}</p>

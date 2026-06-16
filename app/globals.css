@@ -1,0 +1,64 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 100%;
+  --foreground: 217 33% 17%;
+  --card: 0 0% 100%;
+  --card-foreground: 217 33% 17%;
+  --muted: 152 35% 95%;
+  --muted-foreground: 215 16% 47%;
+  --border: 152 23% 88%;
+  --input: 152 23% 88%;
+  --ring: 158 80% 30%;
+}
+
+.dark {
+  --background: 220 31% 8%;
+  --foreground: 210 40% 96%;
+  --card: 220 28% 12%;
+  --card-foreground: 210 40% 96%;
+  --muted: 219 23% 18%;
+  --muted-foreground: 215 20% 70%;
+  --border: 217 19% 23%;
+  --input: 217 19% 23%;
+  --ring: 74 64% 49%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(167, 209, 41, 0.13), transparent 30rem),
+    linear-gradient(180deg, rgba(15, 138, 95, 0.04), transparent 22rem),
+    hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+body::selection {
+  background: #a7d129;
+  color: #1e293b;
+}
+
+.glass {
+  background: color-mix(in srgb, hsl(var(--card)) 80%, transparent);
+  border: 1px solid color-mix(in srgb, hsl(var(--border)) 70%, transparent);
+  backdrop-filter: blur(18px);
+}
+
+.no-scrollbar {
+  scrollbar-width: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

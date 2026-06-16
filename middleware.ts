@@ -13,11 +13,12 @@ export default auth((request) => {
   }
 
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");
+  const isAdminLoginRoute = request.nextUrl.pathname === "/admin/login";
   const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
   const user = request.auth?.user;
 
-  if (isAdminRoute && user?.role !== "ADMIN") {
-    const loginUrl = new URL("/login", request.nextUrl);
+  if (isAdminRoute && !isAdminLoginRoute && user?.role !== "ADMIN") {
+    const loginUrl = new URL("/admin/login", request.nextUrl);
     loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
     return Response.redirect(loginUrl);
   }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Home, Package, Settings, ShoppingBasket, Users } from "lucide-react";
+import { auth } from "@/auth";
 
 const adminNav = [
   { href: "/admin", label: "Dashboard", icon: ShoppingBasket },
@@ -9,7 +10,10 @@ const adminNav = [
   { href: "/admin/settings", label: "Settings", icon: Settings }
 ];
 
-export default function AdminLayout({ children }: { children: React.ReactNode }) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  if (session?.user?.role !== "ADMIN") return <>{children}</>;
+
   return (
     <main className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:grid-cols-[250px_1fr] lg:px-8">
       <aside className="h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 lg:sticky lg:top-24">

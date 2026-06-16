@@ -1,4 +1,5 @@
 import { SITE } from "@/lib/constants";
+import { deliverySummary, serviceablePincodes } from "@/lib/delivery";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { MapPin, Megaphone, Save, Settings } from "lucide-react";
@@ -22,6 +23,7 @@ export default function AdminSettingsPage() {
         <Input defaultValue={SITE.phone} placeholder="Phone number" className="h-12 rounded-2xl" />
         <Input defaultValue={SITE.whatsapp} placeholder="WhatsApp number" className="h-12 rounded-2xl" />
         <Input defaultValue={String(SITE.deliveryRadiusKm)} placeholder="Delivery radius" className="h-12 rounded-2xl" />
+        <Input defaultValue={serviceablePincodes().join(", ")} placeholder="Serviceable pincodes" className="h-12 rounded-2xl" />
         <Input defaultValue={SITE.address} placeholder="Address" className="h-12 rounded-2xl md:col-span-2" />
         <Input placeholder="Google Maps place link" className="h-12 rounded-2xl md:col-span-2" />
         <Input placeholder="Instagram URL" className="h-12 rounded-2xl" />
@@ -52,7 +54,7 @@ export default function AdminSettingsPage() {
         <MapPin className="h-6 w-6 text-lime-fresh" />
         <h3 className="mt-3 font-display text-2xl font-black">Delivery radius</h3>
         <p className="mt-2 text-sm leading-6 text-white/80">
-          Checkout uses the store coordinates and blocks delivery beyond {SITE.deliveryRadiusKm} KM.
+          Checkout uses store coordinates, GPS distance, and pincode validation. {deliverySummary()}
         </p>
       </div>
     </div>

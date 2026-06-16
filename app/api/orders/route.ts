@@ -6,6 +6,7 @@ import { rateLimit } from "@/lib/rate-limit";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { checkoutSchema } from "@/lib/validations";
 import { SITE } from "@/lib/constants";
+import { isServiceablePincode } from "@/lib/delivery";
 
 function orderNumber() {
   const date = new Date();
@@ -34,6 +35,13 @@ export async function POST(request: Request) {
     if (!parsed.success) return NextResponse.json({ error: "Please check your checkout details." }, { status: 400 });
 
     const data = parsed.data;
+    if (!isServiceablePincode(data.pincode)) {
+      return NextResponse.json(
+        { error: "Sorry, this pincode is not currently serviceable by Revathy Supermarket." },
+        { status: 400 }
+      );
+    }
+
     const distanceKm = calculateDistanceKm({ lat: data.latitude, lng: data.longitude });
     if (distanceKm > SITE.deliveryRadiusKm) {
       return NextResponse.json(
@@ -76,6 +84,21 @@ export async function POST(request: Request) {
       },
       include: { items: true }
     });
+
+    if (session?.user?.id) {
+      await prisma.address.create({
+        data: {
+          userId: session.user.id,
+          label: "Home",
+          houseName: data.houseName,
+          street: data.street,
+          landmark: data.landmark,
+          pincode: data.pincode,
+          latitude: data.latitude,
+          longitude: data.longitude
+        }
+      }).catch(() => null);
+    }
 
     const address = `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`;
     const whatsappUrl = buildWhatsAppUrl({

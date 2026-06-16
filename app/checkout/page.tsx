@@ -13,7 +13,7 @@ export default function CheckoutPage() {
         <p className="text-xs font-black uppercase text-primary">Secure local order</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">Checkout</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
-        Add your delivery details. Your location is checked against the 5 KM delivery radius before the order is submitted.
+          Add your address, serviceable pincode, and GPS location. Orders submit only when you are within the 5 KM delivery radius.
         </p>
       </section>
       <CheckoutForm />

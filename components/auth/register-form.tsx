@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { readApiResponse } from "@/lib/client-api";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -20,7 +21,7 @@ export function RegisterForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(form)
     });
-    const data = await response.json();
+    const data = await readApiResponse<{ error?: string }>(response);
     setLoading(false);
     if (!response.ok) {
       setMessage(data.error ?? "Registration failed.");

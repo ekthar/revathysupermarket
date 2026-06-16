@@ -1,4 +1,4 @@
-import { unstable_noStore as noStore } from "next/cache";
+import { unstable_cache, unstable_noStore as noStore } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { SITE } from "@/lib/constants";
 import { serviceablePincodes } from "@/lib/delivery";
@@ -76,6 +76,12 @@ export async function getStoreSettings(): Promise<StoreSettings> {
   noStore();
   return readStoreSettings();
 }
+
+export const getPublicStoreSettings = unstable_cache(
+  readStoreSettings,
+  ["public-store-settings"],
+  { revalidate: 60, tags: ["homepage", "store-settings"] }
+);
 
 export async function getStoreSettingsForApi(): Promise<StoreSettings> {
   return readStoreSettings();

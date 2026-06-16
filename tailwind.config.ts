@@ -23,6 +23,12 @@ const config: Config = {
         lime: {
           fresh: "#A7D129"
         },
+        berry: {
+          50: "#FFF1F4",
+          100: "#FFE0E8",
+          600: "#C0265A",
+          700: "#9F1D4B"
+        },
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))"

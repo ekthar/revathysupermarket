@@ -64,6 +64,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     });
     revalidateTag("products");
+    revalidateTag("homepage");
     return NextResponse.json({ product });
   } catch (error) {
     console.error("Product update failed", error);
@@ -84,6 +85,7 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
       select: { id: true, isActive: true }
     });
     revalidateTag("products");
+    revalidateTag("homepage");
     return NextResponse.json({ ok: true, product });
   } catch (error) {
     console.error("Product delete failed", error);

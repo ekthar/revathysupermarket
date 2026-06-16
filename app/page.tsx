@@ -1,26 +1,35 @@
 import Link from "next/link";
-import { ArrowRight, Bike, Clock, CreditCard, MapPin, MessageCircle, ReceiptText, ShieldCheck } from "lucide-react";
+import { unstable_cache } from "next/cache";
+import { Bike, MapPin, MessageCircle, PackageCheck, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
 import { LocationMap } from "@/components/location-map";
+import { HomeHero } from "@/components/home/home-hero";
+import { HowItWorksCard, MotionCategoryCard, RevealSection } from "@/components/home/home-motion";
 import { categories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
-import { getStoreSettings } from "@/lib/store-settings";
+import { getPublicStoreSettings } from "@/lib/store-settings";
+import type { Product } from "@/lib/types";
 
 const bestSellers = products.sort((a, b) => b.popularity - a.popularity).slice(0, 8);
 const defaultHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
-export default async function HomePage() {
-  const [settings, activeBanner, dbFeatured] = await Promise.all([
-    getStoreSettings(),
+const getHomepageBanner = unstable_cache(
+  async () =>
     prisma.banner.findFirst({
       where: { isActive: true },
       orderBy: { createdAt: "desc" },
       select: { title: true, subtitle: true, image: true, href: true }
     }).catch(() => null),
+  ["homepage-banner"],
+  { revalidate: 60, tags: ["homepage", "banners"] }
+);
+
+const getHomepageFeaturedProducts = unstable_cache(
+  async () =>
     prisma.product.findMany({
       where: { isActive: true, isFeatured: true },
       select: {
@@ -39,14 +48,32 @@ export default async function HomePage() {
       },
       orderBy: [{ popularity: "desc" }, { createdAt: "desc" }],
       take: 8
-    }).catch(() => [])
+    }).catch(() => []),
+  ["homepage-featured-products"],
+  { revalidate: 60, tags: ["homepage", "products"] }
+);
+
+const categoryAccents = [
+  "bg-primary/10 text-primary ring-primary/5",
+  "bg-lime-fresh/25 text-primary ring-lime-fresh/10",
+  "bg-berry-50 text-berry-700 ring-berry-100",
+  "bg-sky-50 text-sky-700 ring-sky-100",
+  "bg-amber-50 text-amber-700 ring-amber-100"
+];
+
+export default async function HomePage() {
+  const [settings, activeBanner, dbFeatured] = await Promise.all([
+    getPublicStoreSettings(),
+    getHomepageBanner(),
+    getHomepageFeaturedProducts()
   ]);
+
   const featuredProducts = dbFeatured.length > 0
     ? dbFeatured.map((product) => ({
         id: product.id,
         slug: product.slug,
         name: product.name,
-        category: product.category.name as (typeof products)[number]["category"],
+        category: product.category.name as Product["category"],
         price: Number(product.price),
         discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
         image: product.image,
@@ -57,6 +84,7 @@ export default async function HomePage() {
         isFeatured: product.isFeatured
       }))
     : bestSellers;
+
   const heroImage = activeBanner?.image || defaultHeroImage;
   const heroTitle = activeBanner?.title || "Fresh Groceries Delivered To Your Doorstep";
   const heroSubtitle = activeBanner?.subtitle || "Premium fruits, vegetables, dairy, snacks, and essentials from Revathy Supermarket. Pay safely by COD or UPI on delivery.";
@@ -64,63 +92,34 @@ export default async function HomePage() {
 
   return (
     <main>
-      <section className="relative overflow-hidden rounded-b-[2.5rem] sm:rounded-b-[4rem]">
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${heroImage}")` }}>
-          <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.45),rgba(15,23,42,0.82)),linear-gradient(90deg,rgba(15,138,95,0.85),rgba(15,23,42,0.08))]" />
-        </div>
-        <div className="relative mx-auto flex min-h-[680px] max-w-7xl items-end px-4 pb-28 pt-16 sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:py-20 lg:px-8">
-          <div className="max-w-3xl text-white">
-            <Badge className="bg-white/15 text-white shadow-sm backdrop-blur">Neyyattinkara delivery within {settings.deliveryRadiusKm} KM</Badge>
-            <h1 className="mt-5 font-display text-[2.75rem] font-black leading-[0.98] sm:text-7xl">
-              {heroTitle}
-            </h1>
-            <p className="mt-5 max-w-2xl text-base leading-7 text-white/85 sm:text-lg">
-              {heroSubtitle}
-            </p>
-            <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
-              <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
-                <Link href={heroHref}>
-                  Start shopping <ArrowRight className="h-5 w-5" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" className="w-full bg-white/10 text-white backdrop-blur hover:bg-white/20 sm:w-auto">
-                <Link href="/cart">View cart</Link>
-              </Button>
-            </div>
-            <div className="mt-7 grid grid-cols-3 gap-2 rounded-[1.5rem] border border-white/30 bg-white/16 p-2 backdrop-blur-xl">
-              {[
-                ["50+", "Products"],
-                [`${settings.deliveryRadiusKm} KM`, "Delivery"],
-                ["COD", "Payment"]
-              ].map(([value, label]) => (
-                <div key={label} className="rounded-2xl bg-white/18 px-3 py-3 text-center shadow-sm">
-                  <p className="font-display text-lg font-black">{value}</p>
-                  <p className="mt-1 text-[11px] font-bold text-white/70">{label}</p>
-                </div>
-              ))}
+      <HomeHero
+        title={heroTitle}
+        subtitle={heroSubtitle}
+        href={heroHref}
+        image={heroImage}
+        deliveryRadiusKm={settings.deliveryRadiusKm}
+        gstEnabled={settings.gstRatePercent > 0 || Boolean(settings.gstin)}
+      />
+
+      <RevealSection className="relative mx-auto -mt-20 grid max-w-7xl gap-3 px-4 pb-10 sm:px-6 md:grid-cols-3 lg:px-8">
+        {[
+          { icon: Bike, title: `${settings.deliveryRadiusKm} KM Delivery`, text: "Fast local delivery from Neyyattinkara." },
+          { icon: ShieldCheck, title: "Pay on Delivery", text: "Choose COD or UPI when groceries arrive." },
+          { icon: PackageCheck, title: "Manual Care", text: "Store staff verify, pack, and process every order." }
+        ].map((item) => (
+          <div key={item.title} className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-white/95 p-4 text-slate-950 shadow-premium backdrop-blur md:block md:p-5 dark:border-white/10 dark:bg-slate-900/92 dark:text-white">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+              <item.icon className="h-6 w-6 text-primary" />
+            </span>
+            <div>
+              <h2 className="font-display text-base font-bold md:mt-4 md:text-xl">{item.title}</h2>
+              <p className="mt-1 text-xs leading-5 text-slate-600 md:mt-2 md:text-sm dark:text-white/70">{item.text}</p>
             </div>
           </div>
-        </div>
-        <div className="relative mx-auto -mt-20 grid max-w-7xl gap-3 px-4 pb-10 sm:px-6 md:grid-cols-3 lg:px-8">
-          {[
-            { icon: Bike, title: `${settings.deliveryRadiusKm} KM Delivery`, text: "Fast local delivery from Neyyattinkara." },
-            { icon: ShieldCheck, title: "Pay on Delivery", text: "Choose COD or UPI when groceries arrive." },
-            { icon: Clock, title: "Manual Care", text: "Store staff verify, pack, and process every order." }
-          ].map((item) => (
-            <div key={item.title} className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-white/95 p-4 text-slate-950 shadow-premium backdrop-blur md:block md:p-5 dark:border-white/10 dark:bg-slate-900/92 dark:text-white">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                <item.icon className="h-6 w-6 text-primary" />
-              </span>
-              <div>
-                <h2 className="font-display text-base font-bold md:mt-4 md:text-xl">{item.title}</h2>
-                <p className="mt-1 text-xs leading-5 text-slate-600 md:mt-2 md:text-sm dark:text-white/70">{item.text}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
+        ))}
+      </RevealSection>
 
-      <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+      <RevealSection className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="flex items-end justify-between gap-5">
           <div>
             <Badge>Featured categories</Badge>
@@ -131,23 +130,18 @@ export default async function HomePage() {
           </Button>
         </div>
         <div className="no-scrollbar -mx-4 mt-6 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:overflow-visible sm:px-0 md:grid-cols-3 lg:grid-cols-5">
-          {categories.map((category) => (
-            <Link
+          {categories.map((category, index) => (
+            <MotionCategoryCard
               key={category}
+              category={category}
               href={`/products?category=${encodeURIComponent(category)}`}
-              className="min-w-[148px] snap-start rounded-[1.5rem] border border-white/70 bg-card/90 p-4 shadow-soft transition hover:-translate-y-1 hover:border-primary/40 dark:border-white/10 sm:min-w-0 sm:p-5"
-            >
-              <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 font-display text-lg font-black text-primary ring-8 ring-primary/5">
-                {category.slice(0, 2)}
-              </span>
-              <h3 className="mt-4 text-sm font-black sm:text-base">{category}</h3>
-              <p className="mt-1 text-xs text-muted-foreground sm:text-sm">Fresh stock daily</p>
-            </Link>
+              accent={categoryAccents[index % categoryAccents.length]}
+            />
           ))}
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="bg-[linear-gradient(180deg,rgba(15,138,95,0.07),rgba(167,209,41,0.08))] py-12 sm:py-14">
+      <RevealSection className="bg-[linear-gradient(180deg,rgba(15,138,95,0.07),rgba(167,209,41,0.08))] py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-5">
             <div>
@@ -161,27 +155,19 @@ export default async function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </RevealSection>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-2 lg:px-8">
+      <RevealSection className="mx-auto grid max-w-7xl gap-8 px-4 py-12 sm:px-6 sm:py-14 lg:grid-cols-2 lg:px-8">
         <div className="space-y-6">
-          <Badge>Why shop with Revathy</Badge>
-          <h2 className="font-display text-3xl font-black leading-tight">Clear ordering, local care, useful bills</h2>
+          <Badge>How ordering works</Badge>
+          <h2 className="font-display text-3xl font-black leading-tight">Fast grocery ordering with store staff care</h2>
           {[
-            { icon: Bike, title: `${settings.deliveryRadiusKm} KM service area`, text: "Checkout verifies pincode and live GPS before the order is submitted." },
-            { icon: CreditCard, title: "COD and UPI on delivery", text: "No online payment gateway. Pay safely when groceries arrive." },
-            { icon: ReceiptText, title: settings.gstRatePercent > 0 ? "GST bill available" : "Clean order bill", text: settings.gstin ? `Bills include GSTIN ${settings.gstin}.` : "Every order gets a downloadable bill and print/PDF option." },
-            { icon: MessageCircle, title: "WhatsApp support", text: "Send a clean order confirmation to the store after checkout." }
-          ].map((item) => (
-            <div key={item.title} className="rounded-[1.5rem] border border-white/70 bg-card/90 p-5 shadow-soft dark:border-white/10">
-              <div className="flex items-center gap-3">
-                <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-fresh/20">
-                  <item.icon className="h-5 w-5 text-primary" />
-                </span>
-                <p className="font-black">{item.title}</p>
-              </div>
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">{item.text}</p>
-            </div>
+            { icon: "shopping" as const, title: "Choose groceries", text: "Browse categories, featured picks, and local essentials made for mobile shopping." },
+            { icon: "location" as const, title: `${settings.deliveryRadiusKm} KM verified delivery`, text: "Checkout checks serviceable pincode and live GPS before the order is submitted." },
+            { icon: "payment" as const, title: "Pay on delivery", text: "No online payment gateway. Pay by COD or UPI when groceries arrive." },
+            { icon: "receipt" as const, title: settings.gstRatePercent > 0 ? "GST bill available" : "Clean order bill", text: settings.gstin ? `Bills include GSTIN ${settings.gstin}.` : "Every order gets a downloadable bill and print/PDF option." }
+          ].map((item, index) => (
+            <HowItWorksCard key={item.title} {...item} index={index} />
           ))}
         </div>
         <div className="space-y-5">
@@ -206,8 +192,20 @@ export default async function HomePage() {
           <div className="h-96 overflow-hidden rounded-[1.75rem] border border-white/70 shadow-soft dark:border-white/10">
             <LocationMap deliveryRadiusKm={settings.deliveryRadiusKm} />
           </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Button asChild className="h-12 rounded-2xl">
+              <a href={settings.googleMapsUrl || "https://www.google.com/maps/search/?api=1&query=Revathy%20Supermarket%20Neyyattinkara"} target="_blank" rel="noreferrer">
+                <MapPin className="h-4 w-4" /> Get directions
+              </a>
+            </Button>
+            <Button asChild variant="outline" className="h-12 rounded-2xl">
+              <a href={`https://wa.me/${settings.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer">
+                <MessageCircle className="h-4 w-4" /> WhatsApp store
+              </a>
+            </Button>
+          </div>
         </div>
-      </section>
+      </RevealSection>
     </main>
   );
 }

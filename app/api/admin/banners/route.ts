@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -30,6 +30,8 @@ export async function POST(request: Request) {
     const banner = await prisma.banner.create({ data: parsed.data });
     revalidatePath("/");
     revalidatePath("/admin/settings");
+    revalidateTag("homepage");
+    revalidateTag("banners");
     return NextResponse.json({ banner });
   } catch (error) {
     console.error("Banner create failed", error);

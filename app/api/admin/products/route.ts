@@ -63,6 +63,7 @@ export async function POST(request: Request) {
     });
 
     revalidateTag("products");
+    revalidateTag("homepage");
     return NextResponse.json({ product });
   } catch (error) {
     console.error("Product create failed", error);

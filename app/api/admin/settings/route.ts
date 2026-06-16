@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { getStoreSettingsForApi, saveStoreSettings } from "@/lib/store-settings";
@@ -44,6 +44,8 @@ export async function PUT(request: Request) {
     revalidatePath("/");
     revalidatePath("/checkout");
     revalidatePath("/admin/settings");
+    revalidateTag("homepage");
+    revalidateTag("store-settings");
     return NextResponse.json({ settings: parsed.data });
   } catch (error) {
     console.error("Settings save failed", error);

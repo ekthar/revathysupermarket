@@ -20,6 +20,7 @@ export async function PATCH(request: Request) {
     if (result.errors.length > 0) return NextResponse.json({ error: "Some rows are invalid.", ...result }, { status: 400 });
 
     revalidateTag("products");
+    revalidateTag("homepage");
     return NextResponse.json(result);
   } catch (error) {
     console.error("Product bulk update failed", error);

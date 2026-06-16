@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -26,6 +26,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     const banner = await prisma.banner.update({ where: { id }, data: parsed.data });
     revalidatePath("/");
     revalidatePath("/admin/settings");
+    revalidateTag("homepage");
+    revalidateTag("banners");
     return NextResponse.json({ banner });
   } catch (error) {
     console.error("Banner update failed", error);
@@ -40,6 +42,8 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     await prisma.banner.delete({ where: { id } });
     revalidatePath("/");
     revalidatePath("/admin/settings");
+    revalidateTag("homepage");
+    revalidateTag("banners");
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Banner delete failed", error);

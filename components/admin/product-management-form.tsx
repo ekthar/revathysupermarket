@@ -8,6 +8,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { categories } from "@/lib/products";
 
+async function readResponse(response: Response) {
+  const text = await response.text();
+  if (!text) return {};
+  try {
+    return JSON.parse(text) as { error?: string; product?: { name?: string }; url?: string };
+  } catch {
+    return { error: text };
+  }
+}
+
 export function ProductManagementForm() {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -25,11 +35,16 @@ export function ProductManagementForm() {
       method: "POST",
       body: formData
     });
-    const data = await response.json();
+    const data = await readResponse(response);
     setIsUploading(false);
 
     if (!response.ok) {
       setMessage(data.error ?? "Image upload failed. Paste an image URL instead.");
+      return;
+    }
+
+    if (!data.url) {
+      setMessage("Image upload did not return a URL. Paste an image URL instead.");
       return;
     }
 
@@ -50,7 +65,7 @@ export function ProductManagementForm() {
       price: Number(formData.get("price")),
       ...(discountPrice ? { discountPrice: Number(discountPrice) } : {}),
       stock: Number(formData.get("stock")),
-      image: String(formData.get("image") ?? "").trim(),
+      image: String(formData.get("image") ?? "").trim() || undefined,
       description: String(formData.get("description") ?? "")
     };
 
@@ -59,7 +74,7 @@ export function ProductManagementForm() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload)
     });
-    const data = await response.json();
+    const data = await readResponse(response);
     setIsSubmitting(false);
 
     if (!response.ok) {
@@ -69,7 +84,7 @@ export function ProductManagementForm() {
 
     form.reset();
     setImageUrl("");
-    setMessage(`Product added: ${data.product.name}`);
+    setMessage(`Product added: ${data.product?.name ?? payload.name}`);
     router.refresh();
   }
 
@@ -89,7 +104,7 @@ export function ProductManagementForm() {
       <Input name="price" placeholder="Price" type="number" min="1" step="1" required className="h-12 rounded-2xl" />
       <Input name="discountPrice" placeholder="Discount price" type="number" min="1" step="1" className="h-12 rounded-2xl" />
       <Input name="stock" placeholder="Stock" type="number" min="0" step="1" required className="h-12 rounded-2xl" />
-      <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Cloudflare R2 image URL" type="url" required className="h-12 rounded-2xl" />
+      <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Cloudflare R2 image URL or leave blank" type="url" className="h-12 rounded-2xl" />
       <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-primary/40 bg-primary/5 p-4 text-center md:col-span-3">
         <ImagePlus className="h-7 w-7 text-primary" />
         <span className="mt-2 text-sm font-black">{isUploading ? "Uploading image" : "Tap to upload product image"}</span>

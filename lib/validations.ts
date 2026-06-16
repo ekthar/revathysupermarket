@@ -39,7 +39,7 @@ export const productSchema = z.object({
   discountPrice: z.coerce.number().positive().optional(),
   stock: z.coerce.number().int().min(0),
   description: z.string().min(10),
-  image: z.string().url()
+  image: z.string().trim().optional()
 });
 
 export const orderStatusSchema = z.object({

@@ -39,9 +39,10 @@ export function ProductManagementForm() {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setIsSubmitting(true);
     setMessage("");
-    const formData = new FormData(event.currentTarget);
+    const formData = new FormData(form);
     const discountPrice = String(formData.get("discountPrice") ?? "").trim();
     const payload = {
       name: String(formData.get("name") ?? ""),
@@ -66,7 +67,7 @@ export function ProductManagementForm() {
       return;
     }
 
-    event.currentTarget.reset();
+    form.reset();
     setImageUrl("");
     setMessage(`Product added: ${data.product.name}`);
     router.refresh();

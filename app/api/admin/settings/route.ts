@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
-import { getStoreSettings, saveStoreSettings } from "@/lib/store-settings";
+import { getStoreSettingsForApi, saveStoreSettings } from "@/lib/store-settings";
 
 const settingsSchema = z.object({
   storeName: z.string().min(2),
@@ -25,7 +25,7 @@ async function requireAdmin() {
 
 export async function GET() {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  return NextResponse.json({ settings: await getStoreSettings() });
+  return NextResponse.json({ settings: await getStoreSettingsForApi() });
 }
 
 export async function PUT(request: Request) {

@@ -72,7 +72,7 @@ export function CartPageClient() {
             </div>
           </div>
           <p className="mt-5 rounded-2xl bg-muted p-4 text-sm leading-6 text-muted-foreground">
-            Delivery is available within 5 KM of Revathy Supermarket. Payment is collected by COD or UPI on delivery.
+            Delivery radius is verified at checkout using your saved store settings. Payment is collected by COD or UPI on delivery.
           </p>
           <Button asChild className="mt-5 w-full" size="lg">
             <Link href="/checkout">Checkout</Link>

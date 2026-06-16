@@ -15,8 +15,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (session?.user?.role !== "ADMIN") return <>{children}</>;
 
   return (
-    <main className="mx-auto grid max-w-7xl gap-5 px-4 py-5 sm:px-6 sm:py-8 lg:grid-cols-[250px_1fr] lg:px-8">
-      <aside className="h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 lg:sticky lg:top-24">
+    <main className="mx-auto grid max-w-7xl gap-5 overflow-x-hidden px-3 py-5 sm:px-6 sm:py-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:px-8">
+      <aside className="min-w-0 h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 lg:sticky lg:top-24">
         <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-4">
           <p className="text-xs font-black uppercase text-primary">Store staff</p>
           <h1 className="mt-1 font-display text-2xl font-black">Admin</h1>
@@ -34,7 +34,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           ))}
         </nav>
       </aside>
-      <section>{children}</section>
+      <section className="min-w-0 overflow-hidden">{children}</section>
     </main>
   );
 }

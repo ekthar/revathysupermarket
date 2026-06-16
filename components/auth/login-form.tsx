@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 
 type Mode = "login" | "register";
 
-const highlights = ["Fresh local delivery", "COD & UPI on delivery", "5 KM Neyyattinkara service"];
+const highlights = ["Fresh local delivery", "COD & UPI on delivery", "Neyyattinkara service"];
 
 export function LoginForm({
   callbackUrl = "/dashboard",

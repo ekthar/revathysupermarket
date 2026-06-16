@@ -246,7 +246,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
         </div>
       )}
 
-      <div className="mt-4 overflow-auto rounded-[1.25rem] border border-border">
+      <div className="-mx-4 mt-4 max-w-[calc(100vw-1.5rem)] overflow-x-auto rounded-[1.25rem] border border-border sm:mx-0 sm:max-w-full">
         <table className="min-w-[1180px] border-collapse text-sm">
           <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
             <tr>

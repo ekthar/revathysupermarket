@@ -23,7 +23,7 @@ export const metadata: Metadata = {
     "Order fresh groceries, vegetables, fruits, dairy, snacks, and essentials from Revathy Supermarket in Neyyattinkara with COD and UPI on delivery.",
   openGraph: {
     title: "Revathy Supermarket",
-    description: "Fresh groceries delivered within 5 KM of Neyyattinkara.",
+    description: "Fresh groceries delivered from Revathy Supermarket in Neyyattinkara.",
     url: SITE.url,
     siteName: "Revathy Supermarket",
     locale: "en_IN",

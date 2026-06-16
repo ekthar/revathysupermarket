@@ -123,7 +123,7 @@ export function CheckoutForm({
       return;
     }
     if (!locationOk) {
-      setMessage(isOutsideRadius ? "Sorry, delivery is currently available only within 5 KM of Revathy Supermarket." : "Please verify your GPS location before placing the order.");
+      setMessage(isOutsideRadius ? `Sorry, delivery is currently available only within ${deliveryRadiusKm} KM of Revathy Supermarket.` : "Please verify your GPS location before placing the order.");
       showToast("Location verification required", "error");
       return;
     }
@@ -230,7 +230,7 @@ export function CheckoutForm({
                 className={isOutsideRadius ? "mt-3 rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600" : "mt-3 rounded-2xl bg-primary/10 p-3 text-sm font-bold text-primary"}
               >
                 {isOutsideRadius
-                  ? "Sorry, delivery is currently available only within 5 KM of Revathy Supermarket."
+                  ? `Sorry, delivery is currently available only within ${deliveryRadiusKm} KM of Revathy Supermarket.`
                   : `Distance from store: ${distance.toFixed(2)} KM`}
               </motion.p>
             )}

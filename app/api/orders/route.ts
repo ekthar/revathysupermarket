@@ -7,7 +7,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { checkoutSchema } from "@/lib/validations";
 import { SITE } from "@/lib/constants";
 import { isServiceablePincode } from "@/lib/delivery";
-import { getStoreSettings } from "@/lib/store-settings";
+import { getStoreSettingsForApi } from "@/lib/store-settings";
 
 function orderNumber() {
   const date = new Date();
@@ -31,7 +31,7 @@ export async function POST(request: Request) {
     if (limit.limited) return NextResponse.json({ error: "Too many order attempts. Please try again shortly." }, { status: 429 });
 
     const session = await auth();
-    const settings = await getStoreSettings();
+    const settings = await getStoreSettingsForApi();
     const body = await request.json();
     const parsed = checkoutSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: "Please check your checkout details." }, { status: 400 });
@@ -53,6 +53,14 @@ export async function POST(request: Request) {
     }
 
     const subtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const requestedProductIds = data.items.map((item) => item.productId).filter(Boolean);
+    const existingProducts = requestedProductIds.length > 0
+      ? await prisma.product.findMany({
+          where: { id: { in: requestedProductIds } },
+          select: { id: true }
+        })
+      : [];
+    const existingProductIds = new Set(existingProducts.map((product) => product.id));
     const number = await createOrderNumber();
     const order = await prisma.order.create({
       data: {
@@ -74,7 +82,7 @@ export async function POST(request: Request) {
         total: subtotal,
         items: {
           create: data.items.map((item) => ({
-            productId: item.productId,
+            productId: existingProductIds.has(item.productId) ? item.productId : null,
             name: item.name,
             quantity: item.quantity,
             price: item.price

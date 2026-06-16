@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Revathy Supermarket",
     short_name: "Revathy",
-    description: "Fresh groceries delivered within 5 KM of Neyyattinkara.",
+    description: "Fresh groceries delivered from Revathy Supermarket in Neyyattinkara.",
     start_url: "/",
     display: "standalone",
     background_color: "#FFFFFF",

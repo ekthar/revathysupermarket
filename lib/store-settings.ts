@@ -41,8 +41,7 @@ function parsePincodes(value?: string) {
   return pincodes.length > 0 ? pincodes : defaultStoreSettings.serviceablePincodes;
 }
 
-export async function getStoreSettings(): Promise<StoreSettings> {
-  noStore();
+async function readStoreSettings(): Promise<StoreSettings> {
   const settings = await prisma.setting.findMany().catch(() => []);
   const byKey = new Map(settings.map((setting) => [setting.key, setting.value]));
 
@@ -57,6 +56,15 @@ export async function getStoreSettings(): Promise<StoreSettings> {
     instagramUrl: byKey.get("instagramUrl") ?? "",
     facebookUrl: byKey.get("facebookUrl") ?? ""
   };
+}
+
+export async function getStoreSettings(): Promise<StoreSettings> {
+  noStore();
+  return readStoreSettings();
+}
+
+export async function getStoreSettingsForApi(): Promise<StoreSettings> {
+  return readStoreSettings();
 }
 
 export async function saveStoreSettings(settings: StoreSettings) {

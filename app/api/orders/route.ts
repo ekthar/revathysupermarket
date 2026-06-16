@@ -7,6 +7,7 @@ import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { checkoutSchema } from "@/lib/validations";
 import { SITE } from "@/lib/constants";
 import { isServiceablePincode } from "@/lib/delivery";
+import { getStoreSettings } from "@/lib/store-settings";
 
 function orderNumber() {
   const date = new Date();
@@ -30,12 +31,13 @@ export async function POST(request: Request) {
     if (limit.limited) return NextResponse.json({ error: "Too many order attempts. Please try again shortly." }, { status: 429 });
 
     const session = await auth();
+    const settings = await getStoreSettings();
     const body = await request.json();
     const parsed = checkoutSchema.safeParse(body);
     if (!parsed.success) return NextResponse.json({ error: "Please check your checkout details." }, { status: 400 });
 
     const data = parsed.data;
-    if (!isServiceablePincode(data.pincode)) {
+    if (!isServiceablePincode(data.pincode, settings.serviceablePincodes)) {
       return NextResponse.json(
         { error: "Sorry, this pincode is not currently serviceable by Revathy Supermarket." },
         { status: 400 }
@@ -43,9 +45,9 @@ export async function POST(request: Request) {
     }
 
     const distanceKm = calculateDistanceKm({ lat: data.latitude, lng: data.longitude });
-    if (distanceKm > SITE.deliveryRadiusKm) {
+    if (distanceKm > settings.deliveryRadiusKm) {
       return NextResponse.json(
-        { error: "Sorry, delivery is currently available only within 5 KM of Revathy Supermarket." },
+        { error: `Sorry, delivery is currently available only within ${settings.deliveryRadiusKm} KM of Revathy Supermarket.` },
         { status: 400 }
       );
     }

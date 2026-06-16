@@ -14,10 +14,10 @@ export function serviceablePincodes() {
   return pincodes.length > 0 ? pincodes : fallbackPincodes;
 }
 
-export function isServiceablePincode(pincode: string) {
-  return serviceablePincodes().includes(pincode.trim());
+export function isServiceablePincode(pincode: string, allowed = serviceablePincodes()) {
+  return allowed.includes(pincode.trim());
 }
 
-export function deliverySummary() {
-  return `${SITE.deliveryRadiusKm} KM delivery radius. Serviceable pincodes: ${serviceablePincodes().join(", ")}.`;
+export function deliverySummary(radiusKm = SITE.deliveryRadiusKm, pincodes = serviceablePincodes()) {
+  return `${radiusKm} KM delivery radius. Serviceable pincodes: ${pincodes.join(", ")}.`;
 }

@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { isServiceablePincode, serviceablePincodes } from "@/lib/delivery";
+import type { StoreSettings } from "@/lib/store-settings";
 
 type CheckoutState = {
   customerName: string;
@@ -49,7 +50,13 @@ const sectionMotion = {
   animate: { opacity: 1, y: 0 }
 };
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  deliveryRadiusKm = SITE.deliveryRadiusKm,
+  allowedPincodes = serviceablePincodes()
+}: {
+  deliveryRadiusKm?: number;
+  allowedPincodes?: StoreSettings["serviceablePincodes"];
+}) {
   const { items, subtotal, clearCart } = useCart();
   const { showToast } = useToast();
   const [form, setForm] = useState(initialState);
@@ -67,8 +74,8 @@ export function CheckoutForm() {
   }, [form.latitude, form.longitude]);
 
   const pincodeReady = /^\d{6}$/.test(form.pincode);
-  const pincodeOk = pincodeReady && isServiceablePincode(form.pincode);
-  const isOutsideRadius = distance !== null && distance > SITE.deliveryRadiusKm;
+  const pincodeOk = pincodeReady && isServiceablePincode(form.pincode, allowedPincodes);
+  const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
   const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting;
 
@@ -189,7 +196,7 @@ export function CheckoutForm() {
                 exit={{ opacity: 0, y: -8 }}
                 className={pincodeOk ? "mt-3 rounded-2xl bg-primary/10 p-3 text-sm font-bold text-primary" : "mt-3 rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600"}
               >
-                {pincodeOk ? "This pincode is serviceable." : `Not serviceable yet. Current pincodes: ${serviceablePincodes().join(", ")}`}
+                {pincodeOk ? "This pincode is serviceable." : `Not serviceable yet. Current pincodes: ${allowedPincodes.join(", ")}`}
               </motion.p>
             )}
           </AnimatePresence>
@@ -208,7 +215,7 @@ export function CheckoutForm() {
               <div className="min-w-0 flex-1">
                 <p className="font-black">GPS location required</p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  We verify your exact distance from Revathy Supermarket. Delivery is available within {SITE.deliveryRadiusKm} KM only.
+                  We verify your exact distance from Revathy Supermarket. Delivery is available within {deliveryRadiusKm} KM only.
                 </p>
               </div>
             </div>

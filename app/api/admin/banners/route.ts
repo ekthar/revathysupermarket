@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
@@ -22,9 +23,16 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  const parsed = schema.safeParse(await request.json());
-  if (!parsed.success) return NextResponse.json({ error: "Invalid banner." }, { status: 400 });
-  const banner = await prisma.banner.create({ data: parsed.data });
-  return NextResponse.json({ banner });
+  try {
+    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const parsed = schema.safeParse(await request.json());
+    if (!parsed.success) return NextResponse.json({ error: "Invalid banner." }, { status: 400 });
+    const banner = await prisma.banner.create({ data: parsed.data });
+    revalidatePath("/");
+    revalidatePath("/admin/settings");
+    return NextResponse.json({ banner });
+  } catch (error) {
+    console.error("Banner create failed", error);
+    return NextResponse.json({ error: "Banner could not be saved." }, { status: 500 });
+  }
 }

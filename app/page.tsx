@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, Bike, Clock, MapPin, ShieldCheck, Sparkles, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,36 +5,46 @@ import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
 import { LocationMap } from "@/components/location-map";
 import { categories, products } from "@/lib/products";
-import { SITE } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
+import { getStoreSettings } from "@/lib/store-settings";
 
 const bestSellers = products.sort((a, b) => b.popularity - a.popularity).slice(0, 8);
+const defaultHeroImage = "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop";
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const [settings, activeBanner] = await Promise.all([
+    getStoreSettings(),
+    prisma.banner.findFirst({
+      where: { isActive: true },
+      orderBy: { createdAt: "desc" },
+      select: { title: true, subtitle: true, image: true, href: true }
+    }).catch(() => null)
+  ]);
+  const heroImage = activeBanner?.image || defaultHeroImage;
+  const heroTitle = activeBanner?.title || "Fresh Groceries Delivered To Your Doorstep";
+  const heroSubtitle = activeBanner?.subtitle || "Premium fruits, vegetables, dairy, snacks, and essentials from Revathy Supermarket. Pay safely by COD or UPI on delivery.";
+  const heroHref = activeBanner?.href || "/products";
+
   return (
     <main>
       <section className="relative overflow-hidden rounded-b-[2.5rem] sm:rounded-b-[4rem]">
-        <div className="absolute inset-0">
-          <Image
-            src="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop"
-            alt="Fresh produce display"
-            fill
-            priority
-            className="object-cover"
-          />
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${heroImage}")` }}>
           <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(15,23,42,0.45),rgba(15,23,42,0.82)),linear-gradient(90deg,rgba(15,138,95,0.85),rgba(15,23,42,0.08))]" />
         </div>
         <div className="relative mx-auto flex min-h-[680px] max-w-7xl items-end px-4 pb-28 pt-16 sm:min-h-[calc(100vh-4rem)] sm:px-6 sm:py-20 lg:px-8">
           <div className="max-w-3xl text-white">
-            <Badge className="bg-white/15 text-white shadow-sm backdrop-blur">Neyyattinkara delivery within 5 KM</Badge>
+            <Badge className="bg-white/15 text-white shadow-sm backdrop-blur">Neyyattinkara delivery within {settings.deliveryRadiusKm} KM</Badge>
             <h1 className="mt-5 font-display text-[2.75rem] font-black leading-[0.98] sm:text-7xl">
-              Fresh Groceries Delivered To Your Doorstep
+              {heroTitle}
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-white/85 sm:text-lg">
-              Premium fruits, vegetables, dairy, snacks, and essentials from Revathy Supermarket. Pay safely by COD or UPI on delivery.
+              {heroSubtitle}
             </p>
             <div className="mt-7 grid gap-3 sm:flex sm:flex-wrap">
               <Button asChild size="lg" variant="secondary" className="w-full sm:w-auto">
-                <Link href="/products">
+                <Link href={heroHref}>
                   Start shopping <ArrowRight className="h-5 w-5" />
                 </Link>
               </Button>
@@ -46,7 +55,7 @@ export default function HomePage() {
             <div className="mt-7 grid grid-cols-3 gap-2 rounded-[1.5rem] border border-white/20 bg-white/12 p-2 backdrop-blur-xl">
               {[
                 ["50+", "Products"],
-                ["5 KM", "Delivery"],
+                [`${settings.deliveryRadiusKm} KM`, "Delivery"],
                 ["COD", "Payment"]
               ].map(([value, label]) => (
                 <div key={label} className="rounded-2xl bg-white/10 px-3 py-3 text-center">
@@ -59,7 +68,7 @@ export default function HomePage() {
         </div>
         <div className="relative mx-auto -mt-20 grid max-w-7xl gap-3 px-4 pb-10 sm:px-6 md:grid-cols-3 lg:px-8">
           {[
-            { icon: Bike, title: "5 KM Delivery", text: "Fast local delivery from Neyyattinkara." },
+            { icon: Bike, title: `${settings.deliveryRadiusKm} KM Delivery`, text: "Fast local delivery from Neyyattinkara." },
             { icon: ShieldCheck, title: "Pay on Delivery", text: "Choose COD or UPI when groceries arrive." },
             { icon: Clock, title: "Manual Care", text: "Store staff verify, pack, and process every order." }
           ].map((item) => (
@@ -141,7 +150,7 @@ export default function HomePage() {
           <Badge>Visit us</Badge>
           <h2 className="font-display text-3xl font-black leading-tight">Revathy Supermarket, Neyyattinkara</h2>
           <p className="text-muted-foreground">
-            Delivery is currently available only within {SITE.deliveryRadiusKm} KM of the store. The checkout automatically validates distance before submitting an order.
+            Delivery is currently available only within {settings.deliveryRadiusKm} KM of the store. The checkout automatically validates distance before submitting an order.
           </p>
           <div className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
             <div className="flex items-start gap-3">
@@ -151,13 +160,13 @@ export default function HomePage() {
               <div>
                 <p className="font-black">Delivery radius</p>
                 <p className="mt-1 text-sm leading-6 text-muted-foreground">
-                  We currently deliver only within {SITE.deliveryRadiusKm} KM of Revathy Supermarket. Checkout validates your location before placing the order.
+                  We currently deliver only within {settings.deliveryRadiusKm} KM of Revathy Supermarket. Checkout validates your location before placing the order.
                 </p>
               </div>
             </div>
           </div>
           <div className="h-96 overflow-hidden rounded-[1.75rem] border border-white/70 shadow-soft dark:border-white/10">
-            <LocationMap />
+            <LocationMap deliveryRadiusKm={settings.deliveryRadiusKm} />
           </div>
         </div>
       </section>

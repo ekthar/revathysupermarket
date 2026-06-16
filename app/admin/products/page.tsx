@@ -1,10 +1,28 @@
 import Image from "next/image";
 import { Minus, Package, Plus, Search } from "lucide-react";
-import { products } from "@/lib/products";
+import { prisma } from "@/lib/prisma";
+import { products as fallbackProducts } from "@/lib/products";
 import { formatCurrency } from "@/lib/utils";
 import { ProductManagementForm } from "@/components/admin/product-management-form";
 
-export default function AdminProductsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function AdminProductsPage() {
+  const dbProducts = await prisma.product.findMany({
+    include: { category: true },
+    orderBy: { createdAt: "desc" }
+  }).catch(() => []);
+  const products = dbProducts.length > 0
+    ? dbProducts.map((product) => ({
+        id: product.id,
+        name: product.name,
+        category: product.category.name,
+        price: Number(product.price),
+        discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
+        stock: product.stock,
+        image: product.image
+      }))
+    : fallbackProducts;
   const lowStock = products.filter((product) => product.stock <= 15);
 
   return (

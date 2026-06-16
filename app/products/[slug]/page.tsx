@@ -6,14 +6,41 @@ import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { getProductBySlug, products } from "@/lib/products";
 import { formatCurrency } from "@/lib/utils";
+import { prisma } from "@/lib/prisma";
+import type { Product } from "@/lib/types";
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
 }
 
+async function getProduct(slug: string): Promise<Product | undefined> {
+  const staticProduct = getProductBySlug(slug);
+  if (staticProduct) return staticProduct;
+
+  const dbProduct = await prisma.product.findUnique({
+    where: { slug },
+    include: { category: true }
+  }).catch(() => null);
+  if (!dbProduct) return undefined;
+
+  return {
+    id: dbProduct.id,
+    slug: dbProduct.slug,
+    name: dbProduct.name,
+    category: dbProduct.category.name as Product["category"],
+    price: Number(dbProduct.price),
+    discountPrice: dbProduct.discountPrice ? Number(dbProduct.discountPrice) : undefined,
+    image: dbProduct.image,
+    description: dbProduct.description,
+    stock: dbProduct.stock,
+    popularity: dbProduct.popularity,
+    unit: dbProduct.unit
+  };
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProduct(slug);
   if (!product) return {};
   return {
     title: product.name,
@@ -28,7 +55,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProduct(slug);
   if (!product) notFound();
   const related = products
     .filter((item) => item.category === product.category && item.id !== product.id)

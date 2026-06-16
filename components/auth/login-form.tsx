@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-export function LoginForm() {
+export function LoginForm({ callbackUrl = "/dashboard" }: { callbackUrl?: string }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +24,7 @@ export function LoginForm() {
       setMessage("Invalid email or password.");
       return;
     }
-    router.push("/dashboard");
+    router.push(callbackUrl.startsWith("/") ? callbackUrl : "/dashboard");
     router.refresh();
   }
 

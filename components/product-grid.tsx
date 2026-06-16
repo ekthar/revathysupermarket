@@ -6,17 +6,18 @@ import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { categories, products } from "@/lib/products";
+import type { Product } from "@/lib/types";
 
 type SortMode = "popularity" | "low" | "high";
 
-export function ProductGrid() {
+export function ProductGrid({ items = products }: { items?: Product[] }) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("All");
   const [maxPrice, setMaxPrice] = useState(350);
   const [sort, setSort] = useState<SortMode>("popularity");
 
   const filtered = useMemo(() => {
-    return products
+    return items
       .filter((product) => {
         const price = product.discountPrice ?? product.price;
         return (
@@ -32,7 +33,7 @@ export function ProductGrid() {
         if (sort === "high") return bPrice - aPrice;
         return b.popularity - a.popularity;
       });
-  }, [category, maxPrice, query, sort]);
+  }, [category, items, maxPrice, query, sort]);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">

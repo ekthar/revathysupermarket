@@ -17,11 +17,15 @@ export default auth((request) => {
   const user = request.auth?.user;
 
   if (isAdminRoute && user?.role !== "ADMIN") {
-    return Response.redirect(new URL("/login", request.nextUrl));
+    const loginUrl = new URL("/login", request.nextUrl);
+    loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+    return Response.redirect(loginUrl);
   }
 
   if (isDashboardRoute && !user) {
-    return Response.redirect(new URL("/login", request.nextUrl));
+    const loginUrl = new URL("/login", request.nextUrl);
+    loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+    return Response.redirect(loginUrl);
   }
 });
 

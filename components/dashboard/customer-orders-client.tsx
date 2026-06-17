@@ -7,6 +7,8 @@ import { orderStatuses, statusLabels } from "@/lib/constants";
 import { readApiResponse } from "@/lib/client-api";
 import { cn, formatCurrency } from "@/lib/utils";
 
+const enableSseTracking = process.env.NEXT_PUBLIC_ENABLE_SSE_TRACKING === "true";
+
 export type CustomerOrder = {
   id: string;
   orderNumber: string;
@@ -17,7 +19,17 @@ export type CustomerOrder = {
   longitude: number;
   total: number;
   createdAt: string;
+  deliveryPartnerLocation?: { latitude: number; longitude: number; updatedAt?: string } | null;
   items: Array<{ id: string; name: string; quantity: number; price: number }>;
+  editLogs: Array<{
+    id: string;
+    action: string;
+    originalItem: unknown;
+    newItem: unknown;
+    priceDelta: number;
+    reason?: string | null;
+    createdAt: string;
+  }>;
 };
 type LiveOrderState = {
   status?: keyof typeof statusLabels;
@@ -34,13 +46,35 @@ function distanceKm(a: { latitude: number; longitude: number }, b: { latitude: n
   return 2 * radius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
+type EditItemSnapshot = {
+  name: string;
+  quantity: number;
+  price: number;
+};
+
+function readEditItem(value: unknown): EditItemSnapshot {
+  const item = value as Partial<EditItemSnapshot> | null | undefined;
+  return {
+    name: String(item?.name ?? "Item"),
+    quantity: Number(item?.quantity ?? 0),
+    price: Number(item?.price ?? 0)
+  };
+}
+
+function editActionLabel(action: string) {
+  if (action === "remove") return "Removed";
+  if (action === "substitute") return "Substituted";
+  if (action === "quantity-change") return "Quantity changed";
+  return "Updated";
+}
+
 export function CustomerOrdersClient({ initialOrders }: { initialOrders: CustomerOrder[] }) {
   const [orders, setOrders] = useState(initialOrders);
   const [liveOrders, setLiveOrders] = useState<Record<string, LiveOrderState>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const activeStreamOrders = useMemo(
-    () => orders.filter((order) => !["DELIVERED", "CANCELLED"].includes(order.status)),
+    () => enableSseTracking ? orders.filter((order) => !["DELIVERED", "CANCELLED"].includes(order.status)) : [],
     [orders]
   );
 
@@ -67,6 +101,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
   }, []);
 
   useEffect(() => {
+    if (!enableSseTracking) return;
     const sources = activeStreamOrders
       .map((order) => {
         const source = new EventSource(`/api/orders/${order.id}/stream`);
@@ -90,12 +125,22 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
       body: JSON.stringify({ decision })
     });
     if (response.ok) {
-      setOrders((current) => current.map((order) => order.id === orderId ? {
-        ...order,
-        status: decision === "approved" ? "ACCEPTED" : "ORDER_RECEIVED",
-        editApprovalStatus: decision
-      } : order));
+      const refresh = await fetch("/api/orders", { cache: "no-store" });
+      const data = await readApiResponse<{ orders?: CustomerOrder[] }>(refresh);
+      if (refresh.ok && data.orders) {
+        setOrders(data.orders);
+      } else {
+        setOrders((current) => current.map((order) => order.id === orderId ? {
+          ...order,
+          status: decision === "approved" ? "ACCEPTED" : "ORDER_RECEIVED",
+          editApprovalStatus: decision,
+          editLogs: []
+        } : order));
+      }
+      return;
     }
+    const data = await readApiResponse<{ error?: string }>(response);
+    window.alert(data.error ?? "Approval update failed.");
   }
 
   async function requestReturn(order: CustomerOrder) {
@@ -132,6 +177,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
         {orders.map((order) => {
           const cancelled = order.status === "CANCELLED";
           const activeIndex = orderStatuses.indexOf(order.status);
+          const visibleItems = order.items.filter((item) => item.quantity > 0);
           return (
             <motion.article
               key={order.id}
@@ -147,7 +193,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
               <div className="flex flex-wrap justify-between gap-4">
                 <div>
                   <h2 className="font-display text-2xl font-bold">Order #{order.orderNumber}</h2>
-                  <p className="text-sm text-muted-foreground">{order.items.length} items</p>
+                  <p className="text-sm text-muted-foreground">{visibleItems.length} items</p>
                 </div>
                 <div className="text-right">
                   <p className="font-black">{formatCurrency(order.total)}</p>
@@ -177,15 +223,9 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
                 </div>
               )}
               {order.status === "AWAITING_CUSTOMER_APPROVAL" ? (
-                <div className="mt-5 rounded-2xl bg-amber-50 p-4 text-amber-800 dark:bg-amber-500/10 dark:text-amber-100">
-                  <p className="font-black">Order edit needs your approval</p>
-                  <p className="mt-1 text-sm">The store updated one or more items before packing.</p>
-                  <div className="mt-3 grid grid-cols-2 gap-2">
-                    <button onClick={() => decideEdit(order.id, "approved")} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-black text-white"><CheckCircle2 className="h-4 w-4" />Approve</button>
-                    <button onClick={() => decideEdit(order.id, "rejected")} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-red-600 text-xs font-black text-white"><XCircle className="h-4 w-4" />Reject</button>
-                  </div>
-                </div>
+                <OrderEditApprovalCard order={order} onDecision={(decision) => decideEdit(order.id, decision)} />
               ) : null}
+              <OrderItemsSummary items={visibleItems} />
               {order.status === "DELIVERED" ? (
                 <button onClick={() => requestReturn(order)} className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 px-4 text-sm font-black">
                   <RotateCcw className="h-4 w-4 text-primary" />
@@ -201,8 +241,115 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
   );
 }
 
+function OrderEditApprovalCard({
+  order,
+  onDecision
+}: {
+  order: CustomerOrder;
+  onDecision: (decision: "approved" | "rejected") => void;
+}) {
+  const totalDelta = order.editLogs.reduce((sum, log) => sum + log.priceDelta, 0);
+  const oldTotal = order.total - totalDelta;
+
+  return (
+    <div className="mt-5 rounded-[1.5rem] bg-amber-50 p-4 text-amber-900 dark:bg-amber-500/10 dark:text-amber-100">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="font-black">Order edit needs your approval</p>
+          <p className="mt-1 text-sm">Please review the supermarket changes before packing starts.</p>
+        </div>
+        <div className="rounded-2xl bg-white/70 p-3 text-right text-slate-900 dark:bg-white/10 dark:text-white">
+          <p className="text-xs font-black uppercase text-muted-foreground">Total change</p>
+          <p className={cn("mt-1 text-xl font-black", totalDelta >= 0 ? "text-amber-700 dark:text-amber-100" : "text-primary")}>
+            {totalDelta >= 0 ? "+" : ""}{formatCurrency(totalDelta)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid gap-3">
+        {order.editLogs.length === 0 ? (
+          <div className="rounded-2xl bg-white/70 p-3 text-sm font-bold text-slate-800 dark:bg-white/10 dark:text-white">
+            Edit details are loading. Please refresh if this stays blank.
+          </div>
+        ) : order.editLogs.map((log) => {
+          const original = readEditItem(log.originalItem);
+          const updated = readEditItem(log.newItem);
+          const originalAmount = original.price * original.quantity;
+          const updatedAmount = updated.price * updated.quantity;
+          return (
+            <article key={log.id} className="rounded-2xl bg-white/80 p-3 text-slate-900 dark:bg-white/10 dark:text-white">
+              <div className="flex flex-wrap justify-between gap-3">
+                <p className="text-sm font-black">{editActionLabel(log.action)}</p>
+                <p className={cn("text-sm font-black", log.priceDelta >= 0 ? "text-amber-700 dark:text-amber-100" : "text-primary")}>
+                  {log.priceDelta >= 0 ? "+" : ""}{formatCurrency(log.priceDelta)}
+                </p>
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="rounded-xl bg-amber-100/70 p-3 dark:bg-black/15">
+                  <p className="text-xs font-black uppercase text-muted-foreground">Original item</p>
+                  <p className="mt-1 font-bold">{original.name}</p>
+                  <p className="mt-1 text-sm">{original.quantity} x {formatCurrency(original.price)} = {formatCurrency(originalAmount)}</p>
+                </div>
+                <div className="rounded-xl bg-primary/10 p-3">
+                  <p className="text-xs font-black uppercase text-muted-foreground">Updated item</p>
+                  <p className="mt-1 font-bold">{updated.quantity === 0 ? "Removed from order" : updated.name}</p>
+                  <p className="mt-1 text-sm">{updated.quantity} x {formatCurrency(updated.price)} = {formatCurrency(updatedAmount)}</p>
+                </div>
+              </div>
+              {log.reason ? <p className="mt-2 text-sm"><span className="font-black">Reason:</span> {log.reason}</p> : null}
+            </article>
+          );
+        })}
+      </div>
+
+      <div className="mt-4 grid gap-2 rounded-2xl bg-white/70 p-3 text-slate-900 dark:bg-white/10 dark:text-white sm:grid-cols-3">
+        <div>
+          <p className="text-xs font-black uppercase text-muted-foreground">Old total</p>
+          <p className="mt-1 font-black">{formatCurrency(oldTotal)}</p>
+        </div>
+        <div>
+          <p className="text-xs font-black uppercase text-muted-foreground">New total</p>
+          <p className="mt-1 font-black">{formatCurrency(order.total)}</p>
+        </div>
+        <div>
+          <p className="text-xs font-black uppercase text-muted-foreground">Decision needed</p>
+          <p className="mt-1 font-black">Approve or reject</p>
+        </div>
+      </div>
+
+      <div className="mt-4 grid grid-cols-2 gap-2">
+        <button onClick={() => onDecision("approved")} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-black text-white">
+          <CheckCircle2 className="h-4 w-4" />
+          Approve changes
+        </button>
+        <button onClick={() => onDecision("rejected")} className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl bg-red-600 text-xs font-black text-white">
+          <XCircle className="h-4 w-4" />
+          Reject changes
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function OrderItemsSummary({ items }: { items: CustomerOrder["items"] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-5 rounded-[1.5rem] border border-border bg-background/70 p-4">
+      <p className="text-xs font-black uppercase text-muted-foreground">Current order details</p>
+      <div className="mt-3 grid gap-2">
+        {items.map((item) => (
+          <div key={item.id} className="flex justify-between gap-3 rounded-2xl bg-muted p-3 text-sm">
+            <span className="font-bold">{item.name} x {item.quantity}</span>
+            <span className="font-black">{formatCurrency(item.price * item.quantity)}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function LiveTrackingPanel({ order, live }: { order: CustomerOrder; live?: LiveOrderState }) {
-  const rider = live?.deliveryPartnerLocation;
+  const rider = live?.deliveryPartnerLocation ?? order.deliveryPartnerLocation;
   if (["DELIVERED", "CANCELLED"].includes(order.status) && !rider) return null;
 
   const destination = { latitude: order.latitude, longitude: order.longitude };
@@ -228,7 +375,7 @@ function LiveTrackingPanel({ order, live }: { order: CustomerOrder; live?: LiveO
         <div className="rounded-2xl bg-muted p-3">
           <p className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground"><Navigation className="h-4 w-4 text-primary" />Live tracking</p>
           <p className="mt-1 font-black">{rider ? "Rider location active" : "Waiting for rider location"}</p>
-          {etaMinutes !== null ? <p className="mt-1 text-sm text-muted-foreground">Approx ETA {etaMinutes} min · {distance?.toFixed(2)} km away</p> : null}
+          {etaMinutes !== null ? <p className="mt-1 text-sm text-muted-foreground">Approx ETA {etaMinutes} min - {distance?.toFixed(2)} km away</p> : null}
         </div>
       </div>
       <iframe

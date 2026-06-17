@@ -9,7 +9,30 @@ export default async function DashboardPage() {
   const orders = session?.user?.id
     ? await prisma.order.findMany({
         where: { userId: session.user.id },
-        include: { items: true, statusEvents: { orderBy: { createdAt: "asc" } } },
+        include: {
+          items: true,
+          deliveryPartner: {
+            select: {
+              currentLatitude: true,
+              currentLongitude: true,
+              locationUpdatedAt: true
+            }
+          },
+          editLogs: {
+            where: { requiresCustomerApproval: true, customerDecision: null },
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              action: true,
+              originalItem: true,
+              newItem: true,
+              priceDelta: true,
+              reason: true,
+              createdAt: true
+            }
+          },
+          statusEvents: { orderBy: { createdAt: "asc" } }
+        },
         orderBy: { createdAt: "desc" }
       })
     : [];
@@ -28,6 +51,20 @@ export default async function DashboardPage() {
       name: item.name,
       quantity: item.quantity,
       price: Number(item.price)
+    })),
+    deliveryPartnerLocation: order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude ? {
+      latitude: Number(order.deliveryPartner.currentLatitude),
+      longitude: Number(order.deliveryPartner.currentLongitude),
+      updatedAt: order.deliveryPartner.locationUpdatedAt?.toISOString()
+    } : null,
+    editLogs: order.editLogs.map((log) => ({
+      id: log.id,
+      action: log.action,
+      originalItem: log.originalItem,
+      newItem: log.newItem,
+      priceDelta: Number(log.priceDelta),
+      reason: log.reason,
+      createdAt: log.createdAt.toISOString()
     }))
   }));
 

@@ -4,6 +4,31 @@ import { isStaffRole } from "@/lib/authz";
 
 export const dynamic = "force-dynamic";
 
+async function trackingPayload(id: string) {
+  const latest = await prisma.order.findUnique({
+    where: { id },
+    select: {
+      status: true,
+      deliveryPartner: {
+        select: {
+          currentLatitude: true,
+          currentLongitude: true,
+          locationUpdatedAt: true
+        }
+      }
+    }
+  });
+
+  return {
+    status: latest?.status,
+    deliveryPartnerLocation: latest?.deliveryPartner?.currentLatitude && latest.deliveryPartner.currentLongitude ? {
+      latitude: Number(latest.deliveryPartner.currentLatitude),
+      longitude: Number(latest.deliveryPartner.currentLongitude),
+      updatedAt: latest.deliveryPartner.locationUpdatedAt?.toISOString()
+    } : null
+  };
+}
+
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   const { id } = await params;
@@ -15,43 +40,30 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     return new Response("Unauthorized", { status: 401 });
   }
 
+  const headers = {
+    "Content-Type": "text/event-stream",
+    "Cache-Control": "no-cache, no-transform",
+    Connection: "keep-alive"
+  };
+
+  if (process.env.VERCEL || process.env.ENABLE_LONG_SSE_TRACKING !== "true") {
+    return new Response(`data: ${JSON.stringify(await trackingPayload(id))}\n\n`, { headers });
+  }
+
+  let timer: ReturnType<typeof setInterval> | undefined;
   const stream = new ReadableStream({
     start(controller) {
       const encoder = new TextEncoder();
       const send = async () => {
-        const latest = await prisma.order.findUnique({
-          where: { id },
-          select: {
-            status: true,
-            deliveryPartner: {
-              select: {
-                currentLatitude: true,
-                currentLongitude: true,
-                locationUpdatedAt: true
-              }
-            }
-          }
-        });
-        controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-          status: latest?.status,
-          deliveryPartnerLocation: latest?.deliveryPartner?.currentLatitude && latest.deliveryPartner.currentLongitude ? {
-            latitude: Number(latest.deliveryPartner.currentLatitude),
-            longitude: Number(latest.deliveryPartner.currentLongitude),
-            updatedAt: latest.deliveryPartner.locationUpdatedAt?.toISOString()
-          } : null
-        })}\n\n`));
+        controller.enqueue(encoder.encode(`data: ${JSON.stringify(await trackingPayload(id))}\n\n`));
       };
       send();
-      const timer = setInterval(send, 10000);
-      return () => clearInterval(timer);
+      timer = setInterval(send, 10000);
+    },
+    cancel() {
+      if (timer) clearInterval(timer);
     }
   });
 
-  return new Response(stream, {
-    headers: {
-      "Content-Type": "text/event-stream",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive"
-    }
-  });
+  return new Response(stream, { headers });
 }

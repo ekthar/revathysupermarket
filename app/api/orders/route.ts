@@ -153,6 +153,26 @@ export async function GET() {
         total: true,
         createdAt: true,
         items: true,
+        deliveryPartner: {
+          select: {
+            currentLatitude: true,
+            currentLongitude: true,
+            locationUpdatedAt: true
+          }
+        },
+        editLogs: {
+          where: { requiresCustomerApproval: true, customerDecision: null },
+          orderBy: { createdAt: "asc" },
+          select: {
+            id: true,
+            action: true,
+            originalItem: true,
+            newItem: true,
+            priceDelta: true,
+            reason: true,
+            createdAt: true
+          }
+        },
         statusEvents: { orderBy: { createdAt: "asc" } }
       },
       orderBy: { createdAt: "desc" }
@@ -169,6 +189,16 @@ export async function GET() {
         items: order.items.map((item) => ({
           ...item,
           price: Number(item.price)
+        })),
+        deliveryPartnerLocation: order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude ? {
+          latitude: Number(order.deliveryPartner.currentLatitude),
+          longitude: Number(order.deliveryPartner.currentLongitude),
+          updatedAt: order.deliveryPartner.locationUpdatedAt?.toISOString()
+        } : null,
+        editLogs: order.editLogs.map((log) => ({
+          ...log,
+          priceDelta: Number(log.priceDelta),
+          createdAt: log.createdAt.toISOString()
         })),
         statusEvents: order.statusEvents.map((event) => ({
           ...event,

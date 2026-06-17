@@ -28,23 +28,25 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "No approval is pending for this order." }, { status: 400 });
   }
 
-  const pendingLog = await prisma.orderEditLog.findFirst({
+  const pendingLogs = await prisma.orderEditLog.findMany({
     where: { orderId: id, requiresCustomerApproval: true, customerDecision: null },
     orderBy: { createdAt: "desc" }
   });
-  if (!pendingLog) return NextResponse.json({ error: "No pending edit found." }, { status: 404 });
+  if (pendingLogs.length === 0) return NextResponse.json({ error: "No pending edit found." }, { status: 404 });
 
   if (parsed.data.decision === "rejected") {
-    const original = pendingLog.originalItem as LoggedItem;
-    await prisma.orderItem.update({
-      where: { id: original.id },
-      data: {
-        productId: original.productId,
-        name: original.name,
-        quantity: original.quantity,
-        price: original.price
-      }
-    });
+    for (const log of pendingLogs) {
+      const original = log.originalItem as LoggedItem;
+      await prisma.orderItem.update({
+        where: { id: original.id },
+        data: {
+          productId: original.productId,
+          name: original.name,
+          quantity: original.quantity,
+          price: original.price
+        }
+      });
+    }
   }
 
   const refreshedItems = await prisma.orderItem.findMany({ where: { orderId: id } });
@@ -59,8 +61,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       editApprovalStatus: parsed.data.decision
     }
   });
-  await prisma.orderEditLog.update({
-    where: { id: pendingLog.id },
+  await prisma.orderEditLog.updateMany({
+    where: { id: { in: pendingLogs.map((log) => log.id) } },
     data: { customerDecision: parsed.data.decision, decidedAt: new Date() }
   });
   await writeAuditLog({
@@ -69,8 +71,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     action: `order_edit_${parsed.data.decision}`,
     targetType: "Order",
     targetId: id,
-    metadata: { editLogId: pendingLog.id }
+    metadata: { editLogIds: pendingLogs.map((log) => log.id) }
   });
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, total, status: parsed.data.decision === "approved" ? "ACCEPTED" : "ORDER_RECEIVED" });
 }

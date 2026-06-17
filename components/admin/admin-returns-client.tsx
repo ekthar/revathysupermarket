@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { BellRing, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/toast-provider";
@@ -23,6 +23,27 @@ export function AdminReturnsClient({ returns }: { returns: AdminReturn[] }) {
   const { showToast } = useToast();
   const [localReturns, setLocalReturns] = useState(returns);
   const [loading, setLoading] = useState<string | null>(null);
+  const knownReturnIds = useRef(new Set(returns.map((entry) => entry.id)));
+
+  useEffect(() => {
+    let active = true;
+    async function refreshReturns() {
+      const response = await fetch("/api/admin/returns", { cache: "no-store" });
+      const data = await readApiResponse<{ returns?: AdminReturn[] }>(response);
+      if (!active || !response.ok || !data.returns) return;
+      const freshRequests = data.returns.filter((entry) => !knownReturnIds.current.has(entry.id) && entry.status === "REQUESTED");
+      if (freshRequests.length > 0) {
+        freshRequests.forEach((entry) => knownReturnIds.current.add(entry.id));
+        showToast(`${freshRequests.length} new return request${freshRequests.length === 1 ? "" : "s"}`, "success");
+      }
+      setLocalReturns(data.returns);
+    }
+    const interval = window.setInterval(refreshReturns, 7000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [showToast]);
 
   async function resolveReturn(id: string, status: "APPROVED" | "REJECTED" | "REFUNDED") {
     const resolutionNote = window.prompt(status === "REJECTED" ? "Reason for rejection" : "Resolution note") ?? "";
@@ -56,6 +77,10 @@ export function AdminReturnsClient({ returns }: { returns: AdminReturn[] }) {
       <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Returns queue</p>
         <h2 className="mt-2 font-display text-4xl font-black leading-tight">Returns & refunds</h2>
+        <p className="mt-2 flex items-center gap-2 text-sm font-bold text-muted-foreground">
+          <BellRing className="h-4 w-4 text-primary" />
+          Auto-refreshes every few seconds for new customer requests.
+        </p>
       </div>
       <div className="mt-5 grid gap-4">
         {localReturns.length === 0 ? <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">No returns yet.</div> : localReturns.map((entry) => (

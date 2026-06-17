@@ -149,6 +149,8 @@ export async function GET() {
         status: true,
         editApprovalStatus: true,
         deliveryOtp: true,
+        acknowledgedAt: true,
+        deliveryPartnerId: true,
         subtotal: true,
         total: true,
         createdAt: true,

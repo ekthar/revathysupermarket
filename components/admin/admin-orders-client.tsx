@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BellRing, FileText, Phone, Search, Send } from "lucide-react";
+import { BellRing, CheckCircle2, FileText, Phone, Search, Send, X } from "lucide-react";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { statusLabels } from "@/lib/constants";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -52,6 +52,8 @@ export function AdminOrdersClient({
   const [editLoading, setEditLoading] = useState<string | null>(null);
   const [assignLoading, setAssignLoading] = useState<string | null>(null);
   const [editDrafts, setEditDrafts] = useState<Record<string, { quantity: string; productId: string; reason: string }>>({});
+  const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
+  const [soundUnlocked, setSoundUnlocked] = useState(false);
 
   const unacknowledgedNewOrders = useMemo(
     () => localOrders.filter((order) => order.status === "ORDER_RECEIVED" && !order.acknowledgedAt),
@@ -72,6 +74,54 @@ export function AdminOrdersClient({
   }, []);
 
   useEffect(() => {
+    function unlockSound() {
+      setSoundUnlocked(true);
+      window.removeEventListener("pointerdown", unlockSound);
+      window.removeEventListener("keydown", unlockSound);
+    }
+    window.addEventListener("pointerdown", unlockSound);
+    window.addEventListener("keydown", unlockSound);
+    return () => {
+      window.removeEventListener("pointerdown", unlockSound);
+      window.removeEventListener("keydown", unlockSound);
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    async function refreshOrders() {
+      const response = await fetch("/api/orders", { cache: "no-store" });
+      const data = await readApiResponse<{ orders?: Array<AdminOrder & {
+        houseName?: string;
+        street?: string;
+        landmark?: string;
+        pincode?: string;
+        items: AdminOrder["items"];
+      }> }>(response);
+      if (!active || !response.ok || !data.orders) return;
+      setLocalOrders(data.orders.map((order) => ({
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: order.customerName,
+        phone: order.phone,
+        whatsapp: order.whatsapp,
+        address: order.address ?? `${order.houseName ?? ""}, ${order.street ?? ""}, ${order.landmark ?? ""}, ${order.pincode ?? ""}`,
+        total: Number(order.total),
+        status: order.status,
+        deliveryPartnerId: order.deliveryPartnerId ?? null,
+        acknowledgedAt: order.acknowledgedAt ?? null,
+        createdAt: order.createdAt,
+        items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price) }))
+      })));
+    }
+    const interval = window.setInterval(refreshOrders, 6000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
+  useEffect(() => {
     if (unacknowledgedNewOrders.length === 0) return;
 
     const originalTitle = document.title;
@@ -82,6 +132,7 @@ export function AdminOrdersClient({
     }, 1000);
 
     const audioTimer = window.setInterval(() => {
+      if (!soundUnlocked) return;
       try {
         const BrowserAudioContext = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof window.AudioContext }).webkitAudioContext;
         if (!BrowserAudioContext) return;
@@ -107,7 +158,7 @@ export function AdminOrdersClient({
       window.clearInterval(titleTimer);
       window.clearInterval(audioTimer);
     };
-  }, [unacknowledgedNewOrders.length]);
+  }, [soundUnlocked, unacknowledgedNewOrders.length]);
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
@@ -138,6 +189,10 @@ export function AdminOrdersClient({
     setLocalOrders((current) => current.map((order) => (
       order.id === orderId ? { ...order, acknowledgedAt: new Date().toISOString() } : order
     )));
+  }
+
+  function dismissAlert(orderId: string) {
+    setDismissedAlertIds((current) => new Set([...current, orderId]));
   }
 
   async function editItem(orderId: string, itemId: string, action: "remove" | "quantity-change" | "substitute") {
@@ -194,6 +249,34 @@ export function AdminOrdersClient({
 
   return (
     <>
+      {unacknowledgedNewOrders
+        .filter((order) => !dismissedAlertIds.has(order.id))
+        .slice(0, 1)
+        .map((order) => (
+          <div key={order.id} className="fixed inset-x-3 top-4 z-50 mx-auto max-w-2xl rounded-[1.5rem] border border-red-200 bg-white p-4 shadow-premium dark:border-red-500/40 dark:bg-slate-950">
+            <div className="flex items-start gap-3">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
+                <BellRing className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black uppercase text-red-600">New order needs stock review</p>
+                <h3 className="mt-1 font-display text-2xl font-black">#{order.orderNumber} - {formatCurrency(order.total)}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{order.customerName} - {order.phone}</p>
+                <p className="mt-2 text-sm font-bold">Go to the rack, verify stock, make substitutions/removals if needed, then mark Stock OK.</p>
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <button onClick={() => acknowledgeOrder(order.id)} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-black text-white">
+                    <CheckCircle2 className="h-4 w-4" />
+                    Start stock review
+                  </button>
+                  <button onClick={() => dismissAlert(order.id)} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background text-xs font-black">
+                    <X className="h-4 w-4" />
+                    Keep open below
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
       <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Staff workflow</p>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-4">

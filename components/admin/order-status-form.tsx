@@ -9,7 +9,7 @@ import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 
 const quickStatuses = [
-  { value: "ACCEPTED", label: "Accept", icon: CheckCircle2 },
+  { value: "ACCEPTED", label: "Stock OK", icon: CheckCircle2 },
   { value: "PACKING", label: "Packing", icon: PackageOpen },
   { value: "READY_FOR_DELIVERY", label: "Ready", icon: PackageCheck },
   { value: "OUT_FOR_DELIVERY", label: "Out", icon: Truck },

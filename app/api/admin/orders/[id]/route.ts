@@ -16,7 +16,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const parsed = orderStatusSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid status." }, { status: 400 });
 
-  const before = await prisma.order.findUnique({ where: { id }, select: { status: true, userId: true, orderNumber: true } });
+  const before = await prisma.order.findUnique({ where: { id }, select: { status: true, userId: true, orderNumber: true, acknowledgedAt: true } });
+  if (parsed.data.status === "ACCEPTED" && !before?.acknowledgedAt) {
+    return NextResponse.json({ error: "Start stock review first. Verify rack stock and make item changes before marking Stock OK." }, { status: 400 });
+  }
   const order = await prisma.order.update({
     where: { id },
     data: {

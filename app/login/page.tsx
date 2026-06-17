@@ -40,6 +40,7 @@ export default async function LoginPage({
             {isCustomerRole(user.role) ? <Link href="/dashboard" className="rounded-2xl bg-primary px-4 py-3 text-center text-sm font-black text-white">Continue to My Orders</Link> : null}
             {isStaffLoginRole(user.role) ? <Link href="/admin" className="rounded-2xl bg-primary px-4 py-3 text-center text-sm font-black text-white">Open Staff Panel</Link> : null}
             {isDeliveryPartnerRole(user.role) ? <Link href="/delivery" className="rounded-2xl bg-primary px-4 py-3 text-center text-sm font-black text-white">Open Assigned Orders</Link> : null}
+            <Link href="/admin/login" className="rounded-2xl border border-border bg-background px-4 py-3 text-center text-sm font-black text-primary">Staff / Admin Login</Link>
           </div>
         </div>
       </section>

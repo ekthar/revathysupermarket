@@ -20,18 +20,18 @@ export function HomeSearch({ products }: { products: Product[] }) {
 
   return (
     <div className="relative z-20 mx-auto max-w-4xl px-4 sm:px-6">
-      <div className="rounded-[1.5rem] border border-border/70 bg-card/95 p-2 shadow-soft">
+      <div className="rounded-[1.5rem] border border-border bg-card p-2 shadow-soft">
         <label className="relative block">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-primary" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search rice, milk, snacks..."
-            className="h-12 rounded-2xl border-0 bg-background/90 pl-12 text-base font-bold shadow-none focus-visible:ring-2 focus-visible:ring-primary"
+            className="h-12 rounded-2xl border-0 bg-background pl-12 text-base font-bold shadow-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
           />
         </label>
         {results.length > 0 ? (
-          <div className="mt-2 grid gap-1 rounded-2xl bg-background/95 p-2">
+          <div className="mt-2 grid gap-1 rounded-2xl bg-background p-2">
             {results.map((product) => (
               <Link key={product.id} href={`/products/${product.slug}`} className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-bold hover:bg-muted">
                 <span>{product.name}</span>
@@ -40,7 +40,7 @@ export function HomeSearch({ products }: { products: Product[] }) {
             ))}
           </div>
         ) : query.trim() === "" && history.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-2 rounded-2xl bg-background/95 p-2">
+          <div className="mt-2 flex flex-wrap gap-2 rounded-2xl bg-background p-2">
             {history.slice(0, 5).map((item) => (
               <button key={item} type="button" onClick={() => setQuery(item)} className="rounded-full bg-muted px-3 py-1 text-xs font-black text-primary">
                 {item}

@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Chrome, LocateFixed, LockKeyhole, Mail, MapPin, PartyPopper, ShoppingBasket, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Chrome, LocateFixed, LockKeyhole, Mail, MapPin, PartyPopper, ShieldCheck, ShoppingBasket, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Confetti } from "@/components/ui/confetti";
 import { Input } from "@/components/ui/input";
@@ -24,6 +25,7 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
   const [emailAuth, setEmailAuth] = useState({ name: "", email: "", password: "" });
+  const [emailMode, setEmailMode] = useState<"register" | "login">("register");
   const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [address, setAddress] = useState("");
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
@@ -31,7 +33,12 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
   const [loading, setLoading] = useState(false);
   const [timer, setTimer] = useState(30);
   const safeCallback = callbackUrl.startsWith("/") && !callbackUrl.startsWith("/admin") ? callbackUrl : "/dashboard";
+  const checkoutMode = safeCallback === "/checkout" || safeCallback.startsWith("/checkout?");
   const progressIndex = Math.max(0, Math.min(4, step - 2));
+
+  useEffect(() => {
+    if (checkoutMode) setShowEmailAuth(true);
+  }, [checkoutMode]);
 
   useEffect(() => {
     if (step !== 1) return;
@@ -80,20 +87,24 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
     setStep(3);
   }
 
-  async function emailSignUp() {
+  async function emailPasswordAuth() {
     setLoading(true);
     setMessage("");
-    const response = await fetch("/api/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(emailAuth)
-    });
-    const data = await readApiResponse<{ error?: string }>(response);
-    if (!response.ok) {
-      setLoading(false);
-      setMessage(data.error ?? "Email account could not be created.");
-      return;
+
+    if (emailMode === "register") {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailAuth)
+      });
+      const data = await readApiResponse<{ error?: string }>(response);
+      if (!response.ok) {
+        setLoading(false);
+        setMessage(data.error ?? "Email account could not be created.");
+        return;
+      }
     }
+
     const result = await signIn("staff-credentials", {
       email: emailAuth.email,
       password: emailAuth.password,
@@ -101,7 +112,7 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
     });
     setLoading(false);
     if (result?.error) {
-      setMessage("Account created. Please login with email and password.");
+      setMessage(emailMode === "register" ? "Account created. Please login with email and password." : "Email or password is incorrect.");
       return;
     }
     window.localStorage.setItem("onboarding-complete", "true");
@@ -110,6 +121,7 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
   }
 
   function skipAuth() {
+    if (checkoutMode) return;
     window.localStorage.setItem("onboarding-complete", "skipped");
     router.push("/products");
   }
@@ -174,7 +186,7 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_20%_20%,rgba(167,209,41,0.34),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(15,138,95,0.24),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.96),rgba(240,253,244,0.92))] px-4 text-foreground dark:bg-[radial-gradient(circle_at_20%_20%,rgba(167,209,41,0.22),transparent_28%),radial-gradient(circle_at_80%_10%,rgba(15,138,95,0.24),transparent_30%),linear-gradient(135deg,#020617,#0f172a)]">
+    <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#ffffff,#f0fdf4)] px-4 text-foreground dark:bg-[linear-gradient(135deg,#020617,#101827)]">
       <Confetti active={step === 1 || step === 6} />
       <div className="mx-auto flex min-h-screen max-w-md flex-col py-5">
         <div className="grid h-12 grid-cols-[48px_1fr_48px] items-center">
@@ -184,6 +196,12 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
             </button>
           ) : <span />}
           {step > 1 && step < 6 ? <ProgressDots current={progressIndex} /> : <span />}
+          {step === 2 ? (
+            <Link href="/admin/login" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm" title="Staff login">
+              <ShieldCheck className="h-4 w-4" />
+              <span className="sr-only">Staff login</span>
+            </Link>
+          ) : <span />}
         </div>
 
         <section className="flex flex-1 items-center justify-center">
@@ -201,13 +219,21 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
             {step === 2 ? (
               <Screen key="phone" variants={variants}>
                 <StepIcon icon={Sparkles} />
-                <h1 className="font-display text-4xl font-black">Let&apos;s get you started</h1>
-                <p className="mt-2 text-sm font-semibold text-muted-foreground">Enter your WhatsApp number to continue.</p>
+                <h1 className="font-display text-4xl font-black">{checkoutMode ? "Login to checkout" : "Let's get you started"}</h1>
+                <p className="mt-2 text-sm font-semibold text-muted-foreground">
+                  {checkoutMode ? "Create or login with an email account before placing your order." : "Enter your WhatsApp number to continue."}
+                </p>
                 <div className="mt-8">
                   <PhoneInput value={phone} onChange={setPhone} />
                 </div>
-                <p className="mt-4 text-center text-xs font-bold text-muted-foreground">We&apos;ll send a verification code via WhatsApp.</p>
+                <p className="mt-4 text-center text-xs font-bold text-muted-foreground">We&apos;ll send a verification code via WhatsApp. Email/password works without extra setup.</p>
                 <div className="mt-6 grid gap-3">
+                  {checkoutMode ? (
+                    <Button type="button" size="lg" onClick={() => setShowEmailAuth(true)} className="w-full">
+                      <Mail className="h-4 w-4" />
+                      Continue with email
+                    </Button>
+                  ) : null}
                   <Button type="button" size="lg" onClick={sendOtp} disabled={loading || phone.length !== 10} className="w-full">
                     {loading ? "Sending code" : "Continue with WhatsApp"}
                   </Button>
@@ -218,19 +244,47 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
                   <button type="button" onClick={() => setShowEmailAuth((current) => !current)} className="h-11 rounded-2xl border border-border bg-background/80 text-sm font-black text-primary">
                     Use email and password
                   </button>
-                  <button type="button" onClick={skipAuth} className="text-sm font-black text-muted-foreground">
-                    Skip for now
-                  </button>
+                  {!checkoutMode ? (
+                    <button type="button" onClick={skipAuth} className="text-sm font-black text-muted-foreground">
+                      Skip for now
+                    </button>
+                  ) : (
+                    <p className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center text-xs font-black text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100">
+                      Checkout needs a logged-in customer account.
+                    </p>
+                  )}
+                  <Link href="/admin/login" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-card text-sm font-black text-primary">
+                    <ShieldCheck className="h-4 w-4" />
+                    Staff login
+                  </Link>
                 </div>
                 <AnimatePresence>
                   {showEmailAuth ? (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} className="mt-5 grid gap-3 rounded-[1.5rem] border border-border bg-card/95 p-3">
-                      <IconInput icon={Sparkles} placeholder="Full name" value={emailAuth.name} onChange={(value) => setEmailAuth((current) => ({ ...current, name: value }))} />
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} className="mt-5 grid gap-3 rounded-[1.5rem] border border-border bg-card p-3 shadow-soft">
+                      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1">
+                        {(["register", "login"] as const).map((mode) => (
+                          <button
+                            key={mode}
+                            type="button"
+                            onClick={() => setEmailMode(mode)}
+                            className={cn("h-10 rounded-xl text-xs font-black", emailMode === mode ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
+                          >
+                            {mode === "register" ? "Create account" : "Login"}
+                          </button>
+                        ))}
+                      </div>
+                      {emailMode === "register" ? (
+                        <IconInput icon={Sparkles} placeholder="Full name" value={emailAuth.name} onChange={(value) => setEmailAuth((current) => ({ ...current, name: value }))} />
+                      ) : null}
                       <IconInput icon={Mail} placeholder="Email" type="email" value={emailAuth.email} onChange={(value) => setEmailAuth((current) => ({ ...current, email: value }))} />
                       <IconInput icon={LockKeyhole} placeholder="Password" type="password" value={emailAuth.password} onChange={(value) => setEmailAuth((current) => ({ ...current, password: value }))} />
                       {message ? <p className="rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{message}</p> : null}
-                      <Button type="button" onClick={emailSignUp} disabled={loading || emailAuth.name.length < 2 || emailAuth.password.length < 8}>
-                        Create email account
+                      <Button
+                        type="button"
+                        onClick={emailPasswordAuth}
+                        disabled={loading || !emailAuth.email.includes("@") || emailAuth.password.length < 8 || (emailMode === "register" && emailAuth.name.trim().length < 2)}
+                      >
+                        {emailMode === "register" ? "Create email account" : "Login with email"}
                       </Button>
                     </motion.div>
                   ) : null}

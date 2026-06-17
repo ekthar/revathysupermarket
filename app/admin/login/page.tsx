@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { AdminLoginForm } from "@/components/auth/admin-login-form";
+import { StaffSessionSwitch } from "@/components/auth/staff-session-switch";
 import { SessionIdentityCard } from "@/components/session-identity-card";
 import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole, roleLabel } from "@/lib/roles";
 
@@ -42,6 +43,7 @@ export default async function AdminLoginPage({
               {isStaffLoginRole(user.role) ? <Link href="/admin" className="rounded-2xl bg-primary px-4 py-3 text-center text-sm font-black text-white">Open Staff Panel</Link> : null}
               {isCustomerRole(user.role) ? <Link href="/dashboard" className="rounded-2xl bg-primary px-4 py-3 text-center text-sm font-black text-white">Open My Orders</Link> : null}
               {isDeliveryPartnerRole(user.role) ? <Link href="/delivery" className="rounded-2xl bg-primary px-4 py-3 text-center text-sm font-black text-white">Open Assigned Orders</Link> : null}
+              {isCustomerRole(user.role) ? <StaffSessionSwitch /> : null}
             </div>
           </div>
         </section>

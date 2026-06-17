@@ -85,7 +85,7 @@ export function Header({ user }: { user: SessionIdentity }) {
             <ThemeToggle />
           </div>
           <div className="hidden lg:block">
-            <SessionIdentityCard user={user} compact={false} className="w-64" />
+            <SessionIdentityCard user={user} compact={false} className={user?.id ? "w-64" : ""} />
           </div>
           <div className="lg:hidden">
             <SessionIdentityCard user={user} compact className="p-0 border-0 bg-transparent" />

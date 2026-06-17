@@ -22,9 +22,11 @@ export async function POST(request: Request) {
     }
 
     const email = parsed.data.email?.trim() || undefined;
-    const phone = parsed.data.phone.replace(/\D/g, "");
+    const phone = parsed.data.phone?.replace(/\D/g, "") || undefined;
+    if (!email && !phone) return NextResponse.json({ error: "Email or phone is required." }, { status: 400 });
+    if (email && !parsed.data.password) return NextResponse.json({ error: "Password is required for email registration." }, { status: 400 });
     const existing = await prisma.user.findFirst({
-      where: { OR: [{ phone }, ...(email ? [{ email }] : [])] }
+      where: { OR: [...(phone ? [{ phone }] : []), ...(email ? [{ email }] : [])] }
     });
     if (existing) return NextResponse.json({ error: "An account already exists for this phone or email." }, { status: 409 });
 

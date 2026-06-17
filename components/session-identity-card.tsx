@@ -35,10 +35,10 @@ export function SessionIdentityCard({
 
   if (!user?.id) {
     return (
-      <Button asChild variant="outline" size={compact ? "sm" : "default"} className={className}>
-        <Link href="/login">
+      <Button asChild variant="outline" size="sm" className={`rounded-full px-3 ${className}`}>
+        <Link href="/login" className="text-xs font-black">
           <UserRound className="h-4 w-4" />
-          {!compact && "Login"}
+          Login
         </Link>
       </Button>
     );

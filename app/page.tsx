@@ -152,9 +152,7 @@ export default async function HomePage() {
         deliveryRadiusKm={settings.deliveryRadiusKm}
         gstEnabled={settings.gstRatePercent > 0 || Boolean(settings.gstin)}
       />
-      <HomeSearch products={mappedProducts} />
-
-      <RevealSection className="relative mx-auto -mt-20 grid max-w-7xl gap-3 px-4 pb-10 sm:px-6 md:grid-cols-3 lg:px-8">
+      <RevealSection className="relative mx-auto -mt-16 grid max-w-7xl gap-3 px-4 pb-6 sm:px-6 md:grid-cols-3 lg:px-8">
         {[
           { icon: Bike, title: `${settings.deliveryRadiusKm} KM Delivery`, text: "Fast local delivery from Neyyattinkara." },
           { icon: ShieldCheck, title: "Pay on Delivery", text: "Choose COD or UPI when groceries arrive." },
@@ -171,6 +169,7 @@ export default async function HomePage() {
           </div>
         ))}
       </RevealSection>
+      <HomeSearch products={mappedProducts} />
 
       <RevealSection className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
         <div className="flex items-end justify-between gap-5">

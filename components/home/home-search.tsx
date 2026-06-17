@@ -19,8 +19,8 @@ export function HomeSearch({ products }: { products: Product[] }) {
   }, [products, query]);
 
   return (
-    <div className="sticky top-[4.6rem] z-30 mx-auto max-w-4xl px-4 sm:px-6">
-      <div className="glass-panel rounded-[1.5rem] p-2 shadow-premium">
+    <div className="relative z-20 mx-auto max-w-4xl px-4 sm:px-6">
+      <div className="rounded-[1.5rem] border border-border/70 bg-card/95 p-2 shadow-soft">
         <label className="relative block">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-primary" />
           <Input

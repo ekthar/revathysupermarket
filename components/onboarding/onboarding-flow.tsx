@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Chrome, LocateFixed, MapPin, PartyPopper, ShoppingBasket, Sparkles } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Chrome, LocateFixed, LockKeyhole, Mail, MapPin, PartyPopper, ShoppingBasket, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Confetti } from "@/components/ui/confetti";
 import { Input } from "@/components/ui/input";
@@ -23,6 +23,8 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [name, setName] = useState("");
+  const [emailAuth, setEmailAuth] = useState({ name: "", email: "", password: "" });
+  const [showEmailAuth, setShowEmailAuth] = useState(false);
   const [address, setAddress] = useState("");
   const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
   const [message, setMessage] = useState("");
@@ -76,6 +78,40 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
     }
     setTimer(30);
     setStep(3);
+  }
+
+  async function emailSignUp() {
+    setLoading(true);
+    setMessage("");
+    const response = await fetch("/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(emailAuth)
+    });
+    const data = await readApiResponse<{ error?: string }>(response);
+    if (!response.ok) {
+      setLoading(false);
+      setMessage(data.error ?? "Email account could not be created.");
+      return;
+    }
+    const result = await signIn("staff-credentials", {
+      email: emailAuth.email,
+      password: emailAuth.password,
+      redirect: false
+    });
+    setLoading(false);
+    if (result?.error) {
+      setMessage("Account created. Please login with email and password.");
+      return;
+    }
+    window.localStorage.setItem("onboarding-complete", "true");
+    router.push(safeCallback);
+    router.refresh();
+  }
+
+  function skipAuth() {
+    window.localStorage.setItem("onboarding-complete", "skipped");
+    router.push("/products");
   }
 
   async function verifyOtp() {
@@ -171,15 +207,30 @@ export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: s
                   <PhoneInput value={phone} onChange={setPhone} />
                 </div>
                 <p className="mt-4 text-center text-xs font-bold text-muted-foreground">We&apos;ll send a verification code via WhatsApp.</p>
+                <div className="mt-6 grid gap-3">
+                  <Button type="button" size="lg" onClick={sendOtp} disabled={loading || phone.length !== 10} className="w-full">
+                    {loading ? "Sending code" : "Continue with WhatsApp"}
+                  </Button>
+                  <Button type="button" variant="outline" size="lg" onClick={() => signIn("google", { callbackUrl: safeCallback })} className="w-full">
+                    <Chrome className="h-4 w-4" />
+                    Continue with Google
+                  </Button>
+                  <button type="button" onClick={() => setShowEmailAuth((current) => !current)} className="h-11 rounded-2xl border border-border bg-background/80 text-sm font-black text-primary">
+                    Use email and password
+                  </button>
+                  <button type="button" onClick={skipAuth} className="text-sm font-black text-muted-foreground">
+                    Skip for now
+                  </button>
+                </div>
                 <AnimatePresence>
-                  {phone.length === 10 ? (
-                    <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }} className="mt-6 grid gap-3">
-                      <Button type="button" size="lg" onClick={sendOtp} disabled={loading} className="w-full">
-                        {loading ? "Sending code" : "Continue"}
-                      </Button>
-                      <Button type="button" variant="outline" size="lg" onClick={() => signIn("google", { callbackUrl: safeCallback })} className="w-full">
-                        <Chrome className="h-4 w-4" />
-                        Continue with Google
+                  {showEmailAuth ? (
+                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} className="mt-5 grid gap-3 rounded-[1.5rem] border border-border bg-card/95 p-3">
+                      <IconInput icon={Sparkles} placeholder="Full name" value={emailAuth.name} onChange={(value) => setEmailAuth((current) => ({ ...current, name: value }))} />
+                      <IconInput icon={Mail} placeholder="Email" type="email" value={emailAuth.email} onChange={(value) => setEmailAuth((current) => ({ ...current, email: value }))} />
+                      <IconInput icon={LockKeyhole} placeholder="Password" type="password" value={emailAuth.password} onChange={(value) => setEmailAuth((current) => ({ ...current, password: value }))} />
+                      {message ? <p className="rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{message}</p> : null}
+                      <Button type="button" onClick={emailSignUp} disabled={loading || emailAuth.name.length < 2 || emailAuth.password.length < 8}>
+                        Create email account
                       </Button>
                     </motion.div>
                   ) : null}
@@ -300,5 +351,26 @@ function StepIcon({ icon: Icon }: { icon: React.ElementType }) {
     <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/10 text-primary">
       <Icon className="h-7 w-7" />
     </span>
+  );
+}
+
+function IconInput({
+  icon: Icon,
+  value,
+  onChange,
+  placeholder,
+  type = "text"
+}: {
+  icon: React.ElementType;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder: string;
+  type?: string;
+}) {
+  return (
+    <label className="relative block">
+      <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
+      <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-12 rounded-2xl pl-11" />
+    </label>
   );
 }

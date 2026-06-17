@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Home, LayoutDashboard, Search, ShoppingBag, UserRound } from "lucide-react";
+import { Home, LayoutDashboard, Search, Settings, ShoppingBag } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/components/cart/cart-provider";
 import { cn } from "@/lib/utils";
@@ -11,7 +11,7 @@ const items = [
   { href: "/products", label: "Shop", icon: Search },
   { href: "/cart", label: "Cart", icon: ShoppingBag },
   { href: "/dashboard", label: "Orders", icon: LayoutDashboard },
-  { href: "/login", label: "Account", icon: UserRound }
+  { href: "/admin", label: "Admin", icon: Settings }
 ];
 
 export function MobileBottomNav() {

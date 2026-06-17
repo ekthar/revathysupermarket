@@ -173,10 +173,10 @@ export function CheckoutForm({
   }
 
   return (
-    <form onSubmit={submit} className="mt-6 grid gap-5 lg:grid-cols-[1fr_360px]">
-      <div className="grid gap-5">
+    <form onSubmit={submit} className="mt-6 grid min-w-0 gap-5 pb-28 lg:grid-cols-[minmax(0,1fr)_360px] lg:pb-0">
+      <div className="grid min-w-0 gap-5">
         <CheckoutSection icon={Phone} eyebrow="Step 1" title="Contact details">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <Field label="Customer name" value={form.customerName} onChange={(value) => update("customerName", value)} />
             <Field label="Phone number" type="tel" value={form.phone} onChange={(value) => update("phone", value)} />
             <Field label="WhatsApp number" type="tel" value={form.whatsapp} onChange={(value) => update("whatsapp", value)} className="sm:col-span-2" />
@@ -184,7 +184,7 @@ export function CheckoutForm({
         </CheckoutSection>
 
         <CheckoutSection icon={Home} eyebrow="Step 2" title="Delivery address">
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <Field label="House name / flat" value={form.houseName} onChange={(value) => update("houseName", value)} />
             <Field label="Pincode" inputMode="numeric" value={form.pincode} onChange={(value) => update("pincode", value.replace(/\D/g, "").slice(0, 6))} />
             <Field label="Street / area" value={form.street} onChange={(value) => update("street", value)} className="sm:col-span-2" />
@@ -210,7 +210,7 @@ export function CheckoutForm({
         </CheckoutSection>
 
         <CheckoutSection icon={LocateFixed} eyebrow="Step 3" title="Verify location">
-          <div className="rounded-[1.5rem] border border-border bg-background/70 p-4">
+          <div className="min-w-0 rounded-[1.5rem] border border-border bg-background/70 p-4">
             <div className="flex items-start gap-3">
               <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
@@ -250,7 +250,7 @@ export function CheckoutForm({
             <AnimatePresence>
               {showManualLocation && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div className="mt-3 grid min-w-0 gap-3 sm:grid-cols-2">
                     <Field label="Latitude" value={form.latitude} onChange={(value) => update("latitude", value)} />
                     <Field label="Longitude" value={form.longitude} onChange={(value) => update("longitude", value)} />
                   </div>
@@ -264,7 +264,7 @@ export function CheckoutForm({
       <motion.aside
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="sticky bottom-24 h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-[0_20px_60px_-38px_rgba(15,23,42,0.75)] dark:border-white/10 lg:top-24"
+        className="h-fit min-w-0 rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-[0_20px_60px_-38px_rgba(15,23,42,0.75)] dark:border-white/10 lg:sticky lg:top-24"
       >
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -325,7 +325,7 @@ function CheckoutSection({
   return (
     <motion.section
       {...sectionMotion}
-      className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5"
+      className="min-w-0 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5"
     >
       <div className="mb-4 flex items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
@@ -357,7 +357,7 @@ function Field({
   className?: string;
 }) {
   return (
-    <label className={className}>
+    <label className={`min-w-0 ${className ?? ""}`}>
       <span className="text-sm font-bold">{label}</span>
       <Input
         required

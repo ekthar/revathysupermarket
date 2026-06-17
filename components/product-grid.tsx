@@ -42,7 +42,7 @@ export function ProductGrid({ items = products }: { items?: Product[] }) {
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="glass-panel sticky top-[5.25rem] z-30 -mx-4 px-4 py-3 sm:static sm:mx-0 sm:rounded-[1.75rem] sm:p-4 md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+      <div className="glass-panel sticky top-[5.25rem] z-30 max-w-full px-4 py-3 sm:static sm:rounded-[1.75rem] sm:p-4 md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
           <Input

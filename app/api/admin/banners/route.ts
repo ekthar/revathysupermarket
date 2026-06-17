@@ -3,6 +3,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
+import { requireProductStaff } from "@/lib/authz";
 
 const schema = z.object({
   title: z.string().min(2),
@@ -12,19 +14,18 @@ const schema = z.object({
   isActive: z.boolean().default(true)
 });
 
-async function requireAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
-
 export async function GET() {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await auth();
+  const unauthorized = requireProductStaff(session);
+  if (unauthorized) return unauthorized;
   return NextResponse.json({ banners: await prisma.banner.findMany({ orderBy: { createdAt: "desc" } }) });
 }
 
 export async function POST(request: Request) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    const unauthorized = requireProductStaff(session);
+    if (unauthorized) return unauthorized;
     const parsed = schema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid banner." }, { status: 400 });
     const banner = await prisma.banner.create({ data: parsed.data });
@@ -32,6 +33,14 @@ export async function POST(request: Request) {
     revalidatePath("/admin/settings");
     revalidateTag("homepage");
     revalidateTag("banners");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "banner_created",
+      targetType: "Banner",
+      targetId: banner.id,
+      metadata: { title: banner.title }
+    });
     return NextResponse.json({ banner });
   } catch (error) {
     console.error("Banner create failed", error);

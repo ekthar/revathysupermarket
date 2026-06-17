@@ -17,3 +17,43 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(event.request).then((cached) => cached || caches.match("/offline")))
   );
 });
+
+self.addEventListener("push", (event) => {
+  let payload = {
+    title: "New order - Revathy",
+    body: "A new order is waiting in the admin panel.",
+    url: "/admin/orders"
+  };
+
+  if (event.data) {
+    try {
+      payload = { ...payload, ...event.data.json() };
+    } catch {
+      payload.body = event.data.text();
+    }
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icons/icon-192.svg",
+      badge: "/icons/icon-192.svg",
+      tag: payload.orderId ? `order-${payload.orderId}` : "new-order",
+      data: { url: payload.url }
+    })
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const targetUrl = event.notification.data?.url || "/admin/orders";
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client && client.url.includes(targetUrl)) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(targetUrl);
+      return undefined;
+    })
+  );
+});

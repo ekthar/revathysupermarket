@@ -3,6 +3,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
+import { requireProductStaff } from "@/lib/authz";
 
 const schema = z.object({
   title: z.string().min(2).optional(),
@@ -12,14 +14,11 @@ const schema = z.object({
   isActive: z.boolean().optional()
 });
 
-async function requireAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
-
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    const unauthorized = requireProductStaff(session);
+    if (unauthorized) return unauthorized;
     const { id } = await params;
     const parsed = schema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid banner." }, { status: 400 });
@@ -28,6 +27,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     revalidatePath("/admin/settings");
     revalidateTag("homepage");
     revalidateTag("banners");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "banner_updated",
+      targetType: "Banner",
+      targetId: banner.id,
+      metadata: parsed.data
+    });
     return NextResponse.json({ banner });
   } catch (error) {
     console.error("Banner update failed", error);
@@ -37,13 +44,22 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    const unauthorized = requireProductStaff(session);
+    if (unauthorized) return unauthorized;
     const { id } = await params;
     await prisma.banner.delete({ where: { id } });
     revalidatePath("/");
     revalidatePath("/admin/settings");
     revalidateTag("homepage");
     revalidateTag("banners");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "banner_deleted",
+      targetType: "Banner",
+      targetId: id
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     console.error("Banner delete failed", error);

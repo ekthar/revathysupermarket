@@ -1,18 +1,22 @@
 import Link from "next/link";
-import { Home, Package, Settings, ShoppingBasket, Users } from "lucide-react";
+import { ClipboardList, Home, Package, RotateCcw, Settings, ShoppingBasket, Users } from "lucide-react";
 import { auth } from "@/auth";
-
-const adminNav = [
-  { href: "/admin", label: "Dashboard", icon: ShoppingBasket },
-  { href: "/admin/products", label: "Products", icon: Package },
-  { href: "/admin/orders", label: "Orders", icon: ShoppingBasket },
-  { href: "/admin/customers", label: "Customers", icon: Users },
-  { href: "/admin/settings", label: "Settings", icon: Settings }
-];
+import { canManageProducts, canManageReturns, canManageSettings, canManageStaff, canViewReports, isStaffRole } from "@/lib/authz";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") return <>{children}</>;
+  if (!isStaffRole(session?.user?.role)) return <>{children}</>;
+  const role = session.user.role;
+  const adminNav = [
+    { href: "/admin", label: "Dashboard", icon: ShoppingBasket, show: true },
+    { href: "/admin/products", label: "Products", icon: Package, show: canManageProducts(role) },
+    { href: "/admin/orders", label: "Orders", icon: ShoppingBasket, show: true },
+    { href: "/admin/returns", label: "Returns", icon: RotateCcw, show: canManageReturns(role) },
+    { href: "/admin/customers", label: "Customers", icon: Users, show: canViewReports(role) },
+    { href: "/admin/staff", label: "Staff", icon: Users, show: canManageStaff(role) },
+    { href: "/admin/audit-log", label: "Audit", icon: ClipboardList, show: canViewReports(role) },
+    { href: "/admin/settings", label: "Settings", icon: Settings, show: canManageSettings(role) }
+  ];
 
   return (
     <main className="mx-auto grid max-w-7xl gap-5 overflow-x-hidden px-3 pb-36 pt-5 sm:px-6 sm:py-8 lg:grid-cols-[250px_minmax(0,1fr)] lg:px-8">
@@ -26,7 +30,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           </Link>
         </div>
         <nav className="no-scrollbar mt-4 flex gap-2 overflow-x-auto lg:grid lg:overflow-visible">
-          {adminNav.map((item) => (
+          {adminNav.filter((item) => item.show).map((item) => (
             <Link key={item.href} href={item.href} className="flex min-w-fit items-center gap-3 rounded-2xl border border-border bg-background/60 px-4 py-3 text-sm font-black hover:bg-muted lg:min-w-0">
               <item.icon className="h-4 w-4 text-primary" />
               {item.label}

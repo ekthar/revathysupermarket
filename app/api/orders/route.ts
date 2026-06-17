@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { calculateDistanceKm } from "@/lib/distance";
 import { rateLimit } from "@/lib/rate-limit";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { isStaffRole } from "@/lib/authz";
 import { checkoutSchema } from "@/lib/validations";
 import { isServiceablePincode } from "@/lib/delivery";
 import { getStoreSettingsForApi } from "@/lib/store-settings";
@@ -30,6 +31,9 @@ export async function POST(request: Request) {
     if (limit.limited) return NextResponse.json({ error: "Too many order attempts. Please try again shortly." }, { status: 429 });
 
     const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Please create an account or log in before placing an order." }, { status: 401 });
+    }
     const settings = await getStoreSettingsForApi();
     const body = await request.json();
     const parsed = checkoutSchema.safeParse(body);
@@ -64,7 +68,7 @@ export async function POST(request: Request) {
     const order = await prisma.order.create({
       data: {
         orderNumber: number,
-        userId: session?.user?.id,
+        userId: session.user.id,
         customerName: data.customerName,
         phone: data.phone,
         whatsapp: data.whatsapp,
@@ -77,6 +81,7 @@ export async function POST(request: Request) {
         longitude: data.longitude,
         distanceKm,
         paymentMethod: data.paymentMethod,
+        paymentStatus: data.paymentMethod === "ONLINE" ? "PENDING" : "PENDING",
         subtotal,
         total: subtotal,
         items: {
@@ -94,20 +99,18 @@ export async function POST(request: Request) {
       include: { items: true }
     });
 
-    if (session?.user?.id) {
-      await prisma.address.create({
-        data: {
-          userId: session.user.id,
-          label: "Home",
-          houseName: data.houseName,
-          street: data.street,
-          landmark: data.landmark,
-          pincode: data.pincode,
-          latitude: data.latitude,
-          longitude: data.longitude
-        }
-      }).catch(() => null);
-    }
+    await prisma.address.create({
+      data: {
+        userId: session.user.id,
+        label: "Home",
+        houseName: data.houseName,
+        street: data.street,
+        landmark: data.landmark,
+        pincode: data.pincode,
+        latitude: data.latitude,
+        longitude: data.longitude
+      }
+    }).catch(() => null);
 
     const whatsappUrl = buildWhatsAppUrl({
       orderNumber: order.orderNumber,
@@ -126,7 +129,7 @@ export async function GET() {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const orders = await prisma.order.findMany({
-      where: session.user.role === "ADMIN" ? {} : { userId: session.user.id },
+      where: isStaffRole(session.user.role) ? {} : { userId: session.user.id },
       select: {
         id: true,
         orderNumber: true,
@@ -142,7 +145,10 @@ export async function GET() {
         longitude: true,
         distanceKm: true,
         paymentMethod: true,
+        paymentStatus: true,
         status: true,
+        editApprovalStatus: true,
+        deliveryOtp: true,
         subtotal: true,
         total: true,
         createdAt: true,

@@ -25,12 +25,23 @@ type CheckoutState = {
   landmark: string;
   pincode: string;
   notes: string;
-  paymentMethod: "COD" | "UPI_ON_DELIVERY";
+  paymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
   latitude: string;
   longitude: string;
 };
 
 type LocationState = "idle" | "loading" | "success" | "denied";
+type SavedAddress = {
+  id: string;
+  label: string;
+  houseName: string;
+  street: string;
+  landmark: string;
+  pincode: string;
+  latitude: number;
+  longitude: number;
+  isDefault: boolean;
+};
 
 const initialState: CheckoutState = {
   customerName: "",
@@ -53,10 +64,12 @@ const sectionMotion = {
 
 export function CheckoutForm({
   deliveryRadiusKm = SITE.deliveryRadiusKm,
-  allowedPincodes = serviceablePincodes()
+  allowedPincodes = serviceablePincodes(),
+  savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
   allowedPincodes?: StoreSettings["serviceablePincodes"];
+  savedAddresses?: SavedAddress[];
 }) {
   const { items, subtotal, clearCart } = useCart();
   const { showToast } = useToast();
@@ -83,6 +96,22 @@ export function CheckoutForm({
 
   function update(name: keyof CheckoutState, value: string) {
     setForm((current) => ({ ...current, [name]: value }));
+  }
+
+  function applySavedAddress(addressId: string) {
+    const address = savedAddresses.find((entry) => entry.id === addressId);
+    if (!address) return;
+    setForm((current) => ({
+      ...current,
+      houseName: address.houseName,
+      street: address.street,
+      landmark: address.landmark,
+      pincode: address.pincode,
+      latitude: address.latitude.toString(),
+      longitude: address.longitude.toString()
+    }));
+    setLocationState("success");
+    showToast(`${address.label} address selected`, "success");
   }
 
   function useCurrentLocation() {
@@ -184,6 +213,23 @@ export function CheckoutForm({
         </CheckoutSection>
 
         <CheckoutSection icon={Home} eyebrow="Step 2" title="Delivery address">
+          {savedAddresses.length > 0 ? (
+            <label className="mb-3 block">
+              <span className="text-sm font-bold">Saved address</span>
+              <select
+                defaultValue=""
+                onChange={(event) => applySavedAddress(event.target.value)}
+                className="mt-2 h-12 w-full rounded-2xl border border-border bg-background/80 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">Choose saved address</option>
+                {savedAddresses.map((address) => (
+                  <option key={address.id} value={address.id}>
+                    {address.label}{address.isDefault ? " (default)" : ""} - {address.houseName}, {address.pincode}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <Field label="House name / flat" value={form.houseName} onChange={(value) => update("houseName", value)} />
             <Field label="Pincode" inputMode="numeric" value={form.pincode} onChange={(value) => update("pincode", value.replace(/\D/g, "").slice(0, 6))} />
@@ -275,6 +321,7 @@ export function CheckoutForm({
         <div className="mt-4 grid gap-3">
           <PaymentCard active={form.paymentMethod === "COD"} label="Cash on Delivery" onClick={() => update("paymentMethod", "COD")} />
           <PaymentCard active={form.paymentMethod === "UPI_ON_DELIVERY"} label="UPI on Delivery" onClick={() => update("paymentMethod", "UPI_ON_DELIVERY")} />
+          <PaymentCard active={form.paymentMethod === "ONLINE"} label="Pay now" onClick={() => update("paymentMethod", "ONLINE")} />
         </div>
         <div className="mt-5 rounded-2xl bg-muted p-4 text-sm leading-6 text-muted-foreground">
           <MapPin className="mb-2 h-4 w-4 text-primary" />

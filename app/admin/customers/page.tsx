@@ -1,9 +1,21 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { canViewReports } from "@/lib/authz";
 import { Phone, Send, UserRound } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminCustomersPage() {
+  const session = await auth();
+  if (!canViewReports(session?.user?.role)) {
+    return (
+      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+        <h2 className="font-display text-3xl font-black">Customers</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Manager or owner access is required.</p>
+      </div>
+    );
+  }
+
   const customers = await prisma.user.findMany({
     where: { role: "CUSTOMER" },
     include: { orders: true },

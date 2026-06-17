@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { canManageSettings } from "@/lib/authz";
 import { deliverySummary } from "@/lib/delivery";
 import { getStoreSettings } from "@/lib/store-settings";
 import { SettingsManagementClient } from "@/components/admin/settings-management-client";
@@ -7,6 +9,16 @@ import { MapPin } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export default async function AdminSettingsPage() {
+  const session = await auth();
+  if (!canManageSettings(session?.user?.role)) {
+    return (
+      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+        <h2 className="font-display text-3xl font-black">Settings</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Owner access is required.</p>
+      </div>
+    );
+  }
+
   const [settings, banners] = await Promise.all([
     getStoreSettings(),
     prisma.banner.findMany({

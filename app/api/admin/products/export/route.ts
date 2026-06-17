@@ -2,19 +2,17 @@ import { NextResponse } from "next/server";
 import * as XLSX from "xlsx";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { requireReportStaff } from "@/lib/authz";
 import { productSheetColumns } from "@/lib/admin-product-bulk";
-
-async function requireAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
 
 function csvCell(value: unknown) {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
 export async function GET(request: Request) {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await auth();
+  const unauthorized = requireReportStaff(session);
+  if (unauthorized) return unauthorized;
   const format = new URL(request.url).searchParams.get("format") === "csv" ? "csv" : "xlsx";
   const products = await prisma.product.findMany({
     select: {

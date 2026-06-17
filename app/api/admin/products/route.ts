@@ -2,18 +2,17 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
+import { requireProductStaff } from "@/lib/authz";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
 import { isAllowedProductImageUrl, PRODUCT_IMAGE_FALLBACK, safeProductImageUrl } from "@/lib/image";
 
-async function requireAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
-
 export async function POST(request: Request) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    const unauthorized = requireProductStaff(session);
+    if (unauthorized) return unauthorized;
     const parsed = productSchema.safeParse(await request.json());
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
@@ -64,6 +63,14 @@ export async function POST(request: Request) {
 
     revalidateTag("products");
     revalidateTag("homepage");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "product_created",
+      targetType: "Product",
+      targetId: product.id,
+      metadata: { name: product.name, price: Number(product.price), stock: product.stock }
+    });
     return NextResponse.json({ product });
   } catch (error) {
     console.error("Product create failed", error);
@@ -75,7 +82,9 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await auth();
+  const unauthorized = requireProductStaff(session);
+  if (unauthorized) return unauthorized;
   const products = await prisma.product.findMany({
     select: {
       id: true,

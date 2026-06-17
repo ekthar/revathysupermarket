@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { canViewReports } from "@/lib/authz";
 import { products } from "@/lib/products";
 import { formatCurrency } from "@/lib/utils";
 import { AdminCharts } from "@/components/admin/admin-charts";
@@ -6,6 +8,8 @@ import { AdminCharts } from "@/components/admin/admin-charts";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
+  const session = await auth();
+  const canSeeFinancials = canViewReports(session?.user?.role);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -30,9 +34,9 @@ export default async function AdminPage() {
   const revenue = orders.reduce((sum, order) => sum + Number(order.total), 0);
   const lowStock = products.filter((product) => product.stock <= 15).slice(0, 6);
   const chartData = [
-    { name: "Today", orders: todayOrders, revenue },
+    { name: "Today", orders: todayOrders, revenue: canSeeFinancials ? revenue : 0 },
     { name: "Pending", orders: pendingOrders, revenue: 0 },
-    { name: "Delivered", orders: deliveredOrders, revenue: revenue * 0.65 }
+    { name: "Delivered", orders: deliveredOrders, revenue: canSeeFinancials ? revenue * 0.65 : 0 }
   ];
 
   return (
@@ -55,10 +59,12 @@ export default async function AdminPage() {
           </div>
         ))}
       </div>
-      <div className="mt-3 rounded-[1.5rem] border border-white/70 bg-primary p-4 text-white shadow-soft dark:border-white/10">
-        <p className="text-xs font-black uppercase text-white/70">Revenue</p>
-        <p className="mt-1 text-3xl font-black">{formatCurrency(revenue)}</p>
-      </div>
+      {canSeeFinancials ? (
+        <div className="mt-3 rounded-[1.5rem] border border-white/70 bg-primary p-4 text-white shadow-soft dark:border-white/10">
+          <p className="text-xs font-black uppercase text-white/70">Revenue</p>
+          <p className="mt-1 text-3xl font-black">{formatCurrency(revenue)}</p>
+        </div>
+      ) : null}
       <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
         <AdminCharts data={chartData} />
         <div className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">

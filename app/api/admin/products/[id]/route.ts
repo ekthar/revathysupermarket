@@ -2,14 +2,11 @@ import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { writeAuditLog } from "@/lib/audit";
+import { requireProductStaff } from "@/lib/authz";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
 import { isAllowedProductImageUrl, safeProductImageUrl } from "@/lib/image";
-
-async function requireAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
 
 async function uniqueProductSlug(name: string, id: string) {
   const baseSlug = slugify(name) || "product";
@@ -26,7 +23,9 @@ async function uniqueProductSlug(name: string, id: string) {
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    const unauthorized = requireProductStaff(session);
+    if (unauthorized) return unauthorized;
     const { id } = await params;
     const parsed = productSchema.partial().safeParse(await request.json());
     if (!parsed.success) {
@@ -45,6 +44,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     const { category, ...productData } = parsed.data;
+    const before = await prisma.product.findUnique({
+      where: { id },
+      select: { name: true, price: true, discountPrice: true, stock: true, isActive: true, isFeatured: true }
+    });
     const slug = productData.name ? await uniqueProductSlug(productData.name, id) : undefined;
     const product = await prisma.product.update({
       where: { id },
@@ -65,6 +68,28 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     });
     revalidateTag("products");
     revalidateTag("homepage");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "product_updated",
+      targetType: "Product",
+      targetId: product.id,
+      metadata: {
+        before: before ? {
+          ...before,
+          price: Number(before.price),
+          discountPrice: before.discountPrice ? Number(before.discountPrice) : null
+        } : null,
+        after: {
+          name: product.name,
+          price: Number(product.price),
+          discountPrice: product.discountPrice ? Number(product.discountPrice) : null,
+          stock: product.stock,
+          isActive: product.isActive,
+          isFeatured: product.isFeatured
+        }
+      }
+    });
     return NextResponse.json({ product });
   } catch (error) {
     console.error("Product update failed", error);
@@ -77,7 +102,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
 export async function DELETE(_: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    const unauthorized = requireProductStaff(session);
+    if (unauthorized) return unauthorized;
     const { id } = await params;
     const product = await prisma.product.update({
       where: { id },
@@ -86,6 +113,13 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     });
     revalidateTag("products");
     revalidateTag("homepage");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "product_deactivated",
+      targetType: "Product",
+      targetId: product.id
+    });
     return NextResponse.json({ ok: true, product });
   } catch (error) {
     console.error("Product delete failed", error);

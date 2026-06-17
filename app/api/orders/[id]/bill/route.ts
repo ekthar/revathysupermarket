@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateInclusiveGst, gstBusinessName } from "@/lib/billing";
+import { isStaffRole } from "@/lib/authz";
 import { getStoreSettingsForApi } from "@/lib/store-settings";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -14,7 +15,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     });
 
     if (!order) return NextResponse.json({ error: "Bill not found." }, { status: 404 });
-    if (order.userId && session?.user?.role !== "ADMIN" && session?.user?.id !== order.userId) {
+    if (order.userId && !isStaffRole(session?.user?.role) && session?.user?.id !== order.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

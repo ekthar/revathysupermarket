@@ -1,4 +1,6 @@
 import { prisma } from "@/lib/prisma";
+import { auth } from "@/auth";
+import { canManageProducts } from "@/lib/authz";
 import { ProductManagementForm } from "@/components/admin/product-management-form";
 import { AdminProductsClient, type AdminProduct } from "@/components/admin/admin-products-client";
 import { ProductSpreadsheetManager } from "@/components/admin/product-spreadsheet-manager";
@@ -6,6 +8,16 @@ import { ProductSpreadsheetManager } from "@/components/admin/product-spreadshee
 export const dynamic = "force-dynamic";
 
 export default async function AdminProductsPage() {
+  const session = await auth();
+  if (!canManageProducts(session?.user?.role)) {
+    return (
+      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+        <h2 className="font-display text-3xl font-black">Products</h2>
+        <p className="mt-2 text-sm text-muted-foreground">Product access is required.</p>
+      </div>
+    );
+  }
+
   const dbProducts = await prisma.product.findMany({
     select: {
       id: true,

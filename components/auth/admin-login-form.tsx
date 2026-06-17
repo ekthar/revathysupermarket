@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast-provider";
 
+const staffRoles = new Set(["ADMIN", "STAFF", "OWNER", "MANAGER", "PACKING_STAFF"]);
+
 export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: string }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -31,7 +33,7 @@ export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: strin
     }
 
     const session = await getSession();
-    if (session?.user?.role !== "ADMIN") {
+    if (!staffRoles.has(String(session?.user?.role ?? ""))) {
       await signOut({ redirect: false });
       setLoading(false);
       setMessage("This login is only for Revathy Supermarket admin users.");

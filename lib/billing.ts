@@ -26,6 +26,10 @@ export function calculateInclusiveGst(total: number, gstRatePercent = 0) {
   };
 }
 
+export function calculateOrderSubtotal(items: Array<{ price: number; quantity: number }>) {
+  return items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+}
+
 export function gstBusinessName(settings: StoreSettings) {
   return settings.gstBusinessName?.trim() || settings.storeName;
 }

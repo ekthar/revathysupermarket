@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { requireReportStaff } from "@/lib/authz";
 
 function csvCell(value: unknown) {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;
@@ -8,7 +9,8 @@ function csvCell(value: unknown) {
 
 export async function GET() {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = requireReportStaff(session);
+  if (unauthorized) return unauthorized;
 
   const orders = await prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: "desc" } });
   const rows = [

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { revalidatePath, revalidateTag } from "next/cache";
 import { z } from "zod";
 import { auth } from "@/auth";
+import { writeAuditLog } from "@/lib/audit";
+import { canManageSettings } from "@/lib/authz";
 import { getStoreSettingsForApi, saveStoreSettings } from "@/lib/store-settings";
 
 const settingsSchema = z.object({
@@ -21,19 +23,16 @@ const settingsSchema = z.object({
   gstBusinessName: z.string().trim().optional().default("")
 });
 
-async function requireAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
-
 export async function GET() {
-  if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const session = await auth();
+  if (!canManageSettings(session?.user?.role)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   return NextResponse.json({ settings: await getStoreSettingsForApi() });
 }
 
 export async function PUT(request: Request) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    if (!canManageSettings(session?.user?.role)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const parsed = settingsSchema.safeParse(await request.json());
     if (!parsed.success) {
       const issue = parsed.error.issues[0];
@@ -46,6 +45,18 @@ export async function PUT(request: Request) {
     revalidatePath("/admin/settings");
     revalidateTag("homepage");
     revalidateTag("store-settings");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "settings_updated",
+      targetType: "Setting",
+      targetId: "store",
+      metadata: {
+        deliveryRadiusKm: parsed.data.deliveryRadiusKm,
+        serviceablePincodes: parsed.data.serviceablePincodes,
+        gstRatePercent: parsed.data.gstRatePercent
+      }
+    });
     return NextResponse.json({ settings: parsed.data });
   } catch (error) {
     console.error("Settings save failed", error);

@@ -11,15 +11,43 @@ enum Role {
   CUSTOMER
   ADMIN
   STAFF
+  OWNER
+  MANAGER
+  PACKING_STAFF
+  DELIVERY_PARTNER
 }
 
 enum PaymentMethod {
   COD
   UPI_ON_DELIVERY
+  ONLINE
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  PARTIALLY_REFUNDED
+}
+
+enum ReturnStatus {
+  REQUESTED
+  APPROVED
+  REJECTED
+  REFUNDED
+}
+
+enum RefundMethod {
+  CASH
+  UPI
+  GATEWAY
+  WALLET
 }
 
 enum OrderStatus {
   ORDER_RECEIVED
+  AWAITING_CUSTOMER_APPROVAL
   ACCEPTED
   PACKING
   READY_FOR_DELIVERY
@@ -37,10 +65,27 @@ model User {
   passwordHash  String?
   phone         String?
   role          Role      @default(CUSTOMER)
+  isActive      Boolean   @default(true)
+  lastLoginAt   DateTime?
+  failedLoginAttempts Int  @default(0)
+  lockedUntil   DateTime?
+  passwordVersion Int     @default(0)
+  vehicleInfo   String?
+  currentLatitude Decimal? @db.Decimal(9, 6)
+  currentLongitude Decimal? @db.Decimal(9, 6)
+  locationUpdatedAt DateTime?
   accounts      Account[]
   sessions      Session[]
   addresses     Address[]
   orders        Order[]
+  assignedOrders Order[] @relation("OrderDeliveryPartner")
+  acknowledgedOrders Order[] @relation("OrderAcknowledgedBy")
+  pushSubscriptions PushSubscription[]
+  auditLogs     AuditLog[]
+  orderEditLogs OrderEditLog[]
+  resolvedReturns ReturnRequest[] @relation("ReturnResolvedBy")
+  walletTransactions WalletTransaction[]
+  passwordResetTokens PasswordResetToken[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 }
@@ -69,6 +114,19 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 model VerificationToken {
@@ -125,6 +183,7 @@ model Address {
   pincode   String
   latitude  Decimal  @db.Decimal(9, 6)
   longitude Decimal  @db.Decimal(9, 6)
+  isDefault Boolean  @default(false)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -146,16 +205,33 @@ model Order {
   longitude     Decimal       @db.Decimal(9, 6)
   distanceKm    Decimal       @db.Decimal(6, 2)
   paymentMethod PaymentMethod
+  paymentStatus PaymentStatus @default(PENDING)
+  paymentGatewayRef String?
   status        OrderStatus   @default(ORDER_RECEIVED)
   subtotal      Decimal       @db.Decimal(10, 2)
   total         Decimal       @db.Decimal(10, 2)
+  acknowledgedAt DateTime?
+  acknowledgedById String?
+  editApprovalStatus String?
+  editApprovalRequestedAt DateTime?
+  deliveryPartnerId String?
+  deliveryOtp String?
+  deliveryConfirmedAt DateTime?
   user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  acknowledgedBy User?        @relation("OrderAcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  deliveryPartner User?       @relation("OrderDeliveryPartner", fields: [deliveryPartnerId], references: [id], onDelete: SetNull)
   items         OrderItem[]
   statusEvents  OrderEvent[]
+  editLogs      OrderEditLog[]
+  returnRequests ReturnRequest[]
+  walletTransactions WalletTransaction[]
   createdAt     DateTime      @default(now())
   updatedAt     DateTime      @updatedAt
 
   @@index([status])
+  @@index([acknowledgedAt])
+  @@index([acknowledgedById])
+  @@index([deliveryPartnerId])
   @@index([createdAt])
   @@index([userId])
 }
@@ -181,6 +257,98 @@ model OrderEvent {
   note      String?
   order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
   createdAt DateTime    @default(now())
+}
+
+model OrderEditLog {
+  id           String   @id @default(cuid())
+  orderId      String
+  editedById   String?
+  action       String
+  originalItem Json?
+  newItem      Json?
+  priceDelta   Decimal  @default(0) @db.Decimal(10, 2)
+  reason       String?
+  requiresCustomerApproval Boolean @default(false)
+  customerDecision String?
+  decidedAt    DateTime?
+  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  editedBy     User?    @relation(fields: [editedById], references: [id], onDelete: SetNull)
+  createdAt    DateTime @default(now())
+
+  @@index([orderId])
+  @@index([editedById])
+  @@index([createdAt])
+}
+
+model ReturnRequest {
+  id              String       @id @default(cuid())
+  orderId         String
+  items           Json
+  reason          String
+  photoUrl        String?
+  note            String?
+  status          ReturnStatus @default(REQUESTED)
+  refundMethod    RefundMethod?
+  refundAmount    Decimal?     @db.Decimal(10, 2)
+  refundReference String?
+  resolutionNote  String?
+  resolvedById    String?
+  resolvedAt      DateTime?
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  resolvedBy      User?        @relation("ReturnResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([orderId])
+  @@index([status])
+  @@index([resolvedById])
+  @@index([createdAt])
+}
+
+model WalletTransaction {
+  id        String   @id @default(cuid())
+  userId    String
+  orderId   String?
+  amount    Decimal  @db.Decimal(10, 2)
+  type      String
+  reason    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String
+  endpoint  String   @unique
+  p256dh     String
+  auth      String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorRole  String
+  action     String
+  targetType String
+  targetId   String
+  metadata   Json?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([targetType, targetId])
+  @@index([createdAt])
 }
 
 model Banner {

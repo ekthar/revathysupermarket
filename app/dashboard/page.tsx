@@ -17,6 +17,10 @@ export default async function DashboardPage() {
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
+    editApprovalStatus: order.editApprovalStatus,
+    deliveryOtp: order.deliveryOtp,
+    latitude: Number(order.latitude),
+    longitude: Number(order.longitude),
     total: Number(order.total),
     createdAt: order.createdAt.toISOString(),
     items: order.items.map((item) => ({

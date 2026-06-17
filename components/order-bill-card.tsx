@@ -17,7 +17,7 @@ type BillData = {
     phone: string;
     whatsapp: string;
     address: string;
-    paymentMethod: "COD" | "UPI_ON_DELIVERY";
+    paymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
     status: keyof typeof statusLabels;
     total: number;
     createdAt: string;
@@ -69,7 +69,7 @@ export function OrderBillCard({ orderId, whatsappUrl }: { orderId: string; whats
       `Revathy Supermarket bill #${bill.order.orderNumber}`,
       `Customer: ${bill.order.customerName}`,
       `Total: ${formatCurrency(bill.order.total)}`,
-      `Payment: ${bill.order.paymentMethod === "COD" ? "Cash on Delivery" : "UPI on Delivery"}`,
+      `Payment: ${bill.order.paymentMethod === "COD" ? "Cash on Delivery" : bill.order.paymentMethod === "ONLINE" ? "Paid Online" : "UPI on Delivery"}`,
       `Status: ${statusLabels[bill.order.status]}`
     ].join("\n");
   }, [bill]);

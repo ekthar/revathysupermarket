@@ -14,6 +14,7 @@ export const SITE = {
 
 export const orderStatuses = [
   "ORDER_RECEIVED",
+  "AWAITING_CUSTOMER_APPROVAL",
   "ACCEPTED",
   "PACKING",
   "READY_FOR_DELIVERY",
@@ -24,6 +25,7 @@ export const orderStatuses = [
 
 export const statusLabels: Record<(typeof orderStatuses)[number], string> = {
   ORDER_RECEIVED: "Order Received",
+  AWAITING_CUSTOMER_APPROVAL: "Awaiting Customer Approval",
   ACCEPTED: "Accepted",
   PACKING: "Packing",
   READY_FOR_DELIVERY: "Ready For Delivery",

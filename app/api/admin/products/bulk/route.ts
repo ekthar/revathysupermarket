@@ -1,16 +1,15 @@
 import { NextResponse } from "next/server";
 import { revalidateTag } from "next/cache";
 import { auth } from "@/auth";
+import { writeAuditLog } from "@/lib/audit";
+import { requireProductStaff } from "@/lib/authz";
 import { normalizeProductSheetRow, upsertProductSheetRows } from "@/lib/admin-product-bulk";
-
-async function requireAdmin() {
-  const session = await auth();
-  return session?.user?.role === "ADMIN";
-}
 
 export async function PATCH(request: Request) {
   try {
-    if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const session = await auth();
+    const unauthorized = requireProductStaff(session);
+    if (unauthorized) return unauthorized;
     const body = await request.json();
     const rawRows: unknown[] = Array.isArray(body.rows) ? body.rows : [];
     if (rawRows.length === 0) return NextResponse.json({ error: "No product rows supplied." }, { status: 400 });
@@ -21,6 +20,14 @@ export async function PATCH(request: Request) {
 
     revalidateTag("products");
     revalidateTag("homepage");
+    await writeAuditLog({
+      actorId: session?.user?.id,
+      actorRole: session?.user?.role,
+      action: "products_bulk_updated",
+      targetType: "Product",
+      targetId: "bulk",
+      metadata: { rowCount: rows.length }
+    });
     return NextResponse.json(result);
   } catch (error) {
     console.error("Product bulk update failed", error);

@@ -1,6 +1,7 @@
 import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { requireProductStaff } from "@/lib/authz";
 import { getR2PublicUrl } from "@/lib/r2";
 
 function r2Client() {
@@ -16,7 +17,8 @@ function r2Client() {
 
 export async function POST(request: Request) {
   const session = await auth();
-  if (session?.user?.role !== "ADMIN") return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const unauthorized = requireProductStaff(session);
+  if (unauthorized) return unauthorized;
 
   const bucket = process.env.CLOUDFLARE_R2_BUCKET;
   if (!bucket) return NextResponse.json({ error: "Cloudflare R2 bucket is not configured." }, { status: 500 });

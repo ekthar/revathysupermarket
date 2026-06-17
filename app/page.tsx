@@ -107,12 +107,12 @@ export default async function HomePage() {
           { icon: ShieldCheck, title: "Pay on Delivery", text: "Choose COD or UPI when groceries arrive." },
           { icon: PackageCheck, title: "Manual Care", text: "Store staff verify, pack, and process every order." }
         ].map((item) => (
-          <div key={item.title} className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-white/95 p-4 text-slate-950 shadow-premium backdrop-blur md:block md:p-5 dark:border-white/10 dark:bg-slate-900/92 dark:text-white">
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
+          <div key={item.title} className="flex items-center gap-4 rounded-[1.5rem] border border-emerald-100 bg-white/95 p-4 text-slate-950 shadow-premium backdrop-blur md:block md:p-5 dark:border-white/10 dark:bg-slate-900 dark:text-white dark:shadow-[0_24px_70px_-34px_rgba(0,0,0,0.9)]">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10 dark:bg-emerald-400/12">
               <item.icon className="h-6 w-6 text-primary" />
             </span>
             <div>
-              <h2 className="font-display text-base font-bold md:mt-4 md:text-xl">{item.title}</h2>
+              <h2 className="font-display text-base font-bold text-slate-950 md:mt-4 md:text-xl dark:text-white">{item.title}</h2>
               <p className="mt-1 text-xs leading-5 text-slate-600 md:mt-2 md:text-sm dark:text-white/70">{item.text}</p>
             </div>
           </div>

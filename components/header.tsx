@@ -1,19 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Apple, Carrot, MapPin, Milk, ShoppingBag, ShoppingBasket, UserRound } from "lucide-react";
+import { Apple, Carrot, MapPin, Milk, ShoppingBag, ShoppingBasket } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useCart } from "@/components/cart/cart-provider";
-
-const navItems = [
-  { href: "/", label: "Home" },
-  { href: "/products", label: "Shop" },
-  { href: "/dashboard", label: "My Orders" },
-  { href: "/admin", label: "Admin" }
-];
+import { SessionIdentityCard, type SessionIdentity } from "@/components/session-identity-card";
+import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole } from "@/lib/roles";
 
 const flyingItems = [
   { icon: Apple, className: "text-berry-600" },
@@ -21,7 +16,7 @@ const flyingItems = [
   { icon: Milk, className: "text-sky-500" }
 ];
 
-export function Header() {
+export function Header({ user }: { user: SessionIdentity }) {
   const { totalItems } = useCart();
   const previousCount = useRef(totalItems);
   const [burst, setBurst] = useState(0);
@@ -31,6 +26,14 @@ export function Header() {
     if (!reduceMotion && totalItems > previousCount.current) setBurst((value) => value + 1);
     previousCount.current = totalItems;
   }, [reduceMotion, totalItems]);
+
+  const navItems = [
+    { href: "/", label: "Home", show: true },
+    { href: "/products", label: "Shop", show: true },
+    { href: "/dashboard", label: "My Orders", show: !user || isCustomerRole(user.role) },
+    { href: "/delivery", label: "Delivery", show: isDeliveryPartnerRole(user?.role) },
+    { href: "/admin", label: "Staff Panel", show: isStaffLoginRole(user?.role) }
+  ];
 
   return (
     <header className="sticky top-0 z-40 border-b border-emerald-950/5 bg-transparent px-2 pt-2 backdrop-blur-none dark:border-white/10">
@@ -71,7 +74,7 @@ export function Header() {
           </AnimatePresence>
         </Link>
         <nav className="hidden items-center gap-7 text-sm font-semibold text-slate-600 dark:text-slate-300 md:flex">
-          {navItems.map((item) => (
+          {navItems.filter((item) => item.show).map((item) => (
             <Link key={item.href} href={item.href} className="transition hover:text-primary">
               {item.label}
             </Link>
@@ -81,11 +84,12 @@ export function Header() {
           <div className="hidden sm:block">
             <ThemeToggle />
           </div>
-          <Button asChild variant="outline" size="icon" title="Account" className="h-10 w-10 rounded-2xl bg-card/80 backdrop-blur sm:h-11 sm:w-11">
-            <Link href="/login">
-              <UserRound className="h-4 w-4" />
-            </Link>
-          </Button>
+          <div className="hidden lg:block">
+            <SessionIdentityCard user={user} compact={false} className="w-64" />
+          </div>
+          <div className="lg:hidden">
+            <SessionIdentityCard user={user} compact className="p-0 border-0 bg-transparent" />
+          </div>
           <Button asChild size="icon" title="Cart" className="relative h-10 w-10 rounded-2xl sm:h-11 sm:w-11">
             <Link href="/cart">
               <motion.span animate={burst > 0 && !reduceMotion ? { scale: [1, 1.18, 1] } : { scale: 1 }} transition={{ duration: 0.32 }}>

@@ -8,8 +8,7 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast-provider";
-
-const staffRoles = new Set(["ADMIN", "STAFF", "OWNER", "MANAGER", "PACKING_STAFF"]);
+import { isDeliveryPartnerRole, isStaffLoginRole, roleLabel } from "@/lib/roles";
 
 export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: string }) {
   const router = useRouter();
@@ -33,15 +32,22 @@ export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: strin
     }
 
     const session = await getSession();
-    if (!staffRoles.has(String(session?.user?.role ?? ""))) {
+    const role = session?.user?.role;
+    if (isDeliveryPartnerRole(role)) {
+      showToast("Opening delivery assignments", "success");
+      router.push("/delivery");
+      router.refresh();
+      return;
+    }
+    if (!isStaffLoginRole(role)) {
       await signOut({ redirect: false });
       setLoading(false);
-      setMessage("This login is only for Revathy Supermarket admin users.");
-      showToast("Admin access required", "error");
+      setMessage("This is a customer account. Use Customer Login.");
+      showToast("Staff access required", "error");
       return;
     }
 
-    showToast("Welcome back, admin", "success");
+    showToast(`Welcome back, ${roleLabel(role)}`, "success");
     router.push(callbackUrl.startsWith("/admin") ? callbackUrl : "/admin");
     router.refresh();
   }
@@ -59,11 +65,11 @@ export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: strin
         </span>
         <div>
           <p className="text-xs font-black uppercase text-primary">Secure login</p>
-          <h2 className="font-display text-2xl font-black">Staff access</h2>
+          <h2 className="font-display text-2xl font-black">Staff Panel access</h2>
         </div>
       </div>
       <label className="mt-6 block">
-        <span className="text-sm font-bold">Admin email</span>
+        <span className="text-sm font-bold">Staff email</span>
         <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className="mt-2 h-12 rounded-2xl" />
       </label>
       <label className="mt-4 block">
@@ -73,8 +79,11 @@ export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: strin
       {message && <p className="mt-4 rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p>}
       <Button className="mt-5 w-full" size="lg" disabled={loading}>
         <LockKeyhole className="h-4 w-4" />
-        {loading ? "Checking access" : "Enter admin panel"}
+        {loading ? "Checking access" : "Enter Staff Panel"}
       </Button>
+      <a href="/login" className="mt-4 block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-primary">
+        Customer? Use Customer Login
+      </a>
     </motion.form>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Poppins } from "next/font/google";
 import "./globals.css";
+import { auth } from "@/auth";
 import { Header } from "@/components/header";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Providers } from "@/components/providers";
@@ -40,14 +41,22 @@ export const viewport: Viewport = {
   initialScale: 1
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  const user = session?.user?.id ? {
+    id: session.user.id,
+    name: session.user.name,
+    email: session.user.email,
+    role: session.user.role
+  } : null;
+
   return (
     <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
         <Providers>
-          <Header />
+          <Header user={user} />
           <div className="pb-24 md:pb-0">{children}</div>
-          <MobileBottomNav />
+          <MobileBottomNav user={user} />
         </Providers>
       </body>
     </html>

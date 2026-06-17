@@ -4,19 +4,21 @@ import Link from "next/link";
 import { Home, LayoutDashboard, Search, Settings, ShoppingBag } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/components/cart/cart-provider";
+import type { SessionIdentity } from "@/components/session-identity-card";
+import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
-const items = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/products", label: "Shop", icon: Search },
-  { href: "/cart", label: "Cart", icon: ShoppingBag },
-  { href: "/dashboard", label: "Orders", icon: LayoutDashboard },
-  { href: "/admin", label: "Admin", icon: Settings }
-];
-
-export function MobileBottomNav() {
+export function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
   const { totalItems } = useCart();
+  const items = [
+    { href: "/", label: "Home", icon: Home, show: true },
+    { href: "/products", label: "Shop", icon: Search, show: true },
+    { href: "/cart", label: "Cart", icon: ShoppingBag, show: !user || isCustomerRole(user.role) },
+    { href: "/dashboard", label: "Orders", icon: LayoutDashboard, show: !user || isCustomerRole(user.role) },
+    { href: "/delivery", label: "Delivery", icon: LayoutDashboard, show: isDeliveryPartnerRole(user?.role) },
+    { href: "/admin", label: "Staff", icon: Settings, show: isStaffLoginRole(user?.role) }
+  ].filter((item) => item.show).slice(0, 5);
 
   return (
     <nav className="glass-nav fixed inset-x-3 bottom-3 z-50 rounded-[1.75rem] p-2 md:hidden">

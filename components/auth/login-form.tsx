@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { getSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, LockKeyhole, Mail, Phone, ShoppingBasket, Sparkles, UserRound } from "lucide-react";
@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
+import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole, roleLabel } from "@/lib/roles";
 
 type Mode = "login" | "register";
 
@@ -36,6 +37,22 @@ export function LoginForm({
   async function customerLogin(email: string, password: string) {
     const result = await signIn("credentials", { email, password, redirect: false });
     if (result?.error) throw new Error("Invalid email or password.");
+    const session = await getSession();
+    const role = session?.user?.role;
+    if (isDeliveryPartnerRole(role)) {
+      router.push("/delivery");
+      router.refresh();
+      return "delivery";
+    }
+    if (isStaffLoginRole(role)) {
+      await signOut({ redirect: false });
+      throw new Error("This is a staff account. Use Staff Login.");
+    }
+    if (!isCustomerRole(role)) {
+      await signOut({ redirect: false });
+      throw new Error("This account cannot use customer login.");
+    }
+    return "customer";
   }
 
   async function submitLogin(event: React.FormEvent<HTMLFormElement>) {
@@ -43,8 +60,12 @@ export function LoginForm({
     setLoading(true);
     setMessage("");
     try {
-      await customerLogin(login.email, login.password);
-      showToast("Welcome back", "success");
+      const loginType = await customerLogin(login.email, login.password);
+      if (loginType === "delivery") {
+        showToast(`Opening ${roleLabel("DELIVERY_PARTNER")} panel`, "success");
+        return;
+      }
+      showToast("Welcome back, customer", "success");
       router.push(safeCallback);
       router.refresh();
     } catch (error) {
@@ -177,6 +198,9 @@ export function LoginForm({
                 <button type="button" onClick={() => setMode("register")} className="text-primary">Create account</button>
                 <Link href="/forgot-password" className="text-primary">Forgot password</Link>
               </div>
+              <Link href="/admin/login" className="mt-4 block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-primary">
+                Staff member? Use Staff Login
+              </Link>
             </motion.form>
           ) : (
             <motion.form

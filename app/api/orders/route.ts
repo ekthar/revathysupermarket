@@ -3,11 +3,11 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateDistanceKm } from "@/lib/distance";
 import { rateLimit } from "@/lib/rate-limit";
-import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { isStaffRole } from "@/lib/authz";
 import { checkoutSchema } from "@/lib/validations";
 import { isServiceablePincode } from "@/lib/delivery";
 import { getStoreSettingsForApi } from "@/lib/store-settings";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 
 function orderNumber() {
   const date = new Date();
@@ -71,7 +71,6 @@ export async function POST(request: Request) {
         userId: session.user.id,
         customerName: data.customerName,
         phone: data.phone,
-        whatsapp: data.whatsapp,
         houseName: data.houseName,
         street: data.street,
         landmark: data.landmark,
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
         longitude: data.longitude,
         distanceKm,
         paymentMethod: data.paymentMethod,
-        paymentStatus: data.paymentMethod === "ONLINE" ? "PENDING" : "PENDING",
+        paymentStatus: "PENDING",
         subtotal,
         total: subtotal,
         items: {
@@ -112,12 +111,14 @@ export async function POST(request: Request) {
       }
     }).catch(() => null);
 
-    const whatsappUrl = buildWhatsAppUrl({
-      orderNumber: order.orderNumber,
-      total: Number(order.total)
-    }, settings.whatsapp);
+    await sendWhatsAppTemplate({
+      to: order.phone,
+      template: "order_confirmed",
+      params: [order.orderNumber, String(order.items.length), Number(order.total).toFixed(2), order.paymentMethod],
+      orderId: order.id
+    });
 
-    return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber, whatsappUrl });
+    return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber });
   } catch (error) {
     console.error("Order create failed", error);
     return NextResponse.json({ error: "Order could not be placed. Please try again." }, { status: 500 });
@@ -135,7 +136,6 @@ export async function GET() {
         orderNumber: true,
         customerName: true,
         phone: true,
-        whatsapp: true,
         houseName: true,
         street: true,
         landmark: true,
@@ -154,7 +154,13 @@ export async function GET() {
         subtotal: true,
         total: true,
         createdAt: true,
-        items: true,
+        items: {
+          include: {
+            product: {
+              include: { category: true }
+            }
+          }
+        },
         deliveryPartner: {
           select: {
             currentLatitude: true,
@@ -190,7 +196,22 @@ export async function GET() {
         createdAt: order.createdAt.toISOString(),
         items: order.items.map((item) => ({
           ...item,
-          price: Number(item.price)
+          price: Number(item.price),
+          product: item.product ? {
+            id: item.product.id,
+            slug: item.product.slug,
+            name: item.product.name,
+            category: item.product.category.name,
+            price: Number(item.product.price),
+            discountPrice: item.product.discountPrice ? Number(item.product.discountPrice) : undefined,
+            image: item.product.image,
+            description: item.product.description,
+            stock: item.product.stock,
+            popularity: item.product.popularity,
+            unit: item.product.unit,
+            isFeatured: item.product.isFeatured,
+            createdAt: item.product.createdAt.toISOString()
+          } : null
         })),
         deliveryPartnerLocation: order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude ? {
           latitude: Number(order.deliveryPartner.currentLatitude),

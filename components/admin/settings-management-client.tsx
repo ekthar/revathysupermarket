@@ -4,7 +4,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Megaphone, Save, Settings, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Megaphone, MessageCircle, Save, Settings, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast-provider";
@@ -22,10 +22,17 @@ type Banner = {
 
 export function SettingsManagementClient({
   settings,
-  banners
+  banners,
+  whatsappConfig
 }: {
   settings: StoreSettings;
   banners: Banner[];
+  whatsappConfig: {
+    phoneNumberIdConfigured: boolean;
+    apiTokenConfigured: boolean;
+    verifyTokenConfigured: boolean;
+    businessPhone: string;
+  };
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -41,6 +48,7 @@ export function SettingsManagementClient({
     href: "",
     isActive: true
   });
+  const [testPhone, setTestPhone] = useState(whatsappConfig.businessPhone);
   const [localBanners, setLocalBanners] = useState(banners);
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
@@ -119,6 +127,20 @@ export function SettingsManagementClient({
     startTransition(() => router.refresh());
   }
 
+  async function sendTestMessage() {
+    const response = await fetch("/api/admin/whatsapp-test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone: testPhone })
+    });
+    const data = await readApiResponse<{ error?: string; success?: boolean }>(response);
+    if (!response.ok || !data.success) {
+      showToast(data.error ?? "Test message failed", "error");
+      return;
+    }
+    showToast("WhatsApp test message sent", "success");
+  }
+
   return (
     <>
       <form onSubmit={saveSettings} className="mt-5 grid gap-4 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5 md:grid-cols-2">
@@ -154,6 +176,42 @@ export function SettingsManagementClient({
           Save settings
         </Button>
       </form>
+
+      <section className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+        <div className="flex items-center gap-3">
+          <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
+            <MessageCircle className="h-5 w-5 text-primary" />
+          </span>
+          <div>
+            <h3 className="font-display text-2xl font-black">WhatsApp Business API</h3>
+            <p className="text-xs font-bold text-muted-foreground">Secrets are read from environment variables and kept masked.</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          <ConfigStatus label="Phone number ID" configured={whatsappConfig.phoneNumberIdConfigured} />
+          <ConfigStatus label="API token" configured={whatsappConfig.apiTokenConfigured} />
+          <ConfigStatus label="Webhook verify token" configured={whatsappConfig.verifyTokenConfigured} />
+          <div className="rounded-2xl border border-border bg-background/70 p-3">
+            <p className="text-xs font-black uppercase text-muted-foreground">Business phone</p>
+            <p className="mt-1 font-black">{whatsappConfig.businessPhone || "Not configured"}</p>
+          </div>
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-[1fr_auto]">
+          <Input value={testPhone} onChange={(event) => setTestPhone(event.target.value)} placeholder="Test phone number" className="h-12 rounded-2xl" />
+          <Button type="button" onClick={sendTestMessage}>
+            <MessageCircle className="h-4 w-4" />
+            Test message
+          </Button>
+        </div>
+        <div className="mt-4 grid gap-2 text-sm font-bold text-muted-foreground">
+          {["login_otp", "order_confirmed", "order_packed", "delivery_assigned", "out_for_delivery", "delivered", "order_edited", "return_approved"].map((template) => (
+            <div key={template} className="flex items-center justify-between rounded-2xl bg-muted px-3 py-2">
+              <span>{template}</span>
+              <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-black text-primary">Configured in Meta</span>
+            </div>
+          ))}
+        </div>
+      </section>
 
       <form onSubmit={createBanner} className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
         <div className="flex items-center gap-3">
@@ -203,5 +261,16 @@ export function SettingsManagementClient({
         </div>
       </form>
     </>
+  );
+}
+
+function ConfigStatus({ label, configured }: { label: string; configured: boolean }) {
+  return (
+    <div className="rounded-2xl border border-border bg-background/70 p-3">
+      <p className="text-xs font-black uppercase text-muted-foreground">{label}</p>
+      <p className={configured ? "mt-1 font-black text-primary" : "mt-1 font-black text-red-600"}>
+        {configured ? "Configured" : "Missing"}
+      </p>
+    </div>
   );
 }

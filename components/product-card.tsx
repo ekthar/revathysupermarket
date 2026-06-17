@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Bell, Minus, Plus, ShoppingCart } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -18,14 +18,19 @@ export function ProductCard({ product }: { product: Product }) {
   const cartItem = items.find((item) => item.id === product.id);
 
   function add() {
+    if (product.stock <= 0) return;
     addItem(product);
     showToast(`${product.name} added to cart`, "success");
+  }
+
+  function notifyMe() {
+    showToast(`We'll notify you when ${product.name} is back in stock`, "success");
   }
 
   return (
     <motion.article
       whileHover={{ y: -4 }}
-      className="group overflow-hidden rounded-[1.45rem] border border-white/70 bg-card/95 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.7)] transition dark:border-white/10"
+      className={product.stock <= 0 ? "group overflow-hidden rounded-[1.45rem] border border-white/70 bg-card/95 opacity-75 grayscale shadow-[0_18px_50px_-34px_rgba(15,23,42,0.7)] transition dark:border-white/10" : "group overflow-hidden rounded-[1.45rem] border border-white/70 bg-card/95 shadow-[0_18px_50px_-34px_rgba(15,23,42,0.7)] transition dark:border-white/10"}
     >
       <Link href={`/products/${product.slug}`} className="block">
         <div className="relative aspect-[1.08] overflow-hidden bg-muted sm:aspect-[4/3]">
@@ -102,6 +107,11 @@ export function ProductCard({ product }: { product: Product }) {
               </Button>
             )}
           </AnimatePresence>
+          {product.stock <= 0 ? (
+            <Button type="button" size="icon" variant="outline" onClick={notifyMe} title={`Notify me about ${product.name}`} className="h-10 w-10 shrink-0 rounded-2xl sm:h-11 sm:w-11">
+              <Bell className="h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
       </div>
     </motion.article>

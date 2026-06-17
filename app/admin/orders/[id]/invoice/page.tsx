@@ -38,7 +38,6 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           <h2 className="font-bold">Customer</h2>
           <p className="mt-2">{order.customerName}</p>
           <p>{order.phone}</p>
-          <p>{order.whatsapp}</p>
         </div>
         <div>
           <h2 className="font-bold">Delivery address</h2>

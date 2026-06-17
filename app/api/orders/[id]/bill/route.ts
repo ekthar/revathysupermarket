@@ -29,7 +29,6 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
         orderNumber: order.orderNumber,
         customerName: order.customerName,
         phone: order.phone,
-        whatsapp: order.whatsapp,
         address: `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`,
         paymentMethod: order.paymentMethod,
         status: order.status,

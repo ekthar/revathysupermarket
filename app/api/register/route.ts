@@ -21,15 +21,20 @@ export async function POST(request: Request) {
       );
     }
 
-    const existing = await prisma.user.findUnique({ where: { email: parsed.data.email } });
-    if (existing) return NextResponse.json({ error: "An account already exists for this email." }, { status: 409 });
+    const email = parsed.data.email?.trim() || undefined;
+    const phone = parsed.data.phone.replace(/\D/g, "");
+    const existing = await prisma.user.findFirst({
+      where: { OR: [{ phone }, ...(email ? [{ email }] : [])] }
+    });
+    if (existing) return NextResponse.json({ error: "An account already exists for this phone or email." }, { status: 409 });
 
-    const passwordHash = await bcrypt.hash(parsed.data.password, 12);
+    const passwordHash = parsed.data.password ? await bcrypt.hash(parsed.data.password, 12) : undefined;
     const user = await prisma.user.create({
       data: {
         name: parsed.data.name,
-        email: parsed.data.email,
-        phone: parsed.data.phone,
+        email,
+        phone,
+        phoneVerified: false,
         passwordHash
       },
       select: { id: true, name: true, email: true }

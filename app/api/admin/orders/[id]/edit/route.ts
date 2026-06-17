@@ -5,6 +5,7 @@ import { calculateOrderSubtotal } from "@/lib/billing";
 import { requireOrderStaff } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { orderEditSchema } from "@/lib/validations";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 
 const AUTO_APPROVE_DELTA = Number(process.env.ORDER_EDIT_AUTO_APPROVE_DELTA ?? 50);
 
@@ -63,7 +64,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     : { price: Number(entry.price), quantity: entry.quantity });
   const nextTotal = calculateOrderSubtotal(nextItems);
   const priceDelta = nextTotal - previousTotal;
-  const requiresCustomerApproval = order.paymentMethod === "ONLINE" || Math.abs(priceDelta) > AUTO_APPROVE_DELTA;
+  const requiresCustomerApproval = Math.abs(priceDelta) > AUTO_APPROVE_DELTA;
 
   await prisma.$transaction(async (tx) => {
     await tx.orderItem.update({
@@ -114,6 +115,14 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     url: "/dashboard",
     orderId: id
   });
+  if (requiresCustomerApproval) {
+    await sendWhatsAppTemplate({
+      to: order.phone,
+      template: "order_edited",
+      params: [order.orderNumber],
+      orderId: id
+    });
+  }
 
   return NextResponse.json({ ok: true, priceDelta, requiresCustomerApproval });
 }

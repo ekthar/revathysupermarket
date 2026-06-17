@@ -20,7 +20,6 @@ enum Role {
 enum PaymentMethod {
   COD
   UPI_ON_DELIVERY
-  ONLINE
 }
 
 enum PaymentStatus {
@@ -59,11 +58,12 @@ enum OrderStatus {
 model User {
   id            String    @id @default(cuid())
   name          String?
-  email         String    @unique
+  email         String?   @unique
   emailVerified DateTime?
   image         String?
   passwordHash  String?
-  phone         String?
+  phone         String?   @unique
+  phoneVerified Boolean   @default(false)
   role          Role      @default(CUSTOMER)
   isActive      Boolean   @default(true)
   lastLoginAt   DateTime?
@@ -86,8 +86,40 @@ model User {
   resolvedReturns ReturnRequest[] @relation("ReturnResolvedBy")
   walletTransactions WalletTransaction[]
   passwordResetTokens PasswordResetToken[]
+  otpTokens     OtpToken[]
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+}
+
+model OtpToken {
+  id        String   @id @default(cuid())
+  phone     String
+  tokenHash String
+  expiresAt DateTime
+  attempts  Int      @default(0)
+  usedAt    DateTime?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([phone, expiresAt])
+  @@index([userId])
+}
+
+model WhatsAppLog {
+  id        String   @id @default(cuid())
+  phone     String
+  orderId   String?
+  template  String
+  messageId String?
+  status    String   @default("sent")
+  error     String?
+  statusAt  DateTime?
+  createdAt DateTime @default(now())
+
+  @@index([orderId])
+  @@index([phone])
+  @@index([createdAt])
 }
 
 model Account {
@@ -195,7 +227,6 @@ model Order {
   userId        String?
   customerName  String
   phone         String
-  whatsapp      String
   houseName     String
   street        String
   landmark      String
@@ -206,7 +237,6 @@ model Order {
   distanceKm    Decimal       @db.Decimal(6, 2)
   paymentMethod PaymentMethod
   paymentStatus PaymentStatus @default(PENDING)
-  paymentGatewayRef String?
   status        OrderStatus   @default(ORDER_RECEIVED)
   subtotal      Decimal       @db.Decimal(10, 2)
   total         Decimal       @db.Decimal(10, 2)

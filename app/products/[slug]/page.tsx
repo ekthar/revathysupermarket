@@ -35,8 +35,9 @@ async function getProduct(slug: string): Promise<Product | undefined> {
     description: dbProduct.description,
     stock: dbProduct.stock,
     popularity: dbProduct.popularity,
-    unit: dbProduct.unit,
-    isFeatured: dbProduct.isFeatured
+      unit: dbProduct.unit,
+      isFeatured: dbProduct.isFeatured,
+      createdAt: dbProduct.createdAt.toISOString()
   };
 }
 
@@ -64,7 +65,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     .slice(0, 4);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+    <main className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 sm:py-10 lg:px-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{
@@ -83,11 +84,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           })
         }}
       />
-      <section className="grid gap-8 lg:grid-cols-2">
-        <div className="relative aspect-square overflow-hidden rounded-2xl border border-border bg-muted shadow-soft">
+      <section className="grid gap-0 overflow-hidden rounded-[2rem] bg-card/95 shadow-soft lg:grid-cols-2">
+        <div className="relative aspect-[1.05] overflow-hidden bg-muted lg:aspect-square">
           <ProductImage src={product.image} alt={product.name} />
+          <div className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-slate-950/55 to-transparent" />
         </div>
-        <div className="flex flex-col justify-center">
+        <div className="-mt-8 flex flex-col justify-center rounded-t-[2rem] bg-card/95 p-5 backdrop-blur lg:mt-0 lg:rounded-none lg:p-8">
           <Badge>{product.category}</Badge>
           <h1 className="mt-4 font-display text-4xl font-black">{product.name}</h1>
           <p className="mt-4 text-lg text-muted-foreground">{product.description}</p>

@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, ChevronDown, Home, LocateFixed, MapPin, Navigation, Phone, Send, WalletCards } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { AlertCircle, CheckCircle2, ChevronDown, Home, LocateFixed, MapPin, Navigation, PartyPopper, Phone, Send, WalletCards } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,17 +16,17 @@ import { useToast } from "@/components/toast-provider";
 import { isServiceablePincode, serviceablePincodes } from "@/lib/delivery";
 import type { StoreSettings } from "@/lib/store-settings";
 import { OrderBillCard } from "@/components/order-bill-card";
+import { Confetti } from "@/components/ui/confetti";
 
 type CheckoutState = {
   customerName: string;
   phone: string;
-  whatsapp: string;
   houseName: string;
   street: string;
   landmark: string;
   pincode: string;
   notes: string;
-  paymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
+  paymentMethod: "COD" | "UPI_ON_DELIVERY";
   latitude: string;
   longitude: string;
 };
@@ -46,7 +47,6 @@ type SavedAddress = {
 const initialState: CheckoutState = {
   customerName: "",
   phone: "",
-  whatsapp: "",
   houseName: "",
   street: "",
   landmark: "",
@@ -75,7 +75,6 @@ export function CheckoutForm({
   const { showToast } = useToast();
   const [form, setForm] = useState(initialState);
   const [message, setMessage] = useState("");
-  const [whatsappUrl, setWhatsappUrl] = useState("");
   const [placedOrderId, setPlacedOrderId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationState, setLocationState] = useState<LocationState>("idle");
@@ -93,6 +92,14 @@ export function CheckoutForm({
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
   const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting;
+
+  useEffect(() => {
+    if (!placedOrderId) return;
+    const timeout = window.setTimeout(() => {
+      window.location.href = "/dashboard";
+    }, 3500);
+    return () => window.clearTimeout(timeout);
+  }, [placedOrderId]);
 
   function update(name: keyof CheckoutState, value: string) {
     setForm((current) => ({ ...current, [name]: value }));
@@ -177,7 +184,7 @@ export function CheckoutForm({
         })
       });
 
-      const data = await readApiResponse<{ error?: string; orderId?: string; orderNumber?: string; whatsappUrl?: string }>(response);
+      const data = await readApiResponse<{ error?: string; orderId?: string; orderNumber?: string }>(response);
       setIsSubmitting(false);
 
       if (!response.ok) {
@@ -188,12 +195,8 @@ export function CheckoutForm({
 
       clearCart();
       if (data.orderId) setPlacedOrderId(data.orderId);
-      if (data.whatsappUrl) {
-        setWhatsappUrl(data.whatsappUrl);
-        window.open(data.whatsappUrl, "_blank", "noopener,noreferrer");
-      }
       showToast("Order placed successfully", "success");
-      setMessage(`Order #${data.orderNumber} placed. Your bill is ready below.`);
+      setMessage(`Order #${data.orderNumber} placed. Confirmation will arrive on WhatsApp.`);
     } catch {
       setIsSubmitting(false);
       setMessage("Order could not be placed. Please check your connection and try again.");
@@ -203,12 +206,31 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={submit} className="mt-6 grid min-w-0 gap-5 pb-28 lg:grid-cols-[minmax(0,1fr)_360px] lg:pb-0">
+      {placedOrderId ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/92 px-4 backdrop-blur">
+          <Confetti />
+          <div className="relative w-full max-w-md rounded-[2rem] border border-white/70 bg-card/95 p-6 text-center shadow-premium dark:border-white/10">
+            <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-[1.75rem] bg-lime-fresh text-slate-950">
+              <PartyPopper className="h-10 w-10" />
+            </span>
+            <h2 className="mt-5 font-display text-3xl font-black">Order placed</h2>
+            <p className="mt-2 text-sm font-bold text-muted-foreground">WhatsApp confirmation is being sent. You will be taken to My Orders.</p>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <Button asChild type="button" variant="outline">
+                <Link href={`/api/orders/${placedOrderId}/bill`}>View bill data</Link>
+              </Button>
+              <Button asChild type="button">
+                <Link href="/dashboard">Track order</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
       <div className="grid min-w-0 gap-5">
         <CheckoutSection icon={Phone} eyebrow="Step 1" title="Contact details">
           <div className="grid min-w-0 gap-3 sm:grid-cols-2">
             <Field label="Customer name" value={form.customerName} onChange={(value) => update("customerName", value)} />
             <Field label="Phone number" type="tel" value={form.phone} onChange={(value) => update("phone", value)} />
-            <Field label="WhatsApp number" type="tel" value={form.whatsapp} onChange={(value) => update("whatsapp", value)} className="sm:col-span-2" />
           </div>
         </CheckoutSection>
 
@@ -321,7 +343,6 @@ export function CheckoutForm({
         <div className="mt-4 grid gap-3">
           <PaymentCard active={form.paymentMethod === "COD"} label="Cash on Delivery" onClick={() => update("paymentMethod", "COD")} />
           <PaymentCard active={form.paymentMethod === "UPI_ON_DELIVERY"} label="UPI on Delivery" onClick={() => update("paymentMethod", "UPI_ON_DELIVERY")} />
-          <PaymentCard active={form.paymentMethod === "ONLINE"} label="Pay now" onClick={() => update("paymentMethod", "ONLINE")} />
         </div>
         <div className="mt-5 rounded-2xl bg-muted p-4 text-sm leading-6 text-muted-foreground">
           <MapPin className="mb-2 h-4 w-4 text-primary" />
@@ -338,12 +359,7 @@ export function CheckoutForm({
           </div>
         </div>
         {message && <p className="mt-4 rounded-xl bg-muted p-3 text-sm font-medium">{message}</p>}
-        {whatsappUrl && (
-          <a href={whatsappUrl} target="_blank" rel="noreferrer" className="mt-3 block rounded-xl bg-lime-fresh p-3 text-center text-sm font-black text-slate-950">
-            Open WhatsApp order message
-          </a>
-        )}
-        {placedOrderId && <OrderBillCard orderId={placedOrderId} whatsappUrl={whatsappUrl} />}
+        {placedOrderId && <OrderBillCard orderId={placedOrderId} />}
         <Button className="mt-5 w-full" size="lg" disabled={!canSubmit}>
           <Send className="h-4 w-4" />
           {isSubmitting ? "Placing order" : "Place order"}
@@ -419,6 +435,7 @@ function Field({
 }
 
 function PaymentCard({ active, label, onClick }: { active: boolean; label: string; onClick: () => void }) {
+  const description = label === "Cash on Delivery" ? "Pay with cash when order arrives" : "Pay via UPI/GPay to delivery partner";
   return (
     <button
       type="button"
@@ -426,7 +443,10 @@ function PaymentCard({ active, label, onClick }: { active: boolean; label: strin
       className={active ? "flex items-center gap-3 rounded-2xl border border-primary bg-primary/10 p-4 text-left" : "flex items-center gap-3 rounded-2xl border border-border p-4 text-left"}
     >
       <span className={active ? "flex h-5 w-5 items-center justify-center rounded-full bg-primary text-white" : "h-5 w-5 rounded-full border border-border"}>{active && <CheckCircle2 className="h-3.5 w-3.5" />}</span>
-      <span className="font-bold">{label}</span>
+      <span>
+        <span className="block font-bold">{label}</span>
+        <span className="mt-1 block text-xs font-semibold text-muted-foreground">{description}</span>
+      </span>
     </button>
   );
 }

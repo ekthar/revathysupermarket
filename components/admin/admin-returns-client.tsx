@@ -59,7 +59,7 @@ export function AdminReturnsClient({ returns }: { returns: AdminReturn[] }) {
         resolutionNote,
         refundReference,
         refundAmount: current?.refundAmount,
-        refundMethod: status === "REFUNDED" ? (current?.paymentMethod === "ONLINE" ? "GATEWAY" : current?.paymentMethod === "UPI_ON_DELIVERY" ? "UPI" : "CASH") : undefined
+        refundMethod: status === "REFUNDED" ? (current?.paymentMethod === "UPI_ON_DELIVERY" ? "UPI" : "CASH") : undefined
       })
     });
     const data = await readApiResponse<{ error?: string }>(response);

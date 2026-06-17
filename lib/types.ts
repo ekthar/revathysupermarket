@@ -22,6 +22,7 @@ export type Product = {
   popularity: number;
   unit: string;
   isFeatured?: boolean;
+  createdAt?: string;
 };
 
 export type CartItem = Product & {

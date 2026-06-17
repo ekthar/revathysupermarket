@@ -12,13 +12,14 @@ import { categories, products } from "@/lib/products";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
-type SortMode = "popularity" | "low" | "high";
+type SortMode = "popularity" | "low" | "high" | "newest";
 
-export function ProductGrid({ items = products }: { items?: Product[] }) {
+export function ProductGrid({ items = products, initialCategory = "All" }: { items?: Product[]; initialCategory?: string }) {
   const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("All");
+  const [category, setCategory] = useState(initialCategory);
   const [maxPrice, setMaxPrice] = useState(350);
   const [sort, setSort] = useState<SortMode>("popularity");
+  const [visibleCount, setVisibleCount] = useState(24);
   const { totalItems, subtotal } = useCart();
 
   const filtered = useMemo(() => {
@@ -36,9 +37,11 @@ export function ProductGrid({ items = products }: { items?: Product[] }) {
         const bPrice = b.discountPrice ?? b.price;
         if (sort === "low") return aPrice - bPrice;
         if (sort === "high") return bPrice - aPrice;
+        if (sort === "newest") return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
         return b.popularity - a.popularity;
       });
   }, [category, items, maxPrice, query, sort]);
+  const visibleItems = filtered.slice(0, visibleCount);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
@@ -86,6 +89,7 @@ export function ProductGrid({ items = products }: { items?: Product[] }) {
           <option value="popularity">Popularity</option>
           <option value="low">Price Low To High</option>
           <option value="high">Price High To Low</option>
+          <option value="newest">Newest</option>
         </select>
         <div className="mt-3 md:col-span-3">
           <div className="flex items-center justify-between text-xs font-black sm:text-sm">
@@ -104,11 +108,20 @@ export function ProductGrid({ items = products }: { items?: Product[] }) {
       </div>
 
       {filtered.length > 0 ? (
-        <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-          {filtered.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        <>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+            {visibleItems.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </div>
+          {visibleItems.length < filtered.length ? (
+            <div className="mt-8 flex justify-center">
+              <Button type="button" variant="outline" onClick={() => setVisibleCount((count) => count + 24)}>
+                Load more
+              </Button>
+            </div>
+          ) : null}
+        </>
       ) : (
         <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center">
           <p className="font-display text-2xl font-bold">No matching products</p>

@@ -34,7 +34,16 @@ export default async function AdminSettingsPage() {
         <h2 className="mt-2 font-display text-4xl font-black leading-tight">Settings</h2>
         <p className="mt-2 text-sm text-muted-foreground">Manage contact details, delivery radius, map links, and offers.</p>
       </div>
-      <SettingsManagementClient settings={settings} banners={banners} />
+      <SettingsManagementClient
+        settings={settings}
+        banners={banners}
+        whatsappConfig={{
+          phoneNumberIdConfigured: Boolean(process.env.WHATSAPP_PHONE_NUMBER_ID),
+          apiTokenConfigured: Boolean(process.env.WHATSAPP_API_TOKEN),
+          verifyTokenConfigured: Boolean(process.env.WHATSAPP_VERIFY_TOKEN),
+          businessPhone: process.env.WHATSAPP_BUSINESS_PHONE ?? settings.whatsapp
+        }}
+      />
       <div className="mt-5 rounded-[1.75rem] border border-white/70 bg-primary p-5 text-white shadow-soft dark:border-white/10">
         <MapPin className="h-6 w-6 text-lime-fresh" />
         <h3 className="mt-3 font-display text-2xl font-black">Delivery radius</h3>

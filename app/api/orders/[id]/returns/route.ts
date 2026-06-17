@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import { returnRequestSchema } from "@/lib/validations";
 
-const RETURN_WINDOW_HOURS = Number(process.env.RETURN_WINDOW_HOURS ?? 48);
+const RETURN_WINDOW_HOURS = Number(process.env.RETURN_WINDOW_HOURS ?? 24);
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();

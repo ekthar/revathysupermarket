@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, MapPin, Navigation, RefreshCcw, RotateCcw, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, MapPin, Navigation, RefreshCcw, RotateCcw, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { orderStatuses, statusLabels } from "@/lib/constants";
 import { readApiResponse } from "@/lib/client-api";
 import { cn, formatCurrency } from "@/lib/utils";
+import { DeliveryOtpCard } from "@/components/dashboard/delivery-otp-card";
+import { OrderTrackingMap } from "@/components/dashboard/order-tracking-map";
+import { useCart } from "@/components/cart/cart-provider";
+import type { Product } from "@/lib/types";
 
 const enableSseTracking = process.env.NEXT_PUBLIC_ENABLE_SSE_TRACKING === "true";
 
@@ -20,7 +24,7 @@ export type CustomerOrder = {
   total: number;
   createdAt: string;
   deliveryPartnerLocation?: { latitude: number; longitude: number; updatedAt?: string } | null;
-  items: Array<{ id: string; name: string; quantity: number; price: number }>;
+  items: Array<{ id: string; name: string; quantity: number; price: number; product?: Product | null }>;
   editLogs: Array<{
     id: string;
     action: string;
@@ -69,6 +73,7 @@ function editActionLabel(action: string) {
 }
 
 export function CustomerOrdersClient({ initialOrders }: { initialOrders: CustomerOrder[] }) {
+  const { addItems } = useCart();
   const [orders, setOrders] = useState(initialOrders);
   const [liveOrders, setLiveOrders] = useState<Record<string, LiveOrderState>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -158,6 +163,18 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
     if (response.ok) window.alert("Return request submitted.");
   }
 
+  function reorder(order: CustomerOrder) {
+    const products = order.items
+      .filter((item) => item.product && item.quantity > 0)
+      .map((item) => ({ ...item.product!, quantity: item.quantity }));
+    if (products.length === 0) {
+      window.alert("Products from this order are no longer available for reorder.");
+      return;
+    }
+    addItems(products);
+    window.location.href = "/cart";
+  }
+
   if (orders.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-dashed border-border p-10 text-center">
@@ -227,10 +244,16 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
               ) : null}
               <OrderItemsSummary items={visibleItems} />
               {order.status === "DELIVERED" ? (
-                <button onClick={() => requestReturn(order)} className="mt-5 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 px-4 text-sm font-black">
-                  <RotateCcw className="h-4 w-4 text-primary" />
-                  Request return
-                </button>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  <button onClick={() => reorder(order)} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary px-4 text-sm font-black text-white">
+                    <RotateCcw className="h-4 w-4" />
+                    Reorder
+                  </button>
+                  <button onClick={() => requestReturn(order)} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 px-4 text-sm font-black">
+                    <RotateCcw className="h-4 w-4 text-primary" />
+                    Request return
+                  </button>
+                </div>
               ) : null}
               <LiveTrackingPanel order={order} live={liveOrders[order.id]} />
             </motion.article>
@@ -355,9 +378,6 @@ function LiveTrackingPanel({ order, live }: { order: CustomerOrder; live?: LiveO
   const destination = { latitude: order.latitude, longitude: order.longitude };
   const distance = rider ? distanceKm(rider, destination) : null;
   const etaMinutes = distance !== null ? Math.max(2, Math.ceil((distance / 18) * 60)) : null;
-  const mapUrl = rider
-    ? `https://www.google.com/maps?q=${rider.latitude},${rider.longitude}&z=15&output=embed`
-    : `https://www.google.com/maps?q=${order.latitude},${order.longitude}&z=15&output=embed`;
   const directionsUrl = rider
     ? `https://www.google.com/maps/dir/?api=1&origin=${rider.latitude},${rider.longitude}&destination=${order.latitude},${order.longitude}`
     : `https://www.google.com/maps/search/?api=1&query=${order.latitude},${order.longitude}`;
@@ -365,25 +385,17 @@ function LiveTrackingPanel({ order, live }: { order: CustomerOrder; live?: LiveO
   return (
     <div className="mt-5 overflow-hidden rounded-[1.5rem] border border-border bg-background/70">
       <div className="grid gap-3 p-4 sm:grid-cols-2">
-        {order.deliveryOtp && !order.deliveryOtp.includes("*") ? (
-          <div className="rounded-2xl bg-primary/10 p-3 text-primary">
-            <p className="flex items-center gap-2 text-xs font-black uppercase"><ShieldCheck className="h-4 w-4" />Delivery OTP</p>
-            <p className="mt-1 text-2xl font-black tracking-[0.2em]">{order.deliveryOtp}</p>
-            <p className="mt-1 text-xs font-bold">Share this with the rider only at handover.</p>
-          </div>
-        ) : null}
+        {order.deliveryOtp && !order.deliveryOtp.includes("*") && ["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY"].includes(order.status) ? <DeliveryOtpCard otp={order.deliveryOtp} /> : null}
         <div className="rounded-2xl bg-muted p-3">
           <p className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground"><Navigation className="h-4 w-4 text-primary" />Live tracking</p>
           <p className="mt-1 font-black">{rider ? "Rider location active" : "Waiting for rider location"}</p>
           {etaMinutes !== null ? <p className="mt-1 text-sm text-muted-foreground">Approx ETA {etaMinutes} min - {distance?.toFixed(2)} km away</p> : null}
         </div>
       </div>
-      <iframe
+      <OrderTrackingMap
         title={`Live delivery map for ${order.orderNumber}`}
-        src={mapUrl}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        className="h-64 w-full border-0"
+        latitude={rider?.latitude ?? order.latitude}
+        longitude={rider?.longitude ?? order.longitude}
       />
       <a href={directionsUrl} target="_blank" rel="noreferrer" className="flex h-11 items-center justify-center gap-2 bg-primary text-sm font-black text-white">
         <MapPin className="h-4 w-4" />

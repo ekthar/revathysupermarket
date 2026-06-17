@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import { requireReturnStaff } from "@/lib/authz";
 import { returnResolutionSchema } from "@/lib/validations";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -52,6 +53,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     targetId: id,
     metadata: parsed.data
   });
+  if (["APPROVED", "REFUNDED"].includes(parsed.data.status)) {
+    await sendWhatsAppTemplate({
+      to: returnRequest.order.phone,
+      template: "return_approved",
+      params: [
+        returnRequest.order.orderNumber,
+        Number(parsed.data.refundAmount ?? returnRequest.refundAmount ?? 0).toFixed(2),
+        parsed.data.refundMethod ?? returnRequest.refundMethod ?? "CASH"
+      ],
+      orderId: returnRequest.orderId
+    });
+  }
 
   return NextResponse.json({ returnRequest });
 }

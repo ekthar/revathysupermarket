@@ -1,14 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus, Trash2 } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { ProductImage } from "@/components/product-image";
+import { products } from "@/lib/products";
+import { ProductCard } from "@/components/product-card";
 
 export function CartPageClient() {
   const { items, subtotal, removeItem, updateQuantity } = useCart();
+  const suggestions = products.filter((product) => !items.some((item) => item.id === product.id)).slice(0, 4);
 
   if (items.length === 0) {
     return (
@@ -32,7 +36,16 @@ export function CartPageClient() {
       <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
         <section className="min-w-0 space-y-3 sm:space-y-4">
           {items.map((item) => (
-            <article key={item.id} className="grid min-w-0 grid-cols-[84px_minmax(0,1fr)] gap-3 rounded-[1.5rem] border border-white/70 bg-card/95 p-3 shadow-soft dark:border-white/10 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:gap-4 sm:p-4">
+            <motion.article
+              key={item.id}
+              drag="x"
+              dragConstraints={{ left: -90, right: 0 }}
+              dragElastic={0.18}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -80) removeItem(item.id);
+              }}
+              className="grid min-w-0 grid-cols-[84px_minmax(0,1fr)] gap-3 rounded-[1.5rem] border border-white/70 bg-card/95 p-3 shadow-soft dark:border-white/10 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:gap-4 sm:p-4"
+            >
               <div className="relative aspect-square overflow-hidden rounded-[1.15rem] bg-muted">
                 <ProductImage src={item.image} alt={item.name} />
               </div>
@@ -56,8 +69,19 @@ export function CartPageClient() {
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
-            </article>
+            </motion.article>
           ))}
+          {suggestions.length > 0 ? (
+            <section className="mt-6">
+              <div className="flex items-center gap-2">
+                <ShoppingCart className="h-5 w-5 text-primary" />
+                <h2 className="font-display text-2xl font-black">You might also like</h2>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
+                {suggestions.map((product) => <ProductCard key={product.id} product={product} />)}
+              </div>
+            </section>
+          ) : null}
         </section>
         <aside className="h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-[0_20px_60px_-38px_rgba(15,23,42,0.75)] dark:border-white/10 lg:sticky lg:top-24">
           <h2 className="font-display text-2xl font-bold">Order summary</h2>

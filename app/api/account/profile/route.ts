@@ -30,3 +30,26 @@ export async function PATCH(request: Request) {
   });
   return NextResponse.json({ user });
 }
+
+export async function DELETE() {
+  const session = await auth();
+  if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  await prisma.$transaction(async (tx) => {
+    await tx.order.updateMany({
+      where: { userId: session.user.id },
+      data: { userId: null }
+    });
+    await tx.user.delete({ where: { id: session.user.id } });
+  });
+
+  await writeAuditLog({
+    actorId: null,
+    actorRole: session.user.role,
+    action: "account_deleted",
+    targetType: "User",
+    targetId: session.user.id
+  }).catch(() => null);
+
+  return NextResponse.json({ ok: true });
+}

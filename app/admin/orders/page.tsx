@@ -10,7 +10,6 @@ export default async function AdminOrdersPage() {
       orderNumber: true,
       customerName: true,
       phone: true,
-      whatsapp: true,
       houseName: true,
       street: true,
       landmark: true,
@@ -43,6 +42,23 @@ export default async function AdminOrdersPage() {
     select: { id: true, name: true, phone: true },
     orderBy: { name: "asc" }
   }).catch(() => []);
+  const orderIds = orders.map((order) => order.id);
+  const whatsappLogs = orderIds.length > 0
+    ? await prisma.whatsAppLog.findMany({
+        where: { orderId: { in: orderIds } },
+        select: { id: true, orderId: true, template: true, status: true, createdAt: true },
+        orderBy: { createdAt: "desc" },
+        take: 200
+      }).catch(() => [])
+    : [];
+  const logsByOrder = new Map<string, Array<{ id: string; template: string; status: string; createdAt: string }>>();
+  for (const log of whatsappLogs) {
+    if (!log.orderId) continue;
+    logsByOrder.set(log.orderId, [
+      ...(logsByOrder.get(log.orderId) ?? []),
+      { id: log.id, template: log.template, status: log.status, createdAt: log.createdAt.toISOString() }
+    ]);
+  }
 
   return (
     <AdminOrdersClient
@@ -60,7 +76,6 @@ export default async function AdminOrdersPage() {
         orderNumber: order.orderNumber,
         customerName: order.customerName,
         phone: order.phone,
-        whatsapp: order.whatsapp,
         address: `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`,
         total: Number(order.total),
         status: order.status,
@@ -72,7 +87,8 @@ export default async function AdminOrdersPage() {
           name: item.name,
           quantity: item.quantity,
           price: Number(item.price)
-        }))
+        })),
+        whatsappLogs: logsByOrder.get(order.id) ?? []
       }))}
     />
   );

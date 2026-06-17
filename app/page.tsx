@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
 import { LocationMap } from "@/components/location-map";
 import { HomeHero } from "@/components/home/home-hero";
+import { HomeSearch } from "@/components/home/home-search";
 import { HowItWorksCard, MotionCategoryCard, RevealSection } from "@/components/home/home-motion";
 import { categories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
@@ -53,6 +54,32 @@ const getHomepageFeaturedProducts = unstable_cache(
   { revalidate: 60, tags: ["homepage", "products"] }
 );
 
+const getHomepageProducts = unstable_cache(
+  async () =>
+    prisma.product.findMany({
+      where: { isActive: true },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        description: true,
+        image: true,
+        price: true,
+        discountPrice: true,
+        stock: true,
+        popularity: true,
+        unit: true,
+        isFeatured: true,
+        createdAt: true,
+        category: { select: { name: true } }
+      },
+      orderBy: [{ popularity: "desc" }, { createdAt: "desc" }],
+      take: 24
+    }).catch(() => []),
+  ["homepage-products"],
+  { revalidate: 60, tags: ["homepage", "products"] }
+);
+
 const categoryAccents = [
   "bg-primary/10 text-primary ring-primary/5",
   "bg-lime-fresh/25 text-primary ring-lime-fresh/10",
@@ -62,11 +89,30 @@ const categoryAccents = [
 ];
 
 export default async function HomePage() {
-  const [settings, activeBanner, dbFeatured] = await Promise.all([
+  const [settings, activeBanner, dbFeatured, dbProducts] = await Promise.all([
     getPublicStoreSettings(),
     getHomepageBanner(),
-    getHomepageFeaturedProducts()
+    getHomepageFeaturedProducts(),
+    getHomepageProducts()
   ]);
+
+  const mappedProducts = dbProducts.length > 0
+    ? dbProducts.map((product) => ({
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        category: product.category.name as Product["category"],
+        price: Number(product.price),
+        discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
+        image: product.image,
+        description: product.description,
+        stock: product.stock,
+        popularity: product.popularity,
+        unit: product.unit,
+        isFeatured: product.isFeatured,
+        createdAt: product.createdAt.toISOString()
+      }))
+    : products;
 
   const featuredProducts = dbFeatured.length > 0
     ? dbFeatured.map((product) => ({
@@ -83,7 +129,9 @@ export default async function HomePage() {
         unit: product.unit,
         isFeatured: product.isFeatured
       }))
-    : bestSellers;
+    : mappedProducts.sort((a, b) => b.popularity - a.popularity).slice(0, 8);
+  const trendingProducts = [...mappedProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 10);
+  const justAddedProducts = [...mappedProducts].sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime()).slice(0, 8);
 
   const heroImage = activeBanner?.image || defaultHeroImage;
   const heroTitle = activeBanner?.title || "Fresh Groceries Delivered To Your Doorstep";
@@ -100,6 +148,7 @@ export default async function HomePage() {
         deliveryRadiusKm={settings.deliveryRadiusKm}
         gstEnabled={settings.gstRatePercent > 0 || Boolean(settings.gstin)}
       />
+      <HomeSearch products={mappedProducts} />
 
       <RevealSection className="relative mx-auto -mt-20 grid max-w-7xl gap-3 px-4 pb-10 sm:px-6 md:grid-cols-3 lg:px-8">
         {[
@@ -141,6 +190,25 @@ export default async function HomePage() {
         </div>
       </RevealSection>
 
+      <RevealSection className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        <div className="flex items-end justify-between gap-5">
+          <div>
+            <Badge>Trending now</Badge>
+            <h2 className="mt-3 font-display text-3xl font-black leading-tight">Popular in your store</h2>
+          </div>
+          <Button asChild variant="outline" className="hidden sm:inline-flex">
+            <Link href="/products">Shop all</Link>
+          </Button>
+        </div>
+        <div className="no-scrollbar -mx-4 mt-6 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0">
+          {trendingProducts.map((product) => (
+            <div key={product.id} className="w-[172px] shrink-0 snap-start sm:w-[220px]">
+              <ProductCard product={product} />
+            </div>
+          ))}
+        </div>
+      </RevealSection>
+
       <RevealSection className="bg-[linear-gradient(180deg,rgba(15,138,95,0.07),rgba(167,209,41,0.08))] py-12 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between gap-5">
@@ -154,6 +222,20 @@ export default async function HomePage() {
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
+        </div>
+      </RevealSection>
+
+      <RevealSection className="mx-auto max-w-7xl px-4 py-12 sm:px-6 sm:py-14 lg:px-8">
+        <div className="flex items-end justify-between gap-5">
+          <div>
+            <Badge>Just added</Badge>
+            <h2 className="mt-3 font-display text-3xl font-black leading-tight">Freshly stocked picks</h2>
+          </div>
+        </div>
+        <div className="mt-7 grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          {justAddedProducts.map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
         </div>
       </RevealSection>
 

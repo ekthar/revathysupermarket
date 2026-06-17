@@ -25,6 +25,7 @@ const getProducts = unstable_cache(async (): Promise<Product[]> => {
       popularity: true,
       unit: true,
       isFeatured: true,
+      createdAt: true,
       category: { select: { name: true } }
     },
     orderBy: [{ popularity: "desc" }, { createdAt: "desc" }]
@@ -44,12 +45,19 @@ const getProducts = unstable_cache(async (): Promise<Product[]> => {
     stock: product.stock,
     popularity: product.popularity,
     unit: product.unit,
-    isFeatured: product.isFeatured
+    isFeatured: product.isFeatured,
+    createdAt: product.createdAt.toISOString()
   }));
 }, ["public-products"], { revalidate: 30, tags: ["products"] });
 
-export default async function ProductsPage() {
+export default async function ProductsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ category?: string }>;
+}) {
+  const { category } = await searchParams;
   const products = await getProducts();
+  const initialCategory = category && ["All", ...new Set(products.map((product) => product.category))].includes(category) ? category : "All";
   return (
     <main>
       <section className="overflow-hidden bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.14))] py-10 sm:py-14">
@@ -61,7 +69,7 @@ export default async function ProductsPage() {
           </p>
         </div>
       </section>
-      <ProductGrid items={products} />
+      <ProductGrid items={products} initialCategory={initialCategory} />
     </main>
   );
 }

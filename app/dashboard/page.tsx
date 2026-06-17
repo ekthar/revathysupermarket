@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CustomerOrdersClient, type CustomerOrder } from "@/components/dashboard/customer-orders-client";
+import type { Product } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,13 @@ export default async function DashboardPage() {
     ? await prisma.order.findMany({
         where: { userId: session.user.id },
         include: {
-          items: true,
+          items: {
+            include: {
+              product: {
+                include: { category: true }
+              }
+            }
+          },
           deliveryPartner: {
             select: {
               currentLatitude: true,
@@ -50,7 +57,22 @@ export default async function DashboardPage() {
       id: item.id,
       name: item.name,
       quantity: item.quantity,
-      price: Number(item.price)
+      price: Number(item.price),
+      product: item.product ? {
+        id: item.product.id,
+        slug: item.product.slug,
+        name: item.product.name,
+        category: item.product.category.name as Product["category"],
+        price: Number(item.product.price),
+        discountPrice: item.product.discountPrice ? Number(item.product.discountPrice) : undefined,
+        image: item.product.image,
+        description: item.product.description,
+        stock: item.product.stock,
+        popularity: item.product.popularity,
+        unit: item.product.unit,
+        isFeatured: item.product.isFeatured,
+        createdAt: item.product.createdAt.toISOString()
+      } : null
     })),
     deliveryPartnerLocation: order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude ? {
       latitude: Number(order.deliveryPartner.currentLatitude),

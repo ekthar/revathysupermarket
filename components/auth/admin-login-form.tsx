@@ -23,7 +23,7 @@ export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: strin
     setLoading(true);
     setMessage("");
 
-    const result = await signIn("credentials", { email, password, redirect: false });
+    const result = await signIn("staff-credentials", { email, password, redirect: false });
     if (result?.error) {
       setLoading(false);
       setMessage("Invalid staff email or password.");

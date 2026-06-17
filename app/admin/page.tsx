@@ -17,14 +17,22 @@ export default async function AdminPage() {
   let pendingOrders = 0;
   let deliveredOrders = 0;
   let packingOrders = 0;
+  let whatsappMessagesToday = 0;
+  let receivedOrders = 0;
+  let readyOrders = 0;
+  let outForDeliveryOrders = 0;
   let orders: Awaited<ReturnType<typeof prisma.order.findMany>> = [];
 
   try {
-    [todayOrders, pendingOrders, packingOrders, deliveredOrders, orders] = await Promise.all([
+    [todayOrders, pendingOrders, packingOrders, deliveredOrders, whatsappMessagesToday, receivedOrders, readyOrders, outForDeliveryOrders, orders] = await Promise.all([
       prisma.order.count({ where: { createdAt: { gte: today } } }),
       prisma.order.count({ where: { status: { in: ["ORDER_RECEIVED", "ACCEPTED", "PACKING"] } } }),
       prisma.order.count({ where: { status: "PACKING" } }),
       prisma.order.count({ where: { status: "DELIVERED" } }),
+      prisma.whatsAppLog.count({ where: { createdAt: { gte: today } } }),
+      prisma.order.count({ where: { status: "ORDER_RECEIVED" } }),
+      prisma.order.count({ where: { status: "READY_FOR_DELIVERY" } }),
+      prisma.order.count({ where: { status: "OUT_FOR_DELIVERY" } }),
       prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: "desc" }, take: 25 })
     ]);
   } catch {
@@ -52,6 +60,7 @@ export default async function AdminPage() {
           ["Pending Orders", pendingOrders],
           ["Packing", packingOrders],
           ["Delivered Orders", deliveredOrders],
+          ["WhatsApp Sent", whatsappMessagesToday],
         ].map(([label, value]) => (
           <div key={label} className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
             <p className="text-xs font-black uppercase text-muted-foreground">{label}</p>
@@ -67,15 +76,34 @@ export default async function AdminPage() {
       ) : null}
       <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_340px]">
         <AdminCharts data={chartData} />
-        <div className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
-          <h3 className="font-display text-2xl font-bold">Low stock alerts</h3>
-          <div className="mt-4 grid gap-3">
-            {lowStock.map((product) => (
-              <div key={product.id} className="flex justify-between rounded-xl bg-muted p-3 text-sm font-bold">
-                <span>{product.name}</span>
-                <span>{product.stock}</span>
-              </div>
-            ))}
+        <div className="grid gap-5">
+          <div className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
+            <h3 className="font-display text-2xl font-bold">Order funnel</h3>
+            <div className="mt-4 grid gap-3">
+              {[
+                ["Received", receivedOrders],
+                ["Packing", packingOrders],
+                ["Ready", readyOrders],
+                ["Out", outForDeliveryOrders],
+                ["Delivered", deliveredOrders]
+              ].map(([label, value]) => (
+                <div key={label} className="flex items-center justify-between rounded-xl bg-muted p-3 text-sm font-bold">
+                  <span>{label}</span>
+                  <span>{value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
+            <h3 className="font-display text-2xl font-bold">Low stock alerts</h3>
+            <div className="mt-4 grid gap-3">
+              {lowStock.map((product) => (
+                <div key={product.id} className="flex justify-between rounded-xl bg-muted p-3 text-sm font-bold">
+                  <span>{product.name}</span>
+                  <span>{product.stock}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </div>

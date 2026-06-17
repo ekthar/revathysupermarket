@@ -19,7 +19,7 @@ export default async function AccountPage() {
       </section>
       {user ? (
         <AccountClient
-          user={{ name: user.name ?? "", email: user.email, phone: user.phone ?? "" }}
+          user={{ name: user.name ?? "", email: user.email ?? "", phone: user.phone ?? "" }}
           addresses={user.addresses.map((address) => ({
             id: address.id,
             label: address.label,

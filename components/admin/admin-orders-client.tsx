@@ -13,7 +13,6 @@ type AdminOrder = {
   orderNumber: string;
   customerName: string;
   phone: string;
-  whatsapp: string;
   address: string;
   total: number;
   status: keyof typeof statusLabels;
@@ -21,6 +20,7 @@ type AdminOrder = {
   acknowledgedAt: string | null;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number }>;
+  whatsappLogs: Array<{ id: string; template: string; status: string; createdAt: string }>;
 };
 type AdminProduct = { id: string; name: string; price: number };
 type DeliveryPartner = { id: string; name: string };
@@ -104,14 +104,14 @@ export function AdminOrdersClient({
         orderNumber: order.orderNumber,
         customerName: order.customerName,
         phone: order.phone,
-        whatsapp: order.whatsapp,
         address: order.address ?? `${order.houseName ?? ""}, ${order.street ?? ""}, ${order.landmark ?? ""}, ${order.pincode ?? ""}`,
         total: Number(order.total),
         status: order.status,
         deliveryPartnerId: order.deliveryPartnerId ?? null,
         acknowledgedAt: order.acknowledgedAt ?? null,
         createdAt: order.createdAt,
-        items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price) }))
+        items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price) })),
+        whatsappLogs: order.whatsappLogs ?? []
       })));
     }
     const interval = window.setInterval(refreshOrders, 6000);
@@ -359,7 +359,7 @@ export function AdminOrdersClient({
                 <Phone className="h-4 w-4 text-primary" />
                 Call
               </a>
-              <a href={`https://wa.me/${order.whatsapp.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-lime-fresh text-sm font-black text-slate-950">
+              <a href={`https://wa.me/${order.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-lime-fresh text-sm font-black text-slate-950">
                 <Send className="h-4 w-4" />
                 WhatsApp
               </a>
@@ -422,6 +422,20 @@ export function AdminOrdersClient({
               ))}
             </ul>
             <OrderStatusForm orderId={order.id} currentStatus={order.status} onStatusChange={(status) => updateOrderStatus(order.id, status)} />
+            {order.whatsappLogs.length > 0 ? (
+              <div className="mt-4 rounded-2xl bg-muted p-3">
+                <p className="text-xs font-black uppercase text-muted-foreground">WhatsApp timeline</p>
+                <div className="mt-2 grid gap-2">
+                  {order.whatsappLogs.slice(0, 5).map((log) => (
+                    <div key={log.id} className="flex flex-wrap justify-between gap-2 rounded-xl bg-background/70 px-3 py-2 text-xs font-bold">
+                      <span>{log.template}</span>
+                      <span className="text-primary">{log.status}</span>
+                      <span className="text-muted-foreground">{new Date(log.createdAt).toLocaleString("en-IN")}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
             <div className="mt-4">
               <label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
                 Delivery partner

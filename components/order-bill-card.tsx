@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Download, MessageCircle, Printer } from "lucide-react";
+import { Copy, Download, Printer } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { statusLabels } from "@/lib/constants";
@@ -15,9 +15,8 @@ type BillData = {
     orderNumber: string;
     customerName: string;
     phone: string;
-    whatsapp: string;
     address: string;
-    paymentMethod: "COD" | "UPI_ON_DELIVERY" | "ONLINE";
+    paymentMethod: "COD" | "UPI_ON_DELIVERY";
     status: keyof typeof statusLabels;
     total: number;
     createdAt: string;
@@ -40,7 +39,7 @@ type BillData = {
   };
 };
 
-export function OrderBillCard({ orderId, whatsappUrl }: { orderId: string; whatsappUrl?: string }) {
+export function OrderBillCard({ orderId }: { orderId: string }) {
   const { showToast } = useToast();
   const [bill, setBill] = useState<BillData | null>(null);
   const [error, setError] = useState("");
@@ -69,7 +68,7 @@ export function OrderBillCard({ orderId, whatsappUrl }: { orderId: string; whats
       `Revathy Supermarket bill #${bill.order.orderNumber}`,
       `Customer: ${bill.order.customerName}`,
       `Total: ${formatCurrency(bill.order.total)}`,
-      `Payment: ${bill.order.paymentMethod === "COD" ? "Cash on Delivery" : bill.order.paymentMethod === "ONLINE" ? "Paid Online" : "UPI on Delivery"}`,
+      `Payment: ${bill.order.paymentMethod === "COD" ? "Cash on Delivery" : "UPI on Delivery"}`,
       `Status: ${statusLabels[bill.order.status]}`
     ].join("\n");
   }, [bill]);
@@ -134,7 +133,7 @@ export function OrderBillCard({ orderId, whatsappUrl }: { orderId: string; whats
         </div>
         <div className="rounded-2xl bg-slate-50 p-3 dark:bg-white/[0.08]">
           <p className="font-black text-slate-950 dark:text-white">{bill.order.customerName}</p>
-          <p>{bill.order.phone} | {bill.order.whatsapp}</p>
+          <p>{bill.order.phone}</p>
           <p>{bill.order.address}</p>
         </div>
         <div className="grid gap-2">
@@ -163,7 +162,6 @@ export function OrderBillCard({ orderId, whatsappUrl }: { orderId: string; whats
         <Button type="button" variant="outline" onClick={downloadImage}><Download className="h-4 w-4" /> Image</Button>
         <Button type="button" variant="outline" onClick={() => window.print()}><Printer className="h-4 w-4" /> PDF/Print</Button>
         <Button type="button" variant="outline" onClick={copySummary}><Copy className="h-4 w-4" /> Copy</Button>
-        {whatsappUrl && <Button type="button" asChild><a href={whatsappUrl} target="_blank" rel="noreferrer"><MessageCircle className="h-4 w-4" /> WhatsApp</a></Button>}
       </div>
     </motion.section>
   );

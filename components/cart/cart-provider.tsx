@@ -8,6 +8,7 @@ type CartContextValue = {
   totalItems: number;
   subtotal: number;
   addItem: (product: Product, quantity?: number) => void;
+  addItems: (products: Array<Product & { quantity?: number }>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -59,6 +60,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
             );
           }
           return [...current, { ...product, quantity }];
+        });
+      },
+      addItems(productsToAdd) {
+        setItems((current) => {
+          const next = [...current];
+          for (const product of productsToAdd) {
+            const quantity = product.quantity ?? 1;
+            const existingIndex = next.findIndex((item) => item.id === product.id);
+            if (existingIndex >= 0) {
+              next[existingIndex] = { ...next[existingIndex], quantity: next[existingIndex].quantity + quantity };
+            } else {
+              next.push({ ...product, quantity });
+            }
+          }
+          return next;
         });
       },
       removeItem(id) {

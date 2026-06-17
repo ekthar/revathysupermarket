@@ -5,6 +5,7 @@ import { writeAuditLog } from "@/lib/audit";
 import { requireOrderStaff } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { deliveryAssignmentSchema } from "@/lib/validations";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 
 function createOtp() {
   return String(Math.floor(100000 + Math.random() * 900000));
@@ -26,7 +27,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       deliveryPartnerId: parsed.data.deliveryPartnerId,
       deliveryOtp: parsed.data.deliveryPartnerId ? createOtp() : null
     },
-    select: { id: true, deliveryOtp: true, userId: true, orderNumber: true }
+    select: { id: true, deliveryOtp: true, userId: true, orderNumber: true, phone: true }
   });
   await writeAuditLog({
     actorId: session?.user?.id,
@@ -37,6 +38,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     metadata: { deliveryPartnerId: parsed.data.deliveryPartnerId }
   });
   if (parsed.data.deliveryPartnerId) {
+    await sendWhatsAppTemplate({
+      to: order.phone,
+      template: "delivery_assigned",
+      params: [order.orderNumber, order.deliveryOtp ?? ""],
+      orderId: order.id
+    });
     await sendPushToUser(order.userId, {
       title: "Delivery partner assigned",
       body: `Order #${order.orderNumber} is ready for delivery. Your OTP is ${order.deliveryOtp}.`,

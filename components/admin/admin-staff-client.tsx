@@ -9,7 +9,7 @@ import { roleLabel } from "@/lib/roles";
 type StaffMember = {
   id: string;
   name: string | null;
-  email: string;
+  email: string | null;
   phone: string | null;
   role: string;
   isActive: boolean;
@@ -85,7 +85,7 @@ export function AdminStaffClient({ staff }: { staff: StaffMember[] }) {
           <article key={member.id} className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="font-black">{member.name ?? member.email}</h3>
+                <h3 className="font-black">{member.name ?? member.email ?? member.phone ?? "Staff member"}</h3>
                 <p className="mt-1 text-sm text-muted-foreground">{member.email} - {member.phone ?? "No phone"} - {roleLabel(member.role)}</p>
                 <p className="mt-1 text-xs font-bold text-muted-foreground">Last login: {member.lastLoginAt ? new Date(member.lastLoginAt).toLocaleString("en-IN") : "Never"}</p>
               </div>

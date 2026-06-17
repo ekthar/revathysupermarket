@@ -1,9 +1,11 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
+import Google from "next-auth/providers/google";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import authConfig from "@/auth.config";
+import { normalizeIndianPhone, verifyLatestOtp } from "@/lib/otp";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -15,6 +17,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = (user as { role?: string }).role;
         token.name = user.name;
         token.email = user.email;
+        token.phone = (user as { phone?: string | null }).phone ?? null;
         token.passwordVersion = (user as { passwordVersion?: number }).passwordVersion ?? 0;
       }
       return token;
@@ -24,7 +27,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = token.id
           ? await prisma.user.findUnique({
               where: { id: token.id as string },
-              select: { passwordVersion: true, isActive: true, role: true, name: true, email: true }
+              select: { passwordVersion: true, isActive: true, role: true, name: true, email: true, phone: true }
             }).catch(() => null)
           : null;
         const tokenVersion = Number(token.passwordVersion ?? 0);
@@ -37,14 +40,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = token.id as string;
         session.user.role = user.role;
         session.user.name = user.name;
-        session.user.email = user.email;
+        session.user.email = user.email ?? "";
+        session.user.phone = user.phone ?? null;
         session.user.passwordVersion = user.passwordVersion;
       }
       return session;
     }
   },
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true
+    }),
     Credentials({
+      id: "staff-credentials",
+      name: "Staff email and password",
       credentials: {
         email: {},
         password: {}
@@ -87,6 +98,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           id: user.id,
           name: user.name,
           email: user.email,
+          phone: user.phone,
+          role: user.role,
+          passwordVersion: user.passwordVersion
+        };
+      }
+    }),
+    Credentials({
+      id: "phone-otp",
+      name: "WhatsApp OTP",
+      credentials: {
+        phone: {},
+        otp: {},
+        name: {}
+      },
+      async authorize(credentials) {
+        const phone = normalizeIndianPhone(String(credentials?.phone ?? ""));
+        const otp = String(credentials?.otp ?? "");
+        const name = String(credentials?.name ?? "").trim();
+        if (!/^91\d{10}$/.test(phone) || !/^\d{6}$/.test(otp)) return null;
+
+        const verified = await verifyLatestOtp(phone, otp);
+        if (!verified.ok) return null;
+
+        const user = await prisma.user.upsert({
+          where: { phone },
+          create: {
+            name: name || null,
+            phone,
+            phoneVerified: true,
+            role: "CUSTOMER",
+            isActive: true,
+            lastLoginAt: new Date()
+          },
+          update: {
+            name: name || undefined,
+            phoneVerified: true,
+            isActive: true,
+            lastLoginAt: new Date()
+          }
+        });
+        if (!user.isActive) return null;
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
           role: user.role,
           passwordVersion: user.passwordVersion
         };

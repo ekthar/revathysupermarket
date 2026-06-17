@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ClipboardList, Home, Package, RotateCcw, Settings, ShoppingBasket, Users } from "lucide-react";
+import { BarChart3, ClipboardList, Home, Package, RotateCcw, Settings, ShoppingBasket, Users } from "lucide-react";
 import { auth } from "@/auth";
 import { SessionIdentityCard } from "@/components/session-identity-card";
 import { canManageProducts, canManageReturns, canManageSettings, canManageStaff, canViewReports, isStaffRole } from "@/lib/authz";
@@ -15,6 +15,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/orders", label: "Orders", icon: ShoppingBasket, show: true },
     { href: "/admin/returns", label: "Returns", icon: RotateCcw, show: canManageReturns(role) },
     { href: "/admin/customers", label: "Customers", icon: Users, show: canViewReports(role) },
+    { href: "/admin/reports", label: "Reports", icon: BarChart3, show: canViewReports(role) },
     { href: "/admin/staff", label: "Staff", icon: Users, show: canManageStaff(role) },
     { href: "/admin/audit-log", label: "Audit", icon: ClipboardList, show: canViewReports(role) },
     { href: "/admin/settings", label: "Settings", icon: Settings, show: canManageSettings(role) }

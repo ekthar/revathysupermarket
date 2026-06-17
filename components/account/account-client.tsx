@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn, signOut } from "next-auth/react";
-import { CheckCircle2, Chrome, Home, Phone, Save, Trash2 } from "lucide-react";
+import { CheckCircle2, Chrome, Download, Home, Phone, Save, Trash2 } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
 
 type Address = { id: string; label: string; houseName: string; street: string; landmark: string; pincode: string; isDefault: boolean };
@@ -37,6 +37,11 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
       return;
     }
     setLocalAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
+  }
+
+  async function deleteAddress(id: string) {
+    const response = await fetch(`/api/account/addresses/${id}`, { method: "DELETE" });
+    if (response.ok) setLocalAddresses((current) => current.filter((address) => address.id !== id));
   }
 
   async function sendPhoneOtp() {
@@ -115,7 +120,10 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
                 {address.isDefault ? <span className="text-xs font-black text-primary"><CheckCircle2 className="mr-1 inline h-3.5 w-3.5" />Default</span> : null}
               </div>
               <p className="mt-1 text-sm">{address.houseName}, {address.street}, {address.landmark}, {address.pincode}</p>
-              {!address.isDefault ? <button onClick={() => makeDefault(address.id)} className="mt-3 text-xs font-black text-primary">Make default</button> : null}
+              <div className="mt-3 flex flex-wrap gap-3">
+                {!address.isDefault ? <button onClick={() => makeDefault(address.id)} className="text-xs font-black text-primary">Make default</button> : null}
+                <button onClick={() => deleteAddress(address.id)} className="text-xs font-black text-red-600">Delete</button>
+              </div>
             </article>
           ))}
         </div>
@@ -127,6 +135,10 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
           <Trash2 className="h-4 w-4" />
           Delete my account
         </button>
+        <a href="/api/account/export" className="ml-2 mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-4 text-sm font-black text-red-700">
+          <Download className="h-4 w-4" />
+          Export my data
+        </a>
       </section>
       {message ? <p className="rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p> : null}
     </div>

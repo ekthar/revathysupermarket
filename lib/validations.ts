@@ -45,7 +45,8 @@ export const productSchema = z.object({
 });
 
 export const orderStatusSchema = z.object({
-  status: z.enum(orderStatuses)
+  status: z.enum(orderStatuses),
+  staffNote: z.string().max(500).optional()
 });
 
 export const pushSubscriptionSchema = z.object({

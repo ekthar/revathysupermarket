@@ -53,6 +53,7 @@ export default async function DashboardPage() {
     longitude: Number(order.longitude),
     total: Number(order.total),
     createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
     items: order.items.map((item) => ({
       id: item.id,
       name: item.name,

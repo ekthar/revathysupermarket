@@ -28,6 +28,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     where: { id },
     data: {
       status: parsed.data.status,
+      staffNote: parsed.data.staffNote,
       paymentStatus: parsed.data.status === "DELIVERED" ? "PAID" : undefined,
       deliveryConfirmedAt: parsed.data.status === "DELIVERED" ? new Date() : undefined,
       statusEvents: { create: { status: parsed.data.status, note: "Updated by staff." } }

@@ -154,6 +154,7 @@ export async function GET() {
         subtotal: true,
         total: true,
         createdAt: true,
+        updatedAt: true,
         items: {
           include: {
             product: {
@@ -194,6 +195,7 @@ export async function GET() {
         subtotal: Number(order.subtotal),
         total: Number(order.total),
         createdAt: order.createdAt.toISOString(),
+        updatedAt: order.updatedAt.toISOString(),
         items: order.items.map((item) => ({
           ...item,
           price: Number(item.price),

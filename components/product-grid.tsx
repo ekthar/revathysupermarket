@@ -50,7 +50,14 @@ export function ProductGrid({ items = products, initialCategory = "All" }: { ite
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
           <Input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              const value = event.target.value;
+              setQuery(value);
+              if (value.trim().length >= 3) {
+                const saved = JSON.parse(window.localStorage.getItem("revathy-search-history") || "[]") as string[];
+                window.localStorage.setItem("revathy-search-history", JSON.stringify([value.trim(), ...saved.filter((item) => item !== value.trim())].slice(0, 8)));
+              }
+            }}
             placeholder="Search groceries"
             className="h-12 rounded-2xl border-border bg-background/85 pl-11 shadow-sm"
           />

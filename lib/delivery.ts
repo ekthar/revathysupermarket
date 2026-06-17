@@ -21,3 +21,11 @@ export function isServiceablePincode(pincode: string, allowed = serviceablePinco
 export function deliverySummary(radiusKm = SITE.deliveryRadiusKm, pincodes = serviceablePincodes()) {
   return `${radiusKm} KM delivery radius. Serviceable pincodes: ${pincodes.join(", ")}.`;
 }
+
+export function createDeliveryOtp() {
+  return String(Math.floor(100000 + Math.random() * 900000));
+}
+
+export function deliveryOtpExpiryDate(minutes = 30) {
+  return new Date(Date.now() + minutes * 60 * 1000);
+}

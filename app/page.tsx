@@ -88,6 +88,10 @@ const categoryAccents = [
   "bg-amber-50 text-amber-700 ring-amber-100"
 ];
 
+function dateString(value: Date | string) {
+  return value instanceof Date ? value.toISOString() : value;
+}
+
 export default async function HomePage() {
   const [settings, activeBanner, dbFeatured, dbProducts] = await Promise.all([
     getPublicStoreSettings(),
@@ -110,7 +114,7 @@ export default async function HomePage() {
         popularity: product.popularity,
         unit: product.unit,
         isFeatured: product.isFeatured,
-        createdAt: product.createdAt.toISOString()
+        createdAt: dateString(product.createdAt)
       }))
     : products;
 

@@ -24,6 +24,8 @@ export function SettingsManagementClient({
   settings,
   banners,
   whatsappConfig
+  ,
+  templateStatuses
 }: {
   settings: StoreSettings;
   banners: Banner[];
@@ -33,6 +35,7 @@ export function SettingsManagementClient({
     verifyTokenConfigured: boolean;
     businessPhone: string;
   };
+  templateStatuses: Record<string, string>;
 }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -49,6 +52,7 @@ export function SettingsManagementClient({
     isActive: true
   });
   const [testPhone, setTestPhone] = useState(whatsappConfig.businessPhone);
+  const [localTemplateStatuses, setLocalTemplateStatuses] = useState(templateStatuses);
   const [localBanners, setLocalBanners] = useState(banners);
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
@@ -141,6 +145,16 @@ export function SettingsManagementClient({
     showToast("WhatsApp test message sent", "success");
   }
 
+  async function updateTemplateStatus(template: string, status: string) {
+    setLocalTemplateStatuses((current) => ({ ...current, [template]: status }));
+    const response = await fetch("/api/admin/whatsapp-template-status", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ template, status })
+    });
+    if (!response.ok) showToast("Template status could not be saved", "error");
+  }
+
   return (
     <>
       <form onSubmit={saveSettings} className="mt-5 grid gap-4 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5 md:grid-cols-2">
@@ -205,9 +219,17 @@ export function SettingsManagementClient({
         </div>
         <div className="mt-4 grid gap-2 text-sm font-bold text-muted-foreground">
           {["login_otp", "order_confirmed", "order_packed", "delivery_assigned", "out_for_delivery", "delivered", "order_edited", "return_approved"].map((template) => (
-            <div key={template} className="flex items-center justify-between rounded-2xl bg-muted px-3 py-2">
+            <div key={template} className="grid gap-2 rounded-2xl bg-muted px-3 py-2 sm:grid-cols-[1fr_auto] sm:items-center">
               <span>{template}</span>
-              <span className="rounded-full bg-primary/10 px-2 py-1 text-xs font-black text-primary">Configured in Meta</span>
+              <select
+                value={localTemplateStatuses[template] ?? "pending"}
+                onChange={(event) => updateTemplateStatus(template, event.target.value)}
+                className="h-9 rounded-xl border border-border bg-background px-3 text-xs font-black outline-none"
+              >
+                <option value="pending">Pending</option>
+                <option value="approved">Approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
             </div>
           ))}
         </div>

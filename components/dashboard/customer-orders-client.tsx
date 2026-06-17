@@ -23,6 +23,7 @@ export type CustomerOrder = {
   longitude: number;
   total: number;
   createdAt: string;
+  updatedAt?: string;
   deliveryPartnerLocation?: { latitude: number; longitude: number; updatedAt?: string } | null;
   items: Array<{ id: string; name: string; quantity: number; price: number; product?: Product | null }>;
   editLogs: Array<{
@@ -165,12 +166,14 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
 
   function reorder(order: CustomerOrder) {
     const products = order.items
-      .filter((item) => item.product && item.quantity > 0)
+      .filter((item) => item.product && item.quantity > 0 && item.product.stock > 0)
       .map((item) => ({ ...item.product!, quantity: item.quantity }));
+    const unavailable = order.items.filter((item) => !item.product || item.product.stock <= 0 || item.quantity <= 0).length;
     if (products.length === 0) {
       window.alert("Products from this order are no longer available for reorder.");
       return;
     }
+    if (unavailable > 0) window.alert(`${unavailable} item${unavailable === 1 ? "" : "s"} from this order are unavailable and were skipped.`);
     addItems(products);
     window.location.href = "/cart";
   }
@@ -253,6 +256,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
                     <RotateCcw className="h-4 w-4 text-primary" />
                     Request return
                   </button>
+                  <ReturnCountdown updatedAt={order.updatedAt ?? order.createdAt} />
                 </div>
               ) : null}
               <LiveTrackingPanel order={order} live={liveOrders[order.id]} />
@@ -261,6 +265,18 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
         })}
       </AnimatePresence>
     </div>
+  );
+}
+
+function ReturnCountdown({ updatedAt }: { updatedAt: string }) {
+  const deadline = new Date(new Date(updatedAt).getTime() + 24 * 60 * 60 * 1000).getTime();
+  const remainingMs = Math.max(0, deadline - Date.now());
+  const hours = Math.floor(remainingMs / 36e5);
+  const minutes = Math.floor((remainingMs % 36e5) / 60000);
+  return (
+    <span className={remainingMs > 0 ? "inline-flex h-11 items-center rounded-2xl bg-primary/10 px-4 text-xs font-black text-primary" : "inline-flex h-11 items-center rounded-2xl bg-red-100 px-4 text-xs font-black text-red-700"}>
+      {remainingMs > 0 ? `Return window ${hours}h ${minutes}m` : "Return window closed"}
+    </span>
   );
 }
 

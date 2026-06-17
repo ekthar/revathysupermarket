@@ -10,9 +10,13 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (body.isDefault) {
     await prisma.address.updateMany({ where: { userId: session.user.id }, data: { isDefault: false } });
   }
+  const data: Record<string, unknown> = {};
+  for (const key of ["label", "houseName", "street", "landmark", "pincode", "latitude", "longitude", "isDefault"]) {
+    if (body[key] !== undefined) data[key] = body[key];
+  }
   await prisma.address.updateMany({
     where: { id, userId: session.user.id },
-    data: { isDefault: Boolean(body.isDefault) }
+    data: Object.keys(data).length > 0 ? data : { isDefault: Boolean(body.isDefault) }
   });
   return NextResponse.json({ ok: true });
 }

@@ -18,11 +18,35 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const parsed = deliveryActionSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid delivery action." }, { status: 400 });
 
-  const order = await prisma.order.findUnique({ where: { id }, select: { id: true, deliveryPartnerId: true, deliveryOtp: true, userId: true, orderNumber: true, phone: true } });
+  const order = await prisma.order.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      deliveryPartnerId: true,
+      deliveryOtp: true,
+      deliveryOtpAttempts: true,
+      deliveryOtpExpiresAt: true,
+      userId: true,
+      orderNumber: true,
+      phone: true
+    }
+  });
   if (!order || order.deliveryPartnerId !== session.user.id) return NextResponse.json({ error: "Order not found." }, { status: 404 });
 
-  if (parsed.data.action === "delivered" && parsed.data.otp !== order.deliveryOtp) {
-    return NextResponse.json({ error: "Delivery OTP is incorrect." }, { status: 400 });
+  if (parsed.data.action === "delivered") {
+    if (order.deliveryOtpExpiresAt && order.deliveryOtpExpiresAt < new Date()) {
+      return NextResponse.json({ error: "Delivery OTP has expired. Ask admin to regenerate it." }, { status: 400 });
+    }
+    if (order.deliveryOtpAttempts >= 3) {
+      return NextResponse.json({ error: "Too many wrong OTP attempts. Ask admin to regenerate it." }, { status: 400 });
+    }
+    if (parsed.data.otp !== order.deliveryOtp) {
+      await prisma.order.update({
+        where: { id },
+        data: { deliveryOtpAttempts: { increment: 1 } }
+      });
+      return NextResponse.json({ error: "Delivery OTP is incorrect." }, { status: 400 });
+    }
   }
 
   const nextStatus = parsed.data.action === "picked_up" ? "OUT_FOR_DELIVERY" : "DELIVERED";
@@ -32,6 +56,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       status: nextStatus,
       deliveryConfirmedAt: parsed.data.action === "delivered" ? new Date() : undefined,
       paymentStatus: parsed.data.action === "delivered" ? "PAID" : undefined,
+      deliveryOtpAttempts: parsed.data.action === "delivered" ? 0 : undefined,
       statusEvents: { create: { status: nextStatus, note: `Marked ${parsed.data.action} by delivery partner.` } }
     }
   });

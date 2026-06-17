@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import type { Product } from "@/lib/types";
 import { safeProductImageUrl } from "@/lib/image";
 import { ProductImage } from "@/components/product-image";
+import { ProductRecentlyViewed } from "@/components/product-recently-viewed";
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -109,6 +110,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
           {related.map((item) => <ProductCard key={item.id} product={item} />)}
         </div>
       </section>
+      <ProductRecentlyViewed product={product} />
     </main>
   );
 }

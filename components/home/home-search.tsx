@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,10 @@ import type { Product } from "@/lib/types";
 
 export function HomeSearch({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
+  const [history, setHistory] = useState<string[]>([]);
+  useEffect(() => {
+    setHistory(JSON.parse(window.localStorage.getItem("revathy-search-history") || "[]"));
+  }, []);
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return [];
@@ -33,6 +37,14 @@ export function HomeSearch({ products }: { products: Product[] }) {
                 <span>{product.name}</span>
                 <span className="text-xs text-primary">{product.unit}</span>
               </Link>
+            ))}
+          </div>
+        ) : query.trim() === "" && history.length > 0 ? (
+          <div className="mt-2 flex flex-wrap gap-2 rounded-2xl bg-background/95 p-2">
+            {history.slice(0, 5).map((item) => (
+              <button key={item} type="button" onClick={() => setQuery(item)} className="rounded-full bg-muted px-3 py-1 text-xs font-black text-primary">
+                {item}
+              </button>
             ))}
           </div>
         ) : null}

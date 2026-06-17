@@ -17,6 +17,10 @@ export default async function AdminOrdersPage() {
       total: true,
       status: true,
       deliveryPartnerId: true,
+      deliveryOtp: true,
+      deliveryOtpAttempts: true,
+      deliveryOtpExpiresAt: true,
+      staffNote: true,
       acknowledgedAt: true,
       createdAt: true,
       items: {
@@ -80,6 +84,10 @@ export default async function AdminOrdersPage() {
         total: Number(order.total),
         status: order.status,
         deliveryPartnerId: order.deliveryPartnerId,
+        deliveryOtp: order.deliveryOtp,
+        deliveryOtpAttempts: order.deliveryOtpAttempts,
+        deliveryOtpExpiresAt: order.deliveryOtpExpiresAt?.toISOString() ?? null,
+        staffNote: order.staffNote,
         acknowledgedAt: order.acknowledgedAt?.toISOString() ?? null,
         createdAt: order.createdAt.toISOString(),
         items: order.items.map((item) => ({

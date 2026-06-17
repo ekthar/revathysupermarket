@@ -14,13 +14,14 @@ export async function GET() {
 
   const orders = await prisma.order.findMany({ include: { items: true }, orderBy: { createdAt: "desc" } });
   const rows = [
-    ["Order Number", "Customer", "Phone", "Status", "Payment", "Total", "Items", "Address", "Created At"],
+    ["Order Number", "Customer", "Phone", "Status", "Payment Method", "Payment Status", "Total", "Items", "Address", "Created At"],
     ...orders.map((order) => [
       order.orderNumber,
       order.customerName,
       order.phone,
       order.status,
       order.paymentMethod,
+      order.paymentStatus,
       order.total,
       order.items.map((item) => `${item.name} x ${item.quantity}`).join("; "),
       `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`,

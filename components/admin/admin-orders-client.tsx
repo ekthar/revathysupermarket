@@ -17,6 +17,10 @@ type AdminOrder = {
   total: number;
   status: keyof typeof statusLabels;
   deliveryPartnerId?: string | null;
+  deliveryOtp?: string | null;
+  deliveryOtpAttempts: number;
+  deliveryOtpExpiresAt: string | null;
+  staffNote?: string | null;
   acknowledgedAt: string | null;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number }>;
@@ -51,7 +55,9 @@ export function AdminOrdersClient({
   const [ackLoading, setAckLoading] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState<string | null>(null);
   const [assignLoading, setAssignLoading] = useState<string | null>(null);
+  const [otpLoading, setOtpLoading] = useState<string | null>(null);
   const [editDrafts, setEditDrafts] = useState<Record<string, { quantity: string; productId: string; reason: string }>>({});
+  const [staffNotes, setStaffNotes] = useState<Record<string, string>>(() => Object.fromEntries(orders.map((order) => [order.id, order.staffNote ?? ""])));
   const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
   const [soundUnlocked, setSoundUnlocked] = useState(false);
 
@@ -108,6 +114,10 @@ export function AdminOrdersClient({
         total: Number(order.total),
         status: order.status,
         deliveryPartnerId: order.deliveryPartnerId ?? null,
+        deliveryOtp: order.deliveryOtp,
+        deliveryOtpAttempts: order.deliveryOtpAttempts ?? 0,
+        deliveryOtpExpiresAt: order.deliveryOtpExpiresAt ?? null,
+        staffNote: order.staffNote,
         acknowledgedAt: order.acknowledgedAt ?? null,
         createdAt: order.createdAt,
         items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price) })),
@@ -247,6 +257,49 @@ export function AdminOrdersClient({
     showToast("Delivery partner assigned", "success");
   }
 
+  async function regenerateOtp(orderId: string) {
+    setOtpLoading(orderId);
+    const response = await fetch(`/api/admin/orders/${orderId}/delivery-otp`, { method: "POST" });
+    const data = await readApiResponse<{ error?: string; order?: { deliveryOtp?: string | null; deliveryOtpExpiresAt?: string | null } }>(response);
+    setOtpLoading(null);
+    if (!response.ok || !data.order) {
+      showToast(data.error ?? "OTP regenerate failed", "error");
+      return;
+    }
+    setLocalOrders((current) => current.map((order) => order.id === orderId ? {
+      ...order,
+      deliveryOtp: data.order?.deliveryOtp,
+      deliveryOtpExpiresAt: data.order?.deliveryOtpExpiresAt ?? null,
+      deliveryOtpAttempts: 0
+    } : order));
+    showToast("Delivery OTP regenerated", "success");
+  }
+
+  async function saveStaffNote(order: AdminOrder) {
+    const response = await fetch(`/api/admin/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: order.status, staffNote: staffNotes[order.id] ?? "" })
+    });
+    const data = await readApiResponse<{ error?: string }>(response);
+    if (!response.ok) {
+      showToast(data.error ?? "Staff note failed", "error");
+      return;
+    }
+    setLocalOrders((current) => current.map((entry) => entry.id === order.id ? { ...entry, staffNote: staffNotes[order.id] ?? "" } : entry));
+    showToast("Staff note saved", "success");
+  }
+
+  function manualWhatsAppLink(order: AdminOrder) {
+    const text = [
+      `Revathy Supermarket order #${order.orderNumber}`,
+      `Status: ${statusLabels[order.status]}`,
+      order.deliveryOtp ? `Delivery OTP: ${order.deliveryOtp}` : "",
+      `Total: ${formatCurrency(order.total)}`
+    ].filter(Boolean).join("\n");
+    return `https://wa.me/${order.phone.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
+  }
+
   return (
     <>
       {unacknowledgedNewOrders
@@ -363,6 +416,10 @@ export function AdminOrdersClient({
                 <Send className="h-4 w-4" />
                 WhatsApp
               </a>
+              <a href={manualWhatsAppLink(order)} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-sm font-black">
+                <Send className="h-4 w-4 text-primary" />
+                Manual send
+              </a>
               <a href={`/admin/orders/${order.id}/invoice`} className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-sm font-black sm:col-span-1">
                 <FileText className="h-4 w-4 text-primary" />
                 Print invoice
@@ -422,6 +479,31 @@ export function AdminOrdersClient({
               ))}
             </ul>
             <OrderStatusForm orderId={order.id} currentStatus={order.status} onStatusChange={(status) => updateOrderStatus(order.id, status)} />
+            {order.deliveryOtp ? (
+              <div className="mt-4 grid gap-3 rounded-2xl bg-primary/10 p-3 text-primary sm:grid-cols-[1fr_auto]">
+                <div>
+                  <p className="text-xs font-black uppercase">Delivery OTP</p>
+                  <p className="mt-1 text-2xl font-black tracking-[0.18em]">{order.deliveryOtp}</p>
+                  <p className="mt-1 text-xs font-bold">
+                    Attempts {order.deliveryOtpAttempts}/3
+                    {order.deliveryOtpExpiresAt ? ` - expires ${new Date(order.deliveryOtpExpiresAt).toLocaleTimeString("en-IN")}` : ""}
+                  </p>
+                </div>
+                <button type="button" onClick={() => regenerateOtp(order.id)} disabled={otpLoading === order.id} className="h-11 rounded-2xl bg-primary px-4 text-xs font-black text-white disabled:opacity-60">
+                  {otpLoading === order.id ? "Regenerating" : "Regenerate OTP"}
+                </button>
+              </div>
+            ) : null}
+            <div className="mt-4 rounded-2xl bg-muted p-3">
+              <label className="text-xs font-black uppercase text-muted-foreground">Internal staff note</label>
+              <textarea
+                value={staffNotes[order.id] ?? ""}
+                onChange={(event) => setStaffNotes((current) => ({ ...current, [order.id]: event.target.value }))}
+                className="mt-2 min-h-20 w-full rounded-2xl border border-border bg-background p-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary"
+                placeholder="Packing note, payment note, customer preference..."
+              />
+              <button type="button" onClick={() => saveStaffNote(order)} className="mt-2 h-10 rounded-2xl bg-primary px-4 text-xs font-black text-white">Save note</button>
+            </div>
             {order.whatsappLogs.length > 0 ? (
               <div className="mt-4 rounded-2xl bg-muted p-3">
                 <p className="text-xs font-black uppercase text-muted-foreground">WhatsApp timeline</p>

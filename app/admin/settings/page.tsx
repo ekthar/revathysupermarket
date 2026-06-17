@@ -19,13 +19,15 @@ export default async function AdminSettingsPage() {
     );
   }
 
-  const [settings, banners] = await Promise.all([
+  const [settings, banners, templateRows] = await Promise.all([
     getStoreSettings(),
     prisma.banner.findMany({
       select: { id: true, title: true, subtitle: true, image: true, href: true, isActive: true },
       orderBy: { createdAt: "desc" }
-    }).catch(() => [])
+    }).catch(() => []),
+    prisma.setting.findMany({ where: { key: { startsWith: "whatsappTemplateStatus." } } }).catch(() => [])
   ]);
+  const templateStatuses = Object.fromEntries(templateRows.map((row) => [row.key.replace("whatsappTemplateStatus.", ""), row.value]));
 
   return (
     <div>
@@ -43,6 +45,7 @@ export default async function AdminSettingsPage() {
           verifyTokenConfigured: Boolean(process.env.WHATSAPP_VERIFY_TOKEN),
           businessPhone: process.env.WHATSAPP_BUSINESS_PHONE ?? settings.whatsapp
         }}
+        templateStatuses={templateStatuses}
       />
       <div className="mt-5 rounded-[1.75rem] border border-white/70 bg-primary p-5 text-white shadow-soft dark:border-white/10">
         <MapPin className="h-6 w-6 text-lime-fresh" />

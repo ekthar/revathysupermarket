@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -9,9 +10,11 @@ import { formatCurrency } from "@/lib/utils";
 import { ProductImage } from "@/components/product-image";
 import { products } from "@/lib/products";
 import { ProductCard } from "@/components/product-card";
+import type { CartItem } from "@/lib/types";
 
 export function CartPageClient() {
   const { items, subtotal, removeItem, updateQuantity } = useCart();
+  const [removed, setRemoved] = useState<CartItem | null>(null);
   const suggestions = products.filter((product) => !items.some((item) => item.id === product.id)).slice(0, 4);
 
   if (items.length === 0) {
@@ -42,7 +45,10 @@ export function CartPageClient() {
               dragConstraints={{ left: -90, right: 0 }}
               dragElastic={0.18}
               onDragEnd={(_, info) => {
-                if (info.offset.x < -80) removeItem(item.id);
+                if (info.offset.x < -80) {
+                  setRemoved(item);
+                  removeItem(item.id);
+                }
               }}
               className="grid min-w-0 grid-cols-[84px_minmax(0,1fr)] gap-3 rounded-[1.5rem] border border-white/70 bg-card/95 p-3 shadow-soft dark:border-white/10 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:gap-4 sm:p-4"
             >
@@ -65,7 +71,7 @@ export function CartPageClient() {
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
-                <Button variant="outline" size="icon" onClick={() => removeItem(item.id)} title="Remove item" className="rounded-2xl">
+                <Button variant="outline" size="icon" onClick={() => { setRemoved(item); removeItem(item.id); }} title="Remove item" className="rounded-2xl">
                   <Trash2 className="h-4 w-4" />
                 </Button>
               </div>
@@ -82,6 +88,7 @@ export function CartPageClient() {
               </div>
             </section>
           ) : null}
+          {removed ? <UndoRemove item={removed} onClose={() => setRemoved(null)} /> : null}
         </section>
         <aside className="h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-[0_20px_60px_-38px_rgba(15,23,42,0.75)] dark:border-white/10 lg:sticky lg:top-24">
           <h2 className="font-display text-2xl font-bold">Order summary</h2>
@@ -104,5 +111,15 @@ export function CartPageClient() {
         </aside>
       </div>
     </main>
+  );
+}
+
+function UndoRemove({ item, onClose }: { item: CartItem; onClose: () => void }) {
+  const { addItem } = useCart();
+  return (
+    <div className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center justify-between rounded-2xl bg-slate-950 p-3 text-sm font-black text-white shadow-premium">
+      <span>{item.name} removed</span>
+      <button type="button" onClick={() => { addItem(item, item.quantity); onClose(); }} className="rounded-xl bg-lime-fresh px-3 py-2 text-slate-950">Undo</button>
+    </div>
   );
 }

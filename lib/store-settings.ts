@@ -9,6 +9,8 @@ export type StoreSettings = {
   phone: string;
   whatsapp: string;
   deliveryRadiusKm: number;
+  storeLatitude: number;
+  storeLongitude: number;
   serviceablePincodes: string[];
   googleMapsUrl: string;
   instagramUrl: string;
@@ -24,6 +26,8 @@ export const defaultStoreSettings: StoreSettings = {
   phone: SITE.phone,
   whatsapp: SITE.whatsapp,
   deliveryRadiusKm: SITE.deliveryRadiusKm,
+  storeLatitude: Number(process.env.STORE_LAT ?? "8.4004"),
+  storeLongitude: Number(process.env.STORE_LNG ?? "77.0851"),
   serviceablePincodes: serviceablePincodes(),
   googleMapsUrl: "",
   instagramUrl: "",
@@ -52,6 +56,11 @@ function parseGstRate(value?: string) {
   return Number.isFinite(rate) && rate >= 0 ? Math.min(rate, 28) : defaultStoreSettings.gstRatePercent;
 }
 
+function parseCoord(value?: string, fallback = 0) {
+  const coord = Number(value);
+  return Number.isFinite(coord) ? coord : fallback;
+}
+
 async function readStoreSettings(): Promise<StoreSettings> {
   const settings = await prisma.setting.findMany().catch(() => []);
   const byKey = new Map(settings.map((setting) => [setting.key, setting.value]));
@@ -62,6 +71,8 @@ async function readStoreSettings(): Promise<StoreSettings> {
     phone: byKey.get("phone") ?? defaultStoreSettings.phone,
     whatsapp: byKey.get("whatsapp") ?? defaultStoreSettings.whatsapp,
     deliveryRadiusKm: parseRadius(byKey.get("deliveryRadiusKm")),
+    storeLatitude: parseCoord(byKey.get("storeLatitude"), defaultStoreSettings.storeLatitude),
+    storeLongitude: parseCoord(byKey.get("storeLongitude"), defaultStoreSettings.storeLongitude),
     serviceablePincodes: parsePincodes(byKey.get("serviceablePincodes")),
     googleMapsUrl: byKey.get("googleMapsUrl") ?? "",
     instagramUrl: byKey.get("instagramUrl") ?? "",
@@ -94,6 +105,8 @@ export async function saveStoreSettings(settings: StoreSettings) {
     ["phone", settings.phone],
     ["whatsapp", settings.whatsapp],
     ["deliveryRadiusKm", String(settings.deliveryRadiusKm)],
+    ["storeLatitude", String(settings.storeLatitude)],
+    ["storeLongitude", String(settings.storeLongitude)],
     ["serviceablePincodes", settings.serviceablePincodes.join(", ")],
     ["googleMapsUrl", settings.googleMapsUrl],
     ["instagramUrl", settings.instagramUrl],

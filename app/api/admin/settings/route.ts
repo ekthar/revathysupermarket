@@ -12,6 +12,8 @@ const settingsSchema = z.object({
   phone: z.string().min(6),
   whatsapp: z.string().min(6),
   deliveryRadiusKm: z.coerce.number().min(1).max(50),
+  storeLatitude: z.coerce.number().min(-90).max(90),
+  storeLongitude: z.coerce.number().min(-180).max(180),
   serviceablePincodes: z
     .array(z.string().regex(/^\d{6}$/))
     .min(1),

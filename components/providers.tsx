@@ -1,23 +1,23 @@
 "use client";
 
-import { ThemeProvider } from "next-themes";
+import { SessionProvider } from "next-auth/react";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { PushNotificationManager } from "@/components/push-notification-manager";
 import { ToastProvider } from "@/components/toast-provider";
-import { WebOnboarding } from "@/components/web-onboarding";
+import { ProfileSync } from "@/components/profile-sync";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+    <SessionProvider>
       <ToastProvider>
         <CartProvider>
           {children}
-          <WebOnboarding />
+          <ProfileSync />
           <ServiceWorkerRegister />
           <PushNotificationManager />
         </CartProvider>
       </ToastProvider>
-    </ThemeProvider>
+    </SessionProvider>
   );
 }

@@ -1,44 +1,27 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   --background: 0 0% 100%;
-  --foreground: 217 33% 17%;
+  --foreground: 222 47% 11%;
   --card: 0 0% 100%;
-  --card-foreground: 217 33% 17%;
-  --muted: 152 35% 96%;
-  --muted-foreground: 215 16% 47%;
-  --border: 152 23% 90%;
-  --input: 152 23% 90%;
+  --card-foreground: 222 47% 11%;
+  --muted: 220 14% 96%;
+  --muted-foreground: 220 9% 46%;
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
   --ring: 158 80% 30%;
+  --radius: 0.75rem;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.dark {
-  --background: 220 31% 8%;
-  --foreground: 210 40% 96%;
-  --card: 220 28% 12%;
-  --card-foreground: 210 40% 96%;
-  --muted: 219 23% 16%;
-  --muted-foreground: 215 20% 70%;
-  --border: 217 19% 22%;
-  --input: 217 19% 22%;
-  --ring: 74 64% 49%;
-}
-
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-}
+* { box-sizing: border-box; margin: 0; }
 
 html {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
-  scroll-behavior: smooth;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
 body {
@@ -47,97 +30,59 @@ body {
   -webkit-overflow-scrolling: touch;
   background: hsl(var(--background));
   color: hsl(var(--foreground));
-  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Inter", system-ui, sans-serif;
 }
 
-::selection {
-  background: #a7d129;
-  color: #1e293b;
+::selection { background: rgba(15, 138, 95, 0.15); }
+
+/* iOS-style scrollbar */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* Safe padding */
+.pb-safe { padding-bottom: calc(5rem + var(--safe-bottom)); }
+@media (min-width: 768px) { .pb-safe { padding-bottom: 0; } }
+
+/* Premium card shadow */
+.card-shadow {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
 }
 
-/* ─── Glassmorphism ─── */
-.glass {
-  background: color-mix(in srgb, hsl(var(--card)) 92%, transparent);
-  border: 1px solid color-mix(in srgb, hsl(var(--border)) 60%, transparent);
-  backdrop-filter: blur(16px) saturate(1.1);
-  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+.card-shadow-lg {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
 }
 
-.glass-panel {
-  background: color-mix(in srgb, hsl(var(--card)) 94%, transparent);
-  border: 1px solid color-mix(in srgb, hsl(var(--border)) 70%, transparent);
-  box-shadow: 0 12px 40px -28px rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(16px) saturate(1.08);
-  -webkit-backdrop-filter: blur(16px) saturate(1.08);
-}
+/* iOS-style pressed state */
+.press:active { transform: scale(0.97); transition: transform 0.1s cubic-bezier(0.25, 0.1, 0.25, 1); }
 
-.glass-nav {
-  background: color-mix(in srgb, hsl(var(--card)) 95%, transparent);
-  border: 1px solid color-mix(in srgb, hsl(var(--border)) 65%, transparent);
-  box-shadow: 0 8px 32px -20px rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(20px) saturate(1.12);
-  -webkit-backdrop-filter: blur(20px) saturate(1.12);
-}
-
-/* ─── Toast position (above mobile nav) ─── */
-.safe-toast-stack {
-  bottom: calc(5.5rem + var(--safe-bottom));
-}
-
-@media (min-width: 640px) {
-  .safe-toast-stack {
-    bottom: calc(1.5rem + var(--safe-bottom));
-  }
-}
-
-/* ─── Scrollbar hiding ─── */
-.no-scrollbar {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-
-/* ─── Smooth scroll container for horizontal sections ─── */
-.snap-scroll {
+/* Smooth horizontal scroll */
+.scroll-x {
+  overflow-x: auto;
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
 }
+.scroll-x > * { scroll-snap-align: start; }
 
-.snap-scroll > * {
-  scroll-snap-align: start;
+/* Admin panel specific */
+.admin-card {
+  background: white;
+  border: 1px solid hsl(var(--border));
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 2px 8px rgba(0,0,0,0.03);
 }
 
-/* ─── iOS safe area padding helper ─── */
-.pb-safe {
-  padding-bottom: calc(5.5rem + var(--safe-bottom));
+/* Slide-in animation for order alerts */
+@keyframes slideDown {
+  from { transform: translateY(-100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
+.animate-slide-down { animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
 
-@media (min-width: 768px) {
-  .pb-safe {
-    padding-bottom: 0;
-  }
+/* Pulse ring for notification */
+@keyframes pulseRing {
+  0% { box-shadow: 0 0 0 0 rgba(15, 138, 95, 0.4); }
+  70% { box-shadow: 0 0 0 10px rgba(15, 138, 95, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(15, 138, 95, 0); }
 }
-
-/* ─── Touch feedback ─── */
-@media (hover: none) {
-  .touch-bounce:active {
-    transform: scale(0.97);
-    transition: transform 0.1s ease;
-  }
-}
-
-/* ─── Page transition layer ─── */
-.page-enter {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.page-enter-active {
-  opacity: 1;
-  transform: translateY(0);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-}
+.pulse-ring { animation: pulseRing 1.5s infinite; }

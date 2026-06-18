@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { Minus, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
@@ -15,105 +14,105 @@ export function ProductCard({ product, compact = false }: { product: Product; co
   const { addItem, items, updateQuantity } = useCart();
   const { showToast } = useToast();
   const price = product.discountPrice ?? product.price;
-  const cartItem = items.find((item) => item.id === product.id);
+  const cartItem = items.find((i) => i.id === product.id);
   const outOfStock = product.stock <= 0;
 
   function add() {
     if (outOfStock) return;
     addItem(product);
-    showToast(`${product.name} added`, "success");
+    showToast(`Added ${product.name}`, "success");
   }
 
   return (
-    <article className={cn(
-      "relative overflow-hidden rounded-xl border border-slate-100 bg-white shadow-sm transition active:scale-[0.98] dark:border-white/8 dark:bg-slate-900",
-      outOfStock && "opacity-60"
-    )}>
-      <Link href={`/products/${product.slug}`} className="block">
+    <motion.article
+      whileTap={{ scale: 0.97 }}
+      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      className={cn(
+        "relative bg-white rounded-2xl overflow-hidden card-shadow",
+        outOfStock && "opacity-50"
+      )}
+    >
+      <Link href={`/products/${product.slug}`}>
         <div className={cn(
-          "relative overflow-hidden bg-slate-100 dark:bg-white/5",
-          compact ? "aspect-square" : "aspect-[4/3]"
+          "relative bg-slate-50 overflow-hidden",
+          compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
         )}>
-          <ProductImage src={product.image} alt={product.name} className="object-cover transition-transform duration-300 group-hover:scale-105" />
+          <ProductImage src={product.image} alt={product.name} className="object-cover transition-transform duration-300" />
           {product.discountPrice && (
-            <span className="absolute left-1.5 top-1.5 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-bold text-white">
-              Sale
+            <span className="absolute top-2 left-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-[2px] rounded-md shadow-sm">
+              OFFER
             </span>
           )}
           {outOfStock && (
-            <div className="absolute inset-0 flex items-center justify-center bg-white/60 dark:bg-slate-900/60">
-              <span className="rounded-md bg-slate-900 px-2 py-1 text-[10px] font-bold text-white">Out of stock</span>
+            <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
+              <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">Sold out</span>
             </div>
           )}
         </div>
       </Link>
 
-      <div className={cn("p-2.5", compact ? "p-2" : "p-2.5 sm:p-3")}>
+      <div className={cn("p-2.5", compact && "p-2")}>
         <Link href={`/products/${product.slug}`}>
           <h3 className={cn(
-            "line-clamp-2 font-semibold leading-tight text-slate-800 dark:text-white",
-            compact ? "text-xs" : "text-[13px] sm:text-sm"
-          )}>
-            {product.name}
-          </h3>
-          <p className={cn("mt-0.5 text-slate-400", compact ? "text-[10px]" : "text-[11px]")}>
-            {product.unit}
-          </p>
+            "font-medium text-slate-800 leading-snug line-clamp-2",
+            compact ? "text-[11px]" : "text-[12px]"
+          )}>{product.name}</h3>
+          <p className="text-[10px] text-slate-400 mt-0.5">{product.unit}</p>
         </Link>
 
-        <div className="mt-2 flex items-center justify-between gap-1.5">
-          <div className="min-w-0">
-            <span className={cn("font-bold text-slate-900 dark:text-white", compact ? "text-sm" : "text-sm sm:text-base")}>
-              {formatCurrency(price)}
-            </span>
+        <div className="flex items-end justify-between mt-2 gap-1">
+          <div>
+            <span className={cn("font-bold text-slate-900", compact ? "text-[13px]" : "text-[14px]")}>{formatCurrency(price)}</span>
             {product.discountPrice && (
-              <span className="ml-1 text-[11px] text-slate-400 line-through">
-                {formatCurrency(product.price)}
-              </span>
+              <span className="ml-1 text-[10px] text-slate-400 line-through">{formatCurrency(product.price)}</span>
             )}
           </div>
 
-          {/* Add to cart / quantity control */}
+          {/* Cart control */}
           <AnimatePresence mode="wait" initial={false}>
             {cartItem ? (
               <motion.div
                 key="qty"
-                initial={{ scale: 0.9, opacity: 0 }}
+                initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="flex h-8 items-center overflow-hidden rounded-lg bg-primary text-white"
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                className="flex items-center h-[28px] rounded-lg bg-primary overflow-hidden shadow-sm"
               >
                 <button
                   type="button"
                   onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                  className="flex h-full w-7 items-center justify-center active:bg-black/10"
+                  className="w-7 h-full flex items-center justify-center text-white active:bg-black/10"
                 >
                   <Minus className="h-3 w-3" />
                 </button>
-                <span className="min-w-5 text-center text-xs font-bold">{cartItem.quantity}</span>
+                <span className="w-5 text-center text-[11px] font-bold text-white">{cartItem.quantity}</span>
                 <button
                   type="button"
                   onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                  className="flex h-full w-7 items-center justify-center active:bg-black/10"
+                  className="w-7 h-full flex items-center justify-center text-white active:bg-black/10"
                 >
                   <Plus className="h-3 w-3" />
                 </button>
               </motion.div>
             ) : (
-              <motion.div key="add" initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}>
-                <Button
-                  size="sm"
-                  disabled={outOfStock}
-                  onClick={add}
-                  className="h-8 rounded-lg px-3 text-xs font-bold"
-                >
-                  ADD
-                </Button>
-              </motion.div>
+              <motion.button
+                key="add"
+                initial={{ scale: 0.8, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.8, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 400, damping: 20 }}
+                type="button"
+                disabled={outOfStock}
+                onClick={add}
+                className="h-[28px] px-3.5 rounded-lg border-[1.5px] border-primary text-primary text-[11px] font-bold active:scale-95 active:bg-primary/5 transition disabled:opacity-30 disabled:cursor-not-allowed"
+              >
+                ADD
+              </motion.button>
             )}
           </AnimatePresence>
         </div>
       </div>
-    </article>
+    </motion.article>
   );
 }

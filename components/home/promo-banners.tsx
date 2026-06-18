@@ -27,16 +27,34 @@ const promos = [
   }
 ];
 
+const cardVariants = {
+  hidden: { opacity: 0, y: 30, scale: 0.95 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      type: "spring",
+      stiffness: 200,
+      damping: 20,
+      delay: i * 0.12
+    }
+  })
+};
+
 export function PromoBanners() {
   return (
     <section className="px-4 pt-4 space-y-3 md:hidden">
       {promos.map((promo, idx) => (
         <motion.div
           key={promo.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.1 }}
-          className={`promo-card bg-gradient-to-br ${promo.gradient} flex gap-3`}
+          custom={idx}
+          variants={cardVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-30px" }}
+          whileTap={{ scale: 0.98 }}
+          className={`promo-card bg-gradient-to-br ${promo.gradient} flex gap-3 press-3d`}
         >
           <div className="flex-1 flex flex-col justify-between min-w-0">
             <div>
@@ -49,15 +67,19 @@ export function PromoBanners() {
             </div>
           </div>
           <div className="relative w-24 h-24 shrink-0 self-center">
-            <img
+            <motion.img
+              whileHover={{ scale: 1.08, rotate: 2 }}
               src={promo.image}
               alt=""
               className="w-full h-full object-cover rounded-2xl"
               loading="lazy"
             />
-            <button className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-md">
+            <motion.button
+              whileTap={{ scale: 0.85 }}
+              className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-slate-900 text-white shadow-md"
+            >
               <ChevronUp className="h-3.5 w-3.5" />
-            </button>
+            </motion.button>
           </div>
         </motion.div>
       ))}

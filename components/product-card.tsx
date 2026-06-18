@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus } from "lucide-react";
+import { Info, Minus, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
@@ -29,25 +29,27 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
     showToast(`Added ${product.name}`, "success");
   }
 
-  // Horizontal list layout (like the reference "Just for you" section)
+  // Horizontal list layout
   if (horizontal) {
     return (
       <motion.article
         whileTap={{ scale: 0.98 }}
+        whileHover={{ y: -2 }}
         transition={{ type: "spring", stiffness: 400, damping: 25 }}
         className={cn(
-          "product-list-card",
+          "product-list-card hover-lift",
           outOfStock && "opacity-50"
         )}
       >
-        {/* Product image */}
         <Link href={`/products/${product.slug}`} className="shrink-0">
-          <div className="h-16 w-16 rounded-xl overflow-hidden bg-slate-50">
+          <motion.div
+            whileHover={{ scale: 1.05 }}
+            className="h-16 w-16 rounded-xl overflow-hidden bg-slate-50"
+          >
             <ProductImage src={product.image} alt={product.name} className="object-cover" />
-          </div>
+          </motion.div>
         </Link>
 
-        {/* Product info */}
         <div className="flex-1 min-w-0">
           <Link href={`/products/${product.slug}`}>
             <h3 className="text-[13px] font-bold text-slate-800 leading-snug line-clamp-1">
@@ -61,45 +63,28 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
           </div>
         </div>
 
-        {/* Add to cart / Quantity stepper */}
         <div className="shrink-0">
           <AnimatePresence mode="wait" initial={false}>
             {cartItem ? (
-              <motion.div
+              <QuantityStepper
                 key="qty"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className="flex flex-col items-center h-[72px] w-[32px] rounded-full bg-primary overflow-hidden shadow-sm"
-              >
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                  className="flex-1 w-full flex items-center justify-center text-white active:bg-black/10"
-                >
-                  <Plus className="h-3 w-3" />
-                </button>
-                <span className="text-[11px] font-bold text-white">{cartItem.quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                  className="flex-1 w-full flex items-center justify-center text-white active:bg-black/10"
-                >
-                  <Minus className="h-3 w-3" />
-                </button>
-              </motion.div>
+                quantity={cartItem.quantity}
+                onIncrement={() => updateQuantity(product.id, cartItem.quantity + 1)}
+                onDecrement={() => updateQuantity(product.id, cartItem.quantity - 1)}
+                vertical
+              />
             ) : (
               <motion.button
                 key="add"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
+                whileTap={{ scale: 0.9 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-100 text-[11px] font-bold text-slate-700 active:scale-95 active:bg-slate-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-100 text-[11px] font-bold text-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <Plus className="h-3 w-3" />
                 Add to Cart
@@ -114,10 +99,11 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
   // Grid / Compact card layout
   return (
     <motion.article
-      whileTap={{ scale: 0.97 }}
+      whileTap={{ scale: 0.96, rotateX: 1 }}
+      whileHover={{ y: -3 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={cn(
-        "relative bg-white rounded-2xl overflow-hidden card-elevated",
+        "relative bg-white rounded-2xl overflow-hidden card-elevated product-card-animated",
         outOfStock && "opacity-50"
       )}
     >
@@ -126,11 +112,22 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
           "relative bg-slate-50 overflow-hidden",
           compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
         )}>
-          <ProductImage src={product.image} alt={product.name} className="object-cover transition-transform duration-300 hover:scale-105" />
+          <motion.div
+            whileHover={{ scale: 1.08 }}
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="h-full w-full"
+          >
+            <ProductImage src={product.image} alt={product.name} className="object-cover" />
+          </motion.div>
           {product.discountPrice && (
-            <span className="absolute top-2 left-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-[2px] rounded-md shadow-sm">
+            <motion.span
+              initial={{ scale: 0, rotate: -10 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
+              className="absolute top-2 left-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-[2px] rounded-md shadow-sm"
+            >
               -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
-            </span>
+            </motion.span>
           )}
           {outOfStock && (
             <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
@@ -161,41 +158,24 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
           {/* Cart control */}
           <AnimatePresence mode="wait" initial={false}>
             {cartItem ? (
-              <motion.div
+              <QuantityStepper
                 key="qty"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                className="flex items-center h-[30px] rounded-full bg-primary overflow-hidden shadow-sm"
-              >
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                  className="w-7 h-full flex items-center justify-center text-white active:bg-black/10"
-                >
-                  <Minus className="h-3 w-3" />
-                </button>
-                <span className="w-5 text-center text-[11px] font-bold text-white">{cartItem.quantity}</span>
-                <button
-                  type="button"
-                  onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                  className="w-7 h-full flex items-center justify-center text-white active:bg-black/10"
-                >
-                  <Plus className="h-3 w-3" />
-                </button>
-              </motion.div>
+                quantity={cartItem.quantity}
+                onIncrement={() => updateQuantity(product.id, cartItem.quantity + 1)}
+                onDecrement={() => updateQuantity(product.id, cartItem.quantity - 1)}
+              />
             ) : (
               <motion.button
                 key="add"
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
+                whileTap={{ scale: 0.85 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex items-center gap-1 h-[30px] px-3 rounded-full bg-slate-100 text-[11px] font-bold text-slate-700 active:scale-95 active:bg-slate-200 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 h-[30px] px-3 rounded-full bg-slate-100 text-[11px] font-bold text-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <Plus className="h-3 w-3" />
                 <span className="hidden sm:inline">Add</span>
@@ -205,5 +185,98 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
         </div>
       </div>
     </motion.article>
+  );
+}
+
+// Animated quantity stepper with number bounce
+function QuantityStepper({
+  quantity,
+  onIncrement,
+  onDecrement,
+  vertical = false
+}: {
+  quantity: number;
+  onIncrement: () => void;
+  onDecrement: () => void;
+  vertical?: boolean;
+}) {
+  if (vertical) {
+    return (
+      <motion.div
+        initial={{ scale: 0.8, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.8, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        className="flex flex-col items-center h-[72px] w-[32px] rounded-full bg-primary overflow-hidden shadow-sm"
+      >
+        <motion.button
+          type="button"
+          onClick={onIncrement}
+          whileTap={{ scale: 1.3 }}
+          className="flex-1 w-full flex items-center justify-center text-white"
+        >
+          <Plus className="h-3 w-3" />
+        </motion.button>
+        <motion.span
+          key={quantity}
+          initial={{ scale: 1.5, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 15 }}
+          className="text-[11px] font-bold text-white"
+        >
+          {quantity}
+        </motion.span>
+        <motion.button
+          type="button"
+          onClick={onDecrement}
+          whileTap={{ scale: 1.3 }}
+          className="flex-1 w-full flex items-center justify-center text-white"
+        >
+          <Minus className="h-3 w-3" />
+        </motion.button>
+        <motion.button
+          type="button"
+          onClick={onDecrement}
+          className="absolute -bottom-0.5 w-full flex items-center justify-center"
+        >
+        </motion.button>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ scale: 0.8, opacity: 0 }}
+      animate={{ scale: 1, opacity: 1 }}
+      exit={{ scale: 0.8, opacity: 0 }}
+      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      className="flex items-center h-[30px] rounded-full bg-primary overflow-hidden shadow-sm"
+    >
+      <motion.button
+        type="button"
+        onClick={onDecrement}
+        whileTap={{ scale: 1.4 }}
+        className="w-7 h-full flex items-center justify-center text-white"
+      >
+        <Minus className="h-3 w-3" />
+      </motion.button>
+      <motion.span
+        key={quantity}
+        initial={{ scale: 1.5, opacity: 0, y: -5 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        transition={{ type: "spring", stiffness: 500, damping: 15 }}
+        className="w-5 text-center text-[11px] font-bold text-white"
+      >
+        {quantity}
+      </motion.span>
+      <motion.button
+        type="button"
+        onClick={onIncrement}
+        whileTap={{ scale: 1.4 }}
+        className="w-7 h-full flex items-center justify-center text-white"
+      >
+        <Plus className="h-3 w-3" />
+      </motion.button>
+    </motion.div>
   );
 }

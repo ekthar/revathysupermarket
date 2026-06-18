@@ -2,11 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, Check, CheckCircle2, ChevronDown, ChevronRight, CreditCard, Home, LocateFixed, MapPin, Navigation, Phone, Plus, Send, Smartphone, Wallet } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, CheckCircle2, ChevronDown, Navigation, Plus, Smartphone, Wallet } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/components/cart/cart-provider";
 import { calculateDistanceKm } from "@/lib/distance";
 import { SITE } from "@/lib/constants";
@@ -15,8 +12,9 @@ import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { isServiceablePincode, serviceablePincodes } from "@/lib/delivery";
 import type { StoreSettings } from "@/lib/store-settings";
-import { OrderBillCard } from "@/components/order-bill-card";
+import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
+
 
 type CheckoutState = {
   customerName: string;
@@ -44,6 +42,8 @@ type SavedAddress = {
   isDefault: boolean;
 };
 
+const STORAGE_KEY = "revathy-customer-info";
+
 const initialState: CheckoutState = {
   customerName: "",
   phone: "",
@@ -56,6 +56,34 @@ const initialState: CheckoutState = {
   latitude: "",
   longitude: ""
 };
+
+
+// Load saved customer info from localStorage
+function loadSavedInfo(): Partial<CheckoutState> {
+  if (typeof window === "undefined") return {};
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) return JSON.parse(saved);
+  } catch {}
+  return {};
+}
+
+// Save customer info to localStorage for next time
+function saveCustomerInfo(form: CheckoutState) {
+  try {
+    const toSave = {
+      customerName: form.customerName,
+      phone: form.phone,
+      houseName: form.houseName,
+      street: form.street,
+      landmark: form.landmark,
+      pincode: form.pincode,
+      latitude: form.latitude,
+      longitude: form.longitude
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+  } catch {}
+}
 
 export function CheckoutForm({
   deliveryRadiusKm = SITE.deliveryRadiusKm,
@@ -74,10 +102,22 @@ export function CheckoutForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationState, setLocationState] = useState<LocationState>("idle");
   const [showManualLocation, setShowManualLocation] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
 
   const deliveryFee = subtotal > 500 ? 0 : 40;
   const tax = Math.round(subtotal * 0.02);
   const totalAmount = subtotal + deliveryFee + tax;
+
+  // Load saved customer info on mount (name, phone, address persist)
+  useEffect(() => {
+    const saved = loadSavedInfo();
+    if (Object.keys(saved).length > 0) {
+      setForm((current) => ({ ...current, ...saved }));
+      if (saved.latitude && saved.longitude) setLocationState("success");
+    }
+    setLoaded(true);
+  }, []);
 
   const distance = useMemo(() => {
     const lat = Number(form.latitude);
@@ -99,6 +139,7 @@ export function CheckoutForm({
     }, 4000);
     return () => window.clearTimeout(timeout);
   }, [placedOrderId]);
+
 
   function update(name: keyof CheckoutState, value: string) {
     setForm((current) => ({ ...current, [name]: value }));
@@ -123,11 +164,9 @@ export function CheckoutForm({
   function useCurrentLocation() {
     if (!navigator.geolocation) {
       setLocationState("denied");
-      setMessage("Location access is not available on this browser.");
       showToast("Location is not available", "error");
       return;
     }
-
     setLocationState("loading");
     setMessage("");
     navigator.geolocation.getCurrentPosition(
@@ -139,31 +178,31 @@ export function CheckoutForm({
       },
       () => {
         setLocationState("denied");
-        setMessage("Unable to read location. Please allow location access or enter coordinates manually.");
         showToast("Location permission needed", "error");
       },
       { enableHighAccuracy: true, timeout: 12000 }
     );
   }
 
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setMessage("");
     if (items.length === 0) {
-      setMessage("Your cart is empty.");
       showToast("Your cart is empty", "error");
       return;
     }
     if (!pincodeOk) {
-      setMessage("Sorry, this pincode is not currently serviceable.");
       showToast("Pincode is outside delivery area", "error");
       return;
     }
     if (!locationOk) {
-      setMessage(isOutsideRadius ? `Sorry, delivery is currently available only within ${deliveryRadiusKm} KM.` : "Please verify your GPS location before placing the order.");
       showToast("Location verification required", "error");
       return;
     }
+
+    // Save customer info for next time (onboarding persistence)
+    saveCustomerInfo(form);
 
     setIsSubmitting(true);
     try {
@@ -187,7 +226,6 @@ export function CheckoutForm({
       setIsSubmitting(false);
 
       if (!response.ok) {
-        setMessage(data.error ?? "Order could not be placed.");
         showToast(data.error ?? "Order could not be placed", "error");
         return;
       }
@@ -197,14 +235,14 @@ export function CheckoutForm({
       showToast("Order placed successfully", "success");
     } catch {
       setIsSubmitting(false);
-      setMessage("Order could not be placed. Please check your connection and try again.");
       showToast("Order could not be placed", "error");
     }
   }
 
+
   return (
     <form onSubmit={submit} className="max-w-5xl mx-auto px-4 pt-2 pb-32 md:pb-8">
-      {/* Order Success Modal */}
+      {/* Order Success Modal with animated checkmark */}
       <AnimatePresence>
         {placedOrderId && (
           <motion.div
@@ -215,62 +253,61 @@ export function CheckoutForm({
           >
             <Confetti />
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              initial={{ scale: 0.85, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.85, opacity: 0, y: 20 }}
+              transition={{ type: "spring", stiffness: 300, damping: 22 }}
               className="success-modal"
             >
-              {/* Checkmark icon */}
-              <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-slate-900">
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 300 }}
-                >
-                  <Check className="h-10 w-10 text-white" strokeWidth={3} />
-                </motion.div>
+              <div className="flex justify-center">
+                <SuccessRing size={100} />
               </div>
-
               <h2 className="mt-6 font-display text-2xl font-black text-slate-900">Order Successful!</h2>
               <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 We&apos;re preparing your order. See updates in My Orders.
               </p>
-
               <div className="mt-6 grid gap-3">
-                <Link
-                  href="/"
-                  className="flex h-[48px] items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white press"
-                >
-                  Go Home
-                </Link>
-                <Link
-                  href="/dashboard"
-                  className="flex h-[48px] items-center justify-center rounded-full border-2 border-slate-200 text-sm font-bold text-slate-700 press"
-                >
-                  Track your order
-                </Link>
+                <motion.div whileTap={{ scale: 0.97 }}>
+                  <Link href="/" className="flex h-[48px] items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+                    Go Home
+                  </Link>
+                </motion.div>
+                <motion.div whileTap={{ scale: 0.97 }}>
+                  <Link href="/dashboard" className="flex h-[48px] items-center justify-center rounded-full border-2 border-slate-200 text-sm font-bold text-slate-700">
+                    Track your order
+                  </Link>
+                </motion.div>
               </div>
             </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Header */}
-      <div className="flex items-center justify-between py-3 md:hidden">
+
+      {/* Mobile Header */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between py-3 md:hidden"
+      >
         <div className="flex items-center gap-3">
           <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 press">
             <ArrowLeft className="h-4 w-4 text-slate-700" />
           </Link>
           <h1 className="text-lg font-black text-slate-900">Checkout</h1>
         </div>
-      </div>
+      </motion.div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_380px] lg:gap-8">
         {/* Left column - Forms */}
         <div className="space-y-5">
           {/* Payment Method */}
-          <section className="bg-white rounded-2xl p-5 card-elevated">
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white rounded-2xl p-5 card-elevated"
+          >
             <h2 className="text-[15px] font-black text-slate-900 mb-4">Payment Method</h2>
             <div className="space-y-3">
               <PaymentMethodCard
@@ -294,10 +331,16 @@ export function CheckoutForm({
               <Plus className="h-3.5 w-3.5" />
               Add Payment Method
             </button>
-          </section>
+          </motion.section>
+
 
           {/* Delivery Address */}
-          <section className="bg-white rounded-2xl p-5 card-elevated">
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white rounded-2xl p-5 card-elevated"
+          >
             <h2 className="text-[15px] font-black text-slate-900 mb-4">Delivery Address</h2>
 
             {savedAddresses.length > 0 && (
@@ -320,25 +363,28 @@ export function CheckoutForm({
             {/* Location detection */}
             <div className="rounded-2xl bg-slate-50 p-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-green-100 text-green-700" : "bg-primary/10 text-primary"}`}>
+                <motion.div
+                  animate={locationOk ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-green-100 text-green-700" : "bg-primary/10 text-primary"}`}
+                >
                   {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
-                </div>
+                </motion.div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[13px] font-bold text-slate-800">
                     {locationOk ? `${distance?.toFixed(1)} KM from store` : "GPS verification needed"}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
-                    Delivery within {deliveryRadiusKm} KM only
-                  </p>
+                  <p className="text-[11px] text-slate-500 mt-0.5">Delivery within {deliveryRadiusKm} KM only</p>
                 </div>
-                <button
+                <motion.button
                   type="button"
                   onClick={useCurrentLocation}
                   disabled={locationState === "loading"}
-                  className="shrink-0 px-3 py-2 rounded-full bg-primary text-white text-[11px] font-bold press"
+                  whileTap={{ scale: 0.9 }}
+                  className="shrink-0 px-3 py-2 rounded-full bg-primary text-white text-[11px] font-bold"
                 >
                   {locationState === "loading" ? "Finding..." : locationOk ? "Refresh" : "Detect"}
-                </button>
+                </motion.button>
               </div>
               {isOutsideRadius && (
                 <p className="mt-3 text-[11px] font-semibold text-red-600 flex items-center gap-1.5">
@@ -346,15 +392,10 @@ export function CheckoutForm({
                   Outside delivery radius ({distance?.toFixed(1)} KM)
                 </p>
               )}
-              {locationState === "denied" && (
-                <p className="mt-3 text-[11px] font-semibold text-amber-600 flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  Allow browser location access, then retry
-                </p>
-              )}
             </div>
 
-            {/* Address fields */}
+
+            {/* Address fields - pre-filled from saved info */}
             <div className="grid gap-3 sm:grid-cols-2">
               <CheckoutField label="Customer name" value={form.customerName} onChange={(v) => update("customerName", v)} />
               <CheckoutField label="Phone number" type="tel" value={form.phone} onChange={(v) => update("phone", v)} />
@@ -384,18 +425,14 @@ export function CheckoutForm({
                 <textarea
                   value={form.notes}
                   onChange={(event) => update("notes", event.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-[13px] outline-none resize-none h-20 focus:border-primary/40"
-                  placeholder="Gate color, preferred time, substitutions..."
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-[13px] outline-none resize-none h-20 focus:border-primary/40 transition-all"
+                  placeholder="Gate color, preferred time..."
                 />
               </label>
             </div>
 
-            {/* Manual coordinates toggle */}
-            <button
-              type="button"
-              onClick={() => setShowManualLocation((c) => !c)}
-              className="mt-3 text-[12px] font-bold text-primary flex items-center gap-1"
-            >
+            {/* Manual coordinates */}
+            <button type="button" onClick={() => setShowManualLocation((c) => !c)} className="mt-3 text-[12px] font-bold text-primary flex items-center gap-1">
               Enter coordinates manually
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showManualLocation ? "rotate-180" : ""}`} />
             </button>
@@ -409,15 +446,19 @@ export function CheckoutForm({
                 </motion.div>
               )}
             </AnimatePresence>
-          </section>
+          </motion.section>
         </div>
 
+
         {/* Right column - Order Summary */}
-        <div className="lg:sticky lg:top-[90px] h-fit">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="lg:sticky lg:top-[90px] h-fit"
+        >
           <section className="bg-white rounded-2xl p-5 card-elevated">
             <h2 className="text-[15px] font-black text-slate-900">Order Summary</h2>
-
-            {/* Items list preview */}
             <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between text-[12px]">
@@ -426,8 +467,6 @@ export function CheckoutForm({
                 </div>
               ))}
             </div>
-
-            {/* Summary lines */}
             <div className="mt-4 pt-4 border-t border-slate-100 space-y-2.5 text-[13px]">
               <div className="flex justify-between">
                 <span className="text-slate-500">Order Amount</span>
@@ -446,59 +485,47 @@ export function CheckoutForm({
               <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between">
                 <span className="font-black text-slate-900">Total Amount</span>
                 <span className="font-black text-slate-900 text-[16px]">
-                  <span className="text-primary">₹</span> {totalAmount.toFixed(2)}
+                  <span className="text-primary">{"\u20b9"}</span> {totalAmount.toFixed(2)}
                 </span>
               </div>
             </div>
-
-            {message && (
-              <p className="mt-4 rounded-xl bg-slate-50 p-3 text-[12px] font-medium text-slate-600">{message}</p>
-            )}
-
-            {/* Pay Now button */}
-            <button
+            {message && <p className="mt-4 rounded-xl bg-slate-50 p-3 text-[12px] font-medium text-slate-600">{message}</p>}
+            <motion.button
               type="submit"
               disabled={!canSubmit}
-              className="mt-5 flex h-[50px] w-full items-center justify-center rounded-full bg-slate-900 text-white text-[14px] font-bold press shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              whileTap={{ scale: 0.97 }}
+              whileHover={{ scale: canSubmit ? 1.01 : 1 }}
+              className="mt-5 flex h-[50px] w-full items-center justify-center rounded-full bg-slate-900 text-white text-[14px] font-bold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
             >
               {isSubmitting ? "Placing order..." : "Pay Now"}
-            </button>
-
+            </motion.button>
             {!canSubmit && (
               <p className="mt-3 text-center text-[11px] font-medium text-slate-400">
-                Complete address, pincode & GPS verification to proceed
+                Complete address, pincode & GPS to proceed
               </p>
             )}
           </section>
-        </div>
+        </motion.div>
       </div>
     </form>
   );
 }
 
+
 function PaymentMethodCard({
-  active,
-  icon,
-  iconBg,
-  label,
-  description,
-  onClick
+  active, icon, iconBg, label, description, onClick
 }: {
-  active: boolean;
-  icon: React.ReactNode;
-  iconBg: string;
-  label: string;
-  description: string;
-  onClick: () => void;
+  active: boolean; icon: React.ReactNode; iconBg: string;
+  label: string; description: string; onClick: () => void;
 }) {
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onClick}
-      className={`w-full flex items-center gap-3 rounded-2xl p-4 text-left transition-all ${
-        active
-          ? "border-2 border-primary bg-primary/5"
-          : "border-2 border-slate-100 hover:border-slate-200"
+      whileTap={{ scale: 0.97 }}
+      animate={active ? { borderColor: "rgba(15,138,95,1)" } : { borderColor: "rgba(241,245,249,1)" }}
+      className={`w-full flex items-center gap-3 rounded-2xl p-4 text-left border-2 transition-colors ${
+        active ? "bg-primary/5" : "hover:border-slate-200"
       }`}
     >
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}>
@@ -508,29 +535,34 @@ function PaymentMethodCard({
         <p className="text-[13px] font-bold text-slate-800">{label}</p>
         <p className="text-[11px] text-slate-500 mt-0.5">{description}</p>
       </div>
-      <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-        active ? "border-primary bg-primary" : "border-slate-300"
-      }`}>
-        {active && <Check className="h-3 w-3 text-white" />}
-      </div>
-    </button>
+      <motion.div
+        animate={active ? { scale: 1, backgroundColor: "#0F8A5F" } : { scale: 1, backgroundColor: "transparent" }}
+        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+          active ? "border-primary" : "border-slate-300"
+        }`}
+      >
+        <AnimatePresence>
+          {active && (
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+            >
+              <Check className="h-3 w-3 text-white" />
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </motion.button>
   );
 }
 
 function CheckoutField({
-  label,
-  value,
-  onChange,
-  type = "text",
-  inputMode,
-  className
+  label, value, onChange, type = "text", inputMode, className
 }: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  type?: string;
-  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
-  className?: string;
+  label: string; value: string; onChange: (value: string) => void;
+  type?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]; className?: string;
 }) {
   return (
     <label className={`min-w-0 ${className ?? ""}`}>

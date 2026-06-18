@@ -4,6 +4,9 @@ import { ChevronRight, ChevronUp, Sparkles, TrendingUp, Zap } from "lucide-react
 import { ProductCard } from "@/components/product-card";
 import { HomeSearch } from "@/components/home/home-search";
 import { PromoBanners } from "@/components/home/promo-banners";
+import { HeroSection } from "@/components/home/hero-section";
+import { AnimatedCategories } from "@/components/home/animated-categories";
+import { AnimatedProductSection } from "@/components/home/animated-product-section";
 import { categories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
@@ -28,11 +31,6 @@ const getHomepageProducts = unstable_cache(
   { revalidate: 60, tags: ["homepage", "products"] }
 );
 
-const categoryIcons: Record<string, string> = {
-  Fruits: "🍎", Vegetables: "🥬", Dairy: "🥛", Beverages: "🧃", Snacks: "🍿",
-  Household: "🧹", "Personal Care": "🧴", "Frozen Foods": "🧊", "Grocery Essentials": "🍚"
-};
-
 const categoryImages: Record<string, string> = {
   Fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=200&h=200&fit=crop",
   Vegetables: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200&h=200&fit=crop",
@@ -55,6 +53,11 @@ const categoryColors: Record<string, string> = {
   "Personal Care": "bg-rose-50",
   "Frozen Foods": "bg-cyan-50",
   "Grocery Essentials": "bg-amber-50"
+};
+
+const categoryIcons: Record<string, string> = {
+  Fruits: "\ud83c\udf4e", Vegetables: "\ud83e\udd2c", Dairy: "\ud83e\udd5b", Beverages: "\ud83e\uddc3", Snacks: "\ud83c\udf7f",
+  Household: "\ud83e\uddf9", "Personal Care": "\ud83e\uddf4", "Frozen Foods": "\ud83e\uddc6", "Grocery Essentials": "\ud83c\udf5a"
 };
 
 export default async function HomePage() {
@@ -89,240 +92,65 @@ export default async function HomePage() {
       {/* Mobile Search */}
       <HomeSearch products={allProducts} />
 
-      {/* Hero Section - Desktop */}
-      <section className="hidden md:block relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
-          <div className="grid grid-cols-2 gap-8 items-center">
-            {/* Left: Text content */}
-            <div>
-              <h1 className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] tracking-tight text-slate-900">
-                {settings.storeName}
-              </h1>
-              <p className="mt-5 text-lg text-slate-600 max-w-md leading-relaxed">
-                Shop from thousands of farm-fresh fruits, vegetables, dairy and daily essentials at unbeatable prices.
-              </p>
-              <Link
-                href={heroHref}
-                className="show-all-pill mt-8 inline-flex"
-              >
-                Shop Now
-                <ChevronUp className="h-4 w-4 rotate-90" />
-              </Link>
-            </div>
-
-            {/* Right: Hero image */}
-            <div className="relative aspect-[4/3] rounded-3xl overflow-hidden">
-              <img
-                src={heroImage}
-                alt={heroTitle}
-                className="h-full w-full object-cover"
-                loading="eager"
-              />
-              {/* Floating product card */}
-              <div className="absolute top-6 right-6 bg-white rounded-2xl p-3 shadow-lg max-w-[160px]">
-                <img
-                  src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=120&h=80&fit=crop"
-                  alt="Fresh Vegetables"
-                  className="w-full h-16 object-cover rounded-xl"
-                />
-                <p className="mt-2 text-[11px] font-bold text-slate-800">Fresh Vegetables</p>
-                <p className="text-[11px] font-bold text-primary">₹18.00</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Hero banner - Mobile */}
-      <section className="px-4 pt-3 pb-1 md:hidden">
-        <Link href={heroHref} className="block relative overflow-hidden rounded-2xl aspect-[2.2/1] press">
-          <img src={heroImage} alt={heroTitle} className="h-full w-full object-cover" loading="eager" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-4">
-            <span className="inline-block text-[10px] font-semibold text-white/90 bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5 mb-1.5">
-              {settings.deliveryRadiusKm} KM delivery
-            </span>
-            <h2 className="text-[17px] font-bold text-white leading-snug">{heroTitle}</h2>
-          </div>
-        </Link>
-      </section>
+      {/* Hero Section - with parallax + floating card */}
+      <HeroSection
+        storeName={settings.storeName}
+        heroImage={heroImage}
+        heroTitle={heroTitle}
+        heroHref={heroHref}
+        deliveryRadiusKm={settings.deliveryRadiusKm}
+      />
 
       {/* Mobile promo banners */}
       <PromoBanners />
 
-      {/* Popular Categories - Desktop */}
-      <section className="hidden md:block max-w-7xl mx-auto px-6 lg:px-8 pt-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="section-title">Popular Categories</h2>
-          <Link href="/products" className="show-all-pill text-sm">
-            Show All
-            <ChevronUp className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-3 lg:grid-cols-6 gap-4">
-          {categories.slice(0, 6).map((cat) => (
-            <Link
-              key={cat}
-              href={`/products?category=${encodeURIComponent(cat)}`}
-              className={`category-card ${categoryColors[cat] || "bg-slate-50"} p-4 flex flex-col items-center justify-center gap-3 press`}
-            >
-              <div className="w-16 h-16 rounded-2xl overflow-hidden">
-                <img
-                  src={categoryImages[cat] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop"}
-                  alt={cat}
-                  className="w-full h-full object-cover"
-                  loading="lazy"
-                />
-              </div>
-              <div className="text-center">
-                <p className="text-[13px] font-bold text-slate-800">{cat}</p>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  {allProducts.filter((p) => p.category === cat).length} Products
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Categories grid - Mobile */}
-      <section className="px-4 pt-5 md:hidden">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-bold text-slate-900">What are you looking for?</h2>
-        </div>
-        <div className="grid grid-cols-4 gap-2 mt-3 sm:grid-cols-5">
-          {categories.map((cat) => (
-            <Link
-              key={cat}
-              href={`/products?category=${encodeURIComponent(cat)}`}
-              className="flex flex-col items-center gap-1.5 rounded-xl bg-slate-50 py-3 px-1 press hover:bg-slate-100 transition-colors"
-            >
-              <span className="text-2xl leading-none">{categoryIcons[cat] ?? "🛒"}</span>
-              <span className="text-[10px] font-medium text-slate-600 text-center leading-tight line-clamp-1">{cat}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {/* Popular Categories - with staggered entrance */}
+      <AnimatedCategories
+        categories={categories}
+        categoryImages={categoryImages}
+        categoryColors={categoryColors}
+        categoryIcons={categoryIcons}
+        allProducts={allProducts}
+      />
 
       {/* Weekly Best Selling Items */}
-      <section className="pt-8 md:pt-12">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <h2 className="section-title text-lg md:text-2xl">Weekly Best Selling Items</h2>
-            <Link href="/products" className="show-all-pill text-xs md:text-sm">
-              Show All
-              <ChevronUp className="h-3 w-3 md:h-3.5 md:w-3.5" />
-            </Link>
-          </div>
-
-          {/* Category filter pills */}
-          <div className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1">
-            {["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Bakery", "Meat & Fish", "Beverages"].map((label, idx) => (
-              <Link
-                key={label}
-                href={`/products?category=${encodeURIComponent(categories[idx] || label)}`}
-                className={`shrink-0 px-4 py-2 rounded-full text-[12px] font-semibold transition-colors ${
-                  idx === 0
-                    ? "bg-primary text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {label}
-              </Link>
-            ))}
-          </div>
-        </div>
-
-        {/* Product list - horizontal scroll */}
-        <div className="flex gap-3 overflow-x-auto px-4 md:px-6 lg:px-8 mt-4 pb-2 no-scrollbar scroll-x max-w-7xl mx-auto">
-          {trending.slice(0, 8).map((p) => (
-            <div key={p.id} className="w-[155px] shrink-0 sm:w-[170px] md:w-[200px]">
-              <ProductCard product={p} compact />
-            </div>
-          ))}
-        </div>
-      </section>
+      <AnimatedProductSection
+        title="Weekly Best Selling Items"
+        products={trending.slice(0, 8)}
+        showCategoryPills
+        categoryPills={["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Bakery", "Meat & Fish", "Beverages"]}
+        categories={categories}
+      />
 
       {/* Just for you / Today's Offers */}
       {offers.length > 0 && (
-        <section className="pt-8 md:pt-12">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Zap className="h-5 w-5 text-orange-500" />
-                <h2 className="section-title text-lg md:text-2xl">Just for you</h2>
-              </div>
-              <Link href="/products" className="show-all-pill text-xs md:text-sm">
-                Show All
-                <ChevronUp className="h-3 w-3 md:h-3.5 md:w-3.5" />
-              </Link>
-            </div>
-          </div>
-          <div className="flex gap-3 overflow-x-auto px-4 md:px-6 lg:px-8 mt-4 pb-2 no-scrollbar scroll-x max-w-7xl mx-auto">
-            {offers.map((p) => (
-              <div key={p.id} className="w-[155px] shrink-0 sm:w-[170px] md:w-[200px]">
-                <ProductCard product={p} compact />
-              </div>
-            ))}
-          </div>
-        </section>
+        <AnimatedProductSection
+          title="Just for you"
+          icon={<Zap className="h-5 w-5 text-orange-500" />}
+          products={offers}
+        />
       )}
 
       {/* Most Selling Products - Desktop grid */}
-      <section className="hidden md:block max-w-7xl mx-auto px-6 lg:px-8 pt-12">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-2">
-            <TrendingUp className="h-5 w-5 text-primary" />
-            <h2 className="section-title">Most Selling Products</h2>
-          </div>
-          <Link href="/products" className="show-all-pill text-sm">
-            Show All
-            <ChevronUp className="h-3.5 w-3.5" />
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-          {trending.slice(0, 10).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-      </section>
+      <AnimatedProductSection
+        title="Most Selling Products"
+        icon={<TrendingUp className="h-5 w-5 text-primary" />}
+        products={trending.slice(0, 10)}
+        layout="grid"
+        desktopOnly
+      />
 
       {/* Today's Fresh Picks */}
-      <section className="pt-8 md:pt-12">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-5 w-5 text-yellow-500" />
-              <h2 className="section-title text-lg md:text-2xl">Today&apos;s Fresh Picks</h2>
-            </div>
-            <Link href="/products" className="show-all-pill text-xs md:text-sm">
-              Show All
-              <ChevronUp className="h-3 w-3 md:h-3.5 md:w-3.5" />
-            </Link>
-          </div>
-        </div>
+      <AnimatedProductSection
+        title="Today's Fresh Picks"
+        icon={<Sparkles className="h-5 w-5 text-yellow-500" />}
+        products={freshPicks}
+        layout="mixed"
+      />
 
-        {/* Desktop: 2-column grid layout */}
-        <div className="hidden md:grid max-w-7xl mx-auto px-6 lg:px-8 mt-6 grid-cols-2 lg:grid-cols-4 gap-4">
-          {freshPicks.map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-
-        {/* Mobile: horizontal scroll */}
-        <div className="flex gap-3 overflow-x-auto px-4 mt-4 pb-2 no-scrollbar scroll-x md:hidden">
-          {freshPicks.slice(0, 8).map((p) => (
-            <div key={p.id} className="w-[155px] shrink-0 sm:w-[170px]">
-              <ProductCard product={p} compact />
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Fresh Fruits & Vegetables banner - Desktop sidebar style */}
+      {/* All Products with side banner - Desktop */}
       <section className="hidden md:block max-w-7xl mx-auto px-6 lg:px-8 pt-12">
         <div className="grid lg:grid-cols-[1fr_380px] gap-6">
-          {/* Product grid */}
           <div>
             <div className="flex items-center justify-between mb-4">
               <h2 className="section-title">All Products</h2>
@@ -330,11 +158,12 @@ export default async function HomePage() {
                 View all {allProducts.length} products <ChevronRight className="h-4 w-4" />
               </Link>
             </div>
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-              {allProducts.slice(0, 12).map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
+            <AnimatedProductSection
+              title=""
+              products={allProducts.slice(0, 12)}
+              layout="grid"
+              hideHeader
+            />
           </div>
 
           {/* Side banner */}
@@ -410,7 +239,7 @@ export default async function HomePage() {
             <div>
               <h4 className="text-sm font-bold text-slate-900">Contact Information</h4>
               <ul className="mt-3 space-y-2">
-                <li className="text-sm text-slate-500">{storeAddress || "Neyyattinkara, Kerala"}</li>
+                <li className="text-sm text-slate-500">{settings.address || "Neyyattinkara, Kerala"}</li>
               </ul>
             </div>
           </div>
@@ -419,5 +248,3 @@ export default async function HomePage() {
     </main>
   );
 }
-
-const storeAddress = "Neyyattinkara, Kerala";

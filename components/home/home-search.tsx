@@ -1,53 +1,70 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Search, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { Product } from "@/lib/types";
+import { cn } from "@/lib/utils";
 
 export function HomeSearch({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
-  const [history, setHistory] = useState<string[]>([]);
-  useEffect(() => {
-    setHistory(JSON.parse(window.localStorage.getItem("revathy-search-history") || "[]"));
-  }, []);
+  const [focused, setFocused] = useState(false);
+
   const results = useMemo(() => {
     const needle = query.trim().toLowerCase();
     if (!needle) return [];
-    return products.filter((product) => product.name.toLowerCase().includes(needle)).slice(0, 5);
+    return products
+      .filter((p) => p.name.toLowerCase().includes(needle) || p.category.toLowerCase().includes(needle))
+      .slice(0, 6);
   }, [products, query]);
 
   return (
-    <div className="relative z-20 mx-auto max-w-4xl px-4 sm:px-6">
-      <div className="rounded-[1.5rem] border border-border bg-card p-2 shadow-soft">
-        <label className="relative block">
-          <Search className="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-primary" />
-          <Input
+    <div className="sticky top-14 z-30 border-b border-slate-100 bg-white/98 px-4 py-3 backdrop-blur-sm dark:border-white/5 dark:bg-slate-950/98 sm:top-16">
+      <div className="mx-auto max-w-2xl">
+        <div className={cn(
+          "relative flex h-11 items-center rounded-xl border bg-slate-50 transition-all dark:bg-white/5",
+          focused ? "border-primary shadow-sm ring-2 ring-primary/10" : "border-slate-200 dark:border-white/10"
+        )}>
+          <Search className="ml-3.5 h-4 w-4 shrink-0 text-slate-400" />
+          <input
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search rice, milk, snacks..."
-            className="h-12 rounded-2xl border-0 bg-background pl-12 text-base font-bold shadow-none placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-primary"
+            onChange={(e) => setQuery(e.target.value)}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setTimeout(() => setFocused(false), 150)}
+            placeholder="Search for groceries..."
+            className="h-full flex-1 bg-transparent px-3 text-sm font-medium outline-none placeholder:text-slate-400"
           />
-        </label>
-        {results.length > 0 ? (
-          <div className="mt-2 grid gap-1 rounded-2xl bg-background p-2">
-            {results.map((product) => (
-              <Link key={product.id} href={`/products/${product.slug}`} className="flex items-center justify-between rounded-xl px-3 py-2 text-sm font-bold hover:bg-muted">
-                <span>{product.name}</span>
-                <span className="text-xs text-primary">{product.unit}</span>
-              </Link>
-            ))}
-          </div>
-        ) : query.trim() === "" && history.length > 0 ? (
-          <div className="mt-2 flex flex-wrap gap-2 rounded-2xl bg-background p-2">
-            {history.slice(0, 5).map((item) => (
-              <button key={item} type="button" onClick={() => setQuery(item)} className="rounded-full bg-muted px-3 py-1 text-xs font-black text-primary">
-                {item}
-              </button>
-            ))}
-          </div>
-        ) : null}
+          {query && (
+            <button type="button" onClick={() => setQuery("")} className="mr-3 text-slate-400 hover:text-slate-600">
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+
+        {/* Dropdown results */}
+        <AnimatePresence>
+          {focused && results.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.15 }}
+              className="absolute inset-x-4 top-full z-50 mt-1 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-lg dark:border-white/10 dark:bg-slate-900"
+            >
+              {results.map((product) => (
+                <Link
+                  key={product.id}
+                  href={`/products/${product.slug}`}
+                  className="flex items-center justify-between px-4 py-3 text-sm transition hover:bg-slate-50 dark:hover:bg-white/5"
+                >
+                  <span className="font-medium text-slate-700 dark:text-white">{product.name}</span>
+                  <span className="text-xs text-slate-400">{product.unit}</span>
+                </Link>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );

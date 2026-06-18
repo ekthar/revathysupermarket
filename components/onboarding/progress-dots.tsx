@@ -1,16 +1,19 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-export function ProgressDots({ current, total = 5 }: { current: number; total?: number }) {
+export function ProgressDots({ current, total = 4 }: { current: number; total?: number }) {
   return (
-    <div className="flex items-center justify-center gap-2">
+    <div className="flex items-center justify-center gap-1.5">
       {Array.from({ length: total }).map((_, index) => (
-        <span
+        <motion.span
           key={index}
+          animate={{ width: index <= current ? 20 : 6 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className={cn(
-            "h-2 rounded-full transition-all",
-            index <= current ? "w-7 bg-primary shadow-[0_8px_18px_-10px_rgba(15,138,95,0.9)]" : "w-2 bg-slate-300/80 dark:bg-white/20"
+            "h-1.5 rounded-full transition-colors",
+            index <= current ? "bg-primary" : "bg-slate-200 dark:bg-white/15"
           )}
         />
       ))}

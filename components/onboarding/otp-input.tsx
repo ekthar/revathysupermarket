@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 export function OtpInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const refs = useRef<Array<HTMLInputElement | null>>([]);
@@ -16,30 +17,40 @@ export function OtpInput({ value, onChange }: { value: string; onChange: (value:
   }
 
   return (
-    <div className="flex justify-center gap-2 sm:gap-3">
-      {digits.map((digit, index) => (
-        <motion.input
-          key={index}
-          ref={(node) => {
-            refs.current[index] = node;
-          }}
-          value={digit.trim()}
-          inputMode="numeric"
-          maxLength={1}
-          animate={digit.trim() ? { scale: [1, 1.1, 1] } : { scale: 1 }}
-          onPaste={(event) => {
-            event.preventDefault();
-            const pasted = event.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
-            onChange(pasted);
-            refs.current[Math.min(pasted.length, 5)]?.focus();
-          }}
-          onChange={(event) => setDigit(index, event.target.value.replace(/\D/g, "").slice(-1))}
-          onKeyDown={(event) => {
-            if (event.key === "Backspace" && !digits[index].trim() && index > 0) refs.current[index - 1]?.focus();
-          }}
-          className="h-14 w-12 rounded-2xl border-2 border-border bg-background/90 text-center text-2xl font-black outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/30 sm:h-16 sm:w-14"
-        />
-      ))}
+    <div className="flex justify-center gap-2.5">
+      {digits.map((digit, index) => {
+        const filled = digit.trim() !== "";
+        return (
+          <motion.input
+            key={index}
+            ref={(node) => { refs.current[index] = node; }}
+            value={digit.trim()}
+            inputMode="numeric"
+            maxLength={1}
+            animate={filled ? { scale: [1, 1.08, 1] } : {}}
+            transition={{ duration: 0.15 }}
+            onPaste={(e) => {
+              e.preventDefault();
+              const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+              onChange(pasted);
+              refs.current[Math.min(pasted.length, 5)]?.focus();
+            }}
+            onChange={(e) => setDigit(index, e.target.value.replace(/\D/g, "").slice(-1))}
+            onKeyDown={(e) => {
+              if (e.key === "Backspace" && !digits[index].trim() && index > 0) {
+                refs.current[index - 1]?.focus();
+              }
+            }}
+            className={cn(
+              "h-14 w-11 rounded-xl border-2 bg-white text-center text-xl font-black outline-none transition-all dark:bg-white/5 sm:h-16 sm:w-14 sm:text-2xl",
+              filled
+                ? "border-primary shadow-sm"
+                : "border-slate-200 dark:border-white/10",
+              "focus:border-primary focus:ring-2 focus:ring-primary/20"
+            )}
+          />
+        );
+      })}
     </div>
   );
 }

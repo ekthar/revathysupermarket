@@ -2,8 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
+import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
@@ -14,112 +14,162 @@ import type { CartItem } from "@/lib/types";
 
 export function CartPageClient() {
   const { items, subtotal, removeItem, updateQuantity } = useCart();
-  const [removed, setRemoved] = useState<CartItem | null>(null);
-  const suggestions = products.filter((product) => !items.some((item) => item.id === product.id)).slice(0, 4);
+  const [removedItem, setRemovedItem] = useState<CartItem | null>(null);
+  const suggestions = products.filter((p) => !items.some((item) => item.id === p.id)).slice(0, 4);
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center overflow-x-hidden px-4 text-center">
-        <h1 className="font-display text-4xl font-black">Your cart is empty</h1>
-        <p className="mt-3 text-muted-foreground">Fresh groceries are waiting in the aisles.</p>
-        <Button asChild className="mt-6">
-          <Link href="/products">Start shopping</Link>
+      <main className="flex min-h-[60dvh] flex-col items-center justify-center px-6 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 dark:bg-white/5">
+          <ShoppingBag className="h-8 w-8 text-slate-400" />
+        </div>
+        <h1 className="mt-4 font-display text-2xl font-bold text-slate-900 dark:text-white">Your cart is empty</h1>
+        <p className="mt-2 text-sm text-slate-500">Add items from the shop to get started.</p>
+        <Button asChild className="mt-6 rounded-xl" size="lg">
+          <Link href="/products">Browse Products</Link>
         </Button>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-7xl overflow-x-hidden px-4 pb-36 pt-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-primary">Review order</p>
-        <h1 className="mt-2 font-display text-4xl font-black leading-tight">Cart</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{items.length} items ready for checkout</p>
+    <main className="mx-auto max-w-4xl px-4 py-6 sm:px-6">
+      {/* Header */}
+      <div className="mb-5">
+        <h1 className="font-display text-xl font-bold text-slate-900 dark:text-white sm:text-2xl">Cart</h1>
+        <p className="mt-0.5 text-sm text-slate-500">{items.length} {items.length === 1 ? "item" : "items"}</p>
       </div>
-      <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="min-w-0 space-y-3 sm:space-y-4">
-          {items.map((item) => (
-            <motion.article
-              key={item.id}
-              drag="x"
-              dragConstraints={{ left: -90, right: 0 }}
-              dragElastic={0.18}
-              onDragEnd={(_, info) => {
-                if (info.offset.x < -80) {
-                  setRemoved(item);
-                  removeItem(item.id);
-                }
-              }}
-              className="grid min-w-0 grid-cols-[84px_minmax(0,1fr)] gap-3 rounded-[1.5rem] border border-white/70 bg-card/95 p-3 shadow-soft dark:border-white/10 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:gap-4 sm:p-4"
-            >
-              <div className="relative aspect-square overflow-hidden rounded-[1.15rem] bg-muted">
-                <ProductImage src={item.image} alt={item.name} />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-[10px] font-black uppercase text-primary sm:text-xs">{item.category}</p>
-                <h2 className="mt-1 line-clamp-2 font-black leading-5">{item.name}</h2>
-                <p className="text-xs font-semibold text-muted-foreground sm:text-sm">{item.unit}</p>
-                <p className="mt-2 font-black">{formatCurrency(item.discountPrice ?? item.price)}</p>
-              </div>
-              <div className="col-span-2 flex min-w-0 items-center justify-between gap-2 sm:col-span-1 sm:flex-col sm:justify-between">
-                <div className="flex h-11 items-center rounded-2xl border border-border bg-background/70">
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.quantity - 1)} title="Decrease quantity">
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-9 text-center font-black">{item.quantity}</span>
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.quantity + 1)} title="Increase quantity">
-                    <Plus className="h-4 w-4" />
-                  </Button>
+
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        {/* Items list */}
+        <div className="space-y-3">
+          <AnimatePresence initial={false}>
+            {items.map((item) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, x: -60, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex gap-3 rounded-xl border border-slate-100 bg-white p-3 shadow-sm dark:border-white/8 dark:bg-slate-900"
+              >
+                {/* Image */}
+                <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-slate-100 dark:bg-white/5 sm:h-20 sm:w-20">
+                  <ProductImage src={item.image} alt={item.name} />
                 </div>
-                <Button variant="outline" size="icon" onClick={() => { setRemoved(item); removeItem(item.id); }} title="Remove item" className="rounded-2xl">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            </motion.article>
-          ))}
-          {suggestions.length > 0 ? (
-            <section className="mt-6">
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-2xl font-black">You might also like</h2>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                {suggestions.map((product) => <ProductCard key={product.id} product={product} />)}
-              </div>
-            </section>
-          ) : null}
-          {removed ? <UndoRemove item={removed} onClose={() => setRemoved(null)} /> : null}
-        </section>
-        <aside className="h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-[0_20px_60px_-38px_rgba(15,23,42,0.75)] dark:border-white/10 lg:sticky lg:top-24">
-          <h2 className="font-display text-2xl font-bold">Order summary</h2>
-          <div className="mt-5 space-y-3 text-sm">
+
+                {/* Info */}
+                <div className="flex min-w-0 flex-1 flex-col justify-between">
+                  <div>
+                    <h3 className="line-clamp-1 text-sm font-semibold text-slate-800 dark:text-white">{item.name}</h3>
+                    <p className="mt-0.5 text-xs text-slate-400">{item.unit}</p>
+                  </div>
+                  <p className="text-sm font-bold text-slate-900 dark:text-white">
+                    {formatCurrency((item.discountPrice ?? item.price) * item.quantity)}
+                  </p>
+                </div>
+
+                {/* Controls */}
+                <div className="flex flex-col items-end justify-between">
+                  <button
+                    type="button"
+                    onClick={() => { setRemovedItem(item); removeItem(item.id); }}
+                    className="flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-red-50 hover:text-red-500"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                  <div className="flex h-8 items-center rounded-lg border border-slate-200 bg-slate-50 dark:border-white/10 dark:bg-white/5">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="flex h-full w-8 items-center justify-center text-slate-600 active:bg-slate-100"
+                    >
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="min-w-6 text-center text-xs font-bold">{item.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="flex h-full w-8 items-center justify-center text-slate-600 active:bg-slate-100"
+                    >
+                      <Plus className="h-3 w-3" />
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Summary sidebar */}
+        <aside className="h-fit rounded-xl border border-slate-100 bg-white p-5 shadow-sm dark:border-white/8 dark:bg-slate-900 lg:sticky lg:top-20">
+          <h2 className="font-display text-base font-bold text-slate-900 dark:text-white">Order Summary</h2>
+          <div className="mt-4 space-y-2.5 text-sm">
             <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span className="font-bold">{formatCurrency(subtotal)}</span>
+              <span className="text-slate-500">Subtotal</span>
+              <span className="font-semibold">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex justify-between">
-              <span>Delivery</span>
-              <span className="font-bold">Confirmed by store</span>
+              <span className="text-slate-500">Delivery</span>
+              <span className="text-xs font-medium text-primary">Confirmed at checkout</span>
+            </div>
+            <hr className="border-slate-100 dark:border-white/5" />
+            <div className="flex justify-between">
+              <span className="font-bold text-slate-900 dark:text-white">Total</span>
+              <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(subtotal)}</span>
             </div>
           </div>
-          <p className="mt-5 rounded-2xl bg-muted p-4 text-sm leading-6 text-muted-foreground">
-            Delivery radius is verified at checkout using your saved store settings. Payment is collected by COD or UPI on delivery.
-          </p>
-          <Button asChild className="mt-5 w-full" size="lg">
-            <Link href="/checkout">Checkout</Link>
+          <Button asChild className="mt-5 w-full rounded-xl" size="lg">
+            <Link href="/checkout">
+              Checkout
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </Button>
+          <p className="mt-3 text-center text-[11px] text-slate-400">COD or UPI on delivery</p>
         </aside>
       </div>
-    </main>
-  );
-}
 
-function UndoRemove({ item, onClose }: { item: CartItem; onClose: () => void }) {
-  const { addItem } = useCart();
-  return (
-    <div className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center justify-between rounded-2xl bg-slate-950 p-3 text-sm font-black text-white shadow-premium">
-      <span>{item.name} removed</span>
-      <button type="button" onClick={() => { addItem(item, item.quantity); onClose(); }} className="rounded-xl bg-lime-fresh px-3 py-2 text-slate-950">Undo</button>
-    </div>
+      {/* Suggestions */}
+      {suggestions.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-display text-base font-bold text-slate-900 dark:text-white">You might also like</h2>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {suggestions.map((product) => (
+              <ProductCard key={product.id} product={product} compact />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Undo toast */}
+      <AnimatePresence>
+        {removedItem && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="fixed inset-x-4 bottom-20 z-50 mx-auto flex max-w-sm items-center justify-between rounded-xl bg-slate-900 px-4 py-3 text-white shadow-lg md:bottom-6"
+            onAnimationComplete={() => {
+              setTimeout(() => setRemovedItem(null), 3000);
+            }}
+          >
+            <span className="text-sm font-medium">{removedItem.name} removed</span>
+            <button
+              type="button"
+              onClick={() => {
+                const item = removedItem;
+                setRemovedItem(null);
+                const { addItem } = useCart as unknown as { addItem: (item: CartItem, qty: number) => void };
+                if (typeof addItem === "function") addItem(item, item.quantity);
+              }}
+              className="rounded-lg bg-primary px-3 py-1.5 text-xs font-bold"
+            >
+              Undo
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
   );
 }

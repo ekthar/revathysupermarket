@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
@@ -14,6 +15,10 @@ export default async function WelcomePage({
 }) {
   const session = await auth();
   const { callbackUrl } = await searchParams;
-  if (session?.user?.id) return <OnboardingFlow callbackUrl={callbackUrl ?? "/dashboard"} />;
-  return <OnboardingFlow callbackUrl={callbackUrl ?? "/dashboard"} />;
+
+  if (session?.user?.id) {
+    redirect(callbackUrl || "/");
+  }
+
+  return <OnboardingFlow callbackUrl={callbackUrl ?? "/"} />;
 }

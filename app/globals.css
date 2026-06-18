@@ -8,11 +8,12 @@
   --foreground: 217 33% 17%;
   --card: 0 0% 100%;
   --card-foreground: 217 33% 17%;
-  --muted: 152 35% 95%;
+  --muted: 152 35% 96%;
   --muted-foreground: 215 16% 47%;
-  --border: 152 23% 88%;
-  --input: 152 23% 88%;
+  --border: 152 23% 90%;
+  --input: 152 23% 90%;
   --ring: 158 80% 30%;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .dark {
@@ -20,71 +21,123 @@
   --foreground: 210 40% 96%;
   --card: 220 28% 12%;
   --card-foreground: 210 40% 96%;
-  --muted: 219 23% 18%;
+  --muted: 219 23% 16%;
   --muted-foreground: 215 20% 70%;
-  --border: 217 19% 23%;
-  --input: 217 19% 23%;
+  --border: 217 19% 22%;
+  --input: 217 19% 22%;
   --ring: 74 64% 49%;
 }
 
-* {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+  margin: 0;
 }
 
 html {
+  -webkit-text-size-adjust: 100%;
+  -webkit-tap-highlight-color: transparent;
   scroll-behavior: smooth;
-  overflow-x: hidden;
 }
 
 body {
-  min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
-  background:
-    radial-gradient(circle at top left, rgba(167, 209, 41, 0.13), transparent 30rem),
-    linear-gradient(180deg, rgba(15, 138, 95, 0.04), transparent 22rem),
-    hsl(var(--background));
+  -webkit-overflow-scrolling: touch;
+  background: hsl(var(--background));
   color: hsl(var(--foreground));
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
 }
 
-body::selection {
+::selection {
   background: #a7d129;
   color: #1e293b;
 }
 
+/* ─── Glassmorphism ─── */
 .glass {
   background: color-mix(in srgb, hsl(var(--card)) 92%, transparent);
-  border: 1px solid color-mix(in srgb, hsl(var(--border)) 78%, transparent);
-  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, hsl(var(--border)) 60%, transparent);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
 }
 
 .glass-panel {
   background: color-mix(in srgb, hsl(var(--card)) 94%, transparent);
-  border: 1px solid color-mix(in srgb, hsl(var(--border)) 82%, transparent);
-  box-shadow: 0 18px 52px -34px rgba(15, 23, 42, 0.5);
-  backdrop-filter: blur(12px);
+  border: 1px solid color-mix(in srgb, hsl(var(--border)) 70%, transparent);
+  box-shadow: 0 12px 40px -28px rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(16px) saturate(1.08);
+  -webkit-backdrop-filter: blur(16px) saturate(1.08);
 }
 
 .glass-nav {
-  background: color-mix(in srgb, hsl(var(--card)) 94%, transparent);
-  border: 1px solid color-mix(in srgb, hsl(var(--border)) 78%, transparent);
-  box-shadow: 0 16px 48px -36px rgba(15, 23, 42, 0.68);
-  backdrop-filter: blur(12px) saturate(1.08);
+  background: color-mix(in srgb, hsl(var(--card)) 95%, transparent);
+  border: 1px solid color-mix(in srgb, hsl(var(--border)) 65%, transparent);
+  box-shadow: 0 8px 32px -20px rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(20px) saturate(1.12);
+  -webkit-backdrop-filter: blur(20px) saturate(1.12);
 }
 
+/* ─── Toast position (above mobile nav) ─── */
 .safe-toast-stack {
-  bottom: calc(11.25rem + env(safe-area-inset-bottom));
+  bottom: calc(5.5rem + var(--safe-bottom));
 }
 
 @media (min-width: 640px) {
   .safe-toast-stack {
-    bottom: calc(1.5rem + env(safe-area-inset-bottom));
+    bottom: calc(1.5rem + var(--safe-bottom));
   }
 }
 
+/* ─── Scrollbar hiding ─── */
 .no-scrollbar {
   scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
 .no-scrollbar::-webkit-scrollbar {
   display: none;
+}
+
+/* ─── Smooth scroll container for horizontal sections ─── */
+.snap-scroll {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+}
+
+.snap-scroll > * {
+  scroll-snap-align: start;
+}
+
+/* ─── iOS safe area padding helper ─── */
+.pb-safe {
+  padding-bottom: calc(5.5rem + var(--safe-bottom));
+}
+
+@media (min-width: 768px) {
+  .pb-safe {
+    padding-bottom: 0;
+  }
+}
+
+/* ─── Touch feedback ─── */
+@media (hover: none) {
+  .touch-bounce:active {
+    transform: scale(0.97);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* ─── Page transition layer ─── */
+.page-enter {
+  opacity: 0;
+  transform: translateY(8px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease;
 }

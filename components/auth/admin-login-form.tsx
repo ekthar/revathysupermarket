@@ -1,89 +1,94 @@
 "use client";
 
 import { useState } from "react";
-import { getSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { LockKeyhole, ShieldCheck } from "lucide-react";
-import { motion } from "framer-motion";
+import { signIn } from "next-auth/react";
+import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/toast-provider";
-import { isDeliveryPartnerRole, isStaffLoginRole, roleLabel } from "@/lib/roles";
 
-export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: string }) {
+export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null }) {
   const router = useRouter();
-  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  const target = callbackUrl || "/admin";
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
     setLoading(true);
-    setMessage("");
 
-    const result = await signIn("staff-credentials", { email, password, redirect: false });
+    const result = await signIn("staff-credentials", {
+      email,
+      password,
+      redirect: false
+    });
+
+    setLoading(false);
+
     if (result?.error) {
-      setLoading(false);
-      setMessage("Invalid staff email or password.");
-      showToast("Invalid staff login", "error");
+      setError("Invalid email or password. Contact your admin if locked out.");
       return;
     }
 
-    const session = await getSession();
-    const role = session?.user?.role;
-    if (isDeliveryPartnerRole(role)) {
-      showToast("Opening delivery assignments", "success");
-      router.push("/delivery");
-      router.refresh();
-      return;
-    }
-    if (!isStaffLoginRole(role)) {
-      await signOut({ redirect: false });
-      setLoading(false);
-      setMessage("This is a customer account. Use Customer Login.");
-      showToast("Staff access required", "error");
-      return;
-    }
-
-    showToast(`Welcome back, ${roleLabel(role)}`, "success");
-    router.push(callbackUrl.startsWith("/admin") ? callbackUrl : "/admin");
+    router.push(target);
     router.refresh();
   }
 
   return (
-    <motion.form
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      onSubmit={submit}
-      className="rounded-[2rem] border border-white/70 bg-card/95 p-5 shadow-soft backdrop-blur dark:border-white/10 sm:p-6"
-    >
-      <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <ShieldCheck className="h-6 w-6" />
-        </span>
-        <div>
-          <p className="text-xs font-black uppercase text-primary">Secure login</p>
-          <h2 className="font-display text-2xl font-black">Staff Panel access</h2>
-        </div>
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+      <div className="space-y-4">
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</span>
+          <div className="relative mt-1.5">
+            <Mail className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="staff@revathysupermarket.in"
+              required
+              className="h-12 rounded-xl pl-10"
+            />
+          </div>
+        </label>
+
+        <label className="block">
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Password</span>
+          <div className="relative mt-1.5">
+            <Lock className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+            <Input
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+              required
+              className="h-12 rounded-xl pl-10 pr-10"
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </button>
+          </div>
+        </label>
       </div>
-      <label className="mt-6 block">
-        <span className="text-sm font-bold">Staff email</span>
-        <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className="mt-2 h-12 rounded-2xl" />
-      </label>
-      <label className="mt-4 block">
-        <span className="text-sm font-bold">Password</span>
-        <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required className="mt-2 h-12 rounded-2xl" />
-      </label>
-      {message && <p className="mt-4 rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p>}
-      <Button className="mt-5 w-full" size="lg" disabled={loading}>
-        <LockKeyhole className="h-4 w-4" />
-        {loading ? "Checking access" : "Enter Staff Panel"}
+
+      {error && (
+        <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400">
+          {error}
+        </p>
+      )}
+
+      <Button type="submit" disabled={loading || !email || !password} size="lg" className="mt-5 w-full rounded-xl">
+        {loading ? "Signing in..." : "Sign in"}
       </Button>
-      <a href="/login" className="mt-4 block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-primary">
-        Customer? Use Customer Login
-      </a>
-    </motion.form>
+    </form>
   );
 }

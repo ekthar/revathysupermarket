@@ -31,14 +31,16 @@ export const metadata: Metadata = {
     type: "website"
   },
   applicationName: "Revathy Supermarket",
-  appleWebApp: { capable: true, title: "Revathy" },
+  appleWebApp: { capable: true, title: "Revathy", statusBarStyle: "black-translucent" },
   manifest: "/manifest.webmanifest"
 };
 
 export const viewport: Viewport = {
   themeColor: "#0F8A5F",
   width: "device-width",
-  initialScale: 1
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover"
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -51,11 +53,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } : null;
 
   return (
-    <html lang="en" data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${poppins.variable} font-sans antialiased`}>
         <Providers>
           <Header user={user} />
-          <div className="pb-24 md:pb-0">{children}</div>
+          <div className="pb-safe">{children}</div>
           <MobileBottomNav user={user} />
         </Providers>
       </body>

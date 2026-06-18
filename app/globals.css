@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800;900&family=Manrope:wght@500;600;700;800;900&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -59,6 +59,86 @@ h1, h2, h3, h4, h5, h6, .font-display {
   box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
 }
 
+/* Elevated card - used for product cards and modals */
+.card-elevated {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+/* Glass morphism panels */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+/* Pill button - rounded capsule style */
+.pill-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  transition: all 0.2s ease;
+}
+
+/* Show All floating pill */
+.show-all-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1.5rem;
+  border-radius: 9999px;
+  background: #1a1a1a;
+  color: white;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  transition: transform 0.2s ease;
+}
+.show-all-pill:hover { transform: translateY(-1px); }
+
+/* Category card with gradient overlay */
+.category-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.25rem;
+  aspect-ratio: 1 / 1.1;
+  transition: transform 0.2s ease;
+}
+.category-card:hover { transform: translateY(-2px); }
+
+/* Promo gradient cards */
+.promo-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  padding: 1.5rem;
+  min-height: 200px;
+}
+
+/* Floating cart bar */
+.floating-cart-bar {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem 0.75rem 1.25rem;
+  border-radius: 9999px;
+  background: #1a1a1a;
+  color: white;
+  box-shadow: 0 20px 50px -20px rgba(0,0,0,0.5);
+  width: calc(100% - 2rem);
+  max-width: 400px;
+}
+
 /* iOS-style pressed state */
 .press:active { transform: scale(0.97); transition: transform 0.1s cubic-bezier(0.25, 0.1, 0.25, 1); }
 
@@ -70,6 +150,53 @@ h1, h2, h3, h4, h5, h6, .font-display {
   overscroll-behavior-x: contain;
 }
 .scroll-x > * { scroll-snap-align: start; }
+
+/* Horizontal product list card */
+.product-list-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: white;
+  border-radius: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  transition: transform 0.15s ease;
+}
+.product-list-card:active { transform: scale(0.98); }
+
+/* Section header with bold typography */
+.section-title {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-weight: 900;
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+@media (min-width: 768px) {
+  .section-title { font-size: 2rem; }
+}
+
+/* Order success modal */
+.success-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+}
+
+.success-modal {
+  background: white;
+  border-radius: 2rem;
+  padding: 2.5rem 2rem;
+  text-align: center;
+  max-width: 360px;
+  width: calc(100% - 2rem);
+  box-shadow: 0 24px 80px -20px rgba(0,0,0,0.3);
+}
 
 /* Admin panel specific */
 .admin-card {
@@ -93,3 +220,17 @@ h1, h2, h3, h4, h5, h6, .font-display {
   100% { box-shadow: 0 0 0 0 rgba(15, 138, 95, 0); }
 }
 .pulse-ring { animation: pulseRing 1.5s infinite; }
+
+/* Fade-in animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
+/* Scale-in animation */
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }

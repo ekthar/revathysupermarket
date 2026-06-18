@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Info, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";

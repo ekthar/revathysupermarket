@@ -36,7 +36,7 @@ export function AnimatedCategories({
   categoryIcons,
   allProducts
 }: {
-  categories: string[];
+  categories: readonly string[];
   categoryImages: Record<string, string>;
   categoryColors: Record<string, string>;
   categoryIcons: Record<string, string>;

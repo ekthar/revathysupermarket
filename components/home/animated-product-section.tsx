@@ -37,7 +37,7 @@ interface AnimatedProductSectionProps {
   products: Product[];
   showCategoryPills?: boolean;
   categoryPills?: string[];
-  categories?: string[];
+  categories?: readonly string[];
   layout?: "scroll" | "grid" | "mixed";
   desktopOnly?: boolean;
   hideHeader?: boolean;

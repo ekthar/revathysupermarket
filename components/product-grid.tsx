@@ -2,14 +2,12 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { SlidersHorizontal, Search, ShoppingBag } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { SlidersHorizontal, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { categories, products } from "@/lib/products";
-import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
 type SortMode = "popularity" | "low" | "high" | "newest";
@@ -20,7 +18,7 @@ export function ProductGrid({ items = products, initialCategory = "All" }: { ite
   const [maxPrice, setMaxPrice] = useState(350);
   const [sort, setSort] = useState<SortMode>("popularity");
   const [visibleCount, setVisibleCount] = useState(24);
-  const { totalItems, subtotal } = useCart();
+  const { totalItems } = useCart();
 
   const filtered = useMemo(() => {
     return items
@@ -138,32 +136,7 @@ export function ProductGrid({ items = products, initialCategory = "All" }: { ite
           </Button>
         </div>
       )}
-      <AnimatePresence>
-        {totalItems > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 24, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 24, scale: 0.96 }}
-            className="fixed inset-x-4 bottom-[5.8rem] z-40 mx-auto max-w-md sm:bottom-6"
-          >
-            <Link
-              href="/cart"
-              className="flex items-center justify-between rounded-[1.35rem] bg-slate-950 p-3 text-white shadow-[0_20px_55px_-26px_rgba(15,23,42,0.9)] ring-1 ring-white/10 dark:bg-primary"
-            >
-              <span className="flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lime-fresh text-slate-950">
-                  <ShoppingBag className="h-5 w-5" />
-                </span>
-                <span>
-                  <span className="block text-sm font-black">{totalItems} items</span>
-                  <span className="block text-xs text-white/70">{formatCurrency(subtotal)}</span>
-                </span>
-              </span>
-              <span className="rounded-2xl bg-white px-4 py-2 text-sm font-black text-slate-950">View cart</span>
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Cart bar is now handled by MobileBottomNav - removed duplicate here */}
     </section>
   );
 }

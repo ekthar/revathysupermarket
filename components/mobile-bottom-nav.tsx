@@ -35,7 +35,7 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.92 }}
             transition={{ type: "spring", stiffness: 280, damping: 22 }}
-            className="fixed bottom-[66px] inset-x-0 z-[55] flex justify-center px-4 md:hidden"
+            className="fixed bottom-[62px] inset-x-0 z-[55] flex justify-center px-4 md:hidden"
             style={{ paddingBottom: "var(--safe-bottom)" }}
           >
             <Link

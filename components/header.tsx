@@ -42,7 +42,7 @@ export function Header({
           <div className="flex items-center justify-between h-[70px]">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 press">
-              <span className="font-display text-2xl font-black tracking-tight text-slate-900">
+              <span className="font-display text-2xl font-black tracking-tight text-slate-900 uppercase">
                 {storeName}
               </span>
             </Link>
@@ -144,7 +144,7 @@ export function Header({
           </Link>
 
           {/* Right icons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2.5">
             <button className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 press">
               <Bell className="h-[17px] w-[17px] text-slate-600" />
             </button>
@@ -156,7 +156,7 @@ export function Header({
                   key={totalItems}
                   initial={{ scale: 0.5 }}
                   animate={{ scale: 1 }}
-                  className="absolute -top-0.5 -right-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white px-0.5"
+                  className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white px-0.5 pointer-events-none"
                 >
                   {totalItems}
                 </motion.span>

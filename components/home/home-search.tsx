@@ -28,7 +28,7 @@ export function HomeSearch({ products }: { products: Product[] }) {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
-            placeholder="Search for fast food..."
+            placeholder="Search for groceries..."
             className="w-full h-11 rounded-full bg-slate-50 border border-slate-100 pl-10 pr-8 text-[13px] outline-none placeholder:text-slate-400 focus:border-primary/40 focus:bg-white focus:shadow-sm transition-all"
           />
           {query && (

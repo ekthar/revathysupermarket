@@ -2,7 +2,6 @@ import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { ChevronRight, ChevronUp, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
-import { HomeSearch } from "@/components/home/home-search";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { HeroSection } from "@/components/home/hero-section";
 import { AnimatedCategories } from "@/components/home/animated-categories";
@@ -89,9 +88,6 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white">
-      {/* Mobile Search */}
-      <HomeSearch products={allProducts} />
-
       {/* Hero Section - with parallax + floating card */}
       <HeroSection
         storeName={settings.storeName}

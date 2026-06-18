@@ -39,8 +39,8 @@ const config: Config = {
         }
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "sans-serif"],
-        display: ["Poppins", "Inter", "system-ui", "sans-serif"]
+        sans: ['"Inter Tight"', "-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "system-ui", "sans-serif"],
+        display: ['"Manrope"', "-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "system-ui", "sans-serif"]
       },
       boxShadow: {
         premium: "0 20px 70px -35px rgba(15, 138, 95, 0.55)",

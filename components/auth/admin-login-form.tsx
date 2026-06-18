@@ -1,89 +1,51 @@
 "use client";
 
 import { useState } from "react";
-import { getSession, signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { LockKeyhole, ShieldCheck } from "lucide-react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { signIn } from "next-auth/react";
 import { Input } from "@/components/ui/input";
-import { useToast } from "@/components/toast-provider";
-import { isDeliveryPartnerRole, isStaffLoginRole, roleLabel } from "@/lib/roles";
 
-export function AdminLoginForm({ callbackUrl = "/admin" }: { callbackUrl?: string }) {
+export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null }) {
   const router = useRouter();
-  const { showToast } = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function submit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
     setLoading(true);
-    setMessage("");
-
     const result = await signIn("staff-credentials", { email, password, redirect: false });
+    setLoading(false);
     if (result?.error) {
-      setLoading(false);
-      setMessage("Invalid staff email or password.");
-      showToast("Invalid staff login", "error");
+      setError("Invalid credentials or account locked.");
       return;
     }
-
-    const session = await getSession();
-    const role = session?.user?.role;
-    if (isDeliveryPartnerRole(role)) {
-      showToast("Opening delivery assignments", "success");
-      router.push("/delivery");
-      router.refresh();
-      return;
-    }
-    if (!isStaffLoginRole(role)) {
-      await signOut({ redirect: false });
-      setLoading(false);
-      setMessage("This is a customer account. Use Customer Login.");
-      showToast("Staff access required", "error");
-      return;
-    }
-
-    showToast(`Welcome back, ${roleLabel(role)}`, "success");
-    router.push(callbackUrl.startsWith("/admin") ? callbackUrl : "/admin");
+    router.push(callbackUrl || "/admin");
     router.refresh();
   }
 
   return (
-    <motion.form
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      onSubmit={submit}
-      className="rounded-[2rem] border border-white/70 bg-card/95 p-5 shadow-soft backdrop-blur dark:border-white/10 sm:p-6"
-    >
-      <div className="flex items-center gap-3">
-        <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <ShieldCheck className="h-6 w-6" />
-        </span>
-        <div>
-          <p className="text-xs font-black uppercase text-primary">Secure login</p>
-          <h2 className="font-display text-2xl font-black">Staff Panel access</h2>
-        </div>
+    <form onSubmit={handleSubmit} className="rounded-lg border border-slate-200 bg-white p-5">
+      <div className="space-y-3">
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">Email</span>
+          <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="mt-1 h-11 rounded-lg" placeholder="staff@revathy.in" />
+        </label>
+        <label className="block">
+          <span className="text-xs font-medium text-slate-600">Password</span>
+          <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="mt-1 h-11 rounded-lg" placeholder="••••••••" />
+        </label>
       </div>
-      <label className="mt-6 block">
-        <span className="text-sm font-bold">Staff email</span>
-        <Input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required className="mt-2 h-12 rounded-2xl" />
-      </label>
-      <label className="mt-4 block">
-        <span className="text-sm font-bold">Password</span>
-        <Input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required className="mt-2 h-12 rounded-2xl" />
-      </label>
-      {message && <p className="mt-4 rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p>}
-      <Button className="mt-5 w-full" size="lg" disabled={loading}>
-        <LockKeyhole className="h-4 w-4" />
-        {loading ? "Checking access" : "Enter Staff Panel"}
-      </Button>
-      <a href="/login" className="mt-4 block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-primary">
-        Customer? Use Customer Login
-      </a>
-    </motion.form>
+      {error && <p className="mt-3 text-sm text-red-600 bg-red-50 rounded px-3 py-2">{error}</p>}
+      <button
+        type="submit"
+        disabled={loading || !email || !password}
+        className="mt-4 h-11 w-full rounded-lg bg-slate-900 text-sm font-semibold text-white disabled:opacity-50 active:scale-[0.98] transition"
+      >
+        {loading ? "Signing in..." : "Sign in"}
+      </button>
+    </form>
   );
 }

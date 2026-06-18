@@ -1,46 +1,49 @@
 "use client";
 
 import Link from "next/link";
-import { Home, LayoutDashboard, Search, Settings, ShoppingBag } from "lucide-react";
+import { Home, Search, ShoppingBag, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/components/cart/cart-provider";
 import type { SessionIdentity } from "@/components/session-identity-card";
-import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole } from "@/lib/roles";
 import { cn } from "@/lib/utils";
 
 export function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
   const { totalItems } = useCart();
-  const items = [
-    { href: "/", label: "Home", icon: Home, show: true },
-    { href: "/products", label: "Shop", icon: Search, show: true },
-    { href: "/cart", label: "Cart", icon: ShoppingBag, show: !user || isCustomerRole(user.role) },
-    { href: "/dashboard", label: "Orders", icon: LayoutDashboard, show: !user || isCustomerRole(user.role) },
-    { href: "/delivery", label: "Delivery", icon: LayoutDashboard, show: isDeliveryPartnerRole(user?.role) },
-    { href: "/admin", label: "Staff", icon: Settings, show: isStaffLoginRole(user?.role) }
-  ].filter((item) => item.show).slice(0, 5);
+
+  // Hide on onboarding, login, staff, admin
+  if (pathname === "/login" || pathname === "/welcome" || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
+
+  const tabs = [
+    { href: "/", icon: Home, label: "Home" },
+    { href: "/products", icon: Search, label: "Browse" },
+    { href: "/cart", icon: ShoppingBag, label: "Cart", badge: totalItems },
+    { href: user?.id ? "/account" : "/login", icon: User, label: user?.id ? "Account" : "Login" }
+  ];
 
   return (
-    <nav className="glass-nav fixed inset-x-3 bottom-3 z-50 rounded-[1.75rem] p-2 md:hidden">
-      <div className="grid grid-cols-5 gap-1">
-        {items.map((item) => {
-          const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+    <nav className="fixed inset-x-0 bottom-0 z-50 bg-white border-t border-slate-100 md:hidden" style={{ paddingBottom: "var(--safe-bottom)" }}>
+      <div className="grid grid-cols-4 h-14">
+        {tabs.map((tab) => {
+          const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={tab.href}
+              href={tab.href}
               className={cn(
-                "relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-2xl text-[11px] font-bold text-muted-foreground transition",
-                active && "bg-primary text-white shadow-[0_12px_30px_-18px_rgba(15,138,95,0.9)]"
+                "flex flex-col items-center justify-center gap-0.5 text-[10px] font-medium transition-colors",
+                active ? "text-primary" : "text-slate-400"
               )}
             >
-              <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
-              {item.href === "/cart" && totalItems > 0 && (
-                <span className="absolute right-3 top-2 flex h-4 min-w-4 items-center justify-center rounded-full bg-lime-fresh px-1 text-[10px] font-black text-slate-950">
-                  {totalItems}
-                </span>
-              )}
+              <span className="relative">
+                <tab.icon className={cn("h-5 w-5", active && "stroke-[2.5]")} />
+                {tab.badge && tab.badge > 0 ? (
+                  <span className="absolute -top-1 -right-2 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white px-0.5">
+                    {tab.badge}
+                  </span>
+                ) : null}
+              </span>
+              <span className={cn(active && "font-semibold")}>{tab.label}</span>
             </Link>
           );
         })}

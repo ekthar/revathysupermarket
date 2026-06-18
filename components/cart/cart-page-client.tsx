@@ -1,125 +1,101 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Minus, Plus, ShoppingCart, Trash2 } from "lucide-react";
-import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { ProductImage } from "@/components/product-image";
-import { products } from "@/lib/products";
-import { ProductCard } from "@/components/product-card";
-import type { CartItem } from "@/lib/types";
 
 export function CartPageClient() {
   const { items, subtotal, removeItem, updateQuantity } = useCart();
-  const [removed, setRemoved] = useState<CartItem | null>(null);
-  const suggestions = products.filter((product) => !items.some((item) => item.id === product.id)).slice(0, 4);
 
   if (items.length === 0) {
     return (
-      <main className="mx-auto flex min-h-[70vh] max-w-3xl flex-col items-center justify-center overflow-x-hidden px-4 text-center">
-        <h1 className="font-display text-4xl font-black">Your cart is empty</h1>
-        <p className="mt-3 text-muted-foreground">Fresh groceries are waiting in the aisles.</p>
-        <Button asChild className="mt-6">
-          <Link href="/products">Start shopping</Link>
-        </Button>
+      <main className="flex flex-col items-center justify-center min-h-[60dvh] px-6 text-center">
+        <ShoppingBag className="h-12 w-12 text-slate-200" />
+        <h1 className="mt-4 text-lg font-bold text-slate-900">Your cart is empty</h1>
+        <p className="mt-1 text-sm text-slate-500">Add items from the store to get started</p>
+        <Link href="/products" className="mt-5 h-10 px-5 inline-flex items-center justify-center rounded-lg bg-primary text-sm font-semibold text-white">
+          Browse Products
+        </Link>
       </main>
     );
   }
 
   return (
-    <main className="mx-auto max-w-7xl overflow-x-hidden px-4 pb-36 pt-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-primary">Review order</p>
-        <h1 className="mt-2 font-display text-4xl font-black leading-tight">Cart</h1>
-        <p className="mt-2 text-sm text-muted-foreground">{items.length} items ready for checkout</p>
-      </div>
-      <div className="mt-6 grid min-w-0 gap-6 lg:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="min-w-0 space-y-3 sm:space-y-4">
+    <main className="max-w-2xl mx-auto px-4 py-4">
+      <h1 className="text-lg font-bold text-slate-900">Cart <span className="text-slate-400 font-normal text-sm">({items.length})</span></h1>
+
+      {/* Items */}
+      <div className="mt-3 divide-y divide-slate-100 border border-slate-100 rounded-lg overflow-hidden bg-white">
+        <AnimatePresence initial={false}>
           {items.map((item) => (
-            <motion.article
+            <motion.div
               key={item.id}
-              drag="x"
-              dragConstraints={{ left: -90, right: 0 }}
-              dragElastic={0.18}
-              onDragEnd={(_, info) => {
-                if (info.offset.x < -80) {
-                  setRemoved(item);
-                  removeItem(item.id);
-                }
-              }}
-              className="grid min-w-0 grid-cols-[84px_minmax(0,1fr)] gap-3 rounded-[1.5rem] border border-white/70 bg-card/95 p-3 shadow-soft dark:border-white/10 sm:grid-cols-[120px_minmax(0,1fr)_auto] sm:gap-4 sm:p-4"
+              layout
+              exit={{ opacity: 0, height: 0 }}
+              className="flex gap-3 p-3"
             >
-              <div className="relative aspect-square overflow-hidden rounded-[1.15rem] bg-muted">
+              <div className="h-14 w-14 shrink-0 rounded-md overflow-hidden bg-slate-50">
                 <ProductImage src={item.image} alt={item.name} />
               </div>
-              <div className="min-w-0">
-                <p className="truncate text-[10px] font-black uppercase text-primary sm:text-xs">{item.category}</p>
-                <h2 className="mt-1 line-clamp-2 font-black leading-5">{item.name}</h2>
-                <p className="text-xs font-semibold text-muted-foreground sm:text-sm">{item.unit}</p>
-                <p className="mt-2 font-black">{formatCurrency(item.discountPrice ?? item.price)}</p>
+              <div className="flex-1 min-w-0">
+                <p className="text-[13px] font-medium text-slate-800 line-clamp-1">{item.name}</p>
+                <p className="text-[11px] text-slate-400">{item.unit}</p>
+                <p className="mt-1 text-[13px] font-bold text-slate-900">{formatCurrency((item.discountPrice ?? item.price) * item.quantity)}</p>
               </div>
-              <div className="col-span-2 flex min-w-0 items-center justify-between gap-2 sm:col-span-1 sm:flex-col sm:justify-between">
-                <div className="flex h-11 items-center rounded-2xl border border-border bg-background/70">
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.quantity - 1)} title="Decrease quantity">
-                    <Minus className="h-4 w-4" />
-                  </Button>
-                  <span className="w-9 text-center font-black">{item.quantity}</span>
-                  <Button variant="ghost" size="icon" onClick={() => updateQuantity(item.id, item.quantity + 1)} title="Increase quantity">
-                    <Plus className="h-4 w-4" />
-                  </Button>
+              <div className="flex flex-col items-end justify-between">
+                <button type="button" onClick={() => removeItem(item.id)} className="text-slate-300 hover:text-red-500 p-0.5">
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+                <div className="flex items-center h-7 rounded border border-primary/30 bg-primary/5">
+                  <button type="button" onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-6 h-full flex items-center justify-center text-primary">
+                    <Minus className="h-3 w-3" />
+                  </button>
+                  <span className="w-5 text-center text-[11px] font-bold text-primary">{item.quantity}</span>
+                  <button type="button" onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-6 h-full flex items-center justify-center text-primary">
+                    <Plus className="h-3 w-3" />
+                  </button>
                 </div>
-                <Button variant="outline" size="icon" onClick={() => { setRemoved(item); removeItem(item.id); }} title="Remove item" className="rounded-2xl">
-                  <Trash2 className="h-4 w-4" />
-                </Button>
               </div>
-            </motion.article>
+            </motion.div>
           ))}
-          {suggestions.length > 0 ? (
-            <section className="mt-6">
-              <div className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5 text-primary" />
-                <h2 className="font-display text-2xl font-black">You might also like</h2>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3 md:grid-cols-4">
-                {suggestions.map((product) => <ProductCard key={product.id} product={product} />)}
-              </div>
-            </section>
-          ) : null}
-          {removed ? <UndoRemove item={removed} onClose={() => setRemoved(null)} /> : null}
-        </section>
-        <aside className="h-fit rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-[0_20px_60px_-38px_rgba(15,23,42,0.75)] dark:border-white/10 lg:sticky lg:top-24">
-          <h2 className="font-display text-2xl font-bold">Order summary</h2>
-          <div className="mt-5 space-y-3 text-sm">
-            <div className="flex justify-between">
-              <span>Subtotal</span>
-              <span className="font-bold">{formatCurrency(subtotal)}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Delivery</span>
-              <span className="font-bold">Confirmed by store</span>
-            </div>
+        </AnimatePresence>
+      </div>
+
+      {/* Bill */}
+      <div className="mt-4 rounded-lg border border-slate-100 bg-white p-3">
+        <h2 className="text-sm font-bold text-slate-900">Bill Details</h2>
+        <div className="mt-2 space-y-1.5 text-[13px]">
+          <div className="flex justify-between">
+            <span className="text-slate-500">Item total</span>
+            <span className="font-medium">{formatCurrency(subtotal)}</span>
           </div>
-          <p className="mt-5 rounded-2xl bg-muted p-4 text-sm leading-6 text-muted-foreground">
-            Delivery radius is verified at checkout using your saved store settings. Payment is collected by COD or UPI on delivery.
-          </p>
-          <Button asChild className="mt-5 w-full" size="lg">
-            <Link href="/checkout">Checkout</Link>
-          </Button>
-        </aside>
+          <div className="flex justify-between">
+            <span className="text-slate-500">Delivery</span>
+            <span className="text-xs text-primary font-medium">At checkout</span>
+          </div>
+          <div className="border-t border-dashed border-slate-100 pt-1.5 flex justify-between font-bold text-slate-900">
+            <span>To Pay</span>
+            <span>{formatCurrency(subtotal)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Checkout bar */}
+      <div className="fixed bottom-14 inset-x-0 z-40 bg-white border-t border-slate-100 px-4 py-3 md:relative md:bottom-auto md:border-0 md:bg-transparent md:px-0 md:mt-4" style={{ marginBottom: "var(--safe-bottom)" }}>
+        <Link
+          href="/checkout"
+          className="flex h-12 w-full items-center justify-between rounded-lg bg-primary px-5 text-white active:scale-[0.98] transition"
+        >
+          <div>
+            <span className="text-sm font-bold">{formatCurrency(subtotal)}</span>
+            <span className="ml-1 text-xs opacity-80">· {items.length} items</span>
+          </div>
+          <span className="text-sm font-semibold">Checkout →</span>
+        </Link>
       </div>
     </main>
-  );
-}
-
-function UndoRemove({ item, onClose }: { item: CartItem; onClose: () => void }) {
-  const { addItem } = useCart();
-  return (
-    <div className="fixed inset-x-4 bottom-24 z-50 mx-auto flex max-w-md items-center justify-between rounded-2xl bg-slate-950 p-3 text-sm font-black text-white shadow-premium">
-      <span>{item.name} removed</span>
-      <button type="button" onClick={() => { addItem(item, item.quantity); onClose(); }} className="rounded-xl bg-lime-fresh px-3 py-2 text-slate-950">Undo</button>
-    </div>
   );
 }

@@ -1,430 +1,189 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowLeft, CheckCircle2, Chrome, LocateFixed, LockKeyhole, Mail, MapPin, PartyPopper, ShieldCheck, ShoppingBasket, Sparkles } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Confetti } from "@/components/ui/confetti";
+import { signIn } from "next-auth/react";
+import { AnimatePresence, motion } from "framer-motion";
+import { ArrowRight, ShoppingBasket } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { OtpInput } from "@/components/onboarding/otp-input";
-import { PhoneInput } from "@/components/onboarding/phone-input";
-import { ProgressDots } from "@/components/onboarding/progress-dots";
-import { readApiResponse } from "@/lib/client-api";
-import { cn } from "@/lib/utils";
 
-type Step = 1 | 2 | 3 | 4 | 5 | 6;
+type Step = "splash" | "name" | "auth" | "done";
 
-export function OnboardingFlow({ callbackUrl = "/dashboard" }: { callbackUrl?: string }) {
+export function OnboardingFlow({ callbackUrl = "/" }: { callbackUrl?: string }) {
   const router = useRouter();
-  const reduceMotion = useReducedMotion();
-  const [step, setStep] = useState<Step>(1);
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
+  const [step, setStep] = useState<Step>("splash");
   const [name, setName] = useState("");
-  const [emailAuth, setEmailAuth] = useState({ name: "", email: "", password: "" });
-  const [emailMode, setEmailMode] = useState<"register" | "login">("register");
-  const [showEmailAuth, setShowEmailAuth] = useState(false);
-  const [address, setAddress] = useState("");
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(30);
-  const safeCallback = callbackUrl.startsWith("/") && !callbackUrl.startsWith("/admin") ? callbackUrl : "/dashboard";
-  const checkoutMode = safeCallback === "/checkout" || safeCallback.startsWith("/checkout?");
-  const progressIndex = Math.max(0, Math.min(4, step - 2));
+  const safeCallback = callbackUrl.startsWith("/") && !callbackUrl.startsWith("/admin") && !callbackUrl.startsWith("/staff") ? callbackUrl : "/";
 
+  // Splash auto-advance
   useEffect(() => {
-    if (checkoutMode) setShowEmailAuth(true);
-  }, [checkoutMode]);
-
-  useEffect(() => {
-    if (step !== 1) return;
-    const timeout = window.setTimeout(() => setStep(2), 2000);
-    return () => window.clearTimeout(timeout);
+    if (step !== "splash") return;
+    const t = setTimeout(() => setStep("name"), 1800);
+    return () => clearTimeout(t);
   }, [step]);
 
+  // Done auto-redirect
   useEffect(() => {
-    if (step !== 3 || timer <= 0) return;
-    const interval = window.setInterval(() => setTimer((current) => Math.max(0, current - 1)), 1000);
-    return () => window.clearInterval(interval);
-  }, [step, timer]);
+    if (step !== "done") return;
+    localStorage.setItem("onboarding-complete", "true");
+    const t = setTimeout(() => { router.push(safeCallback); router.refresh(); }, 2000);
+    return () => clearTimeout(t);
+  }, [step, router, safeCallback]);
 
-  useEffect(() => {
-    if (step !== 6) return;
-    window.localStorage.setItem("onboarding-complete", "true");
-    const timeout = window.setTimeout(() => {
-      router.push(safeCallback);
-      router.refresh();
-    }, 3000);
-    return () => window.clearTimeout(timeout);
-  }, [router, safeCallback, step]);
-
-  const variants = useMemo<Variants>(() => ({
-    initial: reduceMotion ? { opacity: 0 } : { opacity: 0, x: 48 },
-    animate: { opacity: 1, x: 0 },
-    exit: reduceMotion ? { opacity: 0 } : { opacity: 0, x: -48 }
-  }), [reduceMotion]);
-
-  async function sendOtp() {
-    if (phone.length !== 10) return;
-    setLoading(true);
-    setMessage("");
-    const response = await fetch("/api/auth/otp/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone })
-    });
-    const data = await readApiResponse<{ error?: string }>(response);
-    setLoading(false);
-    if (!response.ok) {
-      setMessage(data.error ?? "Could not send OTP.");
-      return;
-    }
-    setTimer(30);
-    setStep(3);
+  function handleGoogleLogin() {
+    // Save name to localStorage so we can update profile after OAuth callback
+    if (name.trim()) localStorage.setItem("pending-name", name.trim());
+    signIn("google", { callbackUrl: safeCallback });
   }
 
-  async function emailPasswordAuth() {
-    setLoading(true);
-    setMessage("");
-
-    if (emailMode === "register") {
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(emailAuth)
-      });
-      const data = await readApiResponse<{ error?: string }>(response);
-      if (!response.ok) {
-        setLoading(false);
-        setMessage(data.error ?? "Email account could not be created.");
-        return;
-      }
-    }
-
-    const result = await signIn("staff-credentials", {
-      email: emailAuth.email,
-      password: emailAuth.password,
-      redirect: false
-    });
-    setLoading(false);
-    if (result?.error) {
-      setMessage(emailMode === "register" ? "Account created. Please login with email and password." : "Email or password is incorrect.");
-      return;
-    }
-    window.localStorage.setItem("onboarding-complete", "true");
-    router.push(safeCallback);
-    router.refresh();
-  }
-
-  function skipAuth() {
-    if (checkoutMode) return;
-    window.localStorage.setItem("onboarding-complete", "skipped");
-    router.push("/products");
-  }
-
-  async function verifyOtp() {
-    if (otp.length !== 6) return;
-    setLoading(true);
-    setMessage("");
-    const result = await signIn("phone-otp", { phone, otp, redirect: false });
-    setLoading(false);
-    if (result?.error) {
-      setMessage("Verification code is incorrect or expired.");
-      return;
-    }
-    setStep(4);
-  }
-
-  async function saveName() {
-    if (name.trim().length < 2) return;
-    setLoading(true);
-    await fetch("/api/auth/complete-profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim() })
-    }).catch(() => null);
-    setLoading(false);
-    setStep(5);
-  }
-
-  async function reverseGeocode(latitude: number, longitude: number) {
-    try {
-      const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${latitude}&lon=${longitude}`);
-      const data = await response.json();
-      return typeof data?.display_name === "string" ? data.display_name : "";
-    } catch {
-      return "";
-    }
-  }
-
-  function useLocation() {
-    setMessage("");
-    if (!navigator.geolocation) {
-      setMessage("Location access is not available. Enter your pincode manually.");
-      return;
-    }
-    setLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const latitude = position.coords.latitude;
-        const longitude = position.coords.longitude;
-        setCoords({ latitude, longitude });
-        const resolved = await reverseGeocode(latitude, longitude);
-        setAddress(resolved || `GPS: ${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
-        setLoading(false);
-      },
-      () => {
-        setMessage("Location permission was denied. Enter your pincode manually.");
-        setLoading(false);
-      },
-      { enableHighAccuracy: true, timeout: 12000 }
-    );
+  function handleSkip() {
+    localStorage.setItem("onboarding-complete", "skipped");
+    router.push("/");
   }
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[linear-gradient(135deg,#ffffff,#f0fdf4)] px-4 text-foreground dark:bg-[linear-gradient(135deg,#020617,#101827)]">
-      <Confetti active={step === 1 || step === 6} />
-      <div className="mx-auto flex min-h-screen max-w-md flex-col py-5">
-        <div className="grid h-12 grid-cols-[48px_1fr_48px] items-center">
-          {step > 2 && step < 6 ? (
-            <button type="button" onClick={() => setStep((current) => Math.max(2, current - 1) as Step)} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background/80 text-primary shadow-soft">
-              <ArrowLeft className="h-5 w-5" />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-white">
+      <AnimatePresence mode="wait">
+        {/* ─── SPLASH ─── */}
+        {step === "splash" && (
+          <motion.div
+            key="splash"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center text-center px-6"
+          >
+            <div className="h-16 w-16 rounded-2xl bg-primary flex items-center justify-center text-white shadow-sm">
+              <ShoppingBasket className="h-8 w-8" />
+            </div>
+            <h1 className="mt-5 text-2xl font-bold text-slate-900">Revathy</h1>
+            <p className="mt-1 text-sm text-slate-500">Fresh groceries, delivered fast</p>
+          </motion.div>
+        )}
+
+        {/* ─── NAME ─── */}
+        {step === "name" && (
+          <motion.div
+            key="name"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            className="w-full max-w-sm px-6"
+          >
+            <h1 className="text-2xl font-bold text-slate-900">What's your name?</h1>
+            <p className="mt-1 text-sm text-slate-500">So we know who to deliver to</p>
+
+            {name.trim().length >= 2 && (
+              <motion.p
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-4 text-base font-medium text-primary"
+              >
+                Hey, {name.trim()} 👋
+              </motion.p>
+            )}
+
+            <Input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Enter your name"
+              autoFocus
+              className="mt-4 h-12 rounded-lg border-slate-200 text-base"
+            />
+
+            <button
+              type="button"
+              onClick={() => setStep("auth")}
+              disabled={name.trim().length < 2}
+              className="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-white disabled:opacity-40 active:scale-[0.98] transition"
+            >
+              Continue
+              <ArrowRight className="h-4 w-4" />
             </button>
-          ) : <span />}
-          {step > 1 && step < 6 ? <ProgressDots current={progressIndex} /> : <span />}
-          {step === 2 ? (
-            <Link href="/admin/login" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border bg-card text-primary shadow-sm" title="Staff login">
-              <ShieldCheck className="h-4 w-4" />
-              <span className="sr-only">Staff login</span>
-            </Link>
-          ) : <span />}
-        </div>
 
-        <section className="flex flex-1 items-center justify-center">
-          <AnimatePresence mode="wait">
-            {step === 1 ? (
-              <Screen key="welcome" variants={variants} center className="text-center text-white">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] bg-white text-primary shadow-premium">
-                  <ShoppingBasket className="h-12 w-12" />
-                </div>
-                <h1 className="mt-6 font-display text-5xl font-black">Revathy</h1>
-                <p className="mt-3 text-lg font-bold text-white/90">Fresh groceries at your doorstep</p>
-              </Screen>
-            ) : null}
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="mt-4 w-full text-center text-sm text-slate-400"
+            >
+              Skip for now
+            </button>
+          </motion.div>
+        )}
 
-            {step === 2 ? (
-              <Screen key="phone" variants={variants}>
-                <StepIcon icon={Sparkles} />
-                <h1 className="font-display text-4xl font-black">{checkoutMode ? "Login to checkout" : "Let's get you started"}</h1>
-                <p className="mt-2 text-sm font-semibold text-muted-foreground">
-                  {checkoutMode ? "Create or login with an email account before placing your order." : "Enter your WhatsApp number to continue."}
-                </p>
-                <div className="mt-8">
-                  <PhoneInput value={phone} onChange={setPhone} />
-                </div>
-                <p className="mt-4 text-center text-xs font-bold text-muted-foreground">We&apos;ll send a verification code via WhatsApp. Email/password works without extra setup.</p>
-                <div className="mt-6 grid gap-3">
-                  {checkoutMode ? (
-                    <Button type="button" size="lg" onClick={() => setShowEmailAuth(true)} className="w-full">
-                      <Mail className="h-4 w-4" />
-                      Continue with email
-                    </Button>
-                  ) : null}
-                  <Button type="button" size="lg" onClick={sendOtp} disabled={loading || phone.length !== 10} className="w-full">
-                    {loading ? "Sending code" : "Continue with WhatsApp"}
-                  </Button>
-                  <Button type="button" variant="outline" size="lg" onClick={() => signIn("google", { callbackUrl: safeCallback })} className="w-full">
-                    <Chrome className="h-4 w-4" />
-                    Continue with Google
-                  </Button>
-                  <button type="button" onClick={() => setShowEmailAuth((current) => !current)} className="h-11 rounded-2xl border border-border bg-background/80 text-sm font-black text-primary">
-                    Use email and password
-                  </button>
-                  {!checkoutMode ? (
-                    <button type="button" onClick={skipAuth} className="text-sm font-black text-muted-foreground">
-                      Skip for now
-                    </button>
-                  ) : (
-                    <p className="rounded-2xl border border-amber-200 bg-amber-50 p-3 text-center text-xs font-black text-amber-800 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100">
-                      Checkout needs a logged-in customer account.
-                    </p>
-                  )}
-                  <Link href="/admin/login" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-card text-sm font-black text-primary">
-                    <ShieldCheck className="h-4 w-4" />
-                    Staff login
-                  </Link>
-                </div>
-                <AnimatePresence>
-                  {showEmailAuth ? (
-                    <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 12 }} className="mt-5 grid gap-3 rounded-[1.5rem] border border-border bg-card p-3 shadow-soft">
-                      <div className="grid grid-cols-2 gap-2 rounded-2xl bg-muted p-1">
-                        {(["register", "login"] as const).map((mode) => (
-                          <button
-                            key={mode}
-                            type="button"
-                            onClick={() => setEmailMode(mode)}
-                            className={cn("h-10 rounded-xl text-xs font-black", emailMode === mode ? "bg-card text-primary shadow-sm" : "text-muted-foreground")}
-                          >
-                            {mode === "register" ? "Create account" : "Login"}
-                          </button>
-                        ))}
-                      </div>
-                      {emailMode === "register" ? (
-                        <IconInput icon={Sparkles} placeholder="Full name" value={emailAuth.name} onChange={(value) => setEmailAuth((current) => ({ ...current, name: value }))} />
-                      ) : null}
-                      <IconInput icon={Mail} placeholder="Email" type="email" value={emailAuth.email} onChange={(value) => setEmailAuth((current) => ({ ...current, email: value }))} />
-                      <IconInput icon={LockKeyhole} placeholder="Password" type="password" value={emailAuth.password} onChange={(value) => setEmailAuth((current) => ({ ...current, password: value }))} />
-                      {message ? <p className="rounded-2xl bg-red-50 p-3 text-sm font-bold text-red-600">{message}</p> : null}
-                      <Button
-                        type="button"
-                        onClick={emailPasswordAuth}
-                        disabled={loading || !emailAuth.email.includes("@") || emailAuth.password.length < 8 || (emailMode === "register" && emailAuth.name.trim().length < 2)}
-                      >
-                        {emailMode === "register" ? "Create email account" : "Login with email"}
-                      </Button>
-                    </motion.div>
-                  ) : null}
-                </AnimatePresence>
-              </Screen>
-            ) : null}
+        {/* ─── AUTH (Google default) ─── */}
+        {step === "auth" && (
+          <motion.div
+            key="auth"
+            initial={{ opacity: 0, x: 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -40 }}
+            transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            className="w-full max-w-sm px-6"
+          >
+            <h1 className="text-2xl font-bold text-slate-900">Almost there!</h1>
+            <p className="mt-1 text-sm text-slate-500">Sign in to save your orders and addresses</p>
 
-            {step === 3 ? (
-              <Screen key="otp" variants={variants}>
-                <StepIcon icon={CheckCircle2} />
-                <h1 className="font-display text-4xl font-black">Check your WhatsApp</h1>
-                <p className="mt-2 text-sm font-semibold text-muted-foreground">We sent a 6-digit code to +91 {phone}.</p>
-                <div className="mt-8">
-                  <OtpInput value={otp} onChange={setOtp} />
-                </div>
-                {message ? <p className="mt-4 rounded-2xl bg-red-50 p-3 text-center text-sm font-bold text-red-600">{message}</p> : null}
-                <Button type="button" size="lg" onClick={verifyOtp} disabled={loading || otp.length !== 6} className="mt-6 w-full">
-                  {loading ? "Verifying" : "Verify OTP"}
-                </Button>
-                <button type="button" onClick={sendOtp} disabled={timer > 0 || loading} className="mt-5 w-full text-sm font-black text-primary disabled:text-muted-foreground">
-                  {timer > 0 ? `Resend code in 0:${String(timer).padStart(2, "0")}` : "Resend via WhatsApp"}
-                </button>
-              </Screen>
-            ) : null}
+            <button
+              type="button"
+              onClick={handleGoogleLogin}
+              className="mt-6 flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm active:scale-[0.98] transition"
+            >
+              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Continue with Google
+            </button>
 
-            {step === 4 ? (
-              <Screen key="name" variants={variants}>
-                <StepIcon icon={Sparkles} />
-                <h1 className="font-display text-4xl font-black">What should we call you?</h1>
-                {name ? <p className="mt-5 rounded-[1.5rem] bg-primary/10 p-4 text-center text-2xl font-black text-primary">Hi, {name}!</p> : null}
-                <Input value={name} onChange={(event) => setName(event.target.value)} placeholder="e.g. Revathy" className="mt-8 h-16 rounded-[1.5rem] text-2xl font-black" />
-                <Button type="button" size="lg" onClick={saveName} disabled={loading || name.trim().length < 2} className="mt-6 w-full">
-                  Continue
-                </Button>
-              </Screen>
-            ) : null}
+            <div className="mt-4 flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-100"></div>
+              <span className="text-xs text-slate-400">or</span>
+              <div className="flex-1 h-px bg-slate-100"></div>
+            </div>
 
-            {step === 5 ? (
-              <Screen key="location" variants={variants}>
-                <StepIcon icon={MapPin} />
-                <h1 className="font-display text-4xl font-black">Where should we deliver?</h1>
-                <div className="mt-8 rounded-[2rem] border border-white/70 bg-card/95 p-6 text-center shadow-soft dark:border-white/10">
-                  <LocateFixed className="mx-auto h-16 w-16 text-primary" />
-                  <p className="mt-4 text-sm font-bold text-muted-foreground">Allow location for faster address setup.</p>
-                </div>
-                {address ? (
-                  <div className="mt-4 overflow-hidden rounded-2xl border border-border bg-card/95 shadow-soft">
-                    {coords ? (
-                      <iframe
-                        title="Delivery address preview"
-                        src={`https://www.google.com/maps?q=${coords.latitude},${coords.longitude}&z=15&output=embed`}
-                        loading="lazy"
-                        referrerPolicy="no-referrer-when-downgrade"
-                        className="h-28 w-full border-0"
-                      />
-                    ) : null}
-                    <p className="p-3 text-sm font-bold text-primary">{address}</p>
-                  </div>
-                ) : null}
-                {message ? <p className="mt-4 rounded-2xl bg-amber-50 p-3 text-sm font-bold text-amber-700">{message}</p> : null}
-                <Button type="button" size="lg" onClick={useLocation} disabled={loading} className="mt-6 w-full">
-                  {loading ? "Finding location" : "Allow Location"}
-                </Button>
-                <Input value={address} onChange={(event) => setAddress(event.target.value)} placeholder="Enter pincode or address manually" className="mt-3 h-14 rounded-2xl" />
-                <button type="button" onClick={() => setStep(6)} className="mt-5 w-full text-sm font-black text-primary">
-                  {address ? "Continue" : "Skip for now"}
-                </button>
-              </Screen>
-            ) : null}
+            <button
+              type="button"
+              onClick={handleSkip}
+              className="mt-4 flex h-12 w-full items-center justify-center rounded-lg border border-slate-200 text-sm font-medium text-slate-600 active:scale-[0.98] transition"
+            >
+              Browse without account
+            </button>
 
-            {step === 6 ? (
-              <Screen key="done" variants={variants} center className="text-center">
-                <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-[2rem] bg-lime-fresh text-slate-950 shadow-premium">
-                  <PartyPopper className="h-12 w-12" />
-                </div>
-                <h1 className="mt-6 font-display text-5xl font-black">You&apos;re all set!</h1>
-                <p className="mt-3 text-lg font-bold text-muted-foreground">Welcome, {name || "shopper"}</p>
-                {address ? <p className="mt-6 rounded-[1.5rem] bg-card/95 p-4 text-sm font-bold shadow-soft">{address}</p> : null}
-                <Button type="button" size="lg" onClick={() => router.push(safeCallback)} className="mt-8 w-full animate-bounce">
-                  Start Shopping
-                </Button>
-              </Screen>
-            ) : null}
-          </AnimatePresence>
-        </section>
-      </div>
-    </main>
-  );
-}
+            <button
+              type="button"
+              onClick={() => setStep("name")}
+              className="mt-3 w-full text-center text-xs text-slate-400"
+            >
+              ← Go back
+            </button>
+          </motion.div>
+        )}
 
-function Screen({
-  children,
-  variants,
-  center,
-  className
-}: {
-  children: React.ReactNode;
-  variants: Variants;
-  center?: boolean;
-  className?: string;
-}) {
-  return (
-    <motion.div
-      variants={variants}
-      initial="initial"
-      animate="animate"
-      exit="exit"
-      transition={{ type: "spring", stiffness: 260, damping: 20 }}
-      className={cn("w-full", center ? "text-center" : "", className)}
-    >
-      {children}
-    </motion.div>
-  );
-}
-
-function StepIcon({ icon: Icon }: { icon: React.ElementType }) {
-  return (
-    <span className="mb-5 flex h-14 w-14 items-center justify-center rounded-3xl bg-primary/10 text-primary">
-      <Icon className="h-7 w-7" />
-    </span>
-  );
-}
-
-function IconInput({
-  icon: Icon,
-  value,
-  onChange,
-  placeholder,
-  type = "text"
-}: {
-  icon: React.ElementType;
-  value: string;
-  onChange: (value: string) => void;
-  placeholder: string;
-  type?: string;
-}) {
-  return (
-    <label className="relative block">
-      <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
-      <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} className="h-12 rounded-2xl pl-11" />
-    </label>
+        {/* ─── DONE ─── */}
+        {step === "done" && (
+          <motion.div
+            key="done"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col items-center text-center px-6"
+          >
+            <div className="h-16 w-16 rounded-full bg-green-50 flex items-center justify-center">
+              <svg className="h-8 w-8 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h1 className="mt-4 text-2xl font-bold text-slate-900">You're all set!</h1>
+            <p className="mt-1 text-sm text-slate-500">Welcome, {name || "shopper"}. Let's get your groceries.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

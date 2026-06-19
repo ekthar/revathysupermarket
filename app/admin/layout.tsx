@@ -28,6 +28,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/reports", label: "Reports", icon: "BarChart3", show: canViewReports(role), badge: 0 },
     { href: "/admin/staff", label: "Staff", icon: "Users", show: canManageStaff(role), badge: 0 },
     { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "Bell", show: canViewReports(role), badge: 0 },
+    { href: "/admin/promo-codes", label: "Promos", icon: "Bell", show: canManageSettings(role), badge: 0 },
     { href: "/admin/audit-log", label: "Audit Log", icon: "ClipboardList", show: canViewReports(role), badge: 0 },
     { href: "/admin/settings", label: "Settings", icon: "Settings", show: canManageSettings(role), badge: 0 }
   ];

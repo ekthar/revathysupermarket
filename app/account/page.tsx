@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { ChevronRight, CreditCard, Heart, HelpCircle, LogOut, MapPin, Package, Pencil, Phone, Settings, User } from "lucide-react";
+import { ChevronRight, CreditCard, Heart, HelpCircle, LogOut, MapPin, Package, Pencil, Phone, Settings, User, Wallet } from "lucide-react";
 import { ThemeToggleInline } from "@/components/ui/theme-toggle-inline";
 
 export const dynamic = "force-dynamic";
@@ -16,10 +16,14 @@ export default async function AccountPage() {
     select: { name: true, email: true, phone: true, image: true }
   });
 
-  const [orderCount, addressCount, favoriteCount] = await Promise.all([
+  const [orderCount, addressCount, favoriteCount, walletBalance] = await Promise.all([
     prisma.order.count({ where: { userId: session.user.id } }).catch(() => 0),
     prisma.address.count({ where: { userId: session.user.id } }).catch(() => 0),
-    prisma.favorite.count({ where: { userId: session.user.id } }).catch(() => 0)
+    prisma.favorite.count({ where: { userId: session.user.id } }).catch(() => 0),
+    Promise.all([
+      prisma.walletTransaction.aggregate({ _sum: { amount: true }, where: { userId: session.user.id, type: "credit" } }),
+      prisma.walletTransaction.aggregate({ _sum: { amount: true }, where: { userId: session.user.id, type: "debit" } })
+    ]).then(([c, d]) => Number(c._sum.amount ?? 0) - Number(d._sum.amount ?? 0)).catch(() => 0)
   ]);
 
   return (
@@ -44,12 +48,29 @@ export default async function AccountPage() {
         </div>
       </div>
 
+      {/* Wallet Balance Card */}
+      <Link href="/account/wallet" className="block rounded-2xl bg-gradient-to-br from-primary to-emerald-600 p-4 text-white shadow-md shadow-primary/15 press">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center">
+              <Wallet className="h-5 w-5 text-white" />
+            </div>
+            <div>
+              <p className="text-[11px] text-white/70 font-medium">Wallet Balance</p>
+              <p className="text-[20px] font-bold tracking-tight">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)}</p>
+            </div>
+          </div>
+          <ChevronRight className="h-5 w-5 text-white/60" />
+        </div>
+      </Link>
+
       {/* My Activity */}
       <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow overflow-hidden">
         <p className="px-4 pt-3.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">My Activity</p>
         <AccountRow href="/dashboard" icon={Package} label="My Orders" detail={`${orderCount} orders`} />
         <AccountRow href="/account/edit" icon={MapPin} label="Saved Addresses" detail={`${addressCount} saved`} />
         <AccountRow href="/account/favorites" icon={Heart} label="Favorites" detail={`${favoriteCount} items`} iconColor="text-red-400" />
+        <AccountRow href="/account/wallet" icon={Wallet} label="Wallet" detail={walletBalance > 0 ? `${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)}` : "No balance"} iconColor="text-emerald-500" />
         <AccountRow href="/account/settings" icon={CreditCard} label="Payment Methods" detail="COD & UPI" />
       </div>
 

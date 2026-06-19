@@ -25,7 +25,7 @@ type CheckoutState = {
   landmark: string;
   pincode: string;
   notes: string;
-  paymentMethod: "COD" | "UPI_ON_DELIVERY";
+  paymentMethod: "COD" | "UPI_ON_DELIVERY" | "WALLET";
   latitude: string;
   longitude: string;
 };
@@ -106,10 +106,21 @@ export function CheckoutForm({
   const [loaded, setLoaded] = useState(false);
   const { show: showCelebration, triggerCelebration, dismiss: dismissCelebration } = useFirstOrderCelebration();
 
+  const [walletBalance, setWalletBalance] = useState<number>(0);
+  const [walletLoading, setWalletLoading] = useState(true);
 
   const deliveryFee = subtotal > 500 ? 0 : 40;
   const tax = Math.round(subtotal * 0.02);
   const totalAmount = subtotal + deliveryFee + tax;
+
+  // Fetch wallet balance on mount
+  useEffect(() => {
+    fetch("/api/account/wallet")
+      .then((res) => res.ok ? res.json() : { balance: 0 })
+      .then((data) => setWalletBalance(data.balance ?? 0))
+      .catch(() => setWalletBalance(0))
+      .finally(() => setWalletLoading(false));
+  }, []);
 
   // Load saved customer info on mount (name, phone, address persist)
   useEffect(() => {
@@ -332,11 +343,25 @@ export function CheckoutForm({
                 description="Pay via UPI/GPay to delivery partner"
                 onClick={() => update("paymentMethod", "UPI_ON_DELIVERY")}
               />
+              {/* Wallet Payment - only show if balance > 0 */}
+              {!walletLoading && walletBalance > 0 && (
+                <PaymentMethodCard
+                  active={form.paymentMethod === "WALLET"}
+                  icon={<Wallet className="h-5 w-5" />}
+                  iconBg="bg-emerald-100 text-emerald-700"
+                  label={`Wallet Balance (${formatCurrency(walletBalance)})`}
+                  description={walletBalance >= totalAmount ? "Full amount covered" : `Remaining ${formatCurrency(totalAmount - walletBalance)} via COD`}
+                  onClick={() => update("paymentMethod", "WALLET")}
+                />
+              )}
             </div>
-            <button type="button" className="mt-4 flex items-center gap-2 w-full justify-center text-[13px] font-bold text-slate-500 hover:text-slate-700 transition-colors py-2">
-              <Plus className="h-3.5 w-3.5" />
-              Add Payment Method
-            </button>
+            {form.paymentMethod === "WALLET" && walletBalance < totalAmount && (
+              <div className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
+                <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                  Wallet covers {formatCurrency(Math.min(walletBalance, totalAmount))}. Remaining {formatCurrency(totalAmount - walletBalance)} will be collected as Cash on Delivery.
+                </p>
+              </div>
+            )}
           </motion.section>
 
 

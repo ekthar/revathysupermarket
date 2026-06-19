@@ -20,6 +20,7 @@ enum Role {
 enum PaymentMethod {
   COD
   UPI_ON_DELIVERY
+  WALLET
 }
 
 enum PaymentStatus {

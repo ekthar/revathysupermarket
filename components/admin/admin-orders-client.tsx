@@ -462,48 +462,62 @@ export function AdminOrdersClient({
                 </button>
               ) : null}
             </div>
-            <ul className="mt-4 grid gap-2 text-sm">
+            <ul className="mt-4 grid gap-1.5 text-sm">
               {order.items.map((item) => (
-                <li key={item.id} className="rounded-2xl bg-muted p-3">
-                  <div className="flex justify-between gap-3">
-                    <span>{item.name} x {item.quantity}</span>
-                    <span>{formatCurrency(item.price * item.quantity)}</span>
-                  </div>
-                  {order.status !== "DELIVERED" && order.status !== "CANCELLED" ? (
-                    <div className="mt-3 grid gap-2 sm:grid-cols-[90px_minmax(0,1fr)_minmax(0,1fr)]">
-                      <input
-                        value={editDrafts[item.id]?.quantity ?? item.quantity.toString()}
-                        onChange={(event) => updateDraft(item.id, { quantity: event.target.value.replace(/\D/g, "") })}
-                        className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-primary"
-                        aria-label={`Quantity for ${item.name}`}
-                      />
-                      <select
-                        value={editDrafts[item.id]?.productId ?? ""}
-                        onChange={(event) => updateDraft(item.id, { productId: event.target.value })}
-                        className="h-10 min-w-0 rounded-xl border border-border bg-background px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-primary"
-                        aria-label={`Substitute for ${item.name}`}
-                      >
-                        <option value="">Choose substitute</option>
-                        {products.map((product) => (
-                          <option key={product.id} value={product.id}>{product.name} - {formatCurrency(product.price)}</option>
-                        ))}
-                      </select>
-                      <input
-                        value={editDrafts[item.id]?.reason ?? ""}
-                        onChange={(event) => updateDraft(item.id, { reason: event.target.value })}
-                        className="h-10 rounded-xl border border-border bg-background px-3 text-xs font-bold outline-none focus:ring-2 focus:ring-primary"
-                        placeholder="Reason"
-                      />
-                      <div className="grid grid-cols-3 gap-2 sm:col-span-3">
-                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "quantity-change")} className="h-10 rounded-xl bg-primary text-xs font-black text-white disabled:opacity-60">Qty</button>
-                        <button type="button" disabled={editLoading === item.id || !(editDrafts[item.id]?.productId)} onClick={() => editItem(order.id, item.id, "substitute")} className="h-10 rounded-xl bg-lime-fresh text-xs font-black text-slate-950 disabled:opacity-60">Swap</button>
-                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "remove")} className="h-10 rounded-xl bg-red-600 text-xs font-black text-white disabled:opacity-60">Remove</button>
-                      </div>
-                    </div>
-                  ) : null}
+                <li key={item.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/60">
+                  <span className="text-[13px] text-slate-700 dark:text-slate-300">{item.name} <span className="text-slate-400">×{item.quantity}</span></span>
+                  <span className="text-[13px] font-semibold text-slate-900 dark:text-white">{formatCurrency(item.price * item.quantity)}</span>
                 </li>
               ))}
+              <li className="flex items-center justify-between px-3 py-2 border-t border-border mt-1">
+                <span className="text-[13px] font-bold text-slate-900 dark:text-white">Total</span>
+                <span className="text-[14px] font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</span>
+              </li>
             </ul>
+            {/* Edit items - only for active orders, behind toggle */}
+            {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+              <details className="mt-3 rounded-xl border border-border overflow-hidden">
+                <summary className="px-3 py-2.5 text-[11px] font-bold text-primary cursor-pointer hover:bg-primary/5 transition-colors">
+                  Edit Items (qty change / substitute / remove)
+                </summary>
+                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border">
+                  {order.items.map((item) => (
+                    <div key={item.id} className="rounded-xl bg-muted/40 p-2.5">
+                      <p className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 mb-2">{item.name}</p>
+                      <div className="grid gap-2 sm:grid-cols-[80px_1fr_1fr]">
+                        <input
+                          value={editDrafts[item.id]?.quantity ?? item.quantity.toString()}
+                          onChange={(event) => updateDraft(item.id, { quantity: event.target.value.replace(/\D/g, "") })}
+                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary"
+                          placeholder="Qty"
+                        />
+                        <select
+                          value={editDrafts[item.id]?.productId ?? ""}
+                          onChange={(event) => updateDraft(item.id, { productId: event.target.value })}
+                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-[11px] font-semibold outline-none focus:ring-1 focus:ring-primary"
+                        >
+                          <option value="">Substitute...</option>
+                          {products.map((product) => (
+                            <option key={product.id} value={product.id}>{product.name} - {formatCurrency(product.price)}</option>
+                          ))}
+                        </select>
+                        <input
+                          value={editDrafts[item.id]?.reason ?? ""}
+                          onChange={(event) => updateDraft(item.id, { reason: event.target.value })}
+                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary"
+                          placeholder="Reason"
+                        />
+                      </div>
+                      <div className="grid grid-cols-3 gap-1.5 mt-2">
+                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "quantity-change")} className="h-8 rounded-lg bg-primary text-[10px] font-bold text-white disabled:opacity-50">Qty</button>
+                        <button type="button" disabled={editLoading === item.id || !(editDrafts[item.id]?.productId)} onClick={() => editItem(order.id, item.id, "substitute")} className="h-8 rounded-lg bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50">Swap</button>
+                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "remove")} className="h-8 rounded-lg bg-red-500 text-[10px] font-bold text-white disabled:opacity-50">Remove</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            )}
             <OrderStatusForm orderId={order.id} currentStatus={order.status} onStatusChange={(status) => updateOrderStatus(order.id, status)} />
             {order.deliveryOtp ? (
               <div className="mt-4 grid gap-3 rounded-2xl bg-primary/10 p-3 text-primary sm:grid-cols-[1fr_auto]">

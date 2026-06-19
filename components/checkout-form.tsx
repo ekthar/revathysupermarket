@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, Check, CheckCircle2, ChevronDown, Navigation, Plus, Smartphone, Wallet } from "lucide-react";
+import { AlertCircle, ArrowLeft, Check, CheckCircle2, ChevronDown, Clock, Navigation, Plus, Smartphone, Wallet } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { calculateDistanceKm } from "@/lib/distance";

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BellRing, CheckCircle2, ChevronDown, FileText, Phone, Search, Send, X } from "lucide-react";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { statusLabels } from "@/lib/constants";
+import { SITE } from "@/lib/constants";
 import { cn, formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
@@ -311,7 +312,7 @@ export function AdminOrdersClient({
 
   function manualWhatsAppLink(order: AdminOrder) {
     const text = [
-      `Revathy Supermarket order #${order.orderNumber}`,
+      `${SITE.name} order #${order.orderNumber}`,
       `Status: ${statusLabels[order.status]}`,
       order.deliveryOtp ? `Delivery OTP: ${order.deliveryOtp}` : "",
       `Total: ${formatCurrency(order.total)}`

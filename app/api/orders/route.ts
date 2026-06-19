@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     const data = parsed.data;
     if (!isServiceablePincode(data.pincode, settings.serviceablePincodes)) {
       return NextResponse.json(
-        { error: "Sorry, this pincode is not currently serviceable by Revathy Supermarket." },
+        { error: "Sorry, this pincode is not currently serviceable." },
         { status: 400 }
       );
     }
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const distanceKm = calculateDistanceKm({ lat: data.latitude, lng: data.longitude });
     if (distanceKm > settings.deliveryRadiusKm) {
       return NextResponse.json(
-        { error: `Sorry, delivery is currently available only within ${settings.deliveryRadiusKm} KM of Revathy Supermarket.` },
+        { error: `Sorry, delivery is currently available only within ${settings.deliveryRadiusKm} KM of our store.` },
         { status: 400 }
       );
     }

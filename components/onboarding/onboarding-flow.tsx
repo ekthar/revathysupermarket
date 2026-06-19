@@ -175,7 +175,7 @@ export function OnboardingFlow({ callbackUrl = "/" }: { callbackUrl?: string }) 
                 transition={{ delay: 0.2 }}
                 className="mt-6 font-display text-3xl font-black text-slate-900 dark:text-white"
               >
-                Revathy Supermarket
+                Revathy
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0 }}

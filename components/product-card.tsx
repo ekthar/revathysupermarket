@@ -26,6 +26,10 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
   function add() {
     if (outOfStock) return;
     addItem(product);
+    // Haptic feedback on mobile
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(10);
+    }
     showToast(`Added ${product.name}`, "success");
   }
 

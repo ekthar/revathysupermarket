@@ -4,32 +4,10 @@ import Link from "next/link";
 import { Home, Search, ShoppingBag, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { cn } from "@/lib/utils";
-
-function useScrollDirection() {
-  const [scrollingDown, setScrollingDown] = useState(false);
-  useEffect(() => {
-    let lastY = window.scrollY;
-    let ticking = false;
-    function onScroll() {
-      if (ticking) return;
-      ticking = true;
-      requestAnimationFrame(() => {
-        const currentY = window.scrollY;
-        setScrollingDown(currentY > lastY && currentY > 80);
-        lastY = currentY;
-        ticking = false;
-      });
-    }
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-  return scrollingDown;
-}
 
 export function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
@@ -42,59 +20,30 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
 
   return (
     <>
-      {/* Floating cart bar - collapses to minimal on scroll down */}
+      {/* Floating cart FAB - simple icon that collapses on scroll */}
       <AnimatePresence>
         {totalItems > 0 && !isCartFlow && (
           <motion.div
-            initial={{ opacity: 0, y: 40, scale: 0.92 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 40, scale: 0.92 }}
-            transition={{ type: "spring", stiffness: 280, damping: 22 }}
-            className="fixed bottom-[68px] inset-x-0 z-[55] flex justify-center px-4 md:hidden"
-            style={{ paddingBottom: "var(--safe-bottom)" }}
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0 }}
+            transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            className="fixed bottom-[72px] right-4 z-[55] md:hidden"
+            style={{ marginBottom: "var(--safe-bottom)" }}
           >
             <Link
               href="/cart"
-              className={cn(
-                "flex items-center justify-between w-full max-w-md rounded-2xl bg-slate-900 dark:bg-slate-800 text-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] press transition-all duration-300",
-                scrollingDown ? "px-3 py-2" : "px-4 py-2.5"
-              )}
+              className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-[0_6px_24px_-4px_rgba(15,138,95,0.5)] press relative"
             >
-              {/* Collapsed: just count + price. Expanded: full text */}
-              {scrollingDown ? (
-                <>
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="h-4 w-4 text-white/80" />
-                    <span className="text-[13px] font-bold">{totalItems}</span>
-                  </div>
-                  <span className="text-[14px] font-bold text-emerald-400">{formatCurrency(subtotal)}</span>
-                </>
-              ) : (
-                <>
-                  <div className="flex-1 min-w-0">
-                    <motion.p
-                      key={totalItems}
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="text-[13px] font-bold"
-                    >
-                      {totalItems} item{totalItems > 1 ? "s" : ""} in cart
-                    </motion.p>
-                    <p className="text-[10px] text-white/60 truncate mt-0.5">
-                      Tap to view cart
-                    </p>
-                  </div>
-                  <motion.span
-                    key={`price-${subtotal}`}
-                    initial={{ scale: 0.8 }}
-                    animate={{ scale: 1 }}
-                    className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-white text-[14px] font-bold shadow-sm"
-                  >
-                    {formatCurrency(subtotal)}
-                    <span className="text-[16px]">&rsaquo;</span>
-                  </motion.span>
-                </>
-              )}
+              <ShoppingBag className="h-5 w-5 text-white" />
+              <motion.span
+                key={totalItems}
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 text-[9px] font-bold text-white px-1 shadow-sm"
+              >
+                {totalItems}
+              </motion.span>
             </Link>
           </motion.div>
         )}

@@ -36,6 +36,7 @@ export const productSchema = z.object({
   category: z.string().min(2),
   price: z.coerce.number().positive(),
   discountPrice: z.coerce.number().positive().optional(),
+  gstRate: z.coerce.number().min(0).max(28).optional(),
   stock: z.coerce.number().int().min(0),
   description: z.string().min(10),
   image: z.string().trim().optional(),

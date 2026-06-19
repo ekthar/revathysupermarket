@@ -56,11 +56,13 @@ export function ProductManagementForm() {
     setMessage("");
     const formData = new FormData(form);
     const discountPrice = String(formData.get("discountPrice") ?? "").trim();
+    const gstRate = String(formData.get("gstRate") ?? "").trim();
     const payload = {
       name: String(formData.get("name") ?? ""),
       category: String(formData.get("category") ?? ""),
       price: Number(formData.get("price")),
       ...(discountPrice ? { discountPrice: Number(discountPrice) } : {}),
+      ...(gstRate ? { gstRate: Number(gstRate) } : {}),
       stock: Number(formData.get("stock")),
       image: String(formData.get("image") ?? "").trim() || undefined,
       description: String(formData.get("description") ?? ""),
@@ -104,6 +106,7 @@ export function ProductManagementForm() {
       <Input name="price" placeholder="Price" type="number" min="1" step="1" required className="h-12 rounded-2xl" />
       <Input name="discountPrice" placeholder="Discount price" type="number" min="1" step="1" className="h-12 rounded-2xl" />
       <Input name="stock" placeholder="Stock" type="number" min="0" step="1" required className="h-12 rounded-2xl" />
+      <Input name="gstRate" placeholder="GST % (optional, overrides store)" type="number" min="0" max="28" step="0.01" className="h-12 rounded-2xl" />
       <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Cloudflare R2 image URL or leave blank" type="url" className="h-12 rounded-2xl" />
       <label className="flex min-h-12 items-center justify-between rounded-2xl border border-lime-fresh/40 bg-lime-fresh/10 px-4 md:col-span-3">
         <span className="text-sm font-black text-primary">Feature this product on homepage</span>

@@ -138,6 +138,7 @@ export const deliveryLocationSchema = z.object({
 });
 
 export const deliveryActionSchema = z.object({
-  action: z.enum(["picked_up", "delivered"]),
-  otp: z.string().optional()
+  action: z.enum(["picked_up", "delivered", "request_cancel"]),
+  otp: z.string().optional(),
+  reason: z.string().optional()
 });

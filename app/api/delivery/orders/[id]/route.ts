@@ -33,6 +33,29 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   });
   if (!order || order.deliveryPartnerId !== session.user.id) return NextResponse.json({ error: "Order not found." }, { status: 404 });
 
+  if (parsed.data.action === "request_cancel") {
+    // Save a staff note with the cancellation reason from the delivery partner
+    const reason = parsed.data.reason || "Delivery partner requested cancellation";
+    const existingNote = await prisma.order.findUnique({ where: { id }, select: { staffNote: true } });
+    const newNote = [existingNote?.staffNote, `[DELIVERY CANCEL REQUEST] ${reason}`].filter(Boolean).join("\n");
+    await prisma.order.update({
+      where: { id },
+      data: {
+        staffNote: newNote,
+        statusEvents: { create: { status: order.deliveryPartnerId ? "READY_FOR_DELIVERY" : "ORDER_RECEIVED", note: `Delivery partner requested cancellation: ${reason}` } }
+      }
+    });
+    await writeAuditLog({
+      actorId: session.user.id,
+      actorRole: session.user.role,
+      action: "delivery_cancel_requested",
+      targetType: "Order",
+      targetId: id,
+      metadata: { reason }
+    });
+    return NextResponse.json({ ok: true });
+  }
+
   if (parsed.data.action === "delivered") {
     if (order.deliveryOtpExpiresAt && order.deliveryOtpExpiresAt < new Date()) {
       return NextResponse.json({ error: "Delivery OTP has expired. Ask admin to regenerate it." }, { status: 400 });

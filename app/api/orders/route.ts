@@ -98,18 +98,40 @@ export async function POST(request: Request) {
       include: { items: true }
     });
 
-    await prisma.address.create({
-      data: {
+    // Save address only if it doesn't already exist for this user (prevent duplicates)
+    const existingAddress = await prisma.address.findFirst({
+      where: {
         userId: session.user.id,
-        label: "Home",
         houseName: data.houseName,
-        street: data.street,
-        landmark: data.landmark,
         pincode: data.pincode,
-        latitude: data.latitude,
-        longitude: data.longitude
+        street: data.street
       }
     }).catch(() => null);
+
+    if (!existingAddress) {
+      await prisma.address.create({
+        data: {
+          userId: session.user.id,
+          label: "Home",
+          houseName: data.houseName,
+          street: data.street,
+          landmark: data.landmark,
+          pincode: data.pincode,
+          latitude: data.latitude,
+          longitude: data.longitude
+        }
+      }).catch(() => null);
+    } else {
+      // Update the existing address with latest coordinates/landmark if changed
+      await prisma.address.update({
+        where: { id: existingAddress.id },
+        data: {
+          landmark: data.landmark,
+          latitude: data.latitude,
+          longitude: data.longitude
+        }
+      }).catch(() => null);
+    }
 
     await sendWhatsAppTemplate({
       to: order.phone,

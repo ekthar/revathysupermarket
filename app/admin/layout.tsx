@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { BarChart3, Bell, ClipboardList, Home, LayoutDashboard, Package, RotateCcw, Settings, ShoppingBag, Users } from "lucide-react";
-import { auth } from "@/auth";
+import { BarChart3, Bell, ClipboardList, Home, LayoutDashboard, LogOut, Package, RotateCcw, Settings, ShoppingBag, Users } from "lucide-react";
+import { auth, signOut } from "@/auth";
 import { canManageProducts, canManageReturns, canManageSettings, canManageStaff, canViewReports, isStaffRole } from "@/lib/authz";
 import { roleLabel } from "@/lib/roles";
 import { NewOrderAlert } from "@/components/admin/new-order-alert";
@@ -60,6 +60,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                 <p className="text-[12px] font-semibold text-slate-900">{userName}</p>
                 <p className="text-[10px] text-slate-400">{roleLabel(role)}</p>
               </div>
+              <form action={async () => { "use server"; await signOut({ redirectTo: "/admin/login" }); }}>
+                <button type="submit" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 hover:bg-red-100 transition-colors press" title="Logout">
+                  <LogOut className="h-3.5 w-3.5 text-red-500" />
+                </button>
+              </form>
             </div>
           </div>
         </div>

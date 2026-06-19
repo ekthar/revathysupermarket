@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, ExternalLink, MapPin, Navigation, Package, Phone, Truck, X } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ExternalLink, MapPin, Navigation, Package, Phone, Truck, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
 import { statusLabels } from "@/lib/constants";
@@ -22,6 +22,7 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
   const [localOrders, setLocalOrders] = useState(orders);
   const [otpModal, setOtpModal] = useState<DeliveryOrder | null>(null);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState<{ orderId: string; reason: string } | null>(null);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -70,6 +71,23 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
 
   function openMaps(address: string) {
     window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, "_blank");
+  }
+
+  async function requestCancellation(order: DeliveryOrder, reason: string) {
+    setActionLoading(order.id);
+    const response = await fetch(`/api/delivery/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "request_cancel", reason })
+    });
+    const data = await readApiResponse<{ error?: string }>(response);
+    setActionLoading(null);
+    setCancelReason(null);
+    if (!response.ok) {
+      window.alert(data.error ?? "Cancellation request failed.");
+      return;
+    }
+    window.alert("Cancellation request sent to admin. They will review and update the order.");
   }
 
   return (
@@ -178,10 +196,50 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
             </div>
 
             {/* Location indicator */}
-            <div className="px-4 pb-3 flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
-              <Navigation className="h-3 w-3 text-primary" />
-              GPS location active
+            <div className="px-4 pb-3 flex items-center justify-between">
+              <span className="flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+                <Navigation className="h-3 w-3 text-primary" />
+                GPS location active
+              </span>
+              {/* Cancel request */}
+              {order.status !== "DELIVERED" && (
+                <button
+                  onClick={() => setCancelReason({ orderId: order.id, reason: "" })}
+                  className="text-[10px] font-semibold text-red-500 hover:text-red-700 transition-colors"
+                >
+                  Request Cancel
+                </button>
+              )}
             </div>
+
+            {/* Cancel reason input (if this order's cancel is being requested) */}
+            {cancelReason?.orderId === order.id && (
+              <div className="px-4 pb-4 border-t border-slate-100 pt-3">
+                <p className="text-[11px] font-bold text-slate-700 mb-2">Reason for cancellation:</p>
+                <input
+                  type="text"
+                  value={cancelReason.reason}
+                  onChange={(e) => setCancelReason({ orderId: order.id, reason: e.target.value })}
+                  placeholder="Customer not available, wrong address, etc."
+                  className="w-full h-9 rounded-lg border border-slate-200 px-3 text-[12px] outline-none focus:border-red-300"
+                />
+                <div className="mt-2 flex gap-2">
+                  <button
+                    onClick={() => requestCancellation(order, cancelReason.reason)}
+                    disabled={!cancelReason.reason.trim() || actionLoading === order.id}
+                    className="flex-1 h-9 rounded-lg bg-red-600 text-[11px] font-bold text-white disabled:opacity-40"
+                  >
+                    Send Request
+                  </button>
+                  <button
+                    onClick={() => setCancelReason(null)}
+                    className="h-9 px-3 rounded-lg border border-slate-200 text-[11px] font-bold text-slate-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
           </article>
         ))}
       </div>

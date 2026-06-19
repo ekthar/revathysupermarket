@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import { Bell, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 
 function publicKeyToUint8Array(publicKey: string) {
@@ -14,60 +14,103 @@ function publicKeyToUint8Array(publicKey: string) {
 }
 
 const DISMISSED_KEY = "push-prompt-dismissed";
+const SUBSCRIBED_KEY = "push-subscribed";
 
 export function PushNotificationManager() {
   const { showToast } = useToast();
+  const { data: session } = useSession();
   const [showPrompt, setShowPrompt] = useState(false);
   const [subscribing, setSubscribing] = useState(false);
   const publicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
 
   useEffect(() => {
-    // Don't show if not supported, already granted, or dismissed recently
     if (!publicKey) return;
+    if (!session?.user?.id) return; // Only prompt logged-in users
     if (!("serviceWorker" in navigator && "PushManager" in window && "Notification" in window)) return;
-    if (Notification.permission === "granted") return;
+
+    // If already subscribed in this browser, try to re-register silently
+    if (localStorage.getItem(SUBSCRIBED_KEY) === "true" || Notification.permission === "granted") {
+      silentResubscribe();
+      return;
+    }
+
     if (Notification.permission === "denied") return;
 
-    // Check if dismissed in last 24 hours
+    // Check if dismissed in last 12 hours
     const dismissed = localStorage.getItem(DISMISSED_KEY);
-    if (dismissed && Date.now() - Number(dismissed) < 24 * 60 * 60 * 1000) return;
+    if (dismissed && Date.now() - Number(dismissed) < 12 * 60 * 60 * 1000) return;
 
-    // Auto-show prompt after 3 seconds (force engagement)
-    const timer = setTimeout(() => setShowPrompt(true), 3000);
+    // Show prompt after 2 seconds
+    const timer = setTimeout(() => setShowPrompt(true), 2000);
     return () => clearTimeout(timer);
-  }, [publicKey]);
+  }, [publicKey, session?.user?.id]);
+
+  // Silently re-subscribe if permission already granted (handles case where DB got reset)
+  async function silentResubscribe() {
+    if (!publicKey) return;
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: publicKeyToUint8Array(publicKey)
+        });
+      }
+
+      await fetch("/api/push-subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription.toJSON())
+      });
+      localStorage.setItem(SUBSCRIBED_KEY, "true");
+    } catch {
+      // Silent failure is OK
+    }
+  }
 
   async function enableNotifications() {
     if (!publicKey) return;
     setSubscribing(true);
 
-    const permission = await Notification.requestPermission();
-    if (permission !== "granted") {
-      showToast("Please allow notifications for order updates", "error");
-      setSubscribing(false);
-      dismiss();
-      return;
-    }
-
     try {
-      const registration = await navigator.serviceWorker.register("/sw.js");
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: publicKeyToUint8Array(publicKey)
-      });
+      const permission = await Notification.requestPermission();
+      if (permission !== "granted") {
+        showToast("Please allow notifications for order updates", "error");
+        setSubscribing(false);
+        dismiss();
+        return;
+      }
+
+      // Wait for service worker to be ready
+      const registration = await navigator.serviceWorker.ready;
+      
+      // Check for existing subscription first
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: publicKeyToUint8Array(publicKey)
+        });
+      }
+
       const response = await fetch("/api/push-subscriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(subscription.toJSON())
       });
-      const data = await readApiResponse<{ error?: string }>(response);
-      if (!response.ok) {
-        showToast(data.error ?? "Notification setup failed", "error");
-      } else {
+
+      if (response.ok) {
+        localStorage.setItem(SUBSCRIBED_KEY, "true");
         showToast("Notifications enabled!", "success");
+      } else {
+        const data = await response.json().catch(() => ({}));
+        showToast((data as any).error || "Subscription failed. Make sure you're logged in.", "error");
       }
-    } catch {
-      showToast("Could not enable notifications", "error");
+    } catch (err) {
+      console.error("Push subscription error:", err);
+      showToast("Could not enable notifications. Try again.", "error");
     }
 
     setSubscribing(false);

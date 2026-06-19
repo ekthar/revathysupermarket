@@ -1,10 +1,12 @@
 import type { MetadataRoute } from "next";
+import { getPublicStoreSettings } from "@/lib/store-settings";
 
-export default function manifest(): MetadataRoute.Manifest {
+export default async function manifest(): Promise<MetadataRoute.Manifest> {
+  const settings = await getPublicStoreSettings();
   return {
-    name: "Revathy Supermarket",
-    short_name: "Revathy",
-    description: "Fresh groceries delivered from Revathy Supermarket in Neyyattinkara.",
+    name: settings.storeName,
+    short_name: settings.storeName.split(" ")[0],
+    description: `Fresh groceries delivered from ${settings.storeName}. Order online with COD & UPI.`,
     start_url: "/",
     display: "standalone",
     background_color: "#FFFFFF",

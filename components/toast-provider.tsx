@@ -41,24 +41,24 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="safe-toast-stack pointer-events-none fixed inset-x-0 z-[88] mx-auto flex max-w-md flex-col gap-2 px-4 sm:left-auto sm:right-4 sm:mx-0 sm:w-[min(420px,calc(100vw-2rem))] sm:px-0">
+      <div className="pointer-events-none fixed bottom-24 md:bottom-8 inset-x-0 z-[88] mx-auto flex max-w-sm flex-col items-center gap-2 px-4">
         <AnimatePresence initial={false}>
           {toasts.map((toast) => {
             const Icon = icons[toast.tone];
             return (
               <motion.div
                 key={toast.id}
-                initial={{ opacity: 0, y: 18, scale: 0.96 }}
+                initial={{ opacity: 0, y: 30, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 12, scale: 0.96 }}
+                exit={{ opacity: 0, y: 20, scale: 0.9 }}
                 className={cn(
-                  "glass-panel pointer-events-auto flex items-center gap-3 rounded-2xl p-3 text-sm font-bold",
-                  toast.tone === "success" && "border-primary/25 bg-primary/10 text-primary dark:bg-primary/15",
-                  toast.tone === "error" && "border-red-300/60 bg-red-50/95 text-red-600 dark:border-red-500/35 dark:bg-red-950/80 dark:text-red-200",
-                  toast.tone === "info" && "text-foreground"
+                  "pointer-events-auto flex items-center gap-2.5 rounded-full px-4 py-2.5 text-[13px] font-semibold shadow-lg",
+                  toast.tone === "success" && "bg-slate-900 text-white dark:bg-white dark:text-slate-900",
+                  toast.tone === "error" && "bg-red-600 text-white",
+                  toast.tone === "info" && "bg-slate-900 text-white dark:bg-white dark:text-slate-900"
                 )}
               >
-                <Icon className="h-5 w-5 shrink-0" />
+                <Icon className="h-4 w-4 shrink-0" />
                 <span>{toast.message}</span>
               </motion.div>
             );

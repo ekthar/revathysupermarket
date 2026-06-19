@@ -65,6 +65,30 @@ export async function POST(request: Request) {
       : [];
     const existingProductIds = new Set(existingProducts.map((product) => product.id));
     const number = await createOrderNumber();
+
+    // Calculate wallet deduction if paying with wallet
+    let walletDeduction = 0;
+    let effectivePaymentMethod = data.paymentMethod;
+    let effectivePaymentStatus: "PENDING" | "PAID" = "PENDING";
+
+    if (data.paymentMethod === "WALLET") {
+      const [creditAgg, debitAgg] = await Promise.all([
+        prisma.walletTransaction.aggregate({ _sum: { amount: true }, where: { userId: session.user.id, type: "credit" } }),
+        prisma.walletTransaction.aggregate({ _sum: { amount: true }, where: { userId: session.user.id, type: "debit" } })
+      ]);
+      const walletBalance = Number(creditAgg._sum.amount ?? 0) - Number(debitAgg._sum.amount ?? 0);
+
+      if (walletBalance <= 0) {
+        return NextResponse.json({ error: "Insufficient wallet balance." }, { status: 400 });
+      }
+
+      walletDeduction = Math.min(walletBalance, subtotal);
+      // If wallet covers the full amount, mark as PAID
+      if (walletDeduction >= subtotal) {
+        effectivePaymentStatus = "PAID";
+      }
+    }
+
     const order = await prisma.order.create({
       data: {
         orderNumber: number,
@@ -79,8 +103,8 @@ export async function POST(request: Request) {
         latitude: data.latitude,
         longitude: data.longitude,
         distanceKm,
-        paymentMethod: data.paymentMethod,
-        paymentStatus: "PENDING",
+        paymentMethod: data.paymentMethod === "WALLET" ? "WALLET" : data.paymentMethod,
+        paymentStatus: effectivePaymentStatus,
         subtotal,
         total: subtotal,
         items: {
@@ -97,6 +121,19 @@ export async function POST(request: Request) {
       },
       include: { items: true }
     });
+
+    // Deduct wallet balance if applicable
+    if (walletDeduction > 0) {
+      await prisma.walletTransaction.create({
+        data: {
+          userId: session.user.id,
+          orderId: order.id,
+          amount: walletDeduction,
+          type: "debit",
+          reason: `Payment for order #${order.orderNumber}`
+        }
+      });
+    }
 
     // Save address only if it doesn't already exist for this user (prevent duplicates)
     const existingAddress = await prisma.address.findFirst({

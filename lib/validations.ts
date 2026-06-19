@@ -16,7 +16,7 @@ export const checkoutSchema = z.object({
   landmark: z.string().min(2),
   pincode: z.string().regex(/^\d{6}$/),
   notes: z.string().optional(),
-  paymentMethod: z.enum(["COD", "UPI_ON_DELIVERY"]),
+  paymentMethod: z.enum(["COD", "UPI_ON_DELIVERY", "WALLET"]),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   items: z

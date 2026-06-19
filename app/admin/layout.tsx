@@ -44,24 +44,24 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <ShoppingBag className="h-4 w-4 text-white" />
               </div>
-              <span className="text-[14px] font-bold text-slate-900 hidden sm:block">Revathy Admin</span>
+              <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">Revathy Admin</span>
             </Link>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-[12px] font-semibold text-primary flex items-center gap-1.5 hover:underline px-3 py-1.5 rounded-full bg-primary/5">
+            <Link href="/" className="text-[12px] font-semibold text-primary flex items-center gap-1.5 hover:underline px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10">
               <Home className="h-3.5 w-3.5" /> View Store
             </Link>
-            <div className="h-4 w-px bg-slate-200" />
+            <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center">
-                <span className="text-[11px] font-bold text-slate-600">{userName.charAt(0).toUpperCase()}</span>
+              <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{userName.charAt(0).toUpperCase()}</span>
               </div>
               <div className="text-right hidden sm:block">
-                <p className="text-[12px] font-semibold text-slate-900">{userName}</p>
+                <p className="text-[12px] font-semibold text-slate-900 dark:text-white">{userName}</p>
                 <p className="text-[10px] text-slate-400">{roleLabel(role)}</p>
               </div>
               <form action={async () => { "use server"; await signOut({ redirectTo: "/admin/login" }); }}>
-                <button type="submit" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 hover:bg-red-100 transition-colors press" title="Logout">
+                <button type="submit" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors press" title="Logout">
                   <LogOut className="h-3.5 w-3.5 text-red-500" />
                 </button>
               </form>

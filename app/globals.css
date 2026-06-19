@@ -35,6 +35,12 @@ html {
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  touch-action: manipulation;
+}
+
+/* Remove 300ms tap delay globally */
+a, button, input, select, textarea, [role="button"] {
+  touch-action: manipulation;
 }
 
 body {
@@ -66,9 +72,17 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .card-shadow {
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
 }
+.dark .card-shadow {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.06);
+}
 
 .card-shadow-lg {
   box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+}
+.dark .card-shadow-lg {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
 }
 
 /* Elevated card - used for product cards and modals */
@@ -76,12 +90,21 @@ h1, h2, h3, h4, h5, h6, .font-display {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
   border: 1px solid rgba(0,0,0,0.04);
 }
+.dark .card-elevated {
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 15px -3px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.08);
+}
 
 /* Green tint glassmorphism - Foodizo style */
 .card-green-glass {
   background: linear-gradient(135deg, rgba(15, 138, 95, 0.03), rgba(255, 255, 255, 0.95));
   border: 1px solid rgba(15, 138, 95, 0.08);
   box-shadow: 0 4px 12px -2px rgba(15, 138, 95, 0.06);
+}
+.dark .card-green-glass {
+  background: linear-gradient(135deg, rgba(15, 138, 95, 0.08), rgba(15, 23, 42, 0.95));
+  border: 1px solid rgba(15, 138, 95, 0.15);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.3);
 }
 
 /* Green gradient CTA button */
@@ -104,6 +127,12 @@ h1, h2, h3, h4, h5, h6, .font-display {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 /* Pill button - rounded capsule style */
@@ -171,8 +200,18 @@ h1, h2, h3, h4, h5, h6, .font-display {
   width: calc(100% - 2rem);
   max-width: 400px;
 }
+.dark .floating-cart-bar {
+  background: #0f172a;
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 20px 50px -20px rgba(0,0,0,0.8);
+}
 
 /* iOS-style pressed state */
+.press {
+  will-change: transform;
+  -webkit-user-select: none;
+  user-select: none;
+}
 .press:active { transform: scale(0.97); transition: transform 0.1s cubic-bezier(0.25, 0.1, 0.25, 1); }
 
 /* Smooth horizontal scroll */
@@ -194,6 +233,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border-radius: 1rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
   transition: transform 0.15s ease;
+}
+.dark .product-list-card {
+  background: hsl(222 47% 9%);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.06);
 }
 .product-list-card:active { transform: scale(0.98); }
 
@@ -230,6 +274,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
   width: calc(100% - 2rem);
   box-shadow: 0 24px 80px -20px rgba(0,0,0,0.3);
 }
+.dark .success-modal {
+  background: hsl(222 47% 9%);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 24px 80px -20px rgba(0,0,0,0.6);
+}
 
 /* Admin panel specific */
 .admin-card {
@@ -237,6 +286,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border: 1px solid hsl(var(--border));
   border-radius: 1rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.02), 0 2px 8px rgba(0,0,0,0.03);
+}
+.dark .admin-card {
+  background: hsl(222 47% 9%);
+  border: 1px solid hsl(var(--border));
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 2px 8px rgba(0,0,0,0.2);
 }
 
 /* Slide-in animation for order alerts */

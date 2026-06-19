@@ -53,7 +53,7 @@ export function Header({
           <div className="flex items-center justify-between h-[70px]">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 press">
-              <span className="font-display text-2xl font-black tracking-tight text-slate-900 uppercase">
+              <span className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
                 {storeName}
               </span>
             </Link>
@@ -67,7 +67,7 @@ export function Header({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search Grocery Items..."
-                  className="w-full h-11 rounded-full bg-slate-50 border border-slate-200 pl-11 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-primary/50 focus:bg-white focus:shadow-sm transition-all"
+                  className="w-full h-11 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-11 pr-4 text-sm text-slate-900 dark:text-white outline-none placeholder:text-slate-400 focus:border-primary/50 focus:bg-white dark:focus:bg-slate-700 focus:shadow-sm transition-all"
                 />
               </div>
             </form>
@@ -99,12 +99,12 @@ export function Header({
                 Help & Support
               </Link>
 
-              <Link href="/account" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 hover:bg-slate-100 transition-colors press">
-                <Heart className="h-[18px] w-[18px] text-slate-600" />
+              <Link href="/account/favorites" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">
+                <Heart className="h-[18px] w-[18px] text-slate-600 dark:text-slate-300" />
               </Link>
 
-              <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 hover:bg-slate-100 transition-colors press">
-                <ShoppingBag className="h-[18px] w-[18px] text-slate-600" />
+              <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">
+                <ShoppingBag className="h-[18px] w-[18px] text-slate-600 dark:text-slate-300" />
                 {totalItems > 0 && (
                   <motion.span
                     key={totalItems}
@@ -120,18 +120,18 @@ export function Header({
               {user?.id ? (
                 <Link
                   href="/account"
-                  className="flex items-center gap-2 h-10 px-4 rounded-full bg-slate-50 hover:bg-slate-100 transition-colors press"
+                  className="flex items-center gap-2 h-10 px-4 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press"
                 >
-                  <User className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm font-semibold text-slate-700">{user.name?.split(" ")[0] || "Account"}</span>
+                  <User className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user.name?.split(" ")[0] || "Account"}</span>
                 </Link>
               ) : (
                 <Link
                   href="/login"
-                  className="flex items-center gap-2 h-10 px-4 rounded-full border border-slate-200 hover:border-primary/30 hover:bg-primary/5 transition-all press"
+                  className="flex items-center gap-2 h-10 px-4 rounded-full border border-slate-200 dark:border-slate-700 hover:border-primary/30 hover:bg-primary/5 transition-all press"
                 >
-                  <User className="h-4 w-4 text-slate-600" />
-                  <span className="text-sm font-semibold text-slate-700">Login/Signup</span>
+                  <User className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Login/Signup</span>
                 </Link>
               )}
             </div>
@@ -144,13 +144,13 @@ export function Header({
         <div className="flex items-center justify-between px-4 h-[56px]">
           {/* Delivery address */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50">
-              <Truck className="h-4 w-4 text-slate-700" />
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800">
+              <Truck className="h-4 w-4 text-slate-700 dark:text-slate-300" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] text-slate-400 font-medium">Delivery to</p>
               <div className="flex items-center gap-0.5">
-                <p className="text-[13px] font-bold text-slate-900 truncate">{shortAddress}</p>
+                <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{shortAddress}</p>
                 <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
               </div>
             </div>
@@ -159,11 +159,11 @@ export function Header({
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
             <button className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
-              <Bell className="h-[17px] w-[17px] text-slate-600" />
+              <Bell className="h-[17px] w-[17px] text-slate-600 dark:text-slate-300" />
             </button>
 
             <Link href="/cart" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
-              <ShoppingBag className="h-[17px] w-[17px] text-slate-600" />
+              <ShoppingBag className="h-[17px] w-[17px] text-slate-600 dark:text-slate-300" />
               {totalItems > 0 && (
                 <motion.span
                   key={totalItems}

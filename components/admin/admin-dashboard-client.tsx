@@ -40,6 +40,7 @@ interface Props {
   customerChange: number;
   recentOrders: RecentOrder[];
   monthlyRevenue: { month: string; revenue: number; orders: number }[];
+  lowStockProducts: { id: string; name: string; stock: number; image: string }[];
 }
 
 const statusColors: Record<string, string> = {
@@ -67,7 +68,7 @@ export function AdminDashboardClient({
   pendingOrders, packingOrders, deliveredOrders, receivedOrders,
   readyOrders, outForDeliveryOrders, totalCustomers,
   orderChange, revenueChange, customerChange,
-  recentOrders, monthlyRevenue
+  recentOrders, monthlyRevenue, lowStockProducts
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const todayDate = new Date().toLocaleDateString("en-IN", {
@@ -301,6 +302,43 @@ export function AdminDashboardClient({
                   </p>
                 </div>
               </Link>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Low Stock Alerts */}
+      {lowStockProducts.length > 0 && (
+        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-800/50 shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-orange-100 dark:border-orange-900/30 bg-orange-50/50 dark:bg-orange-950/20">
+            <div className="flex items-center gap-2">
+              <div className="h-7 w-7 rounded-lg bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center">
+                <Package className="h-3.5 w-3.5 text-orange-600" />
+              </div>
+              <div>
+                <h2 className="text-[13px] font-semibold text-orange-800 dark:text-orange-200">Low Stock Alert</h2>
+                <p className="text-[10px] text-orange-600 dark:text-orange-400">{lowStockProducts.length} product{lowStockProducts.length > 1 ? "s" : ""} running low</p>
+              </div>
+            </div>
+            <Link href="/admin/products" className="text-[11px] font-semibold text-orange-600 press">
+              Manage →
+            </Link>
+          </div>
+          <div className="divide-y divide-orange-50 dark:divide-orange-900/20">
+            {lowStockProducts.slice(0, 5).map((product) => (
+              <div key={product.id} className="flex items-center gap-3 px-4 py-2.5">
+                <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 overflow-hidden shrink-0">
+                  {product.image && <img src={product.image} alt="" className="h-full w-full object-cover" />}
+                </div>
+                <span className="text-[12px] font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{product.name}</span>
+                <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
+                  product.stock === 0
+                    ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
+                    : "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-300"
+                }`}>
+                  {product.stock === 0 ? "Out of stock" : `${product.stock} left`}
+                </span>
+              </div>
             ))}
           </div>
         </div>

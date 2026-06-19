@@ -6,8 +6,9 @@ import { rateLimit } from "@/lib/rate-limit";
 import { isStaffRole } from "@/lib/authz";
 import { checkoutSchema } from "@/lib/validations";
 import { isServiceablePincode } from "@/lib/delivery";
-import { getStoreSettingsForApi } from "@/lib/store-settings";
+import { getStoreSettingsForApi, isStoreCurrentlyOpen } from "@/lib/store-settings";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
+import { notifyOrderStatus } from "@/lib/notifications";
 
 function orderNumber() {
   const date = new Date();
@@ -40,6 +41,22 @@ export async function POST(request: Request) {
     if (!parsed.success) return NextResponse.json({ error: "Please check your checkout details." }, { status: 400 });
 
     const data = parsed.data;
+
+    // Check store hours
+    const storeStatus = isStoreCurrentlyOpen(settings);
+    if (!storeStatus.open) {
+      return NextResponse.json({ error: storeStatus.message }, { status: 400 });
+    }
+
+    // Check minimum order value
+    const orderSubtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    if (orderSubtotal < settings.minimumOrderValue) {
+      return NextResponse.json(
+        { error: `Minimum order value is ₹${settings.minimumOrderValue}. Please add more items.` },
+        { status: 400 }
+      );
+    }
+
     if (!isServiceablePincode(data.pincode, settings.serviceablePincodes)) {
       return NextResponse.json(
         { error: "Sorry, this pincode is not currently serviceable." },
@@ -176,6 +193,19 @@ export async function POST(request: Request) {
       params: [order.orderNumber, String(order.items.length), Number(order.total).toFixed(2), order.paymentMethod],
       orderId: order.id
     });
+
+    // Deduct inventory for each ordered product
+    for (const item of order.items) {
+      if (item.productId) {
+        await prisma.product.update({
+          where: { id: item.productId },
+          data: { stock: { decrement: item.quantity } }
+        }).catch(() => null);
+      }
+    }
+
+    // Send in-app notification
+    await notifyOrderStatus(session.user.id, order.orderNumber, "ORDER_RECEIVED", order.id).catch(() => null);
 
     return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber });
   } catch (error) {

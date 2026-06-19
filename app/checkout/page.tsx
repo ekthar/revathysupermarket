@@ -43,6 +43,9 @@ export default async function CheckoutPage() {
       <CheckoutForm
         deliveryRadiusKm={settings.deliveryRadiusKm}
         allowedPincodes={settings.serviceablePincodes}
+        deliveryEstimateMin={settings.deliveryEstimateMin}
+        deliveryEstimateMax={settings.deliveryEstimateMax}
+        minimumOrderValue={settings.minimumOrderValue}
         savedAddresses={addresses.map((address) => ({
           id: address.id,
           label: address.label,

@@ -25,7 +25,7 @@ export default async function AdminPage() {
     receivedOrders, readyOrders, outForDeliveryOrders,
     totalRevenue, totalCustomers,
     lastWeekOrders, lastWeekRevenue, lastWeekCustomers,
-    recentOrders, monthlyRevenue
+    recentOrders, monthlyRevenue, lowStockProducts
   ] = await Promise.all([
     prisma.order.count({ where: { createdAt: { gte: today } } }).catch(() => 0),
     prisma.order.count({ where: { status: { in: ["ORDER_RECEIVED", "ACCEPTED", "PACKING"] } } }).catch(() => 0),
@@ -63,7 +63,14 @@ export default async function AdminPage() {
     // Monthly revenue for chart (last 6 months)
     canSeeFinancials
       ? getMonthlyRevenue()
-      : Promise.resolve([])
+      : Promise.resolve([]),
+    // Low stock products (stock <= 5)
+    prisma.product.findMany({
+      where: { isActive: true, stock: { lte: 5 } },
+      select: { id: true, name: true, stock: true, image: true },
+      orderBy: { stock: "asc" },
+      take: 10
+    }).catch(() => [])
   ]);
 
   const hour = new Date().getHours();
@@ -102,6 +109,7 @@ export default async function AdminPage() {
         itemNames: o.items.map((i) => i.name).slice(0, 2)
       }))}
       monthlyRevenue={monthlyRevenue}
+      lowStockProducts={lowStockProducts}
     />
   );
 }

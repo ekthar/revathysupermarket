@@ -2,9 +2,9 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Megaphone, MessageCircle, Save, Settings, Trash2 } from "lucide-react";
+import { Camera, Eye, EyeOff, ImagePlus, Megaphone, MessageCircle, Save, Settings, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast-provider";
@@ -157,6 +157,9 @@ export function SettingsManagementClient({
 
   return (
     <>
+      {/* Logo Upload Section */}
+      <LogoUploadSection />
+
       <form onSubmit={saveSettings} className="mt-5 grid gap-4 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5 md:grid-cols-2">
         <div className="flex items-center gap-3 md:col-span-2">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
@@ -293,6 +296,72 @@ function ConfigStatus({ label, configured }: { label: string; configured: boolea
       <p className={configured ? "mt-1 font-black text-primary" : "mt-1 font-black text-red-600"}>
         {configured ? "Configured" : "Missing"}
       </p>
+    </div>
+  );
+}
+
+function LogoUploadSection() {
+  const { showToast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Logo too large. Max 2MB.", "error");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("logo", file);
+
+    try {
+      const res = await fetch("/api/admin/logo", { method: "POST", body: formData });
+      const data = await readApiResponse<{ logoUrl?: string; error?: string }>(res);
+      if (res.ok && data.logoUrl) {
+        setLogoUrl(data.logoUrl);
+        showToast("Logo uploaded!", "success");
+      } else {
+        showToast(data.error || "Upload failed", "error");
+      }
+    } catch {
+      showToast("Upload failed", "error");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
+          <ImagePlus className="h-5 w-5 text-primary" />
+        </span>
+        <div>
+          <h3 className="font-display text-2xl font-black">Store Logo</h3>
+          <p className="text-xs font-bold text-muted-foreground">Upload your store logo. Used in PWA, splash screen, and header.</p>
+        </div>
+      </div>
+      <div className="mt-4 flex items-center gap-4">
+        <div className="h-20 w-20 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden">
+          {logoUrl ? (
+            <img src={logoUrl} alt="Store logo" className="h-full w-full object-contain" />
+          ) : (
+            <Camera className="h-6 w-6 text-primary/40" />
+          )}
+        </div>
+        <div className="flex-1">
+          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
+            <Upload className="h-4 w-4" />
+            {uploading ? "Uploading..." : "Upload Logo"}
+          </Button>
+          <p className="mt-2 text-[10px] text-muted-foreground">PNG, SVG, or JPG. Max 2MB. Square recommended.</p>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
+        </div>
+      </div>
     </div>
   );
 }

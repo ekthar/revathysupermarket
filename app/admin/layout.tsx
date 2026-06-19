@@ -33,11 +33,11 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb]">
+    <div className="min-h-screen bg-[#f8f9fb] dark:bg-slate-950">
       <NewOrderAlert />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl border-b border-slate-200/60">
+      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <Link href="/admin" className="flex items-center gap-2.5">

@@ -100,13 +100,14 @@ export function AnimatedProductSection({
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={isInView ? { opacity: 1, scale: 1 } : {}}
                   transition={{ delay: 0.2 + idx * 0.05, type: "spring", stiffness: 300, damping: 20 }}
+                  className="shrink-0"
                 >
                   <Link
                     href={`/products?category=${encodeURIComponent(categories[idx] || label)}`}
-                    className={`shrink-0 px-4 py-2 rounded-full text-[12px] font-semibold transition-all spring-transition ${
+                    className={`block whitespace-nowrap px-4 py-2 rounded-full text-[12px] font-semibold transition-all ${
                       idx === 0
                         ? "bg-primary text-white shadow-sm"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200 hover:scale-105"
+                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                     }`}
                   >
                     {label}

@@ -24,24 +24,6 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
   const [loading, setLoading] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  // Infinite scroll - auto-load more when scrolling to bottom
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && visibleCount < filtered.length) {
-          setLoading(true);
-          setTimeout(() => {
-            setVisibleCount((c) => c + 24);
-            setLoading(false);
-          }, 300);
-        }
-      },
-      { threshold: 0.1 }
-    );
-    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [visibleCount, filtered.length]);
-
   const filtered = useMemo(() => {
     return items
       .filter((product) => {
@@ -62,6 +44,24 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
       });
   }, [category, items, maxPrice, query, sort]);
   const visibleItems = filtered.slice(0, visibleCount);
+
+  // Infinite scroll - auto-load more when scrolling to bottom
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < filtered.length) {
+          setLoading(true);
+          setTimeout(() => {
+            setVisibleCount((c) => c + 24);
+            setLoading(false);
+          }, 300);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [visibleCount, filtered.length]);
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">

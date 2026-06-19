@@ -192,6 +192,7 @@ model Product {
   unit          String
   isActive      Boolean     @default(true)
   isFeatured    Boolean     @default(false)
+  gstRate       Decimal?    @db.Decimal(5, 2)
   categoryId    String
   category      Category    @relation(fields: [categoryId], references: [id])
   orderItems    OrderItem[]

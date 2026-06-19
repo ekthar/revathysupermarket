@@ -467,3 +467,50 @@ h1, h2, h3, h4, h5, h6, .font-display {
     scroll-padding: 1rem;
   }
 }
+
+
+/* ===== DARK MODE GLOBAL FIXES ===== */
+
+/* Toast position fix for mobile */
+.safe-toast-stack {
+  top: env(safe-area-inset-top, 12px);
+  padding-top: 12px;
+}
+
+/* Dark mode fixes for common patterns */
+.dark .bg-white { background-color: hsl(222 47% 9%); }
+.dark .bg-slate-50 { background-color: hsl(217 33% 12%); }
+.dark .border-slate-100 { border-color: hsl(217 33% 17%); }
+.dark .border-slate-200 { border-color: hsl(217 33% 17%); }
+.dark .text-slate-900 { color: hsl(210 40% 98%); }
+.dark .text-slate-800 { color: hsl(210 40% 93%); }
+.dark .text-slate-700 { color: hsl(215 20% 75%); }
+
+/* Ensure card-elevated works in dark */
+.dark .card-elevated {
+  background: hsl(222 47% 9%);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 15px -3px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Fix promo card in dark */
+.dark .promo-card {
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+/* Customer dashboard dark mode */
+.dark .bg-slate-50\/50 { background: rgba(30, 41, 59, 0.5); }
+
+/* Checkout form inputs dark */
+.dark input[type="text"],
+.dark input[type="tel"],
+.dark input[type="email"],
+.dark input[type="number"],
+.dark select,
+.dark textarea {
+  color: hsl(210 40% 98%);
+}
+
+/* Admin orders dark mode fix */
+.dark .border-white\/70 { border-color: rgba(255,255,255,0.06); }
+.dark .bg-card\/95 { background: hsl(222 47% 9% / 0.95); }

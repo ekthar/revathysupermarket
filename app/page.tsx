@@ -20,6 +20,17 @@ const getHomepageBanner = unstable_cache(
   { revalidate: 60, tags: ["homepage", "banners"] }
 );
 
+const getPromoBanners = unstable_cache(
+  async () => prisma.banner.findMany({
+    where: { isActive: true },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, title: true, subtitle: true, image: true, href: true },
+    take: 5
+  }).catch(() => []),
+  ["homepage-promo-banners"],
+  { revalidate: 60, tags: ["homepage", "banners"] }
+);
+
 const getHomepageProducts = unstable_cache(
   async () => prisma.product.findMany({
     where: { isActive: true },
@@ -61,10 +72,11 @@ const categoryIcons: Record<string, string> = {
 };
 
 export default async function HomePage() {
-  const [settings, banner, dbProducts] = await Promise.all([
+  const [settings, banner, dbProducts, promoBanners] = await Promise.all([
     getPublicStoreSettings(),
     getHomepageBanner(),
-    getHomepageProducts()
+    getHomepageProducts(),
+    getPromoBanners()
   ]);
 
   const allProducts: Product[] = dbProducts.length > 0
@@ -98,8 +110,8 @@ export default async function HomePage() {
         deliveryRadiusKm={settings.deliveryRadiusKm}
       />
 
-      {/* Mobile promo banners */}
-      <PromoBanners />
+      {/* Mobile promo banners - dynamic from admin */}
+      <PromoBanners banners={promoBanners} />
 
       {/* Recent Orders - Foodizo horizontal cards (mobile only) */}
       <RecentOrdersSection />

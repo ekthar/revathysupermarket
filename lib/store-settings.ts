@@ -18,6 +18,13 @@ export type StoreSettings = {
   gstin: string;
   gstRatePercent: number;
   gstBusinessName: string;
+  // Store hours & ordering rules
+  storeOpenTime: string;   // "08:00" (24h format)
+  storeCloseTime: string;  // "21:00"
+  isStoreOpen: boolean;    // Manual override
+  minimumOrderValue: number;
+  deliveryEstimateMin: number;  // minutes
+  deliveryEstimateMax: number;
 };
 
 export const defaultStoreSettings: StoreSettings = {
@@ -34,7 +41,13 @@ export const defaultStoreSettings: StoreSettings = {
   facebookUrl: "",
   gstin: "",
   gstRatePercent: 0,
-  gstBusinessName: SITE.name
+  gstBusinessName: SITE.name,
+  storeOpenTime: "08:00",
+  storeCloseTime: "21:00",
+  isStoreOpen: true,
+  minimumOrderValue: 99,
+  deliveryEstimateMin: 25,
+  deliveryEstimateMax: 45
 };
 
 function parseRadius(value?: string) {
@@ -79,7 +92,13 @@ async function readStoreSettings(): Promise<StoreSettings> {
     facebookUrl: byKey.get("facebookUrl") ?? "",
     gstin: byKey.get("gstin") ?? "",
     gstRatePercent: parseGstRate(byKey.get("gstRatePercent")),
-    gstBusinessName: byKey.get("gstBusinessName") ?? byKey.get("storeName") ?? defaultStoreSettings.gstBusinessName
+    gstBusinessName: byKey.get("gstBusinessName") ?? byKey.get("storeName") ?? defaultStoreSettings.gstBusinessName,
+    storeOpenTime: byKey.get("storeOpenTime") ?? defaultStoreSettings.storeOpenTime,
+    storeCloseTime: byKey.get("storeCloseTime") ?? defaultStoreSettings.storeCloseTime,
+    isStoreOpen: byKey.get("isStoreOpen") !== "false",
+    minimumOrderValue: Number(byKey.get("minimumOrderValue") || defaultStoreSettings.minimumOrderValue),
+    deliveryEstimateMin: Number(byKey.get("deliveryEstimateMin") || defaultStoreSettings.deliveryEstimateMin),
+    deliveryEstimateMax: Number(byKey.get("deliveryEstimateMax") || defaultStoreSettings.deliveryEstimateMax)
   };
 }
 
@@ -113,7 +132,13 @@ export async function saveStoreSettings(settings: StoreSettings) {
     ["facebookUrl", settings.facebookUrl],
     ["gstin", settings.gstin],
     ["gstRatePercent", String(settings.gstRatePercent)],
-    ["gstBusinessName", settings.gstBusinessName || settings.storeName]
+    ["gstBusinessName", settings.gstBusinessName || settings.storeName],
+    ["storeOpenTime", settings.storeOpenTime],
+    ["storeCloseTime", settings.storeCloseTime],
+    ["isStoreOpen", String(settings.isStoreOpen)],
+    ["minimumOrderValue", String(settings.minimumOrderValue)],
+    ["deliveryEstimateMin", String(settings.deliveryEstimateMin)],
+    ["deliveryEstimateMax", String(settings.deliveryEstimateMax)]
   ];
 
   await prisma.$transaction(
@@ -125,4 +150,35 @@ export async function saveStoreSettings(settings: StoreSettings) {
       })
     )
   );
+}
+
+
+/**
+ * Check if the store is currently open based on settings.
+ * Returns { open, message } with a user-friendly message if closed.
+ */
+export function isStoreCurrentlyOpen(settings: StoreSettings): { open: boolean; message?: string } {
+  // Manual override - store is marked closed
+  if (!settings.isStoreOpen) {
+    return { open: false, message: "Store is currently closed. Please try again later." };
+  }
+
+  const now = new Date();
+  const hours = now.getHours();
+  const minutes = now.getMinutes();
+  const currentTime = hours * 60 + minutes;
+
+  const [openH, openM] = settings.storeOpenTime.split(":").map(Number);
+  const [closeH, closeM] = settings.storeCloseTime.split(":").map(Number);
+  const openTime = openH * 60 + openM;
+  const closeTime = closeH * 60 + closeM;
+
+  if (currentTime < openTime || currentTime >= closeTime) {
+    return {
+      open: false,
+      message: `Store is closed. We're open from ${settings.storeOpenTime} to ${settings.storeCloseTime}.`
+    };
+  }
+
+  return { open: true };
 }

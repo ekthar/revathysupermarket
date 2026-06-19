@@ -89,10 +89,16 @@ function saveCustomerInfo(form: CheckoutState) {
 export function CheckoutForm({
   deliveryRadiusKm = SITE.deliveryRadiusKm,
   allowedPincodes = serviceablePincodes(),
+  deliveryEstimateMin = 25,
+  deliveryEstimateMax = 45,
+  minimumOrderValue = 99,
   savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
   allowedPincodes?: StoreSettings["serviceablePincodes"];
+  deliveryEstimateMin?: number;
+  deliveryEstimateMax?: number;
+  minimumOrderValue?: number;
   savedAddresses?: SavedAddress[];
 }) {
   const { items, subtotal, clearCart } = useCart();
@@ -318,6 +324,28 @@ export function CheckoutForm({
       <div className="grid gap-5 lg:grid-cols-[1fr_380px] lg:gap-8">
         {/* Left column - Forms */}
         <div className="space-y-5">
+          {/* Delivery ETA + Minimum Order Info */}
+          <div className="flex items-center justify-between rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 px-4 py-3">
+            <div className="flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center">
+                <Clock className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-[12px] font-semibold text-slate-800 dark:text-white">Delivery in {deliveryEstimateMin}-{deliveryEstimateMax} min</p>
+                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                  {subtotal < minimumOrderValue
+                    ? `Add ₹${minimumOrderValue - subtotal} more (min order ₹${minimumOrderValue})`
+                    : "Free delivery on orders above ₹500"}
+                </p>
+              </div>
+            </div>
+            {subtotal < minimumOrderValue && (
+              <span className="text-[10px] font-bold text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-2 py-1 rounded-full">
+                Min ₹{minimumOrderValue}
+              </span>
+            )}
+          </div>
+
           {/* Payment Method */}
           <motion.section
             initial={{ opacity: 0, y: 20 }}
@@ -325,7 +353,7 @@ export function CheckoutForm({
             transition={{ delay: 0.1 }}
             className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated"
           >
-            <h2 className="text-[15px] font-black text-slate-900 mb-4">Payment Method</h2>
+            <h2 className="text-[15px] font-black text-slate-900 dark:text-white mb-4">Payment Method</h2>
             <div className="space-y-3">
               <PaymentMethodCard
                 active={form.paymentMethod === "COD"}

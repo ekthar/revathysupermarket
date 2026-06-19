@@ -6,6 +6,7 @@ import { requireOrderStaff } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { orderStatusSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
+import { notifyOrderStatus } from "@/lib/notifications";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -49,6 +50,24 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     orderId: id
   });
   if (before && before.status !== parsed.data.status) {
+    // Restore inventory on cancellation
+    if (parsed.data.status === "CANCELLED") {
+      const orderItems = await prisma.orderItem.findMany({ where: { orderId: id }, select: { productId: true, quantity: true } });
+      for (const item of orderItems) {
+        if (item.productId) {
+          await prisma.product.update({
+            where: { id: item.productId },
+            data: { stock: { increment: item.quantity } }
+          }).catch(() => null);
+        }
+      }
+    }
+
+    // Send in-app notification
+    if (before.userId) {
+      await notifyOrderStatus(before.userId, before.orderNumber, parsed.data.status, id).catch(() => null);
+    }
+
     if (parsed.data.status === "READY_FOR_DELIVERY") {
       await sendWhatsAppTemplate({ to: before.phone, template: "order_packed", params: [before.orderNumber], orderId: id });
     }

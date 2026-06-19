@@ -158,9 +158,9 @@ export function Header({
 
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
-            <button className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
+            <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
               <Bell className="h-[17px] w-[17px] text-slate-600 dark:text-slate-300" />
-            </button>
+            </Link>
 
             <Link href="/cart" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
               <ShoppingBag className="h-[17px] w-[17px] text-slate-600 dark:text-slate-300" />

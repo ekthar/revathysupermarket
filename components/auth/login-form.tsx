@@ -7,6 +7,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, CheckCircle2, LockKeyhole, Mail, Phone, ShoppingBasket, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SITE } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
@@ -122,7 +123,7 @@ export function LoginForm({
           <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-primary">
             <ShoppingBasket className="h-7 w-7" />
           </div>
-          <p className="mt-6 text-xs font-black uppercase tracking-wide text-lime-fresh">Revathy Supermarket</p>
+          <p className="mt-6 text-xs font-black uppercase tracking-wide text-lime-fresh">{SITE.name}</p>
           <h1 className="mt-3 font-display text-4xl font-black leading-tight sm:text-6xl">
             Fresh groceries, made easy.
           </h1>

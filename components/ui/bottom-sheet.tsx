@@ -1,0 +1,76 @@
+"use client";
+
+import { useEffect } from "react";
+import { AnimatePresence, motion, useDragControls } from "framer-motion";
+import { X } from "lucide-react";
+
+interface BottomSheetProps {
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+}
+
+export function BottomSheet({ open, onClose, title, children }: BottomSheetProps) {
+  // Prevent body scroll when sheet is open
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [open]);
+
+  return (
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm"
+          />
+
+          {/* Sheet */}
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ type: "spring", stiffness: 300, damping: 30 }}
+            drag="y"
+            dragConstraints={{ top: 0 }}
+            dragElastic={0.1}
+            onDragEnd={(_, info) => {
+              if (info.offset.y > 100 || info.velocity.y > 500) {
+                onClose();
+              }
+            }}
+            className="fixed inset-x-0 bottom-0 z-[71] bg-white dark:bg-slate-900 rounded-t-3xl max-h-[85vh] overflow-hidden shadow-2xl"
+          >
+            {/* Drag handle */}
+            <div className="flex justify-center pt-3 pb-2">
+              <div className="h-1 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
+            </div>
+
+            {/* Header */}
+            {title && (
+              <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100 dark:border-slate-800">
+                <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{title}</h3>
+                <button onClick={onClose} className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                  <X className="h-4 w-4 text-slate-500" />
+                </button>
+              </div>
+            )}
+
+            {/* Content */}
+            <div className="overflow-y-auto max-h-[calc(85vh-80px)] px-5 py-4">
+              {children}
+            </div>
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
+  );
+}

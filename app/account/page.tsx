@@ -3,6 +3,7 @@ import Link from "next/link";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ChevronRight, CreditCard, Heart, HelpCircle, LogOut, MapPin, Package, Phone, Settings, User } from "lucide-react";
+import { ThemeToggleInline } from "@/components/ui/theme-toggle-inline";
 
 export const dynamic = "force-dynamic";
 
@@ -50,6 +51,20 @@ export default async function AccountPage() {
         <p className="px-4 pt-3.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Help & Info</p>
         {user?.phone && <AccountRow href="/account" icon={Phone} label="Phone" detail={user.phone} />}
         <AccountRow href="/account" icon={HelpCircle} label="Help & Support" detail="Contact us" />
+      </div>
+
+      {/* Appearance */}
+      <div className="rounded-2xl bg-white card-shadow overflow-hidden">
+        <p className="px-4 pt-3.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Appearance</p>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-slate-50 flex items-center justify-center shrink-0">
+              <Settings className="h-4 w-4 text-slate-500" />
+            </div>
+            <p className="text-[13px] font-medium text-slate-800">Dark Mode</p>
+          </div>
+          <ThemeToggleInline />
+        </div>
       </div>
 
       {/* Logout */}

@@ -12,8 +12,8 @@ import type { Product } from "@/lib/types";
 
 type SortMode = "popularity" | "low" | "high" | "newest";
 
-export function ProductGrid({ items = products, initialCategory = "All" }: { items?: Product[]; initialCategory?: string }) {
-  const [query, setQuery] = useState("");
+export function ProductGrid({ items = products, initialCategory = "All", initialQuery = "" }: { items?: Product[]; initialCategory?: string; initialQuery?: string }) {
+  const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
   const [maxPrice, setMaxPrice] = useState(350);
   const [sort, setSort] = useState<SortMode>("popularity");
@@ -43,7 +43,7 @@ export function ProductGrid({ items = products, initialCategory = "All" }: { ite
 
   return (
     <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="glass-panel sticky top-[5.25rem] z-30 max-w-full px-4 py-3 sm:static sm:rounded-[1.75rem] sm:p-4 md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+      <div className="bg-white border-b border-slate-100 px-4 py-3 sm:static sm:border-0 sm:rounded-[1.75rem] sm:p-4 sm:card-shadow md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
           <Input

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BellRing, CheckCircle2, FileText, Phone, Search, Send, X } from "lucide-react";
+import { BellRing, CheckCircle2, ChevronDown, FileText, Phone, Search, Send, X } from "lucide-react";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { statusLabels } from "@/lib/constants";
 import { cn, formatCurrency } from "@/lib/utils";
@@ -60,6 +60,25 @@ export function AdminOrdersClient({
   const [staffNotes, setStaffNotes] = useState<Record<string, string>>(() => Object.fromEntries(orders.map((order) => [order.id, order.staffNote ?? ""])));
   const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
   const [soundUnlocked, setSoundUnlocked] = useState(false);
+  const [expandedOrderIds, setExpandedOrderIds] = useState<Set<string>>(() => {
+    // Auto-expand non-delivered/cancelled orders
+    const active = new Set<string>();
+    for (const order of orders) {
+      if (!["DELIVERED", "CANCELLED"].includes(order.status)) {
+        active.add(order.id);
+      }
+    }
+    return active;
+  });
+
+  function toggleOrderExpand(orderId: string) {
+    setExpandedOrderIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(orderId)) next.delete(orderId);
+      else next.add(orderId);
+      return next;
+    });
+  }
 
   const unacknowledgedNewOrders = useMemo(
     () => localOrders.filter((order) => order.status === "ORDER_RECEIVED" && !order.acknowledgedAt),
@@ -383,30 +402,36 @@ export function AdminOrdersClient({
           <article
             key={order.id}
             className={cn(
-              "rounded-[1.75rem] border bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5",
+              "rounded-[1.75rem] border bg-card/95 overflow-hidden shadow-soft dark:border-white/10",
               order.status === "CANCELLED" ? "border-red-200 bg-red-50/90 dark:border-red-500/30 dark:bg-red-950/25" : "border-white/70"
             )}
           >
-            <div className="flex flex-wrap justify-between gap-4">
-              <div>
+            {/* Collapsible header - always visible */}
+            <button
+              type="button"
+              onClick={() => toggleOrderExpand(order.id)}
+              className="w-full text-left px-4 py-3.5 flex items-center gap-3 sm:px-5"
+            >
+              <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="font-display text-2xl font-bold">#{order.orderNumber}</h3>
+                  <h3 className="text-[15px] font-bold text-slate-900">#{order.orderNumber}</h3>
                   {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2.5 py-1 text-xs font-black text-white">
-                      <BellRing className="h-3.5 w-3.5" />
-                      New
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                      <BellRing className="h-3 w-3" /> New
                     </span>
                   ) : null}
+                  <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", order.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</span>
                 </div>
-                <p className="text-sm text-muted-foreground">{order.customerName} - {order.phone}</p>
-                <p className="mt-1 text-xs font-black uppercase text-primary">Placed {timeSince(order.createdAt, now)}</p>
-                <p className="mt-2 text-sm">{order.address}</p>
+                <p className="text-[12px] text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
               </div>
-              <div className="text-right">
-                <p className="text-xl font-black">{formatCurrency(order.total)}</p>
-                <p className={cn("mt-1 rounded-full px-3 py-1 text-xs font-black", order.status === "CANCELLED" ? "bg-red-600 text-white" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</p>
-              </div>
-            </div>
+              <p className="text-[14px] font-bold text-slate-900 shrink-0 mr-2">{formatCurrency(order.total)}</p>
+              <ChevronDown className={cn("h-4 w-4 text-slate-400 shrink-0 transition-transform", expandedOrderIds.has(order.id) && "rotate-180")} />
+            </button>
+
+            {/* Expandable details */}
+            {expandedOrderIds.has(order.id) && (
+            <div className="px-4 pb-4 border-t border-slate-100 pt-3 sm:px-5">
+              <p className="text-sm text-muted-foreground">{order.address}</p>
             <div className="mt-4 grid grid-cols-2 gap-2 sm:flex">
               <a href={`tel:${order.phone}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-sm font-black">
                 <Phone className="h-4 w-4 text-primary" />
@@ -532,6 +557,8 @@ export function AdminOrdersClient({
                 {deliveryPartners.map((partner) => <option key={partner.id} value={partner.id}>{partner.name}</option>)}
               </select>
             </div>
+            </div>
+            )}
           </article>
         ))}
       </div>

@@ -9,6 +9,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { DeliveryOtpCard } from "@/components/dashboard/delivery-otp-card";
 import { OrderTrackingMap } from "@/components/dashboard/order-tracking-map";
 import { useCart } from "@/components/cart/cart-provider";
+import { SwipeableCard } from "@/components/ui/swipeable-card";
 import type { Product } from "@/lib/types";
 
 const enableSseTracking = process.env.NEXT_PUBLIC_ENABLE_SSE_TRACKING === "true";
@@ -195,15 +196,21 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
           const moreCount = visibleItems.length - 3;
 
           return (
-            <motion.article
+            <SwipeableCard
               key={order.id}
+              onSwipeRight={delivered ? () => reorder(order) : undefined}
+              rightLabel="Reorder"
+              leftLabel=""
+              className="mb-3"
+            >
+            <motion.article
               layout
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               className={cn(
-                "rounded-2xl border bg-white overflow-hidden transition-shadow",
-                cancelled ? "border-red-200" : "border-slate-100",
+                "rounded-2xl border bg-white dark:bg-slate-900 overflow-hidden transition-shadow",
+                cancelled ? "border-red-200" : "border-slate-100 dark:border-slate-800",
                 isExpanded && "shadow-md"
               )}
             >
@@ -317,13 +324,16 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
 
                       {/* Actions for delivered orders */}
                       {delivered && (
-                        <div className="mt-3 flex gap-2">
-                          <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-[11px] font-bold text-white">
-                            <RotateCcw className="h-3.5 w-3.5" /> Reorder
-                          </button>
-                          <button onClick={() => requestReturn(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700">
-                            <RotateCcw className="h-3.5 w-3.5" /> Return
-                          </button>
+                        <div className="mt-3">
+                          <p className="text-[10px] text-slate-400 italic mb-2 md:hidden">← Swipe right to reorder</p>
+                          <div className="flex gap-2">
+                            <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-[11px] font-bold text-white">
+                              <RotateCcw className="h-3.5 w-3.5" /> Reorder
+                            </button>
+                            <button onClick={() => requestReturn(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                              <RotateCcw className="h-3.5 w-3.5" /> Return
+                            </button>
+                          </div>
                         </div>
                       )}
 
@@ -334,6 +344,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
                 )}
               </AnimatePresence>
             </motion.article>
+            </SwipeableCard>
           );
         })}
       </AnimatePresence>

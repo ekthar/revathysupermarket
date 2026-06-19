@@ -1,13 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { SlidersHorizontal, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
-import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
 import { categories, products } from "@/lib/products";
 import type { Product } from "@/lib/types";
 
@@ -21,6 +21,26 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
   const [visibleCount, setVisibleCount] = useState(24);
   const { totalItems } = useCart();
   const [filterOpen, setFilterOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll - auto-load more when scrolling to bottom
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < filtered.length) {
+          setLoading(true);
+          setTimeout(() => {
+            setVisibleCount((c) => c + 24);
+            setLoading(false);
+          }, 300);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [visibleCount, filtered.length]);
 
   const filtered = useMemo(() => {
     return items
@@ -126,10 +146,8 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
             ))}
           </div>
           {visibleItems.length < filtered.length ? (
-            <div className="mt-8 flex justify-center">
-              <Button type="button" variant="outline" onClick={() => setVisibleCount((count) => count + 24)}>
-                Load more
-              </Button>
+            <div ref={loadMoreRef} className="mt-6">
+              {loading && <ProductSkeletonGrid count={4} />}
             </div>
           ) : null}
         </>

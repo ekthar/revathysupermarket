@@ -164,7 +164,7 @@ export function CartPageClient() {
                       animate={{ scale: 1 }}
                       className="text-[16px] font-black text-slate-900"
                     >
-                      <span className="text-[12px] text-slate-400 font-medium mr-0.5">\u20b9</span>
+                      <span className="text-[12px] text-slate-400 font-medium mr-0.5">₹</span>
                       {((item.discountPrice ?? item.price) * item.quantity).toFixed(2)}
                     </motion.p>
 
@@ -261,7 +261,7 @@ export function CartPageClient() {
               animate={{ opacity: 1, x: 0 }}
               className="font-semibold text-slate-700"
             >
-              \u20b9 {subtotal.toFixed(2)}
+              ₹ {subtotal.toFixed(2)}
             </motion.span>
           </div>
           <AnimatePresence>
@@ -273,7 +273,7 @@ export function CartPageClient() {
                 className="flex justify-between overflow-hidden"
               >
                 <span className="text-slate-500">Promo-code</span>
-                <span className="font-semibold text-green-600">-\u20b9 {promoDiscount.toFixed(2)}</span>
+                <span className="font-semibold text-green-600">-₹ {promoDiscount.toFixed(2)}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -283,13 +283,13 @@ export function CartPageClient() {
               {deliveryFee === 0 ? (
                 <span className="text-green-600">FREE</span>
               ) : (
-                `\u20b9 ${deliveryFee.toFixed(2)}`
+                `₹ ${deliveryFee.toFixed(2)}`
               )}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Tax</span>
-            <span className="font-semibold text-slate-700">\u20b9 {tax.toFixed(2)}</span>
+            <span className="font-semibold text-slate-700">₹ {tax.toFixed(2)}</span>
           </div>
           <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between">
             <span className="font-black text-slate-900">Total Amount</span>
@@ -300,7 +300,7 @@ export function CartPageClient() {
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
               className="font-black text-slate-900 text-[15px]"
             >
-              <span className="text-primary">\u20b9</span> {totalAmount.toFixed(2)}
+              <span className="text-primary">₹</span> {totalAmount.toFixed(2)}
             </motion.span>
           </div>
         </div>

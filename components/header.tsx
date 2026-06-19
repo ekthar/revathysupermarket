@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
+import { InAppNotifications } from "@/components/in-app-notifications";
 import type { SessionIdentity } from "@/components/session-identity-card";
 
 export function Header({
@@ -158,9 +159,7 @@ export function Header({
 
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
-            <button className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 press">
-              <Bell className="h-[17px] w-[17px] text-slate-600" />
-            </button>
+            <InAppNotifications />
 
             <Link href="/cart" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 press">
               <ShoppingBag className="h-[17px] w-[17px] text-slate-600" />

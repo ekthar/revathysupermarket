@@ -101,7 +101,7 @@ export function HeroSection({
                     className="w-full h-16 object-cover rounded-xl"
                   />
                   <p className="mt-2 text-[11px] font-bold text-slate-800">Fresh Vegetables</p>
-                  <p className="text-[11px] font-bold text-primary">\u20b918.00</p>
+                  <p className="text-[11px] font-bold text-primary">₹18.00</p>
                 </motion.div>
               </motion.div>
 

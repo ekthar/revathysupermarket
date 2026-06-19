@@ -485,7 +485,7 @@ export function CheckoutForm({
               <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between">
                 <span className="font-black text-slate-900">Total Amount</span>
                 <span className="font-black text-slate-900 text-[16px]">
-                  <span className="text-primary">{"\u20b9"}</span> {totalAmount.toFixed(2)}
+                  <span className="text-primary">{"₹"}</span> {totalAmount.toFixed(2)}
                 </span>
               </div>
             </div>

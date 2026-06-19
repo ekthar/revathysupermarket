@@ -16,7 +16,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Fetch badge counts
   const [newOrderCount, pendingReturnCount] = await Promise.all([
     prisma.order.count({ where: { status: "ORDER_RECEIVED", acknowledgedAt: null } }).catch(() => 0),
-    prisma.returnRequest.count({ where: { status: "PENDING" } }).catch(() => 0)
+    prisma.returnRequest.count({ where: { status: "REQUESTED" } }).catch(() => 0)
   ]);
 
   const nav = [

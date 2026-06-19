@@ -87,7 +87,7 @@ export default async function HomePage() {
   const heroHref = banner?.href || "/products";
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen bg-white dark:bg-slate-950">
       {/* Hero Section - with parallax + floating card */}
       <HeroSection
         storeName={settings.storeName}

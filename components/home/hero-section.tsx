@@ -93,7 +93,7 @@ export function HeroSection({
                 <motion.div
                   animate={{ y: [-4, 4, -4] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="bg-white rounded-2xl p-3 shadow-lg max-w-[160px]"
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-lg max-w-[160px]"
                 >
                   <img
                     src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=120&h=80&fit=crop"
@@ -101,7 +101,7 @@ export function HeroSection({
                     className="w-full h-16 object-cover rounded-xl"
                   />
                   <p className="mt-2 text-[11px] font-bold text-slate-800">Fresh Vegetables</p>
-                  <p className="text-[11px] font-bold text-primary">\u20b918.00</p>
+                  <p className="text-[11px] font-bold text-primary">₹18.00</p>
                 </motion.div>
               </motion.div>
 

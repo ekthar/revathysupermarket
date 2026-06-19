@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { SlidersHorizontal, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
-import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
 import { categories, products } from "@/lib/products";
 import type { Product } from "@/lib/types";
 
@@ -19,6 +20,27 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
   const [sort, setSort] = useState<SortMode>("popularity");
   const [visibleCount, setVisibleCount] = useState(24);
   const { totalItems } = useCart();
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+
+  // Infinite scroll - auto-load more when scrolling to bottom
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && visibleCount < filtered.length) {
+          setLoading(true);
+          setTimeout(() => {
+            setVisibleCount((c) => c + 24);
+            setLoading(false);
+          }, 300);
+        }
+      },
+      { threshold: 0.1 }
+    );
+    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [visibleCount, filtered.length]);
 
   const filtered = useMemo(() => {
     return items
@@ -61,16 +83,20 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
           />
         </label>
         <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 md:hidden">
-          <span className="flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary/10 px-3 text-xs font-black text-primary">
+          <button
+            type="button"
+            onClick={() => setFilterOpen(true)}
+            className="flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary/10 px-3 text-xs font-black text-primary press"
+          >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filters
-          </span>
+          </button>
           {["All", ...categories].map((item) => (
             <button
               key={item}
               type="button"
               onClick={() => setCategory(item)}
-              className={category === item ? "h-9 shrink-0 rounded-full bg-primary px-4 text-xs font-black text-white" : "h-9 shrink-0 rounded-full border border-border bg-card/80 px-4 text-xs font-black text-foreground"}
+              className={category === item ? "h-9 shrink-0 rounded-full bg-primary px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-border bg-card/80 px-4 text-xs font-black text-foreground whitespace-nowrap"}
             >
               {item}
             </button>
@@ -120,10 +146,8 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
             ))}
           </div>
           {visibleItems.length < filtered.length ? (
-            <div className="mt-8 flex justify-center">
-              <Button type="button" variant="outline" onClick={() => setVisibleCount((count) => count + 24)}>
-                Load more
-              </Button>
+            <div ref={loadMoreRef} className="mt-6">
+              {loading && <ProductSkeletonGrid count={4} />}
             </div>
           ) : null}
         </>
@@ -137,6 +161,78 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
         </div>
       )}
       {/* Cart bar is now handled by MobileBottomNav - removed duplicate here */}
+
+      {/* Mobile filter bottom sheet */}
+      <BottomSheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Sort & Filter">
+        <div className="space-y-5">
+          {/* Sort */}
+          <div>
+            <p className="text-[12px] font-bold text-slate-500 uppercase mb-2">Sort by</p>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: "popularity" as const, label: "Popularity" },
+                { value: "low" as const, label: "Price: Low → High" },
+                { value: "high" as const, label: "Price: High → Low" },
+                { value: "newest" as const, label: "Newest First" }
+              ].map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => { setSort(option.value); setFilterOpen(false); }}
+                  className={`h-10 rounded-xl text-[12px] font-semibold transition-colors ${
+                    sort === option.value
+                      ? "bg-primary text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Price range */}
+          <div>
+            <p className="text-[12px] font-bold text-slate-500 uppercase mb-2">Price range (up to ₹{maxPrice})</p>
+            <input
+              type="range"
+              min="20"
+              max="350"
+              value={maxPrice}
+              onChange={(event) => setMaxPrice(Number(event.target.value))}
+              className="w-full accent-primary"
+            />
+            <div className="flex justify-between text-[11px] text-slate-400 mt-1">
+              <span>₹20</span>
+              <span>₹350</span>
+            </div>
+          </div>
+
+          {/* Category */}
+          <div>
+            <p className="text-[12px] font-bold text-slate-500 uppercase mb-2">Category</p>
+            <div className="flex flex-wrap gap-2">
+              {["All", ...categories].map((item) => (
+                <button
+                  key={item}
+                  type="button"
+                  onClick={() => { setCategory(item); setFilterOpen(false); }}
+                  className={`h-9 px-3 rounded-full text-[11px] font-semibold transition-colors ${
+                    category === item
+                      ? "bg-primary text-white"
+                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                  }`}
+                >
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Results count */}
+          <p className="text-center text-[12px] font-semibold text-primary">{filtered.length} products found</p>
+        </div>
+      </BottomSheet>
     </section>
   );
 }

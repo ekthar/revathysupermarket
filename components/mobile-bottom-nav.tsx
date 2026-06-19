@@ -71,7 +71,7 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
       </AnimatePresence>
 
       {/* Navigation tabs - no cart badge here (single cart bar above handles it) */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 bg-white/98 backdrop-blur-md border-t border-slate-100/80 md:hidden" style={{ paddingBottom: "var(--safe-bottom)" }}>
+      <nav className="fixed inset-x-0 bottom-0 z-50 bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-t border-slate-100/80 dark:border-slate-800/80 md:hidden" style={{ paddingBottom: "var(--safe-bottom)" }}>
         <div className="grid grid-cols-4 h-[56px]">
           {tabs.map((tab) => {
             const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
@@ -81,7 +81,7 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
                 href={tab.href}
                 className={cn(
                   "relative flex flex-col items-center justify-center gap-[3px] text-[10px] font-medium transition-colors",
-                  active ? "text-slate-900" : "text-slate-400"
+                  active ? "text-slate-900 dark:text-white" : "text-slate-400"
                 )}
               >
                 <motion.span

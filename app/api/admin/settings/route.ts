@@ -22,7 +22,13 @@ const settingsSchema = z.object({
   facebookUrl: z.string().trim().optional().default(""),
   gstin: z.string().trim().optional().default(""),
   gstRatePercent: z.coerce.number().min(0).max(28).default(0),
-  gstBusinessName: z.string().trim().optional().default("")
+  gstBusinessName: z.string().trim().optional().default(""),
+  storeOpenTime: z.string().regex(/^\d{2}:\d{2}$/).optional().default("08:00"),
+  storeCloseTime: z.string().regex(/^\d{2}:\d{2}$/).optional().default("21:00"),
+  isStoreOpen: z.coerce.boolean().optional().default(true),
+  minimumOrderValue: z.coerce.number().min(0).max(10000).optional().default(99),
+  deliveryEstimateMin: z.coerce.number().min(5).max(120).optional().default(25),
+  deliveryEstimateMax: z.coerce.number().min(10).max(180).optional().default(45)
 });
 
 export async function GET() {

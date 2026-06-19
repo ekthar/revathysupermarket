@@ -53,7 +53,7 @@ export function CartPageClient() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mt-5 text-xl font-black text-slate-900"
+          className="mt-5 text-xl font-black text-slate-900 dark:text-white"
         >
           Your cart is empty
         </motion.h1>
@@ -96,7 +96,7 @@ export function CartPageClient() {
           <Link href="/" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 press">
             <ArrowLeft className="h-4 w-4 text-slate-700" />
           </Link>
-          <h1 className="text-lg font-black text-slate-900">My Cart List</h1>
+          <h1 className="text-lg font-black text-slate-900 dark:text-white">My Cart List</h1>
         </div>
         <button className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 press">
           <MoreVertical className="h-4 w-4 text-slate-700" />
@@ -118,7 +118,7 @@ export function CartPageClient() {
               }}
               exit={{ opacity: 0, x: -100, height: 0, marginTop: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 25, delay: idx * 0.05 }}
-              className="bg-white rounded-2xl p-3.5 card-elevated"
+              className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 card-elevated"
             >
               <div className="flex gap-3">
                 {/* Image with hover zoom */}
@@ -162,9 +162,9 @@ export function CartPageClient() {
                       key={`price-${item.id}-${item.quantity}`}
                       initial={{ scale: 1.1 }}
                       animate={{ scale: 1 }}
-                      className="text-[16px] font-black text-slate-900"
+                      className="text-[16px] font-black text-slate-900 dark:text-white"
                     >
-                      <span className="text-[12px] text-slate-400 font-medium mr-0.5">\u20b9</span>
+                      <span className="text-[12px] text-slate-400 font-medium mr-0.5">₹</span>
                       {((item.discountPrice ?? item.price) * item.quantity).toFixed(2)}
                     </motion.p>
 
@@ -183,7 +183,7 @@ export function CartPageClient() {
                         initial={{ scale: 1.5, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         transition={{ type: "spring", stiffness: 500, damping: 15 }}
-                        className="w-7 text-center text-[12px] font-bold text-slate-900"
+                        className="w-7 text-center text-[12px] font-bold text-slate-900 dark:text-white"
                       >
                         {String(item.quantity).padStart(2, "0")}
                       </motion.span>
@@ -209,7 +209,7 @@ export function CartPageClient() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="mt-5 bg-white rounded-2xl p-4 card-elevated"
+        className="mt-5 bg-white dark:bg-slate-900 rounded-2xl p-4 card-elevated"
       >
         <div className="flex items-center gap-2">
           <input
@@ -249,9 +249,9 @@ export function CartPageClient() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="mt-5 bg-white rounded-2xl p-5 card-elevated"
+        className="mt-5 bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated"
       >
-        <h2 className="text-[15px] font-black text-slate-900">Order Summary</h2>
+        <h2 className="text-[15px] font-black text-slate-900 dark:text-white">Order Summary</h2>
         <div className="mt-4 space-y-3 text-[13px]">
           <div className="flex justify-between">
             <span className="text-slate-500">Order Amount</span>
@@ -261,7 +261,7 @@ export function CartPageClient() {
               animate={{ opacity: 1, x: 0 }}
               className="font-semibold text-slate-700"
             >
-              \u20b9 {subtotal.toFixed(2)}
+              ₹ {subtotal.toFixed(2)}
             </motion.span>
           </div>
           <AnimatePresence>
@@ -273,7 +273,7 @@ export function CartPageClient() {
                 className="flex justify-between overflow-hidden"
               >
                 <span className="text-slate-500">Promo-code</span>
-                <span className="font-semibold text-green-600">-\u20b9 {promoDiscount.toFixed(2)}</span>
+                <span className="font-semibold text-green-600">-₹ {promoDiscount.toFixed(2)}</span>
               </motion.div>
             )}
           </AnimatePresence>
@@ -283,16 +283,16 @@ export function CartPageClient() {
               {deliveryFee === 0 ? (
                 <span className="text-green-600">FREE</span>
               ) : (
-                `\u20b9 ${deliveryFee.toFixed(2)}`
+                `₹ ${deliveryFee.toFixed(2)}`
               )}
             </span>
           </div>
           <div className="flex justify-between">
             <span className="text-slate-500">Tax</span>
-            <span className="font-semibold text-slate-700">\u20b9 {tax.toFixed(2)}</span>
+            <span className="font-semibold text-slate-700">₹ {tax.toFixed(2)}</span>
           </div>
           <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between">
-            <span className="font-black text-slate-900">Total Amount</span>
+            <span className="font-black text-slate-900 dark:text-white">Total Amount</span>
             <motion.span
               key={totalAmount}
               initial={{ scale: 1.1 }}
@@ -300,7 +300,7 @@ export function CartPageClient() {
               transition={{ type: "spring", stiffness: 400, damping: 15 }}
               className="font-black text-slate-900 text-[15px]"
             >
-              <span className="text-primary">\u20b9</span> {totalAmount.toFixed(2)}
+              <span className="text-primary">₹</span> {totalAmount.toFixed(2)}
             </motion.span>
           </div>
         </div>

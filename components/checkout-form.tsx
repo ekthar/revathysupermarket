@@ -14,6 +14,7 @@ import { isServiceablePincode, serviceablePincodes } from "@/lib/delivery";
 import type { StoreSettings } from "@/lib/store-settings";
 import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
+import { useFirstOrderCelebration, FirstOrderCelebration } from "@/components/ui/first-order-celebration";
 
 
 type CheckoutState = {
@@ -103,6 +104,7 @@ export function CheckoutForm({
   const [locationState, setLocationState] = useState<LocationState>("idle");
   const [showManualLocation, setShowManualLocation] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const { show: showCelebration, triggerCelebration, dismiss: dismissCelebration } = useFirstOrderCelebration();
 
 
   const deliveryFee = subtotal > 500 ? 0 : 40;
@@ -232,6 +234,7 @@ export function CheckoutForm({
 
       clearCart();
       if (data.orderId) setPlacedOrderId(data.orderId);
+      triggerCelebration();
       showToast("Order placed successfully", "success");
     } catch {
       setIsSubmitting(false);
@@ -242,6 +245,9 @@ export function CheckoutForm({
 
   return (
     <form onSubmit={submit} className="max-w-5xl mx-auto px-4 pt-2 pb-32 md:pb-8">
+      {/* First order celebration */}
+      <FirstOrderCelebration show={showCelebration} onDismiss={dismissCelebration} />
+
       {/* Order Success Modal with animated checkmark */}
       <AnimatePresence>
         {placedOrderId && (
@@ -306,7 +312,7 @@ export function CheckoutForm({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl p-5 card-elevated"
+            className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated"
           >
             <h2 className="text-[15px] font-black text-slate-900 mb-4">Payment Method</h2>
             <div className="space-y-3">
@@ -339,7 +345,7 @@ export function CheckoutForm({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white rounded-2xl p-5 card-elevated"
+            className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated"
           >
             <h2 className="text-[15px] font-black text-slate-900 mb-4">Delivery Address</h2>
 
@@ -457,7 +463,7 @@ export function CheckoutForm({
           transition={{ delay: 0.3 }}
           className="lg:sticky lg:top-[90px] h-fit"
         >
-          <section className="bg-white rounded-2xl p-5 card-elevated">
+          <section className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated">
             <h2 className="text-[15px] font-black text-slate-900">Order Summary</h2>
             <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
               {items.map((item) => (
@@ -485,7 +491,7 @@ export function CheckoutForm({
               <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between">
                 <span className="font-black text-slate-900">Total Amount</span>
                 <span className="font-black text-slate-900 text-[16px]">
-                  <span className="text-primary">{"\u20b9"}</span> {totalAmount.toFixed(2)}
+                  <span className="text-primary">{"₹"}</span> {totalAmount.toFixed(2)}
                 </span>
               </div>
             </div>

@@ -107,7 +107,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
       whileHover={{ y: -3 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={cn(
-        "relative bg-white rounded-2xl overflow-hidden card-elevated product-card-animated",
+        "relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden card-elevated product-card-animated",
         outOfStock && "opacity-50"
       )}
     >

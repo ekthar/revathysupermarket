@@ -47,7 +47,7 @@ export function Header({
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-40 hidden md:block bg-white border-b border-slate-100">
+      <header className="sticky top-0 z-40 hidden md:block bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
         {/* Top bar */}
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-[70px]">
@@ -81,7 +81,7 @@ export function Header({
                   className={`text-sm font-semibold transition-colors ${
                     pathname === link.href || pathname.startsWith(link.href.split("?")[0])
                       ? "text-primary"
-                      : "text-slate-600 hover:text-slate-900"
+                      : "text-slate-600 hover:text-slate-900 dark:text-white"
                   }`}
                 >
                   {link.label}
@@ -140,7 +140,7 @@ export function Header({
       </header>
 
       {/* Mobile Header */}
-      <header className="sticky top-0 z-40 md:hidden bg-white/98 backdrop-blur-md border-b border-slate-100/80">
+      <header className="sticky top-0 z-40 md:hidden bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-b border-slate-100/80 dark:border-slate-800/80">
         <div className="flex items-center justify-between px-4 h-[56px]">
           {/* Delivery address */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
@@ -158,11 +158,11 @@ export function Header({
 
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
-            <button className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 press">
+            <button className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
               <Bell className="h-[17px] w-[17px] text-slate-600" />
             </button>
 
-            <Link href="/cart" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 press">
+            <Link href="/cart" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
               <ShoppingBag className="h-[17px] w-[17px] text-slate-600" />
               {totalItems > 0 && (
                 <motion.span

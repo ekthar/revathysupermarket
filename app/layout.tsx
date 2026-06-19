@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { Header } from "@/components/header";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Providers } from "@/components/providers";
+import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -38,6 +39,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     <html lang="en" suppressHydrationWarning>
       <body>
         <Providers>
+          <ScrollProgress />
           <Header user={user} storeName={settings.storeName} storeAddress={settings.address} />
           <div className="pb-safe">{children}</div>
           <MobileBottomNav user={user} />

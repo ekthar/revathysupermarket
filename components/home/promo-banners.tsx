@@ -13,7 +13,7 @@ const promos = [
   },
   {
     id: 2,
-    title: "FREE DELIVERY ON ORDERS OVER \u20b9500",
+    title: "FREE DELIVERY ON ORDERS OVER ₹500",
     subtitle: "Stock up on your weekly groceries and save more with zero delivery charges.",
     gradient: "from-pink-200 via-pink-100 to-pink-50",
     image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=300&h=300&fit=crop"

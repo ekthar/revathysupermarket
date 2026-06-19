@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle2, MapPin, Navigation, Phone, Truck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, ExternalLink, MapPin, Navigation, Package, Phone, Truck, X } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
 import { statusLabels } from "@/lib/constants";
-import { formatCurrency } from "@/lib/utils";
+import { cn, formatCurrency } from "@/lib/utils";
 
 type DeliveryOrder = {
   id: string;
@@ -19,6 +20,8 @@ type DeliveryOrder = {
 
 export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
   const [localOrders, setLocalOrders] = useState(orders);
+  const [otpModal, setOtpModal] = useState<DeliveryOrder | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -32,45 +35,352 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
     return () => navigator.geolocation.clearWatch(watchId);
   }, []);
 
-  async function updateOrder(order: DeliveryOrder, action: "picked_up" | "delivered") {
-    const otp = action === "delivered" ? window.prompt("Enter delivery OTP") ?? "" : undefined;
+  async function markPickedUp(order: DeliveryOrder) {
+    setActionLoading(order.id);
     const response = await fetch(`/api/delivery/orders/${order.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action, otp })
+      body: JSON.stringify({ action: "picked_up" })
     });
     const data = await readApiResponse<{ error?: string }>(response);
+    setActionLoading(null);
     if (!response.ok) {
-      window.alert(data.error ?? "Delivery update failed.");
+      window.alert(data.error ?? "Update failed.");
       return;
     }
-    setLocalOrders((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: action === "picked_up" ? "OUT_FOR_DELIVERY" : "DELIVERED" } : entry));
+    setLocalOrders((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: "OUT_FOR_DELIVERY" } : entry));
+  }
+
+  async function markDelivered(order: DeliveryOrder, otp: string) {
+    setActionLoading(order.id);
+    const response = await fetch(`/api/delivery/orders/${order.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "delivered", otp })
+    });
+    const data = await readApiResponse<{ error?: string }>(response);
+    setActionLoading(null);
+    if (!response.ok) {
+      return data.error ?? "Invalid OTP. Please try again.";
+    }
+    setLocalOrders((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: "DELIVERED" } : entry));
+    setOtpModal(null);
+    return null;
+  }
+
+  function openMaps(address: string) {
+    window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`, "_blank");
   }
 
   return (
-    <div className="mt-5 grid gap-4">
-      {localOrders.length === 0 ? <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">No assigned active orders.</div> : localOrders.map((order) => (
-        <article key={order.id} className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
-          <div className="flex justify-between gap-3">
-            <div>
-              <h2 className="font-display text-2xl font-bold">#{order.orderNumber}</h2>
-              <p className="mt-1 text-sm text-muted-foreground">{order.customerName}</p>
+    <>
+      {/* OTP Modal */}
+      <AnimatePresence>
+        {otpModal && (
+          <OtpVerificationModal
+            order={otpModal}
+            onClose={() => setOtpModal(null)}
+            onSubmit={(otp) => markDelivered(otpModal, otp)}
+          />
+        )}
+      </AnimatePresence>
+
+      <div className="mt-4 space-y-3">
+        {localOrders.length === 0 ? (
+          <div className="rounded-2xl border border-dashed border-slate-200 p-10 text-center">
+            <Package className="h-12 w-12 mx-auto text-slate-300" />
+            <p className="mt-3 text-[14px] font-bold text-slate-700">No assigned orders</p>
+            <p className="mt-1 text-[12px] text-slate-500">New deliveries will appear here.</p>
+          </div>
+        ) : localOrders.map((order) => (
+          <article key={order.id} className="rounded-2xl bg-white border border-slate-100 overflow-hidden shadow-sm">
+            {/* Header */}
+            <div className="px-4 pt-4 pb-3 flex items-start justify-between">
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-[16px] font-bold text-slate-900">#{order.orderNumber}</h2>
+                  <span className={cn(
+                    "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                    order.status === "OUT_FOR_DELIVERY" ? "bg-blue-100 text-blue-700" :
+                    order.status === "DELIVERED" ? "bg-green-100 text-green-700" :
+                    "bg-primary/10 text-primary"
+                  )}>
+                    {statusLabels[order.status]}
+                  </span>
+                </div>
+                <p className="mt-1 text-[13px] text-slate-600">{order.customerName}</p>
+              </div>
+              <p className="text-[15px] font-bold text-slate-900">{formatCurrency(order.total)}</p>
             </div>
-            <p className="h-fit rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{statusLabels[order.status]}</p>
-          </div>
-          <p className="mt-3 flex gap-2 text-sm"><MapPin className="h-4 w-4 shrink-0 text-primary" />{order.address}</p>
-          <p className="mt-2 font-black">{formatCurrency(order.total)}</p>
-          <ul className="mt-3 grid gap-2 text-sm">
-            {order.items.map((item) => <li key={item.id} className="rounded-2xl bg-muted p-3">{item.name} x {item.quantity}</li>)}
-          </ul>
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            <a href={`tel:${order.phone}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background text-xs font-black"><Phone className="h-4 w-4" />Call</a>
-            <button onClick={() => updateOrder(order, "picked_up")} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-black text-white"><Truck className="h-4 w-4" />Picked</button>
-            <button onClick={() => updateOrder(order, "delivered")} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-lime-fresh text-xs font-black text-slate-950"><CheckCircle2 className="h-4 w-4" />Delivered</button>
-          </div>
-          <p className="mt-3 flex items-center gap-2 text-xs font-bold text-muted-foreground"><Navigation className="h-3.5 w-3.5" />Location updates while this page is open.</p>
-        </article>
-      ))}
-    </div>
+
+            {/* Address */}
+            <div className="px-4 pb-3">
+              <button
+                onClick={() => openMaps(order.address)}
+                className="w-full flex items-start gap-2 rounded-xl bg-slate-50 p-3 text-left press"
+              >
+                <MapPin className="h-4 w-4 shrink-0 text-primary mt-0.5" />
+                <span className="text-[12px] text-slate-700 flex-1">{order.address}</span>
+                <ExternalLink className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+              </button>
+            </div>
+
+            {/* Items - compact */}
+            <div className="px-4 pb-3">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1.5">Items ({order.items.length})</p>
+              <div className="flex flex-wrap gap-1.5">
+                {order.items.map((item) => (
+                  <span key={item.id} className="text-[11px] bg-slate-100 rounded-lg px-2 py-1 text-slate-700">
+                    {item.name} <span className="text-slate-400">x{item.quantity}</span>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="px-4 pb-4 grid grid-cols-3 gap-2">
+              <a
+                href={`tel:${order.phone}`}
+                className="flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-[11px] font-bold text-slate-700 press"
+              >
+                <Phone className="h-3.5 w-3.5" />
+                Call
+              </a>
+
+              {order.status === "READY_FOR_DELIVERY" && (
+                <button
+                  onClick={() => markPickedUp(order)}
+                  disabled={actionLoading === order.id}
+                  className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-primary text-[11px] font-bold text-white press disabled:opacity-50 col-span-2"
+                >
+                  <Truck className="h-3.5 w-3.5" />
+                  {actionLoading === order.id ? "Updating..." : "Mark Picked Up"}
+                </button>
+              )}
+
+              {order.status === "OUT_FOR_DELIVERY" && (
+                <button
+                  onClick={() => setOtpModal(order)}
+                  disabled={actionLoading === order.id}
+                  className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-slate-900 text-[11px] font-bold text-white press disabled:opacity-50 col-span-2"
+                >
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Mark Delivered
+                </button>
+              )}
+
+              {order.status === "DELIVERED" && (
+                <span className="flex h-10 items-center justify-center gap-1.5 rounded-xl bg-green-100 text-[11px] font-bold text-green-700 col-span-2">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Delivered
+                </span>
+              )}
+            </div>
+
+            {/* Location indicator */}
+            <div className="px-4 pb-3 flex items-center gap-1.5 text-[10px] text-slate-400 font-medium">
+              <Navigation className="h-3 w-3 text-primary" />
+              GPS location active
+            </div>
+          </article>
+        ))}
+      </div>
+    </>
+  );
+}
+
+// ============ OTP VERIFICATION MODAL ============
+
+function OtpVerificationModal({
+  order,
+  onClose,
+  onSubmit
+}: {
+  order: DeliveryOrder;
+  onClose: () => void;
+  onSubmit: (otp: string) => Promise<string | null>;
+}) {
+  const [digits, setDigits] = useState(["", "", "", ""]);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [shake, setShake] = useState(false);
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  useEffect(() => {
+    // Auto-focus first input on mount
+    setTimeout(() => inputRefs.current[0]?.focus(), 100);
+  }, []);
+
+  function handleDigitChange(index: number, value: string) {
+    if (!/^\d*$/.test(value)) return;
+    const newDigits = [...digits];
+    newDigits[index] = value.slice(-1);
+    setDigits(newDigits);
+    setError("");
+
+    // Auto-advance to next input
+    if (value && index < 3) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleKeyDown(index: number, e: React.KeyboardEvent) {
+    if (e.key === "Backspace" && !digits[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+    if (e.key === "Enter") {
+      handleSubmit();
+    }
+  }
+
+  function handlePaste(e: React.ClipboardEvent) {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 4);
+    if (pasted.length === 4) {
+      setDigits(pasted.split(""));
+      inputRefs.current[3]?.focus();
+    }
+  }
+
+  async function handleSubmit() {
+    const otp = digits.join("");
+    if (otp.length < 4) {
+      setError("Enter all 4 digits");
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      return;
+    }
+
+    setLoading(true);
+    const errorMsg = await onSubmit(otp);
+    setLoading(false);
+
+    if (errorMsg) {
+      setError(errorMsg);
+      setShake(true);
+      setTimeout(() => setShake(false), 500);
+      setDigits(["", "", "", ""]);
+      inputRefs.current[0]?.focus();
+    } else {
+      setSuccess(true);
+    }
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[70] flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ y: 100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 100, opacity: 0 }}
+        transition={{ type: "spring", stiffness: 300, damping: 28 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-sm bg-white rounded-3xl p-6 shadow-2xl"
+      >
+        {success ? (
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="text-center py-4"
+          >
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
+              className="mx-auto h-16 w-16 rounded-full bg-green-100 flex items-center justify-center"
+            >
+              <CheckCircle2 className="h-8 w-8 text-green-600" />
+            </motion.div>
+            <p className="mt-4 text-[16px] font-bold text-slate-900">Delivery Confirmed!</p>
+            <p className="mt-1 text-[13px] text-slate-500">Order #{order.orderNumber} marked as delivered.</p>
+          </motion.div>
+        ) : (
+          <>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <p className="text-[16px] font-bold text-slate-900">Enter Delivery OTP</p>
+                <p className="text-[12px] text-slate-500 mt-0.5">Order #{order.orderNumber} • {order.customerName}</p>
+              </div>
+              <button onClick={onClose} className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center press">
+                <X className="h-4 w-4 text-slate-500" />
+              </button>
+            </div>
+
+            {/* OTP Input boxes */}
+            <motion.div
+              animate={shake ? { x: [-8, 8, -6, 6, -4, 4, 0] } : {}}
+              transition={{ duration: 0.4 }}
+              className="flex justify-center gap-3 mb-4"
+              onPaste={handlePaste}
+            >
+              {digits.map((digit, idx) => (
+                <input
+                  key={idx}
+                  ref={(el) => { inputRefs.current[idx] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleDigitChange(idx, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(idx, e)}
+                  className={cn(
+                    "w-14 h-16 text-center text-2xl font-bold rounded-2xl border-2 outline-none transition-all",
+                    error ? "border-red-300 bg-red-50" :
+                    digit ? "border-primary bg-primary/5" :
+                    "border-slate-200 bg-slate-50 focus:border-primary focus:bg-white"
+                  )}
+                />
+              ))}
+            </motion.div>
+
+            {/* Error message */}
+            <AnimatePresence>
+              {error && (
+                <motion.p
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  className="text-center text-[12px] font-semibold text-red-600 mb-3"
+                >
+                  {error}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            {/* Helper text */}
+            <p className="text-center text-[11px] text-slate-400 mb-5">
+              Ask the customer for their 4-digit delivery OTP
+            </p>
+
+            {/* Submit button */}
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleSubmit}
+              disabled={loading || digits.join("").length < 4}
+              className="w-full h-12 rounded-2xl bg-slate-900 text-white text-[14px] font-bold flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <span className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Verifying...
+                </span>
+              ) : (
+                <>
+                  <CheckCircle2 className="h-4 w-4" />
+                  Confirm Delivery
+                </>
+              )}
+            </motion.button>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
   );
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Bell, ChevronDown, Heart, HelpCircle, MapPin, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import type { SessionIdentity } from "@/components/session-identity-card";
@@ -18,8 +18,19 @@ export function Header({
   storeAddress?: string;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const { totalItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  function handleSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = searchQuery.trim();
+    if (q) {
+      router.push(`/products?q=${encodeURIComponent(q)}`);
+      setSearchQuery("");
+    }
+  }
 
   // Hide on login/welcome/staff/admin
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
@@ -47,17 +58,19 @@ export function Header({
               </span>
             </Link>
 
-            {/* Search bar */}
-            <div className="flex-1 max-w-xl mx-8">
+            {/* Search bar - functional */}
+            <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-8">
               <div className="relative">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
                 <input
                   type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search Grocery Items..."
                   className="w-full h-11 rounded-full bg-slate-50 border border-slate-200 pl-11 pr-4 text-sm outline-none placeholder:text-slate-400 focus:border-primary/50 focus:bg-white focus:shadow-sm transition-all"
                 />
               </div>
-            </div>
+            </form>
 
             {/* Navigation links */}
             <nav className="hidden lg:flex items-center gap-6">

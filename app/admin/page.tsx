@@ -2,7 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canViewReports } from "@/lib/authz";
 import { formatCurrency } from "@/lib/utils";
-import { ArrowUpRight, Box, Clock, Package, ShoppingBag, Truck, Zap } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Box, Clock, IndianRupee, Package, ShoppingBag, Truck, Users, Zap } from "lucide-react";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -10,12 +10,14 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const session = await auth();
   const canSeeFinancials = canViewReports(session?.user?.role);
+  const userName = session?.user?.name?.split(" ")[0] || "Admin";
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const [
     todayOrders, pendingOrders, packingOrders, deliveredOrders,
-    receivedOrders, readyOrders, outForDeliveryOrders, totalRevenue
+    receivedOrders, readyOrders, outForDeliveryOrders, totalRevenue,
+    totalCustomers
   ] = await Promise.all([
     prisma.order.count({ where: { createdAt: { gte: today } } }).catch(() => 0),
     prisma.order.count({ where: { status: { in: ["ORDER_RECEIVED", "ACCEPTED", "PACKING"] } } }).catch(() => 0),
@@ -26,91 +28,151 @@ export default async function AdminPage() {
     prisma.order.count({ where: { status: "OUT_FOR_DELIVERY" } }).catch(() => 0),
     canSeeFinancials
       ? prisma.order.aggregate({ _sum: { total: true }, where: { status: "DELIVERED", createdAt: { gte: today } } }).then((r) => Number(r._sum.total ?? 0)).catch(() => 0)
-      : Promise.resolve(0)
+      : Promise.resolve(0),
+    prisma.user.count({ where: { role: "CUSTOMER" } }).catch(() => 0)
   ]);
 
-  const stats = [
-    { label: "New Orders", value: receivedOrders, icon: Zap, color: "text-orange-500 bg-orange-50", urgent: receivedOrders > 0 },
-    { label: "Today", value: todayOrders, icon: Clock, color: "text-blue-500 bg-blue-50" },
-    { label: "Packing", value: packingOrders, icon: Box, color: "text-purple-500 bg-purple-50" },
-    { label: "Ready", value: readyOrders, icon: Package, color: "text-yellow-600 bg-yellow-50" },
-    { label: "Out for Delivery", value: outForDeliveryOrders, icon: Truck, color: "text-primary bg-emerald-50" },
-    { label: "Delivered", value: deliveredOrders, icon: ShoppingBag, color: "text-slate-600 bg-slate-50" }
-  ];
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   return (
     <div className="space-y-5">
-      {/* Page title */}
-      <div>
-        <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
-        <p className="text-[13px] text-slate-500 mt-0.5">Today&apos;s overview at a glance</p>
+      {/* Welcome header */}
+      <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-emerald-50 to-lime-50 p-5">
+        <p className="text-[13px] font-semibold text-primary">{greeting}, {userName}!</p>
+        <h1 className="mt-1 text-xl font-bold text-slate-900">Store Dashboard</h1>
+        <p className="text-[12px] text-slate-500 mt-1">Here&apos;s what&apos;s happening today</p>
       </div>
 
-      {/* Revenue card */}
-      {canSeeFinancials && (
-        <div className="admin-card p-4 flex items-center justify-between">
-          <div>
-            <p className="text-[11px] font-medium text-slate-400 uppercase tracking-wide">Today&apos;s Revenue</p>
-            <p className="text-2xl font-bold text-slate-900 mt-1">{formatCurrency(totalRevenue)}</p>
-          </div>
-          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-            <ArrowUpRight className="h-5 w-5 text-primary" />
-          </div>
-        </div>
-      )}
-
-      {/* Stats grid */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {stats.map((stat) => (
-          <div key={stat.label} className={`admin-card p-3.5 ${stat.urgent ? "ring-2 ring-orange-200" : ""}`}>
+      {/* Key metrics row */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        {/* Revenue */}
+        {canSeeFinancials && (
+          <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
             <div className="flex items-center justify-between">
-              <div className={`h-8 w-8 rounded-lg flex items-center justify-center ${stat.color}`}>
-                <stat.icon className="h-4 w-4" />
+              <div className="h-9 w-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <IndianRupee className="h-4 w-4 text-emerald-600" />
               </div>
-              {stat.urgent && <span className="flex h-2 w-2 rounded-full bg-orange-500 pulse-ring" />}
+              <ArrowUpRight className="h-4 w-4 text-emerald-500" />
             </div>
-            <p className="mt-3 text-2xl font-bold text-slate-900">{stat.value}</p>
-            <p className="text-[11px] font-medium text-slate-400 mt-0.5">{stat.label}</p>
+            <p className="mt-3 text-[20px] font-bold text-slate-900">{formatCurrency(totalRevenue)}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">Today&apos;s revenue</p>
           </div>
-        ))}
+        )}
+
+        {/* Today's orders */}
+        <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center">
+              <Clock className="h-4 w-4 text-blue-600" />
+            </div>
+          </div>
+          <p className="mt-3 text-[20px] font-bold text-slate-900">{todayOrders}</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Orders today</p>
+        </div>
+
+        {/* Pending */}
+        <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="h-9 w-9 rounded-xl bg-orange-50 flex items-center justify-center">
+              <Zap className="h-4 w-4 text-orange-600" />
+            </div>
+            {receivedOrders > 0 && <span className="flex h-2 w-2 rounded-full bg-orange-500 pulse-ring" />}
+          </div>
+          <p className="mt-3 text-[20px] font-bold text-slate-900">{pendingOrders}</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Pending orders</p>
+        </div>
+
+        {/* Customers */}
+        <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <div className="h-9 w-9 rounded-xl bg-purple-50 flex items-center justify-center">
+              <Users className="h-4 w-4 text-purple-600" />
+            </div>
+          </div>
+          <p className="mt-3 text-[20px] font-bold text-slate-900">{totalCustomers}</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">Customers</p>
+        </div>
       </div>
 
-      {/* Order funnel */}
-      <div className="admin-card p-4">
+      {/* Order status cards - horizontal on mobile */}
+      <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[15px] font-semibold text-slate-900">Order Pipeline</h2>
-          <Link href="/admin/orders" className="text-xs font-medium text-primary">View all →</Link>
+          <h2 className="text-[14px] font-semibold text-slate-900">Live Order Status</h2>
+          <Link href="/admin/orders" className="text-[11px] font-semibold text-primary flex items-center gap-1">
+            View all <ArrowRight className="h-3 w-3" />
+          </Link>
         </div>
-        <div className="space-y-2">
+        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
           {[
-            { label: "Received", count: receivedOrders, pct: Math.min(100, (receivedOrders / Math.max(todayOrders, 1)) * 100), color: "bg-orange-400" },
-            { label: "Packing", count: packingOrders, pct: Math.min(100, (packingOrders / Math.max(todayOrders, 1)) * 100), color: "bg-purple-400" },
-            { label: "Ready", count: readyOrders, pct: Math.min(100, (readyOrders / Math.max(todayOrders, 1)) * 100), color: "bg-yellow-400" },
-            { label: "Out for Delivery", count: outForDeliveryOrders, pct: Math.min(100, (outForDeliveryOrders / Math.max(todayOrders, 1)) * 100), color: "bg-primary" },
-            { label: "Delivered", count: deliveredOrders, pct: Math.min(100, (deliveredOrders / Math.max(todayOrders, 1)) * 100), color: "bg-slate-400" }
-          ].map((row) => (
-            <div key={row.label} className="flex items-center gap-3">
-              <span className="text-[12px] font-medium text-slate-500 w-28 shrink-0">{row.label}</span>
-              <div className="flex-1 h-2 rounded-full bg-slate-100 overflow-hidden">
-                <div className={`h-full rounded-full ${row.color} transition-all`} style={{ width: `${row.pct}%` }} />
-              </div>
-              <span className="text-[12px] font-bold text-slate-700 w-6 text-right">{row.count}</span>
+            { label: "New", value: receivedOrders, color: "bg-orange-500", ring: receivedOrders > 0 },
+            { label: "Packing", value: packingOrders, color: "bg-purple-500", ring: false },
+            { label: "Ready", value: readyOrders, color: "bg-yellow-500", ring: false },
+            { label: "Out", value: outForDeliveryOrders, color: "bg-blue-500", ring: false },
+            { label: "Done", value: deliveredOrders, color: "bg-slate-400", ring: false }
+          ].map((item) => (
+            <div key={item.label} className={`rounded-xl bg-white border border-slate-100 p-3 text-center shadow-sm ${item.ring ? "ring-2 ring-orange-200" : ""}`}>
+              <div className={`mx-auto h-2 w-2 rounded-full ${item.color} ${item.ring ? "pulse-ring" : ""}`} />
+              <p className="mt-2 text-[18px] font-bold text-slate-900">{item.value}</p>
+              <p className="text-[10px] font-medium text-slate-500">{item.label}</p>
             </div>
           ))}
         </div>
       </div>
 
+      {/* Order Pipeline */}
+      <div className="rounded-2xl bg-white border border-slate-100 p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-[14px] font-semibold text-slate-900">Order Pipeline</h2>
+          <span className="text-[10px] font-medium text-slate-400">% of today&apos;s orders</span>
+        </div>
+        <div className="space-y-3">
+          {[
+            { label: "Received", count: receivedOrders, color: "bg-orange-400" },
+            { label: "Packing", count: packingOrders, color: "bg-purple-400" },
+            { label: "Ready for Delivery", count: readyOrders, color: "bg-yellow-400" },
+            { label: "Out for Delivery", count: outForDeliveryOrders, color: "bg-blue-400" },
+            { label: "Delivered", count: deliveredOrders, color: "bg-emerald-400" }
+          ].map((row) => {
+            const pct = todayOrders > 0 ? Math.min(100, (row.count / todayOrders) * 100) : 0;
+            return (
+              <div key={row.label} className="flex items-center gap-3">
+                <span className="text-[11px] font-medium text-slate-600 w-28 shrink-0">{row.label}</span>
+                <div className="flex-1 h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                  <div
+                    className={`h-full rounded-full ${row.color} transition-all duration-700 ease-out`}
+                    style={{ width: `${pct}%` }}
+                  />
+                </div>
+                <span className="text-[11px] font-bold text-slate-700 w-6 text-right">{row.count}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Quick actions */}
-      <div className="grid grid-cols-2 gap-3">
-        <Link href="/admin/orders" className="admin-card p-4 press hover:shadow-md transition-shadow">
-          <ShoppingBag className="h-5 w-5 text-primary" />
-          <p className="text-[13px] font-semibold text-slate-900 mt-2">Manage Orders</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        <Link href="/admin/orders" className="rounded-2xl bg-white border border-slate-100 p-4 press hover:shadow-md transition-all group">
+          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+            <ShoppingBag className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-[13px] font-semibold text-slate-900 mt-3">Manage Orders</p>
           <p className="text-[11px] text-slate-400 mt-0.5">{pendingOrders} pending</p>
         </Link>
-        <Link href="/admin/products" className="admin-card p-4 press hover:shadow-md transition-shadow">
-          <Package className="h-5 w-5 text-primary" />
-          <p className="text-[13px] font-semibold text-slate-900 mt-2">Products</p>
+        <Link href="/admin/products" className="rounded-2xl bg-white border border-slate-100 p-4 press hover:shadow-md transition-all group">
+          <div className="h-9 w-9 rounded-xl bg-purple-50 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
+            <Package className="h-4 w-4 text-purple-600" />
+          </div>
+          <p className="text-[13px] font-semibold text-slate-900 mt-3">Products</p>
           <p className="text-[11px] text-slate-400 mt-0.5">Add & manage</p>
+        </Link>
+        <Link href="/admin/customers" className="rounded-2xl bg-white border border-slate-100 p-4 press hover:shadow-md transition-all group">
+          <div className="h-9 w-9 rounded-xl bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+            <Users className="h-4 w-4 text-blue-600" />
+          </div>
+          <p className="text-[13px] font-semibold text-slate-900 mt-3">Customers</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{totalCustomers} registered</p>
         </Link>
       </div>
     </div>

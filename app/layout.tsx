@@ -5,6 +5,7 @@ import { Header } from "@/components/header";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Providers } from "@/components/providers";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
+import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 
@@ -44,6 +45,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <OnboardingTour />
           <Header user={user} storeName={settings.storeName} storeAddress={settings.address} />
           <div className="pb-safe">{children}</div>
+          <ScrollToTop />
           <MobileBottomNav user={user} />
         </Providers>
       </body>

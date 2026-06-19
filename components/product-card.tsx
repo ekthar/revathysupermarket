@@ -9,6 +9,7 @@ import type { Product } from "@/lib/types";
 import { ProductImage } from "@/components/product-image";
 import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
+import { FavoriteButton } from "@/components/favorite-button";
 
 interface ProductCardProps {
   product: Product;
@@ -139,6 +140,10 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
               <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">Sold out</span>
             </div>
           )}
+          {/* Favorite button */}
+          <div className="absolute top-2 right-2 z-10">
+            <FavoriteButton productId={product.id} size="sm" />
+          </div>
         </div>
       </Link>
 

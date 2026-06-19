@@ -48,11 +48,11 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
                 className={cn(
                   "flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all relative",
                   active
-                    ? "bg-primary/10 text-primary font-semibold shadow-sm"
-                    : "text-slate-600 hover:bg-white hover:text-slate-900 hover:shadow-sm"
+                    ? "bg-primary/10 dark:bg-primary/15 text-primary font-semibold shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:bg-white dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-white hover:shadow-sm"
                 )}
               >
-                <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-slate-400")} />
+                <Icon className={cn("h-4 w-4", active ? "text-primary" : "text-slate-400 dark:text-slate-500")} />
                 <span className="flex-1">{item.label}</span>
                 {item.badge > 0 && (
                   <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[9px] font-bold text-white">
@@ -68,9 +68,9 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
         </nav>
       </aside>
 
-      {/* Mobile nav - horizontal scroll with active state */}
+      {/* Mobile nav - larger touch targets, better dark mode */}
       <div className="lg:hidden mb-4 -mx-4 px-4">
-        <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 pt-1">
           {nav.map((item) => {
             const Icon = iconMap[item.icon] || LayoutDashboard;
             const active = isActive(item.href);
@@ -79,18 +79,18 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-full text-[11px] font-semibold transition-all press",
+                  "shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-xl text-[12px] font-semibold transition-all press min-h-[44px]",
                   active
-                    ? "bg-primary text-white shadow-sm"
-                    : "bg-white border border-slate-200 text-slate-600"
+                    ? "bg-primary text-white shadow-md shadow-primary/20"
+                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
                 )}
               >
-                <Icon className={cn("h-3.5 w-3.5", active ? "text-white" : "text-slate-400")} />
-                {item.label}
+                <Icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-slate-400 dark:text-slate-500")} />
+                <span className="whitespace-nowrap">{item.label}</span>
                 {item.badge > 0 && (
                   <span className={cn(
-                    "flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[8px] font-bold",
-                    active ? "bg-white/30 text-white" : "bg-red-500 text-white"
+                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[9px] font-bold",
+                    active ? "bg-white/25 text-white" : "bg-red-500 text-white"
                   )}>
                     {item.badge}
                   </span>

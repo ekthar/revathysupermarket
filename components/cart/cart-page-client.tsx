@@ -118,16 +118,25 @@ export function CartPageClient() {
               }}
               exit={{ opacity: 0, x: -100, height: 0, marginTop: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 25, delay: idx * 0.05 }}
-              className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 card-elevated"
+              className="bg-white dark:bg-slate-900 rounded-2xl p-3.5 card-elevated border border-primary/5"
             >
               <div className="flex gap-3">
-                {/* Image with hover zoom */}
+                {/* Image with quantity badge overlay */}
                 <motion.div
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="h-[72px] w-[72px] shrink-0 rounded-xl overflow-hidden bg-slate-50"
+                  className="h-[72px] w-[72px] shrink-0 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800 relative"
                 >
                   <ProductImage src={item.image} alt={item.name} />
+                  {/* Quantity badge overlay on image */}
+                  <motion.span
+                    key={item.quantity}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute bottom-1 right-1 flex h-5 min-w-5 items-center justify-center rounded-md bg-primary text-[9px] font-bold text-white px-1 shadow-sm"
+                  >
+                    x{item.quantity}
+                  </motion.span>
                 </motion.div>
 
                 {/* Info */}
@@ -314,8 +323,9 @@ export function CartPageClient() {
         >
           <Link
             href="/checkout"
-            className="flex h-[52px] w-full items-center justify-center rounded-full bg-slate-900 text-white shadow-lg gap-2"
+            className="flex h-[52px] w-full items-center justify-center rounded-2xl bg-gradient-to-r from-primary to-emerald-500 text-white shadow-lg gap-2"
           >
+            <ShoppingBag className="h-4 w-4" />
             <span className="text-[14px] font-bold">Proceed Transactions</span>
           </Link>
         </motion.div>

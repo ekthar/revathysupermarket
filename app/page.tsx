@@ -3,6 +3,7 @@ import { unstable_cache } from "next/cache";
 import { ChevronRight, ChevronUp, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { PromoBanners } from "@/components/home/promo-banners";
+import { RecentOrdersSection } from "@/components/home/recent-orders-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { AnimatedCategories } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
@@ -99,6 +100,9 @@ export default async function HomePage() {
 
       {/* Mobile promo banners */}
       <PromoBanners />
+
+      {/* Recent Orders - Foodizo horizontal cards (mobile only) */}
+      <RecentOrdersSection />
 
       {/* Popular Categories - with staggered entrance */}
       <AnimatedCategories

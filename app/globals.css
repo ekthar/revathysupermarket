@@ -77,6 +77,27 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border: 1px solid rgba(0,0,0,0.04);
 }
 
+/* Green tint glassmorphism - Foodizo style */
+.card-green-glass {
+  background: linear-gradient(135deg, rgba(15, 138, 95, 0.03), rgba(255, 255, 255, 0.95));
+  border: 1px solid rgba(15, 138, 95, 0.08);
+  box-shadow: 0 4px 12px -2px rgba(15, 138, 95, 0.06);
+}
+
+/* Green gradient CTA button */
+.btn-gradient-green {
+  background: linear-gradient(135deg, #0F8A5F, #34D399);
+  color: white;
+  font-weight: 700;
+  border-radius: 1rem;
+  box-shadow: 0 4px 14px -4px rgba(15, 138, 95, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-gradient-green:active {
+  transform: scale(0.97);
+  box-shadow: 0 2px 8px -2px rgba(15, 138, 95, 0.3);
+}
+
 /* Glass morphism panels */
 .glass-card {
   background: rgba(255, 255, 255, 0.85);

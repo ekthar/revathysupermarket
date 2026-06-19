@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Minus, Plus } from "lucide-react";
+import { Clock, Minus, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
@@ -128,9 +128,10 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
               initial={{ scale: 0, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
-              className="absolute top-2 left-2 bg-orange-500 text-white text-[9px] font-bold px-1.5 py-[2px] rounded-md shadow-sm"
+              className="absolute top-2 left-2 flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-md"
             >
-              -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+              <Clock className="h-2.5 w-2.5" />
+              {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
             </motion.span>
           )}
           {outOfStock && (

@@ -15,19 +15,11 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
 
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
 
-  // Hide bottom nav entirely on cart/checkout pages on mobile
   const isCartFlow = pathname.startsWith("/cart") || pathname.startsWith("/checkout");
-
-  const tabs = [
-    { href: "/", icon: Home, label: "Home" },
-    { href: "/products", icon: Search, label: "Browse" },
-    { href: "/cart", icon: ShoppingBag, label: "Cart" },
-    { href: user?.id ? "/account" : "/login", icon: User, label: user?.id ? "Account" : "Login" }
-  ];
 
   return (
     <>
-      {/* SINGLE floating cart bar - only shows when items in cart AND not on cart/checkout pages */}
+      {/* Floating cart bar - Foodizo style with green gradient price pill */}
       <AnimatePresence>
         {totalItems > 0 && !isCartFlow && (
           <motion.div
@@ -35,86 +27,114 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 40, scale: 0.92 }}
             transition={{ type: "spring", stiffness: 280, damping: 22 }}
-            className="fixed bottom-[62px] inset-x-0 z-[55] flex justify-center px-4 md:hidden"
+            className="fixed bottom-[68px] inset-x-0 z-[55] flex justify-center px-4 md:hidden"
             style={{ paddingBottom: "var(--safe-bottom)" }}
           >
             <Link
               href="/cart"
-              className="flex items-center justify-between w-full max-w-md px-5 py-3 rounded-full bg-slate-900 text-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] press ripple"
+              className="flex items-center justify-between w-full max-w-md px-4 py-2.5 rounded-2xl bg-slate-900 text-white shadow-[0_10px_40px_-10px_rgba(0,0,0,0.5)] press"
             >
-              <motion.span
-                key={totalItems}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="text-[13px] font-semibold"
-              >
-                {totalItems} Item{totalItems > 1 ? "s" : ""} Selected
-              </motion.span>
+              <div className="flex-1 min-w-0">
+                <motion.p
+                  key={totalItems}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-[13px] font-bold"
+                >
+                  {String(totalItems).padStart(2, "0")} Items selected
+                </motion.p>
+                <p className="text-[10px] text-white/60 truncate mt-0.5">
+                  Tap to view cart
+                </p>
+              </div>
+              {/* Green gradient price pill */}
               <motion.span
                 key={`price-${subtotal}`}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                className="text-[14px] font-bold"
+                initial={{ scale: 0.8 }}
+                animate={{ scale: 1 }}
+                className="flex items-center gap-1 px-4 py-2 rounded-xl bg-gradient-to-r from-primary to-emerald-400 text-white text-[14px] font-bold shadow-sm"
               >
                 {formatCurrency(subtotal)}
-              </motion.span>
-              <motion.span
-                whileTap={{ scale: 0.85, rotate: -10 }}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-orange-500 -mr-1"
-              >
-                <ShoppingBag className="h-4 w-4 text-white" />
+                <span className="text-[16px]">&rsaquo;</span>
               </motion.span>
             </Link>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Navigation tabs - no cart badge here (single cart bar above handles it) */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-t border-slate-100/80 dark:border-slate-800/80 md:hidden" style={{ paddingBottom: "var(--safe-bottom)" }}>
-        <div className="grid grid-cols-4 h-[56px]">
-          {tabs.map((tab) => {
-            const active = tab.href === "/" ? pathname === "/" : pathname.startsWith(tab.href);
-            return (
-              <Link
-                key={tab.href}
-                href={tab.href}
+      {/* Bottom Navigation - Foodizo style with elevated center cart */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden" style={{ paddingBottom: "var(--safe-bottom)" }}>
+        <div className="bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-t border-slate-100/80 dark:border-slate-800/80 px-4">
+          <div className="flex items-end justify-around h-[56px] max-w-md mx-auto">
+            {/* Home */}
+            <NavTab href="/" icon={Home} label="Home" active={pathname === "/"} />
+
+            {/* Browse */}
+            <NavTab href="/products" icon={Search} label="Stores" active={pathname.startsWith("/products")} />
+
+            {/* Center elevated Cart */}
+            <Link
+              href="/cart"
+              className="relative flex flex-col items-center -mt-4"
+            >
+              <motion.div
+                whileTap={{ scale: 0.9 }}
                 className={cn(
-                  "relative flex flex-col items-center justify-center gap-[3px] text-[10px] font-medium transition-colors",
-                  active ? "text-slate-900 dark:text-white" : "text-slate-400"
+                  "flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-lg border-4 border-white dark:border-slate-950",
+                  pathname.startsWith("/cart")
+                    ? "bg-primary"
+                    : "bg-gradient-to-br from-primary to-emerald-500"
                 )}
               >
-                <motion.span
-                  whileTap={{ scale: 0.8 }}
-                  className="relative"
-                >
-                  <tab.icon
-                    className={cn(
-                      "h-[22px] w-[22px] transition-all",
-                      active && "scale-110"
-                    )}
-                    strokeWidth={active ? 2.2 : 1.8}
-                  />
-                </motion.span>
-                <span className={cn(
-                  "leading-none transition-all",
-                  active ? "font-bold" : "font-medium"
-                )}>
-                  {tab.label}
-                </span>
-                {/* Active indicator line */}
-                {active && (
+                <ShoppingBag className="h-5 w-5 text-white" />
+                {totalItems > 0 && (
                   <motion.span
-                    layoutId="activeTabIndicator"
-                    className="absolute -bottom-0 h-[2px] w-4 rounded-full bg-slate-900"
-                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  />
+                    key={totalItems}
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-orange-500 text-[8px] font-bold text-white px-0.5 shadow-sm"
+                  >
+                    {totalItems}
+                  </motion.span>
                 )}
-              </Link>
-            );
-          })}
+              </motion.div>
+              <span className={cn(
+                "text-[9px] font-semibold mt-1",
+                pathname.startsWith("/cart") ? "text-primary" : "text-slate-400"
+              )}>
+                Cart
+              </span>
+            </Link>
+
+            {/* Account/Login */}
+            <NavTab
+              href={user?.id ? "/account" : "/login"}
+              icon={User}
+              label={user?.id ? "Profile" : "Login"}
+              active={pathname.startsWith("/account") || pathname === "/login"}
+            />
+          </div>
         </div>
       </nav>
     </>
+  );
+}
+
+function NavTab({ href, icon: Icon, label, active }: { href: string; icon: React.ElementType; label: string; active: boolean }) {
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "flex flex-col items-center justify-center gap-[2px] py-2 px-3",
+        active ? "text-primary" : "text-slate-400"
+      )}
+    >
+      <motion.div whileTap={{ scale: 0.8 }}>
+        <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.8} />
+      </motion.div>
+      <span className={cn("text-[9px]", active ? "font-bold" : "font-medium")}>
+        {label}
+      </span>
+    </Link>
   );
 }

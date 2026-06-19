@@ -501,7 +501,7 @@ export function CheckoutForm({
               disabled={!canSubmit}
               whileTap={{ scale: 0.97 }}
               whileHover={{ scale: canSubmit ? 1.01 : 1 }}
-              className="mt-5 flex h-[50px] w-full items-center justify-center rounded-full bg-slate-900 text-white text-[14px] font-bold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed transition-opacity"
+              className="mt-5 flex h-[50px] w-full items-center justify-center rounded-2xl bg-gradient-to-r from-primary to-emerald-500 text-white text-[14px] font-bold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 transition-opacity"
             >
               {isSubmitting ? "Placing order..." : "Pay Now"}
             </motion.button>

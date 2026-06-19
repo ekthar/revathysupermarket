@@ -53,9 +53,9 @@ const getProducts = unstable_cache(async (): Promise<Product[]> => {
 export default async function ProductsPage({
   searchParams
 }: {
-  searchParams: Promise<{ category?: string }>;
+  searchParams: Promise<{ category?: string; q?: string }>;
 }) {
-  const { category } = await searchParams;
+  const { category, q } = await searchParams;
   const products = await getProducts();
   const initialCategory = category && ["All", ...new Set(products.map((product) => product.category))].includes(category) ? category : "All";
   return (
@@ -69,7 +69,7 @@ export default async function ProductsPage({
           </p>
         </div>
       </section>
-      <ProductGrid items={products} initialCategory={initialCategory} />
+      <ProductGrid items={products} initialCategory={initialCategory} initialQuery={q || ""} />
     </main>
   );
 }

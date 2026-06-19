@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 export function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
   const { totalItems, subtotal } = useCart();
-  const scrollingDown = useScrollDirection();
 
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
 

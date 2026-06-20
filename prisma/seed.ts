@@ -9,11 +9,11 @@ async function main() {
   const adminPassword = await bcrypt.hash("Admin@12345", 12);
 
   await prisma.user.upsert({
-    where: { email: "admin@revathysupermarket.in" },
+    where: { email: "admin@msmsupermarket.in" },
     update: {},
     create: {
-      name: "Revathy Admin",
-      email: "admin@revathysupermarket.in",
+      name: "MSM Admin",
+      email: "admin@msmsupermarket.in",
       phone: "+91 98765 43210",
       passwordHash: adminPassword,
       role: "ADMIN"
@@ -74,8 +74,8 @@ async function main() {
 
   await prisma.setting.createMany({
     data: [
-      { key: "storeName", value: "Revathy Supermarket" },
-      { key: "address", value: "Neyyattinkara, Kerala, India" },
+      { key: "storeName", value: "MSM Supermarket" },
+      { key: "address", value: "Kerala, India" },
       { key: "phone", value: "+91 98765 43210" },
       { key: "whatsapp", value: "919876543210" },
       { key: "deliveryRadiusKm", value: "5" }

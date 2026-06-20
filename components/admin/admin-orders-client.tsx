@@ -158,7 +158,7 @@ export function AdminOrdersClient({
     let alertTitle = false;
     const titleTimer = window.setInterval(() => {
       alertTitle = !alertTitle;
-      document.title = alertTitle ? "New order - Revathy" : originalTitle;
+      document.title = alertTitle ? "New order - MSM" : originalTitle;
     }, 1000);
 
     const audioTimer = window.setInterval(() => {

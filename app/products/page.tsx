@@ -7,7 +7,7 @@ import type { Product } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Shop Groceries",
-  description: "Search and order fresh groceries from Revathy Supermarket in Neyyattinkara."
+  description: "Search and order fresh groceries from MSM Supermarket."
 };
 
 const getProducts = unstable_cache(async (): Promise<Product[]> => {
@@ -65,7 +65,7 @@ export default async function ProductsPage({
           <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">Fresh today</span>
           <h1 className="mt-4 font-display text-4xl font-black leading-tight sm:text-5xl">Shop groceries</h1>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Live search, category filtering, price filtering, and delivery-ready products from Revathy Supermarket.
+            Live search, category filtering, price filtering, and delivery-ready products from MSM Supermarket.
           </p>
         </div>
       </section>

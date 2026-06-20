@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ArrowLeft } from "lucide-react";
 import { ProfileEditClient } from "@/components/account/profile-edit-client";
+import { SavedAddressesClient } from "@/components/account/saved-addresses-client";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,17 @@ export default async function ProfileEditPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login?callbackUrl=/account/edit");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { name: true, email: true, phone: true, image: true }
-  });
+  const [user, addresses] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true, email: true, phone: true, image: true }
+    }),
+    prisma.address.findMany({
+      where: { userId: session.user.id },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }],
+      select: { id: true, label: true, houseName: true, street: true, landmark: true, pincode: true, isDefault: true }
+    }).catch(() => [])
+  ]);
 
   return (
     <main className="max-w-lg mx-auto px-4 py-5">
@@ -28,7 +36,7 @@ export default async function ProfileEditPage() {
         </Link>
         <div>
           <h1 className="text-[18px] font-bold text-slate-900 dark:text-white">Edit Profile</h1>
-          <p className="text-[12px] text-slate-500 dark:text-slate-400">Update your personal details</p>
+          <p className="text-[12px] text-slate-500 dark:text-slate-400">Update your personal details & addresses</p>
         </div>
       </div>
 
@@ -40,6 +48,9 @@ export default async function ProfileEditPage() {
           image: user?.image || null
         }}
       />
+
+      {/* Saved Addresses Section */}
+      <SavedAddressesClient addresses={addresses} />
     </main>
   );
 }

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { canManageSettings } from "@/lib/authz";
+import { prisma } from "@/lib/prisma";
 import { getStoreSettingsForApi, saveStoreSettings } from "@/lib/store-settings";
 
 const settingsSchema = z.object({
@@ -68,6 +69,48 @@ export async function PUT(request: Request) {
     return NextResponse.json({ settings: parsed.data });
   } catch (error) {
     console.error("Settings save failed", error);
+    return NextResponse.json({ error: "Settings could not be saved." }, { status: 500 });
+  }
+}
+
+
+
+// PATCH - partial settings update (e.g., logoUrl)
+export async function PATCH(request: Request) {
+  try {
+    const session = await auth();
+    if (!canManageSettings(session?.user?.role)) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const body = await request.json();
+
+    // Support updating individual settings like logoUrl
+    const allowedKeys = ["logoUrl"];
+    const updates: Array<{ key: string; value: string }> = [];
+
+    for (const key of allowedKeys) {
+      if (key in body && typeof body[key] === "string") {
+        updates.push({ key, value: body[key] });
+      }
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json({ error: "No valid fields to update." }, { status: 400 });
+    }
+
+    await Promise.all(
+      updates.map(({ key, value }) =>
+        prisma.setting.upsert({
+          where: { key },
+          update: { value },
+          create: { key, value }
+        })
+      )
+    );
+
+    revalidatePath("/");
+    revalidateTag("store-settings");
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error("Settings patch failed", error);
     return NextResponse.json({ error: "Settings could not be saved." }, { status: 500 });
   }
 }

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { Home, Search, ShoppingBag, User } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import type { SessionIdentity } from "@/components/session-identity-card";
@@ -19,37 +19,8 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
 
   return (
     <>
-      {/* Floating cart FAB - simple icon that collapses on scroll */}
-      <AnimatePresence>
-        {totalItems > 0 && !isCartFlow && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="fixed bottom-[72px] right-4 z-[55] md:hidden"
-            style={{ marginBottom: "var(--safe-bottom)" }}
-          >
-            <Link
-              href="/cart"
-              className="flex h-14 w-14 items-center justify-center rounded-full bg-primary shadow-[0_6px_24px_-4px_rgba(15,138,95,0.5)] press relative"
-            >
-              <ShoppingBag className="h-5 w-5 text-white" />
-              <motion.span
-                key={totalItems}
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-orange-500 text-[9px] font-bold text-white px-1 shadow-sm"
-              >
-                {totalItems}
-              </motion.span>
-            </Link>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Bottom Navigation - Foodizo style with elevated center cart */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden" style={{ paddingBottom: "var(--safe-bottom)" }}>
+      <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <div className="bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-t border-slate-100/80 dark:border-slate-800/80 px-4">
           <div className="flex items-end justify-around h-[56px] max-w-md mx-auto">
             {/* Home */}

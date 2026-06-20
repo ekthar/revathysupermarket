@@ -387,7 +387,7 @@ function EditProductModal({
           </div>
           <label>
             <span className="text-sm font-bold">Image URL</span>
-            <Input value={form.image} onChange={(event) => update("image", event.target.value)} className="mt-2 h-12 rounded-2xl" placeholder="Cloudflare/R2 HTTPS URL or leave blank" />
+            <Input value={form.image} onChange={(event) => update("image", event.target.value)} className="mt-2 h-12 rounded-2xl" placeholder="Any HTTPS image URL (Unsplash, Imgur, etc.)" />
           </label>
           <label>
             <span className="text-sm font-bold">Description</span>

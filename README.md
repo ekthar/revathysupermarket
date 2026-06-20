@@ -1,6 +1,6 @@
-# Revathy Supermarket Website
+# MSM Supermarket Website
 
-Production-ready grocery ordering website for Revathy Supermarket, Neyyattinkara, Kerala.
+Production-ready grocery ordering website for MSM Supermarket, Kerala.
 
 ## Stack
 
@@ -22,7 +22,7 @@ Production-ready grocery ordering website for Revathy Supermarket, Neyyattinkara
 
 Admin seed login:
 
-- Email: `admin@revathysupermarket.in`
+- Email: `admin@msmsupermarket.in`
 - Password: `Admin@12345`
 
 ## Delivery Rules

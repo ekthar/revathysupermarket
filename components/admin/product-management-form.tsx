@@ -97,7 +97,7 @@ export function ProductManagementForm() {
     >
       <div className="md:col-span-3">
         <h3 className="font-display text-2xl font-black">Add product</h3>
-        <p className="mt-1 text-sm text-muted-foreground">Simple fields for staff. Images can be uploaded to R2 or pasted as URLs.</p>
+        <p className="mt-1 text-sm text-muted-foreground">Simple fields for staff. Images can be uploaded or pasted as any HTTPS URL (Unsplash, Imgur, etc.)</p>
       </div>
       <Input name="name" placeholder="Product name" required className="h-12 rounded-2xl" />
       <select name="category" className="h-12 rounded-2xl border border-input bg-background px-4 text-sm font-semibold">
@@ -107,7 +107,7 @@ export function ProductManagementForm() {
       <Input name="discountPrice" placeholder="Discount price" type="number" min="1" step="1" className="h-12 rounded-2xl" />
       <Input name="stock" placeholder="Stock" type="number" min="0" step="1" required className="h-12 rounded-2xl" />
       <Input name="gstRate" placeholder="GST % (optional, overrides store)" type="number" min="0" max="28" step="0.01" className="h-12 rounded-2xl" />
-      <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Cloudflare R2 image URL or leave blank" type="url" className="h-12 rounded-2xl" />
+      <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Any image URL (unsplash, imgur, etc.) or upload below" type="url" className="h-12 rounded-2xl" />
       <label className="flex min-h-12 items-center justify-between rounded-2xl border border-lime-fresh/40 bg-lime-fresh/10 px-4 md:col-span-3">
         <span className="text-sm font-black text-primary">Feature this product on homepage</span>
         <input name="isFeatured" type="checkbox" className="h-5 w-5 accent-primary" />
@@ -115,7 +115,7 @@ export function ProductManagementForm() {
       <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-primary/40 bg-primary/5 p-4 text-center md:col-span-3">
         <ImagePlus className="h-7 w-7 text-primary" />
         <span className="mt-2 text-sm font-black">{isUploading ? "Uploading image" : "Tap to upload product image"}</span>
-        <span className="mt-1 text-xs text-muted-foreground">If R2 is not configured, paste an image URL above.</span>
+        <span className="mt-1 text-xs text-muted-foreground">Or paste any image URL (Unsplash, Imgur, etc.) in the field above.</span>
         <input
           ref={fileInputRef}
           type="file"

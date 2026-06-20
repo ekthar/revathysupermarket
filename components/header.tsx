@@ -10,8 +10,8 @@ import type { SessionIdentity } from "@/components/session-identity-card";
 
 export function Header({
   user,
-  storeName = "Revathy",
-  storeAddress = "Neyyattinkara"
+  storeName = "MSM",
+  storeAddress = "Kerala"
 }: {
   user: SessionIdentity;
   storeName?: string;
@@ -140,7 +140,7 @@ export function Header({
       </header>
 
       {/* Mobile Header */}
-      <header className="sticky top-0 z-40 md:hidden bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-b border-slate-100/80 dark:border-slate-800/80">
+      <header className="sticky top-0 z-40 md:hidden bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-b border-slate-100/80 dark:border-slate-800/80" style={{ paddingTop: "var(--safe-top)" }}>
         <div className="flex items-center justify-between px-4 h-[56px]">
           {/* Delivery address */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
@@ -160,20 +160,6 @@ export function Header({
           <div className="flex items-center gap-2.5">
             <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
               <Bell className="h-[17px] w-[17px] text-slate-600 dark:text-slate-300" />
-            </Link>
-
-            <Link href="/cart" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
-              <ShoppingBag className="h-[17px] w-[17px] text-slate-600 dark:text-slate-300" />
-              {totalItems > 0 && (
-                <motion.span
-                  key={totalItems}
-                  initial={{ scale: 0.5 }}
-                  animate={{ scale: 1 }}
-                  className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-[8px] font-bold text-white px-0.5 pointer-events-none"
-                >
-                  {totalItems}
-                </motion.span>
-              )}
             </Link>
           </div>
         </div>

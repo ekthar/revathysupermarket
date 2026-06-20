@@ -248,7 +248,7 @@ export function SettingsManagementClient({
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Input required value={bannerForm.title} onChange={(event) => setBannerForm((current) => ({ ...current, title: event.target.value }))} placeholder="Offer title" className="h-12 rounded-2xl" />
           <Input value={bannerForm.subtitle} onChange={(event) => setBannerForm((current) => ({ ...current, subtitle: event.target.value }))} placeholder="Subtitle" className="h-12 rounded-2xl" />
-          <Input required value={bannerForm.image} onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))} placeholder="Homepage banner image URL" className="h-12 rounded-2xl md:col-span-2" />
+          <Input required value={bannerForm.image} onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))} placeholder="Banner image URL (Unsplash, Imgur, etc.)" className="h-12 rounded-2xl md:col-span-2" />
           <Input value={bannerForm.href} onChange={(event) => setBannerForm((current) => ({ ...current, href: event.target.value }))} placeholder="Promotion link" className="h-12 rounded-2xl" />
           <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-border px-4">
             <input type="checkbox" checked={bannerForm.isActive} onChange={(event) => setBannerForm((current) => ({ ...current, isActive: event.target.checked }))} />
@@ -304,6 +304,7 @@ function LogoUploadSection() {
   const { showToast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoUrlInput, setLogoUrlInput] = useState("");
   const [uploading, setUploading] = useState(false);
 
   async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
@@ -323,6 +324,7 @@ function LogoUploadSection() {
       const data = await readApiResponse<{ logoUrl?: string; error?: string }>(res);
       if (res.ok && data.logoUrl) {
         setLogoUrl(data.logoUrl);
+        setLogoUrlInput(data.logoUrl);
         showToast("Logo uploaded!", "success");
       } else {
         showToast(data.error || "Upload failed", "error");
@@ -334,6 +336,36 @@ function LogoUploadSection() {
     }
   }
 
+  async function saveLogoUrl() {
+    const url = logoUrlInput.trim();
+    if (!url) {
+      showToast("Enter a valid URL", "error");
+      return;
+    }
+    try {
+      new URL(url);
+    } catch {
+      showToast("Invalid URL format", "error");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/admin/settings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ logoUrl: url })
+      });
+      if (res.ok) {
+        setLogoUrl(url);
+        showToast("Logo URL saved!", "success");
+      } else {
+        showToast("Failed to save logo URL", "error");
+      }
+    } catch {
+      showToast("Failed to save logo URL", "error");
+    }
+  }
+
   return (
     <div className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
       <div className="flex items-center gap-3">
@@ -342,23 +374,37 @@ function LogoUploadSection() {
         </span>
         <div>
           <h3 className="font-display text-2xl font-black">Store Logo</h3>
-          <p className="text-xs font-bold text-muted-foreground">Upload your store logo. Used in PWA, splash screen, and header.</p>
+          <p className="text-xs font-bold text-muted-foreground">Upload or paste any image URL (Unsplash, Imgur, etc.)</p>
         </div>
       </div>
       <div className="mt-4 flex items-center gap-4">
-        <div className="h-20 w-20 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden">
+        <div className="h-20 w-20 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden shrink-0">
           {logoUrl ? (
             <img src={logoUrl} alt="Store logo" className="h-full w-full object-contain" />
           ) : (
             <Camera className="h-6 w-6 text-primary/40" />
           )}
         </div>
-        <div className="flex-1">
-          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
-            <Upload className="h-4 w-4" />
-            {uploading ? "Uploading..." : "Upload Logo"}
-          </Button>
-          <p className="mt-2 text-[10px] text-muted-foreground">PNG, SVG, or JPG. Max 2MB. Square recommended.</p>
+        <div className="flex-1 space-y-2">
+          <div className="flex gap-2">
+            <input
+              type="url"
+              value={logoUrlInput}
+              onChange={(e) => setLogoUrlInput(e.target.value)}
+              placeholder="Paste logo URL (Unsplash, Imgur, etc.)"
+              className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+            />
+            <Button type="button" size="sm" onClick={saveLogoUrl} disabled={!logoUrlInput.trim()}>
+              Save
+            </Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+              <Upload className="h-3.5 w-3.5" />
+              {uploading ? "Uploading..." : "Upload file"}
+            </Button>
+            <span className="text-[10px] text-muted-foreground">or upload PNG/SVG/JPG (max 2MB)</span>
+          </div>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
         </div>
       </div>

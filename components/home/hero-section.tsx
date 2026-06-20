@@ -41,7 +41,7 @@ export function HeroSection({
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
-                className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] tracking-tight text-slate-900"
+                className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] tracking-tight text-slate-900 dark:text-white"
               >
                 {storeName}
               </motion.h1>
@@ -49,7 +49,7 @@ export function HeroSection({
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.25 }}
-                className="mt-5 text-lg text-slate-600 max-w-md leading-relaxed"
+                className="mt-5 text-lg text-slate-600 dark:text-slate-300 max-w-md leading-relaxed"
               >
                 Shop from thousands of farm-fresh fruits, vegetables, dairy and daily essentials at unbeatable prices.
               </motion.p>

@@ -5,7 +5,7 @@ import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 export const metadata: Metadata = {
   title: "Login",
-  description: "Login or create your Revathy Supermarket account."
+  description: "Login or create your MSM Supermarket account."
 };
 
 export default async function LoginPage({

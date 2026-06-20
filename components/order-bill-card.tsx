@@ -65,7 +65,7 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
   const summary = useMemo(() => {
     if (!bill) return "";
     return [
-      `Revathy Supermarket bill #${bill.order.orderNumber}`,
+      `MSM Supermarket bill #${bill.order.orderNumber}`,
       `Customer: ${bill.order.customerName}`,
       `Total: ${formatCurrency(bill.order.total)}`,
       `Payment: ${bill.order.paymentMethod === "COD" ? "Cash on Delivery" : "UPI on Delivery"}`,
@@ -82,8 +82,8 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="740" height="${height}" viewBox="0 0 740 ${height}">
       <rect width="740" height="${height}" rx="38" fill="#fffaf0"/>
       <rect x="28" y="28" width="684" height="${height - 56}" rx="30" fill="#ffffff" stroke="#dbe7d2" stroke-width="2"/>
-      <circle cx="92" cy="96" r="34" fill="#0F8A5F"/><text x="92" y="105" text-anchor="middle" font-size="25" font-weight="900" fill="#ffffff">RS</text>
-      <text x="142" y="84" font-size="28" font-weight="900" fill="#0f172a">REVATHY SUPERMARKET</text>
+      <circle cx="92" cy="96" r="34" fill="#0F8A5F"/><text x="92" y="105" text-anchor="middle" font-size="25" font-weight="900" fill="#ffffff">MS</text>
+      <text x="142" y="84" font-size="28" font-weight="900" fill="#0f172a">MSM SUPERMARKET</text>
       <text x="142" y="116" font-size="15" fill="#64748b">${escapeXml(bill.store.address)}</text>
       <text x="52" y="178" font-size="20" font-weight="900" fill="#0f172a">Order #${escapeXml(bill.order.orderNumber)}</text>
       <text x="52" y="210" font-size="15" fill="#64748b">${escapeXml(bill.order.customerName)} | ${escapeXml(bill.order.phone)}</text>
@@ -99,7 +99,7 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `revathy-${bill.order.orderNumber}.svg`;
+    link.download = `msm-${bill.order.orderNumber}.svg`;
     link.click();
     URL.revokeObjectURL(url);
     showToast("Bill image downloaded", "success");

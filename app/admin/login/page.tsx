@@ -5,7 +5,7 @@ import { AdminLoginForm } from "@/components/auth/admin-login-form";
 
 export const metadata: Metadata = {
   title: "Staff Login",
-  description: "Staff and admin login for Revathy Supermarket."
+  description: "Staff and admin login for MSM Supermarket."
 };
 
 export default async function AdminLoginPage({

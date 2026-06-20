@@ -86,7 +86,7 @@ export async function POST(request: Request) {
     body: notifBody,
     url,
     image: imageUrl,
-    badge: "/icons/icon-192.svg"
+    badge: "/icons/icon-192.ico"
   });
 
   let sent = 0;

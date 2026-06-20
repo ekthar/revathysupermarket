@@ -13,12 +13,12 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     theme_color: "#0F8A5F",
     icons: [
       {
-        src: "/icons/icon-192.svg",
+        src: "/icons/icon-192.ico",
         sizes: "192x192",
         type: "image/svg+xml"
       },
       {
-        src: "/icons/icon-512.svg",
+        src: "/icons/icon-512.ico",
         sizes: "512x512",
         type: "image/svg+xml"
       }

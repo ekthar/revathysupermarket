@@ -1,6 +1,8 @@
 "use client";
 
 import { Clock, Truck } from "lucide-react";
+import { useStoreConfig } from "@/lib/use-store-config";
+import { formatCurrency } from "@/lib/utils";
 
 interface DeliveryEtaProps {
   minMinutes: number;
@@ -14,6 +16,8 @@ interface DeliveryEtaProps {
  * Used on product pages, cart, checkout, and home page.
  */
 export function DeliveryEta({ minMinutes, maxMinutes, className = "", compact = false }: DeliveryEtaProps) {
+  const config = useStoreConfig();
+
   if (compact) {
     return (
       <span className={`inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 ${className}`}>
@@ -32,7 +36,11 @@ export function DeliveryEta({ minMinutes, maxMinutes, className = "", compact = 
         <p className="text-[12px] font-semibold text-slate-800 dark:text-white">
           Delivery in {minMinutes}-{maxMinutes} min
         </p>
-        <p className="text-[10px] text-slate-400">Free delivery on orders above ₹500</p>
+        <p className="text-[10px] text-slate-400">
+          {config.freeDeliveryThreshold > 0
+            ? `Free delivery on orders above ${formatCurrency(config.freeDeliveryThreshold)}`
+            : `Delivery fee: ${formatCurrency(config.deliveryFee)}`}
+        </p>
       </div>
     </div>
   );

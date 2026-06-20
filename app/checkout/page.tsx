@@ -50,6 +50,10 @@ export default async function CheckoutPage() {
         minimumOrderValue={settings.minimumOrderValue}
         storeLatitude={settings.storeLatitude}
         storeLongitude={settings.storeLongitude}
+        deliveryFee={settings.deliveryFee}
+        freeDeliveryThreshold={settings.freeDeliveryThreshold}
+        gstRatePercent={settings.gstRatePercent}
+        gstin={settings.gstin}
         savedAddresses={addresses.map((address) => ({
           id: address.id,
           label: address.label,

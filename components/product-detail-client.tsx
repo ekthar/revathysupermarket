@@ -4,15 +4,17 @@ import Link from "next/link";
 import { ArrowLeft, Heart, Minus, Plus, Share2, ShoppingBag, Star, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { useStoreConfig } from "@/lib/use-store-config";
+import { formatCurrency } from "@/lib/utils";
 import { useCart } from "@/components/cart/cart-provider";
 import { useToast } from "@/components/toast-provider";
 import { ProductImage } from "@/components/product-image";
-import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 
 export function ProductDetailClient({ product }: { product: Product }) {
   const { addItem, items, updateQuantity } = useCart();
   const { showToast } = useToast();
+  const storeConfig = useStoreConfig();
   const [liked, setLiked] = useState(false);
   const cartItem = items.find((i) => i.id === product.id);
   const price = product.discountPrice ?? product.price;
@@ -135,7 +137,11 @@ export function ProductDetailClient({ product }: { product: Product }) {
             <div className="mt-6 flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
               <Truck className="h-5 w-5 text-primary shrink-0" />
               <div>
-                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">Free delivery on orders above ₹500</p>
+                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">
+                  {storeConfig.freeDeliveryThreshold > 0
+                    ? `Free delivery on orders above ${formatCurrency(storeConfig.freeDeliveryThreshold)}`
+                    : `Delivery fee: ${formatCurrency(storeConfig.deliveryFee)}`}
+                </p>
                 <p className="text-[11px] text-slate-500">Delivered within 15-30 minutes</p>
               </div>
             </div>
@@ -217,7 +223,11 @@ export function ProductDetailClient({ product }: { product: Product }) {
           {/* Delivery */}
           <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
             <Truck className="h-4 w-4 text-primary shrink-0" />
-            <p className="text-[12px] text-slate-600 dark:text-slate-400">Free delivery above ₹500 • 15-30 min</p>
+            <p className="text-[12px] text-slate-600 dark:text-slate-400">
+              {storeConfig.freeDeliveryThreshold > 0
+                ? `Free delivery above ${formatCurrency(storeConfig.freeDeliveryThreshold)}`
+                : `Delivery: ${formatCurrency(storeConfig.deliveryFee)}`} • 15-30 min
+            </p>
           </div>
         </motion.div>
       </div>

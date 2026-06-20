@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element */
 
-import { useRef, useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Camera, Eye, EyeOff, ImagePlus, Megaphone, MessageCircle, Save, Settings, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -188,6 +188,20 @@ export function SettingsManagementClient({
         <Input value={form.gstBusinessName} onChange={(event) => update("gstBusinessName", event.target.value)} placeholder="GST business name" className="h-12 rounded-2xl" />
         <Input value={form.gstin} onChange={(event) => update("gstin", event.target.value.toUpperCase())} placeholder="GSTIN" className="h-12 rounded-2xl" />
         <Input value={form.gstRatePercent} onChange={(event) => update("gstRatePercent", Number(event.target.value))} type="number" min="0" max="28" step="0.01" placeholder="GST rate %" className="h-12 rounded-2xl" />
+        <div className="mt-2 flex items-center gap-3 border-t border-border pt-4 md:col-span-2">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-fresh/20 text-primary">
+            ₹
+          </span>
+          <div>
+            <h4 className="font-display text-xl font-black">Delivery & Order Settings</h4>
+            <p className="text-xs font-bold text-muted-foreground">Delivery fee, free delivery threshold, and minimum order value.</p>
+          </div>
+        </div>
+        <Input value={form.deliveryFee} onChange={(event) => update("deliveryFee", Number(event.target.value))} type="number" min="0" max="500" step="1" placeholder="Delivery fee (₹)" className="h-12 rounded-2xl" />
+        <Input value={form.freeDeliveryThreshold} onChange={(event) => update("freeDeliveryThreshold", Number(event.target.value))} type="number" min="0" max="50000" step="1" placeholder="Free delivery above (₹, 0 = never free)" className="h-12 rounded-2xl" />
+        <Input value={form.minimumOrderValue} onChange={(event) => update("minimumOrderValue", Number(event.target.value))} type="number" min="0" max="10000" step="1" placeholder="Minimum order value (₹)" className="h-12 rounded-2xl" />
+        <Input value={form.deliveryEstimateMin} onChange={(event) => update("deliveryEstimateMin", Number(event.target.value))} type="number" min="5" max="120" step="5" placeholder="Delivery estimate min (mins)" className="h-12 rounded-2xl" />
+        <Input value={form.deliveryEstimateMax} onChange={(event) => update("deliveryEstimateMax", Number(event.target.value))} type="number" min="10" max="180" step="5" placeholder="Delivery estimate max (mins)" className="h-12 rounded-2xl" />
         <Button className="md:col-span-2" disabled={isPending}>
           <Save className="h-4 w-4" />
           Save settings
@@ -314,6 +328,19 @@ function LogoUploadSection() {
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
   const [logoUrlInput, setLogoUrlInput] = useState("");
   const [uploading, setUploading] = useState(false);
+
+  // Fetch current logo on mount so it persists across refreshes
+  useEffect(() => {
+    fetch("/api/admin/logo")
+      .then((res) => res.ok ? res.json() : { logoUrl: null })
+      .then((data) => {
+        if (data.logoUrl) {
+          setLogoUrl(data.logoUrl);
+          setLogoUrlInput(data.logoUrl);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];

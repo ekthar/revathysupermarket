@@ -549,8 +549,8 @@ export function CheckoutForm({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Tax</span>
-                <span className="font-semibold text-slate-700">{formatCurrency(tax)}</span>
+                <span className="text-slate-500">{gstRatePercent > 0 ? `GST (${gstRatePercent}% incl.)` : "Tax"}</span>
+                <span className="font-semibold text-slate-700">{formatCurrency(gstAmount)}</span>
               </div>
               <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-3 flex justify-between">
                 <span className="font-black text-slate-900 dark:text-white">Total Amount</span>

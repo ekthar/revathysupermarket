@@ -38,8 +38,8 @@ self.addEventListener("push", (event) => {
   event.waitUntil(
     self.registration.showNotification(payload.title, {
       body: payload.body,
-      icon: "/icons/icon-192.ico",
-      badge: "/icons/icon-192.ico",
+      icon: "/icons/icon-192.png",
+      badge: "/icons/icon-192.png",
       tag: payload.orderId ? `order-${payload.orderId}` : "new-order",
       data: { url: payload.url }
     })

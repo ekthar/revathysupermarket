@@ -5,6 +5,7 @@ import { statusLabels } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import { gstBusinessName } from "@/lib/billing";
 import { getStoreSettings } from "@/lib/store-settings";
+import { PrintButton } from "@/components/print-button";
 
 export const dynamic = "force-dynamic";
 
@@ -171,9 +172,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
       {/* Print button */}
       <div className="mt-8 text-center print:hidden">
-        <button onClick={() => window.print()} className="rounded-xl bg-slate-900 px-6 py-3 text-sm font-bold text-white">
-          Print Invoice
-        </button>
+        <PrintButton />
       </div>
     </main>
   );

@@ -62,7 +62,7 @@ export function AdminOrdersClient({
   const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
   const [soundUnlocked, setSoundUnlocked] = useState(false);
   const [expandedOrderIds, setExpandedOrderIds] = useState<Set<string>>(() => {
-    // Auto-expand non-delivered/cancelled orders
+    // Only expand undelivered/uncancelled orders. Delivered = collapsed by default
     const active = new Set<string>();
     for (const order of orders) {
       if (!["DELIVERED", "CANCELLED"].includes(order.status)) {

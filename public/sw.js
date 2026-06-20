@@ -22,7 +22,7 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   let payload = {
-    title: "New order - MSM",
+    title: "New order!",
     body: "A new order is waiting in the admin panel.",
     url: "/admin/orders"
   };

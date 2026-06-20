@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
+import { SITE } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Login",
-  description: "Login or create your MSM Supermarket account."
+  description: `Login or create your ${SITE.name} account.`
 };
 
 export default async function LoginPage({

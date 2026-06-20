@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AdminLoginForm } from "@/components/auth/admin-login-form";
+import { SITE } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Staff Login",
-  description: "Staff and admin login for MSM Supermarket."
+  description: `Staff and admin login for ${SITE.name}.`
 };
 
 export default async function AdminLoginPage({

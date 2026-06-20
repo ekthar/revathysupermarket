@@ -12,6 +12,7 @@ import { PhoneInput } from "@/components/onboarding/phone-input";
 import { ProgressDots } from "@/components/onboarding/progress-dots";
 import { readApiResponse } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
+import { SITE } from "@/lib/constants";
 
 type Step = "splash" | "name" | "phone" | "otp" | "location" | "done";
 const STEPS: Step[] = ["splash", "name", "phone", "otp", "location", "done"];
@@ -175,7 +176,7 @@ export function OnboardingFlow({ callbackUrl = "/" }: { callbackUrl?: string }) 
                 transition={{ delay: 0.2 }}
                 className="mt-6 font-display text-3xl font-black text-slate-900 dark:text-white"
               >
-                MSM
+                {SITE.name}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0 }}

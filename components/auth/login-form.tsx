@@ -98,7 +98,7 @@ export function LoginForm({
 
     try {
       await customerLogin(register.email, register.password);
-      showToast("Account created. Welcome to MSM", "success");
+      showToast(`Account created. Welcome to ${SITE.name}`, "success");
       router.push(safeCallback);
       router.refresh();
     } catch {

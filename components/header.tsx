@@ -6,12 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
+import { SITE } from "@/lib/constants";
 import type { SessionIdentity } from "@/components/session-identity-card";
 
 export function Header({
   user,
-  storeName = "MSM",
-  storeAddress = "Kerala"
+  storeName = SITE.name,
+  storeAddress = SITE.address
 }: {
   user: SessionIdentity;
   storeName?: string;

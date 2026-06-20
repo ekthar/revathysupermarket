@@ -251,7 +251,7 @@ export default async function HomePage() {
             <div>
               <h4 className="text-sm font-bold text-slate-900">Contact Information</h4>
               <ul className="mt-3 space-y-2">
-                <li className="text-sm text-slate-500">{settings.address || "Neyyattinkara, Kerala"}</li>
+                <li className="text-sm text-slate-500">{settings.address || "Kerala, India"}</li>
               </ul>
             </div>
           </div>

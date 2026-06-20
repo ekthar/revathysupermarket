@@ -43,7 +43,7 @@ type SavedAddress = {
   isDefault: boolean;
 };
 
-const STORAGE_KEY = "revathy-customer-info";
+const STORAGE_KEY = "store-customer-info";
 
 const initialState: CheckoutState = {
   customerName: "",
@@ -92,6 +92,8 @@ export function CheckoutForm({
   deliveryEstimateMin = 25,
   deliveryEstimateMax = 45,
   minimumOrderValue = 99,
+  storeLatitude,
+  storeLongitude,
   savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
@@ -99,6 +101,8 @@ export function CheckoutForm({
   deliveryEstimateMin?: number;
   deliveryEstimateMax?: number;
   minimumOrderValue?: number;
+  storeLatitude?: number;
+  storeLongitude?: number;
   savedAddresses?: SavedAddress[];
 }) {
   const { items, subtotal, clearCart } = useCart();
@@ -142,8 +146,11 @@ export function CheckoutForm({
     const lat = Number(form.latitude);
     const lng = Number(form.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || !form.latitude || !form.longitude) return null;
-    return calculateDistanceKm({ lat, lng });
-  }, [form.latitude, form.longitude]);
+    const storeCoords = storeLatitude && storeLongitude
+      ? { lat: storeLatitude, lng: storeLongitude }
+      : undefined;
+    return calculateDistanceKm({ lat, lng }, storeCoords);
+  }, [form.latitude, form.longitude, storeLatitude, storeLongitude]);
 
   const pincodeReady = /^\d{6}$/.test(form.pincode);
   const pincodeOk = pincodeReady && isServiceablePincode(form.pincode, allowedPincodes);

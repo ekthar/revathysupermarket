@@ -20,7 +20,7 @@ type BillData = {
     status: keyof typeof statusLabels;
     total: number;
     createdAt: string;
-    items: Array<{ id: string; name: string; quantity: number; price: number; amount: number }>;
+    items: Array<{ id: string; name: string; quantity: number; price: number; amount: number; gstRate: number; taxableValue: number; gstAmount: number }>;
   };
   store: {
     name: string;
@@ -36,6 +36,7 @@ type BillData = {
     gstAmount: number;
     cgst: number;
     sgst: number;
+    perItem?: Array<{ name: string; rate: number; taxable: number; gst: number }>;
   };
 };
 
@@ -65,7 +66,7 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
   const summary = useMemo(() => {
     if (!bill) return "";
     return [
-      `Revathy Supermarket bill #${bill.order.orderNumber}`,
+      `${bill.store.name} bill #${bill.order.orderNumber}`,
       `Customer: ${bill.order.customerName}`,
       `Total: ${formatCurrency(bill.order.total)}`,
       `Payment: ${bill.order.paymentMethod === "COD" ? "Cash on Delivery" : "UPI on Delivery"}`,
@@ -79,12 +80,14 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
       .map((item, index) => `<text x="52" y="${330 + index * 34}" font-size="18" fill="#1e293b">${escapeXml(item.name)} x ${item.quantity}</text><text x="685" y="${330 + index * 34}" font-size="18" font-weight="700" fill="#1e293b" text-anchor="end">${escapeXml(formatCurrency(item.amount))}</text>`)
       .join("");
     const height = Math.max(720, 430 + bill.order.items.length * 34);
+    const initials = bill.store.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="740" height="${height}" viewBox="0 0 740 ${height}">
       <rect width="740" height="${height}" rx="38" fill="#fffaf0"/>
       <rect x="28" y="28" width="684" height="${height - 56}" rx="30" fill="#ffffff" stroke="#dbe7d2" stroke-width="2"/>
-      <circle cx="92" cy="96" r="34" fill="#0F8A5F"/><text x="92" y="105" text-anchor="middle" font-size="25" font-weight="900" fill="#ffffff">RS</text>
-      <text x="142" y="84" font-size="28" font-weight="900" fill="#0f172a">REVATHY SUPERMARKET</text>
+      <circle cx="92" cy="96" r="34" fill="#0F8A5F"/><text x="92" y="105" text-anchor="middle" font-size="25" font-weight="900" fill="#ffffff">${initials}</text>
+      <text x="142" y="84" font-size="28" font-weight="900" fill="#0f172a">${escapeXml(bill.store.name.toUpperCase())}</text>
       <text x="142" y="116" font-size="15" fill="#64748b">${escapeXml(bill.store.address)}</text>
+      ${bill.store.gstin ? `<text x="142" y="140" font-size="13" fill="#64748b">GSTIN: ${escapeXml(bill.store.gstin)}</text>` : ""}
       <text x="52" y="178" font-size="20" font-weight="900" fill="#0f172a">Order #${escapeXml(bill.order.orderNumber)}</text>
       <text x="52" y="210" font-size="15" fill="#64748b">${escapeXml(bill.order.customerName)} | ${escapeXml(bill.order.phone)}</text>
       <text x="52" y="238" font-size="15" fill="#64748b">${escapeXml(bill.order.address)}</text>
@@ -99,7 +102,7 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `revathy-${bill.order.orderNumber}.svg`;
+    link.download = `order-${bill.order.orderNumber}.svg`;
     link.click();
     URL.revokeObjectURL(url);
     showToast("Bill image downloaded", "success");
@@ -148,8 +151,9 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
           <div className="flex justify-between"><span>Taxable value</span><span>{formatCurrency(bill.gst.taxableValue)}</span></div>
           {bill.gst.rate > 0 && (
             <>
-              <div className="mt-1 flex justify-between"><span>CGST</span><span>{formatCurrency(bill.gst.cgst)}</span></div>
-              <div className="mt-1 flex justify-between"><span>SGST</span><span>{formatCurrency(bill.gst.sgst)}</span></div>
+              <div className="mt-1 flex justify-between"><span>CGST ({bill.gst.rate / 2}%)</span><span>{formatCurrency(bill.gst.cgst)}</span></div>
+              <div className="mt-1 flex justify-between"><span>SGST ({bill.gst.rate / 2}%)</span><span>{formatCurrency(bill.gst.sgst)}</span></div>
+              <div className="mt-1 flex justify-between text-xs text-muted-foreground"><span>Total GST ({bill.gst.rate}%)</span><span>{formatCurrency(bill.gst.gstAmount)}</span></div>
             </>
           )}
           <div className="mt-3 flex justify-between border-t border-slate-200 pt-3 text-lg font-black text-slate-950 dark:border-white/10 dark:text-white">

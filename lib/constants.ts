@@ -1,15 +1,16 @@
+// Store coordinates fallback (overridden by DB settings at runtime)
 export const STORE_COORDINATES = {
-  lat: 8.4004,
-  lng: 77.0851
+  lat: Number(process.env.STORE_LAT ?? "8.644361"),
+  lng: Number(process.env.STORE_LNG ?? "76.843472")
 };
 
 export const SITE = {
-  name: "Revathy Supermarket",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://revathysupermarket.in",
-  phone: "+91 98765 43210",
-  whatsapp: "919876543210",
-  address: "Neyyattinkara, Kerala, India",
-  deliveryRadiusKm: 5
+  name: process.env.NEXT_PUBLIC_STORE_NAME ?? "My Supermarket",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  phone: process.env.NEXT_PUBLIC_STORE_PHONE ?? "+91 98765 43210",
+  whatsapp: process.env.NEXT_PUBLIC_STORE_WHATSAPP ?? "919876543210",
+  address: process.env.NEXT_PUBLIC_STORE_ADDRESS ?? "Kerala, India",
+  deliveryRadiusKm: Number(process.env.NEXT_PUBLIC_DELIVERY_RADIUS ?? "5")
 };
 
 export const orderStatuses = [

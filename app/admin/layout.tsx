@@ -48,7 +48,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <ShoppingBag className="h-4 w-4 text-white" />
               </div>
-              <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">Revathy Admin</span>
+              <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">Admin</span>
             </Link>
             <StoreToggleButton />
           </div>

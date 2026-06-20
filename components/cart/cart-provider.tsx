@@ -15,7 +15,7 @@ type CartContextValue = {
 };
 
 const CartContext = createContext<CartContextValue | null>(null);
-const CART_STORAGE_KEY = "revathy-cart-v1";
+const CART_STORAGE_KEY = "store-cart-v1";
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);

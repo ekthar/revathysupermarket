@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Search, ShoppingBag, Sparkles, X } from "lucide-react";
 
-const STORAGE_KEY = "revathy-onboarding-done";
+const STORAGE_KEY = "store-onboarding-done";
 
 type TourStep = {
   id: string;

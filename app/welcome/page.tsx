@@ -4,8 +4,8 @@ import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 
 export const metadata: Metadata = {
-  title: "Welcome to Revathy",
-  description: "Set up your Revathy Supermarket grocery delivery account."
+  title: "Welcome",
+  description: "Set up your grocery delivery account."
 };
 
 export default async function WelcomePage({

@@ -248,7 +248,15 @@ export function SettingsManagementClient({
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Input required value={bannerForm.title} onChange={(event) => setBannerForm((current) => ({ ...current, title: event.target.value }))} placeholder="Offer title" className="h-12 rounded-2xl" />
           <Input value={bannerForm.subtitle} onChange={(event) => setBannerForm((current) => ({ ...current, subtitle: event.target.value }))} placeholder="Subtitle" className="h-12 rounded-2xl" />
-          <Input required value={bannerForm.image} onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))} placeholder="Homepage banner image URL" className="h-12 rounded-2xl md:col-span-2" />
+          <div className="md:col-span-2 grid gap-2">
+            <div className="flex gap-2">
+              <Input required value={bannerForm.image} onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))} placeholder="Paste image URL or upload below" className="h-12 rounded-2xl flex-1" />
+              <BannerUploadButton onUploaded={(url) => setBannerForm((current) => ({ ...current, image: url }))} />
+            </div>
+            {bannerForm.image && (
+              <img src={bannerForm.image} alt="Preview" className="h-20 w-full rounded-xl object-cover border border-border" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} />
+            )}
+          </div>
           <Input value={bannerForm.href} onChange={(event) => setBannerForm((current) => ({ ...current, href: event.target.value }))} placeholder="Promotion link" className="h-12 rounded-2xl" />
           <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-border px-4">
             <input type="checkbox" checked={bannerForm.isActive} onChange={(event) => setBannerForm((current) => ({ ...current, isActive: event.target.checked }))} />
@@ -304,6 +312,7 @@ function LogoUploadSection() {
   const { showToast } = useToast();
   const fileRef = useRef<HTMLInputElement>(null);
   const [logoUrl, setLogoUrl] = useState<string | null>(null);
+  const [logoInput, setLogoInput] = useState("");
   const [uploading, setUploading] = useState(false);
 
   async function uploadLogo(e: React.ChangeEvent<HTMLInputElement>) {
@@ -316,21 +325,46 @@ function LogoUploadSection() {
 
     setUploading(true);
     const formData = new FormData();
-    formData.append("logo", file);
+    formData.append("file", file);
 
     try {
-      const res = await fetch("/api/admin/logo", { method: "POST", body: formData });
-      const data = await readApiResponse<{ logoUrl?: string; error?: string }>(res);
-      if (res.ok && data.logoUrl) {
-        setLogoUrl(data.logoUrl);
+      // Upload to R2 via the existing uploads endpoint
+      const res = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const data = await readApiResponse<{ url?: string; error?: string }>(res);
+      if (res.ok && data.url) {
+        setLogoUrl(data.url);
+        setLogoInput(data.url);
+        // Save to settings
+        await fetch("/api/admin/logo", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ logoUrl: data.url })
+        });
         showToast("Logo uploaded!", "success");
       } else {
-        showToast(data.error || "Upload failed", "error");
+        showToast(data.error || "Upload failed. Try pasting a URL instead.", "error");
       }
     } catch {
-      showToast("Upload failed", "error");
+      showToast("Upload failed. Try pasting a URL instead.", "error");
     } finally {
       setUploading(false);
+    }
+  }
+
+  async function saveLogoUrl() {
+    const url = logoInput.trim();
+    if (!url) return;
+    try { new URL(url); } catch { showToast("Invalid URL", "error"); return; }
+    const res = await fetch("/api/admin/logo", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ logoUrl: url })
+    });
+    if (res.ok) {
+      setLogoUrl(url);
+      showToast("Logo URL saved!", "success");
+    } else {
+      showToast("Failed to save logo URL", "error");
     }
   }
 
@@ -342,26 +376,83 @@ function LogoUploadSection() {
         </span>
         <div>
           <h3 className="font-display text-2xl font-black">Store Logo</h3>
-          <p className="text-xs font-bold text-muted-foreground">Upload your store logo. Used in PWA, splash screen, and header.</p>
+          <p className="text-xs font-bold text-muted-foreground">Upload image or paste any URL (Unsplash, Imgur, etc.)</p>
         </div>
       </div>
-      <div className="mt-4 flex items-center gap-4">
-        <div className="h-20 w-20 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden">
+      <div className="mt-4 flex items-start gap-4">
+        <div className="h-20 w-20 shrink-0 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden">
           {logoUrl ? (
             <img src={logoUrl} alt="Store logo" className="h-full w-full object-contain" />
           ) : (
             <Camera className="h-6 w-6 text-primary/40" />
           )}
         </div>
-        <div className="flex-1">
-          <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading}>
-            <Upload className="h-4 w-4" />
-            {uploading ? "Uploading..." : "Upload Logo"}
-          </Button>
-          <p className="mt-2 text-[10px] text-muted-foreground">PNG, SVG, or JPG. Max 2MB. Square recommended.</p>
+        <div className="flex-1 space-y-2">
+          <div className="flex gap-2">
+            <Input
+              type="url"
+              value={logoInput}
+              onChange={(e) => setLogoInput(e.target.value)}
+              placeholder="Paste logo image URL"
+              className="h-10 rounded-xl flex-1"
+            />
+            <Button type="button" size="sm" onClick={saveLogoUrl} disabled={!logoInput.trim()}>Save</Button>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={uploading}>
+              <Upload className="h-3.5 w-3.5" />
+              {uploading ? "Uploading..." : "Upload file"}
+            </Button>
+            <span className="text-[10px] text-muted-foreground">PNG/JPG/SVG, max 2MB</span>
+          </div>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
         </div>
       </div>
     </div>
+  );
+}
+
+function BannerUploadButton({ onUploaded }: { onUploaded: (url: string) => void }) {
+  const { showToast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Image too large. Max 5MB.", "error");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const data = await readApiResponse<{ url?: string; error?: string }>(res);
+      if (res.ok && data.url) {
+        onUploaded(data.url);
+        showToast("Banner image uploaded!", "success");
+      } else {
+        showToast(data.error || "Upload failed. Paste a URL instead.", "error");
+      }
+    } catch {
+      showToast("Upload failed. Paste a URL instead.", "error");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  return (
+    <>
+      <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading} className="shrink-0 h-12 rounded-2xl">
+        <Upload className="h-4 w-4" />
+        {uploading ? "Uploading..." : "Upload"}
+      </Button>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+    </>
   );
 }

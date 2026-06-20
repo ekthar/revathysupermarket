@@ -6,7 +6,7 @@ import { writeAuditLog } from "@/lib/audit";
 import { requireProductStaff } from "@/lib/authz";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
-import { isAllowedProductImageUrl, safeProductImageUrl } from "@/lib/image";
+import { isAllowedProductImageUrl, normalizeImageUrl, safeProductImageUrl } from "@/lib/image";
 
 async function uniqueProductSlug(name: string, id: string) {
   const baseSlug = slugify(name) || "product";
@@ -36,11 +36,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
         { status: 400 }
       );
     }
-    if (parsed.data.image && !isAllowedProductImageUrl(parsed.data.image)) {
-      return NextResponse.json(
-        { error: "Use a valid HTTPS image URL. Localhost, admin page, and API URLs are not image links." },
-        { status: 400 }
-      );
+    if (parsed.data.image) {
+      parsed.data.image = normalizeImageUrl(parsed.data.image);
+      if (!isAllowedProductImageUrl(parsed.data.image)) {
+        return NextResponse.json(
+          { error: "Use a valid HTTPS image URL. Localhost, admin page, and API URLs are not image links." },
+          { status: 400 }
+        );
+      }
     }
 
     const { category, ...productData } = parsed.data;
@@ -53,7 +56,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       where: { id },
       data: {
         ...productData,
-        image: productData.image !== undefined ? safeProductImageUrl(productData.image) : undefined,
+        image: productData.image !== undefined ? productData.image : undefined,
         unit: productData.unit?.trim(),
         slug,
         category: category

@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { PartyPopper, X } from "lucide-react";
 import { Confetti } from "@/components/ui/confetti";
 
-const STORAGE_KEY = "revathy-first-order-celebrated";
+const STORAGE_KEY = "store-first-order-celebrated";
 
 /**
  * Shows a celebration overlay when the user places their first order.

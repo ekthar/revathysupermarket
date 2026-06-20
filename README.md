@@ -1,50 +1,46 @@
-# Revathy Supermarket Website
+# Grocery Ordering Website (White-Label)
 
-Production-ready grocery ordering website for Revathy Supermarket, Neyyattinkara, Kerala.
+Production-ready, white-label grocery ordering PWA. Deploy for any supermarket in minutes.
 
 ## Stack
 
 - Next.js 15, TypeScript, Tailwind CSS, shadcn-style UI primitives
 - PostgreSQL with Prisma ORM
-- NextAuth credentials authentication with bcrypt password hashing
-- Cloudflare R2-ready image URL support
-- Framer Motion, Recharts, Leaflet/OpenStreetMap
-- PWA manifest, offline shell, robots, sitemap, schema markup
+- NextAuth credentials + Google OAuth authentication
+- Cloudflare R2 image uploads (+ any external URL including Unsplash)
+- Framer Motion animations, PWA with offline support
+- Per-product GST billing, WhatsApp notifications
 
-## Local Setup
+## Quick Start
 
-1. Copy `.env.example` to `.env`.
-2. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, and `NEXT_PUBLIC_SITE_URL`.
-3. Install dependencies with `npm install`.
-4. Run `npx prisma migrate dev`.
-5. Seed sample data with `npm run seed`.
-6. Start development with `npm run dev`.
+1. Copy `.env.example` to `.env` and fill in values.
+2. `npm install`
+3. `npx prisma migrate dev`
+4. `npm run seed`
+5. `npm run dev`
 
-Admin seed login:
+**Default admin login:** `admin@store.in` / `Admin@12345`
+(Customize via `ADMIN_EMAIL` env var before seeding)
 
-- Email: `admin@revathysupermarket.in`
-- Password: `Admin@12345`
+## How Branding Works
 
-## Delivery Rules
+All branding is **100% dynamic** — no code changes per customer:
+- **Admin Settings panel (DB)** → Primary source for name, address, coordinates, phone, delivery rules
+- **Environment variables** → Fallback: `NEXT_PUBLIC_STORE_NAME`, `NEXT_PUBLIC_STORE_ADDRESS`, `STORE_LAT`, `STORE_LNG`
 
-The store coordinates are configured in `lib/constants.ts`. Checkout uses Haversine distance calculation and blocks submission when the customer location is more than 5 KM away.
+## Image Support
 
-## Deployment To Vercel
-
-1. Create a PostgreSQL database.
-2. Add all variables from `.env.example` to Vercel Project Settings.
-3. Connect the repository to Vercel.
-4. Use the default build command: `npm run build`.
-5. Run Prisma migrations against production before the first launch.
-6. Configure Cloudflare R2 public URLs for product and banner images.
+Accepts **any HTTPS image URL**:
+- Unsplash page URLs: `https://unsplash.com/photos/...` (auto-converted to direct image!)
+- Direct image URLs from any host
+- File uploads via Cloudflare R2
 
 ## Folder Structure
 
-```text
-app/                 Next.js routes, API routes, admin and customer pages
-components/          UI, cart, auth, checkout, map, admin components
-lib/                 constants, products, validation, Prisma, distance, WhatsApp helpers
-prisma/              Database schema and seed data
-public/              PWA icons and service worker
-types/               NextAuth type augmentation
+```
+app/          Next.js routes, API routes, admin and customer pages
+components/   UI, cart, auth, checkout, map, admin components
+lib/          constants, products, validation, Prisma, distance, billing
+prisma/       Database schema, migrations, seed data
+public/       PWA icons and service worker
 ```

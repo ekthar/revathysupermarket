@@ -11,6 +11,7 @@ import { OtpInput } from "@/components/onboarding/otp-input";
 import { PhoneInput } from "@/components/onboarding/phone-input";
 import { ProgressDots } from "@/components/onboarding/progress-dots";
 import { readApiResponse } from "@/lib/client-api";
+import { SITE } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 type Step = "splash" | "name" | "phone" | "otp" | "location" | "done";
@@ -175,7 +176,7 @@ export function OnboardingFlow({ callbackUrl = "/" }: { callbackUrl?: string }) 
                 transition={{ delay: 0.2 }}
                 className="mt-6 font-display text-3xl font-black text-slate-900 dark:text-white"
               >
-                Revathy
+                {SITE.name}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0 }}

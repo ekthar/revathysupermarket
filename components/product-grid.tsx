@@ -75,8 +75,8 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
               const value = event.target.value;
               setQuery(value);
               if (value.trim().length >= 3) {
-                const saved = JSON.parse(window.localStorage.getItem("revathy-search-history") || "[]") as string[];
-                window.localStorage.setItem("revathy-search-history", JSON.stringify([value.trim(), ...saved.filter((item) => item !== value.trim())].slice(0, 8)));
+                const saved = JSON.parse(window.localStorage.getItem("store-search-history") || "[]") as string[];
+                window.localStorage.setItem("store-search-history", JSON.stringify([value.trim(), ...saved.filter((item) => item !== value.trim())].slice(0, 8)));
               }
             }}
             placeholder="Search groceries"

@@ -13,7 +13,7 @@ const s3 = new S3Client({
     : undefined
 });
 
-const BUCKET = process.env.S3_BUCKET || "revathy-uploads";
+const BUCKET = process.env.S3_BUCKET || "store-uploads";
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 
 // POST /api/account/avatar - Upload profile picture

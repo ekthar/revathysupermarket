@@ -8,12 +8,15 @@ const prisma = new PrismaClient();
 async function main() {
   const adminPassword = await bcrypt.hash("Admin@12345", 12);
 
+  const adminEmail = process.env.ADMIN_EMAIL || "admin@store.in";
+  const adminName = process.env.ADMIN_NAME || "Store Admin";
+
   await prisma.user.upsert({
-    where: { email: "admin@revathysupermarket.in" },
+    where: { email: adminEmail },
     update: {},
     create: {
-      name: "Revathy Admin",
-      email: "admin@revathysupermarket.in",
+      name: adminName,
+      email: adminEmail,
       phone: "+91 98765 43210",
       passwordHash: adminPassword,
       role: "ADMIN"
@@ -74,11 +77,13 @@ async function main() {
 
   await prisma.setting.createMany({
     data: [
-      { key: "storeName", value: "Revathy Supermarket" },
-      { key: "address", value: "Neyyattinkara, Kerala, India" },
+      { key: "storeName", value: process.env.NEXT_PUBLIC_STORE_NAME || "My Supermarket" },
+      { key: "address", value: process.env.NEXT_PUBLIC_STORE_ADDRESS || "Kerala, India" },
       { key: "phone", value: "+91 98765 43210" },
       { key: "whatsapp", value: "919876543210" },
-      { key: "deliveryRadiusKm", value: "5" }
+      { key: "deliveryRadiusKm", value: "5" },
+      { key: "storeLatitude", value: process.env.STORE_LAT || "8.644361" },
+      { key: "storeLongitude", value: process.env.STORE_LNG || "76.843472" }
     ],
     skipDuplicates: true
   });

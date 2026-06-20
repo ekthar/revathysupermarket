@@ -1,4 +1,4 @@
-# Revathy Supermarket Permissions Matrix
+# Permissions Matrix
 
 | Role | Allowed actions |
 | --- | --- |

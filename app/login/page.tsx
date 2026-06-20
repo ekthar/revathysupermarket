@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { SITE } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -17,7 +18,6 @@ export default async function LoginPage({
   const session = await auth();
   const { callbackUrl } = await searchParams;
 
-  // Already logged in → redirect to appropriate page
   if (session?.user?.id) {
     const role = session.user.role;
     if (role === "DELIVERY_PARTNER") redirect("/delivery");
@@ -25,5 +25,7 @@ export default async function LoginPage({
     redirect(callbackUrl || "/dashboard");
   }
 
-  return <OnboardingFlow callbackUrl={callbackUrl ?? "/"} />;
+  const logoSetting = await prisma.setting.findUnique({ where: { key: "logoUrl" } }).catch(() => null);
+
+  return <OnboardingFlow callbackUrl={callbackUrl ?? "/"} logoUrl={logoSetting?.value || null} />;
 }

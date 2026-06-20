@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import { requireProductStaff } from "@/lib/authz";
+import { normalizeImageUrl } from "@/lib/image";
 
 const schema = z.object({
   title: z.string().min(2),
@@ -28,7 +29,8 @@ export async function POST(request: Request) {
     if (unauthorized) return unauthorized;
     const parsed = schema.safeParse(await request.json());
     if (!parsed.success) return NextResponse.json({ error: "Invalid banner." }, { status: 400 });
-    const banner = await prisma.banner.create({ data: parsed.data });
+    const bannerData = { ...parsed.data, image: normalizeImageUrl(parsed.data.image) };
+    const banner = await prisma.banner.create({ data: bannerData });
     revalidatePath("/");
     revalidatePath("/admin/settings");
     revalidateTag("homepage");

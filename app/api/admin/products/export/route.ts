@@ -54,7 +54,7 @@ export async function GET(request: Request) {
     return new Response(csv, {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
-        "Content-Disposition": "attachment; filename=msm-products.csv"
+        "Content-Disposition": "attachment; filename=products.csv"
       }
     });
   }
@@ -66,7 +66,7 @@ export async function GET(request: Request) {
   return new Response(buffer, {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-      "Content-Disposition": "attachment; filename=msm-products.xlsx"
+      "Content-Disposition": "attachment; filename=products.xlsx"
     }
   });
 }

@@ -99,7 +99,7 @@ export function OrderBillCard({ orderId }: { orderId: string }) {
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     const link = document.createElement("a");
     link.href = url;
-    link.download = `msm-${bill.order.orderNumber}.svg`;
+    link.download = `order-${bill.order.orderNumber}.svg`;
     link.click();
     URL.revokeObjectURL(url);
     showToast("Bill image downloaded", "success");

@@ -6,7 +6,7 @@ import { writeAuditLog } from "@/lib/audit";
 import { requireProductStaff } from "@/lib/authz";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
-import { isAllowedProductImageUrl, PRODUCT_IMAGE_FALLBACK, safeProductImageUrl } from "@/lib/image";
+import { isAllowedProductImageUrl, normalizeImageUrl, PRODUCT_IMAGE_FALLBACK, safeProductImageUrl } from "@/lib/image";
 
 export async function POST(request: Request) {
   try {
@@ -23,7 +23,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const image = parsed.data.image?.trim() || PRODUCT_IMAGE_FALLBACK;
+    const image = normalizeImageUrl(parsed.data.image?.trim() || "") || PRODUCT_IMAGE_FALLBACK;
     if (!isAllowedProductImageUrl(image)) {
       return NextResponse.json(
         { error: "Use a valid HTTPS image URL. Localhost, admin page, and API URLs are not image links." },

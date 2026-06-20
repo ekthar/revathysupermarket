@@ -13,6 +13,7 @@ export function ProductImage({
   alt: string;
   className?: string;
 }) {
+  // safeProductImageUrl already normalizes URLs (converts unsplash page URLs → direct image URLs)
   const [currentSrc, setCurrentSrc] = useState(safeProductImageUrl(src));
 
   return (

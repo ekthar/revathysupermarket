@@ -107,7 +107,7 @@ export function ProductManagementForm() {
       <Input name="discountPrice" placeholder="Discount price" type="number" min="1" step="1" className="h-12 rounded-2xl" />
       <Input name="stock" placeholder="Stock" type="number" min="0" step="1" required className="h-12 rounded-2xl" />
       <Input name="gstRate" placeholder="GST % (optional, overrides store)" type="number" min="0" max="28" step="0.01" className="h-12 rounded-2xl" />
-      <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Any image URL (unsplash, imgur, etc.) or upload below" type="url" className="h-12 rounded-2xl" />
+      <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Paste image URL (unsplash.com/photos/..., imgur, or any https link)" type="url" className="h-12 rounded-2xl" />
       <label className="flex min-h-12 items-center justify-between rounded-2xl border border-lime-fresh/40 bg-lime-fresh/10 px-4 md:col-span-3">
         <span className="text-sm font-black text-primary">Feature this product on homepage</span>
         <input name="isFeatured" type="checkbox" className="h-5 w-5 accent-primary" />

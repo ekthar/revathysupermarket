@@ -50,7 +50,7 @@ export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null })
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="staff@msmsupermarket.in"
+              placeholder="staff@yourstore.in"
               required
               className="h-12 rounded-xl pl-10"
             />

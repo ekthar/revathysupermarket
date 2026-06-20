@@ -1,42 +1,50 @@
-# MSM Supermarket Website
+# Grocery Ordering Website
 
-Production-ready grocery ordering website for MSM Supermarket, Kerala.
+Production-ready, white-label grocery ordering PWA. Deploy for any supermarket in minutes.
 
 ## Stack
 
 - Next.js 15, TypeScript, Tailwind CSS, shadcn-style UI primitives
 - PostgreSQL with Prisma ORM
 - NextAuth credentials authentication with bcrypt password hashing
-- Cloudflare R2-ready image URL support
+- Cloudflare R2-ready image URL support (+ any external URL including Unsplash)
 - Framer Motion, Recharts, Leaflet/OpenStreetMap
 - PWA manifest, offline shell, robots, sitemap, schema markup
 
-## Local Setup
+## Quick Start (Development)
 
-1. Copy `.env.example` to `.env`.
-2. Set `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, and `NEXT_PUBLIC_SITE_URL`.
-3. Install dependencies with `npm install`.
-4. Run `npx prisma migrate dev`.
-5. Seed sample data with `npm run seed`.
-6. Start development with `npm run dev`.
+1. Copy `.env.example` to `.env` and fill in your values.
+2. Install: `npm install`
+3. Run migrations: `npx prisma migrate dev`
+4. Seed data: `npm run seed`
+5. Start: `npm run dev`
 
-Admin seed login:
+**Default admin login:** `admin@store.in` / `Admin@12345`
+(Customize via `ADMIN_EMAIL` env var before seeding)
 
-- Email: `admin@msmsupermarket.in`
-- Password: `Admin@12345`
+## Deploy for a New Customer
 
-## Delivery Rules
+See **[docs/NEW-CUSTOMER-SETUP.md](docs/NEW-CUSTOMER-SETUP.md)** for the complete guide:
+- Database setup (Neon/Supabase/Railway)
+- Vercel deployment
+- Store configuration (name, location, delivery radius)
+- Product setup & image URLs
+- Custom domain
 
-The store coordinates are configured in `lib/constants.ts`. Checkout uses Haversine distance calculation and blocks submission when the customer location is more than 5 KM away.
+## How Store Branding Works
 
-## Deployment To Vercel
+All branding is **dynamic** — no code changes needed per customer:
 
-1. Create a PostgreSQL database.
-2. Add all variables from `.env.example` to Vercel Project Settings.
-3. Connect the repository to Vercel.
-4. Use the default build command: `npm run build`.
-5. Run Prisma migrations against production before the first launch.
-6. Configure Cloudflare R2 public URLs for product and banner images.
+1. **Admin Settings panel** (DB) → Primary source for store name, address, coordinates, phone, delivery rules
+2. **Environment variables** → Fallback: `NEXT_PUBLIC_STORE_NAME`, `NEXT_PUBLIC_STORE_ADDRESS`
+3. **Seed data** → Initial values, overridden by admin settings
+
+## Image URLs
+
+The system accepts **any HTTPS image URL** including:
+- Unsplash page URLs: `https://unsplash.com/photos/...` (auto-converted!)
+- Direct Unsplash: `https://images.unsplash.com/photo-...`
+- Imgur, Cloudflare R2, or any public HTTPS image
 
 ## Folder Structure
 
@@ -46,5 +54,9 @@ components/          UI, cart, auth, checkout, map, admin components
 lib/                 constants, products, validation, Prisma, distance, WhatsApp helpers
 prisma/              Database schema and seed data
 public/              PWA icons and service worker
-types/               NextAuth type augmentation
+docs/                Setup guides, permissions matrix
 ```
+
+## Delivery Rules
+
+The store coordinates are configured in Admin Settings (or `STORE_LAT`/`STORE_LNG` env vars as fallback). Checkout uses Haversine distance calculation and blocks submission when the customer location is more than the configured delivery radius (KM) away.

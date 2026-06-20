@@ -248,7 +248,15 @@ export function SettingsManagementClient({
         <div className="mt-4 grid gap-4 md:grid-cols-2">
           <Input required value={bannerForm.title} onChange={(event) => setBannerForm((current) => ({ ...current, title: event.target.value }))} placeholder="Offer title" className="h-12 rounded-2xl" />
           <Input value={bannerForm.subtitle} onChange={(event) => setBannerForm((current) => ({ ...current, subtitle: event.target.value }))} placeholder="Subtitle" className="h-12 rounded-2xl" />
-          <Input required value={bannerForm.image} onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))} placeholder="Banner image URL (Unsplash, Imgur, etc.)" className="h-12 rounded-2xl md:col-span-2" />
+          <div className="md:col-span-2">
+            <div className="flex gap-2">
+              <Input required value={bannerForm.image} onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))} placeholder="Paste image URL or upload →" className="h-12 rounded-2xl flex-1" />
+              <BannerUploadButton onUploaded={(url) => setBannerForm((current) => ({ ...current, image: url }))} />
+            </div>
+            {bannerForm.image && (
+              <img src={bannerForm.image} alt="Preview" className="mt-2 h-16 w-full rounded-xl object-cover border border-border" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }} />
+            )}
+          </div>
           <Input value={bannerForm.href} onChange={(event) => setBannerForm((current) => ({ ...current, href: event.target.value }))} placeholder="Promotion link" className="h-12 rounded-2xl" />
           <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-border px-4">
             <input type="checkbox" checked={bannerForm.isActive} onChange={(event) => setBannerForm((current) => ({ ...current, isActive: event.target.checked }))} />
@@ -409,5 +417,51 @@ function LogoUploadSection() {
         </div>
       </div>
     </div>
+  );
+}
+
+
+function BannerUploadButton({ onUploaded }: { onUploaded: (url: string) => void }) {
+  const { showToast } = useToast();
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("Image too large. Max 5MB.", "error");
+      return;
+    }
+
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const res = await fetch("/api/admin/uploads", { method: "POST", body: formData });
+      const data = await readApiResponse<{ url?: string; error?: string }>(res);
+      if (res.ok && data.url) {
+        onUploaded(data.url);
+        showToast("Image uploaded!", "success");
+      } else {
+        showToast(data.error || "Upload failed. Paste a URL instead.", "error");
+      }
+    } catch {
+      showToast("Upload failed. Paste a URL instead.", "error");
+    } finally {
+      setUploading(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  return (
+    <>
+      <Button type="button" variant="outline" onClick={() => fileRef.current?.click()} disabled={uploading} className="shrink-0 h-12 rounded-2xl">
+        <Upload className="h-4 w-4" />
+        {uploading ? "..." : "Upload"}
+      </Button>
+      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
+    </>
   );
 }

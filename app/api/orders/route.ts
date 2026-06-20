@@ -64,7 +64,10 @@ export async function POST(request: Request) {
       );
     }
 
-    const distanceKm = calculateDistanceKm({ lat: data.latitude, lng: data.longitude });
+    const distanceKm = calculateDistanceKm(
+      { lat: data.latitude, lng: data.longitude },
+      { lat: settings.storeLatitude, lng: settings.storeLongitude }
+    );
     if (distanceKm > settings.deliveryRadiusKm) {
       return NextResponse.json(
         { error: `Sorry, delivery is currently available only within ${settings.deliveryRadiusKm} KM of our store.` },
@@ -81,6 +84,16 @@ export async function POST(request: Request) {
         })
       : [];
     const existingProductIds = new Set(existingProducts.map((product) => product.id));
+
+    // Fetch per-product GST rates
+    const productGstRates = requestedProductIds.length > 0
+      ? await prisma.product.findMany({
+          where: { id: { in: requestedProductIds } },
+          select: { id: true, gstRate: true }
+        })
+      : [];
+    const gstRateByProductId = new Map(productGstRates.map((p) => [p.id, p.gstRate ? Number(p.gstRate) : null]));
+
     const number = await createOrderNumber();
 
     // Calculate wallet deduction if paying with wallet
@@ -129,7 +142,8 @@ export async function POST(request: Request) {
             productId: existingProductIds.has(item.productId) ? item.productId : null,
             name: item.name,
             quantity: item.quantity,
-            price: item.price
+            price: item.price,
+            gstRate: gstRateByProductId.get(item.productId) ?? settings.gstRatePercent ?? null
           }))
         },
         statusEvents: {

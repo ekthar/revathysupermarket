@@ -1,6 +1,6 @@
 export const STORE_COORDINATES = {
-  lat: 8.4004,
-  lng: 77.0851
+  lat: Number(process.env.STORE_LAT ?? "8.644361"),
+  lng: Number(process.env.STORE_LNG ?? "76.843472")
 };
 
 export const SITE = {

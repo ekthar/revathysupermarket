@@ -155,7 +155,7 @@ export async function saveStoreSettings(settings: StoreSettings) {
 
 /**
  * Check if the store is currently open based on settings.
- * Returns { open, message } with a user-friendly message if closed.
+ * Uses IST timezone (Asia/Kolkata) since Vercel servers run in UTC.
  */
 export function isStoreCurrentlyOpen(settings: StoreSettings): { open: boolean; message?: string } {
   // Manual override - store is marked closed
@@ -163,9 +163,11 @@ export function isStoreCurrentlyOpen(settings: StoreSettings): { open: boolean; 
     return { open: false, message: "Store is currently closed. Please try again later." };
   }
 
+  // Use IST (India Standard Time) regardless of server timezone
   const now = new Date();
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
+  const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const hours = istTime.getHours();
+  const minutes = istTime.getMinutes();
   const currentTime = hours * 60 + minutes;
 
   const [openH, openM] = settings.storeOpenTime.split(":").map(Number);

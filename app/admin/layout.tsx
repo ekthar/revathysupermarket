@@ -6,6 +6,7 @@ import { roleLabel } from "@/lib/roles";
 import { NewOrderAlert } from "@/components/admin/new-order-alert";
 import { prisma } from "@/lib/prisma";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
+import { StoreToggleButton } from "@/components/admin/store-toggle-button";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -26,6 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/returns", label: "Returns", icon: "RotateCcw", show: canManageReturns(role), badge: pendingReturnCount },
     { href: "/admin/customers", label: "Customers", icon: "Users", show: canViewReports(role), badge: 0 },
     { href: "/admin/reports", label: "Reports", icon: "BarChart3", show: canViewReports(role), badge: 0 },
+    { href: "/admin/billing", label: "Billing", icon: "BarChart3", show: canViewReports(role), badge: 0 },
     { href: "/admin/staff", label: "Staff", icon: "Users", show: canManageStaff(role), badge: 0 },
     { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "Bell", show: canViewReports(role), badge: 0 },
     { href: "/admin/promo-codes", label: "Promos", icon: "Bell", show: canManageSettings(role), badge: 0 },
@@ -48,6 +50,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </div>
               <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">Revathy Admin</span>
             </Link>
+            <StoreToggleButton />
           </div>
           <div className="flex items-center gap-4">
             <Link href="/" className="text-[12px] font-semibold text-primary flex items-center gap-1.5 hover:underline px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10">

@@ -29,7 +29,9 @@ const settingsSchema = z.object({
   isStoreOpen: z.coerce.boolean().optional().default(true),
   minimumOrderValue: z.coerce.number().min(0).max(10000).optional().default(99),
   deliveryEstimateMin: z.coerce.number().min(5).max(120).optional().default(25),
-  deliveryEstimateMax: z.coerce.number().min(10).max(180).optional().default(45)
+  deliveryEstimateMax: z.coerce.number().min(10).max(180).optional().default(45),
+  deliveryFee: z.coerce.number().min(0).max(500).optional().default(40),
+  freeDeliveryThreshold: z.coerce.number().min(0).max(50000).optional().default(500)
 });
 
 export async function GET() {

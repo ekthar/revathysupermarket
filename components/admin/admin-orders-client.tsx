@@ -24,7 +24,7 @@ type AdminOrder = {
   staffNote?: string | null;
   acknowledgedAt: string | null;
   createdAt: string;
-  items: Array<{ id: string; name: string; quantity: number; price: number }>;
+  items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
   whatsappLogs: Array<{ id: string; template: string; status: string; createdAt: string }>;
 };
 type AdminProduct = { id: string; name: string; price: number };
@@ -140,7 +140,7 @@ export function AdminOrdersClient({
         staffNote: order.staffNote,
         acknowledgedAt: order.acknowledgedAt ?? null,
         createdAt: order.createdAt,
-        items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price) })),
+        items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price), gstRate: item.gstRate ?? null })),
         whatsappLogs: order.whatsappLogs ?? []
       })));
     }
@@ -463,12 +463,33 @@ export function AdminOrdersClient({
               ) : null}
             </div>
             <ul className="mt-4 grid gap-1.5 text-sm">
-              {order.items.map((item) => (
-                <li key={item.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/60">
-                  <span className="text-[13px] text-slate-700 dark:text-slate-300">{item.name} <span className="text-slate-400">×{item.quantity}</span></span>
-                  <span className="text-[13px] font-semibold text-slate-900 dark:text-white">{formatCurrency(item.price * item.quantity)}</span>
-                </li>
-              ))}
+              {order.items.map((item) => {
+                const itemTotal = item.price * item.quantity;
+                const gstRate = item.gstRate ?? 0;
+                const gstAmt = gstRate > 0 ? itemTotal - itemTotal / (1 + gstRate / 100) : 0;
+                return (
+                  <li key={item.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/60">
+                    <div>
+                      <span className="text-[13px] text-slate-700 dark:text-slate-300">{item.name} <span className="text-slate-400">x{item.quantity}</span></span>
+                      {gstRate > 0 && <span className="ml-2 text-[10px] text-slate-400">({gstRate}% GST: {formatCurrency(gstAmt)})</span>}
+                    </div>
+                    <span className="text-[13px] font-semibold text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
+                  </li>
+                );
+              })}
+              {(() => {
+                const totalGst = order.items.reduce((sum, item) => {
+                  const itemTotal = item.price * item.quantity;
+                  const rate = item.gstRate ?? 0;
+                  return sum + (rate > 0 ? itemTotal - itemTotal / (1 + rate / 100) : 0);
+                }, 0);
+                return totalGst > 0 ? (
+                  <li className="flex items-center justify-between px-3 py-1.5 text-[11px] text-slate-500">
+                    <span>GST (inclusive)</span>
+                    <span>{formatCurrency(totalGst)}</span>
+                  </li>
+                ) : null;
+              })()}
               <li className="flex items-center justify-between px-3 py-2 border-t border-border mt-1">
                 <span className="text-[13px] font-bold text-slate-900 dark:text-white">Total</span>
                 <span className="text-[14px] font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</span>

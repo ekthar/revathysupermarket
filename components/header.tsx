@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 import { Bell, ChevronDown, Heart, HelpCircle, MapPin, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,11 +14,13 @@ import type { SessionIdentity } from "@/components/session-identity-card";
 export function Header({
   user,
   storeName = SITE.name,
-  storeAddress = SITE.address
+  storeAddress = SITE.address,
+  logoUrl
 }: {
   user: SessionIdentity;
   storeName?: string;
   storeAddress?: string;
+  logoUrl?: string | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -54,6 +58,9 @@ export function Header({
           <div className="flex items-center justify-between h-[70px]">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 press">
+              {logoUrl && (
+                <img src={logoUrl} alt={storeName} className="h-9 w-9 rounded-lg object-contain" />
+              )}
               <span className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
                 {storeName}
               </span>

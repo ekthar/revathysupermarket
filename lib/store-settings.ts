@@ -25,6 +25,9 @@ export type StoreSettings = {
   minimumOrderValue: number;
   deliveryEstimateMin: number;  // minutes
   deliveryEstimateMax: number;
+  // Delivery fee settings
+  deliveryFee: number;           // base delivery fee in rupees
+  freeDeliveryThreshold: number; // orders above this amount get free delivery (0 = never free)
 };
 
 export const defaultStoreSettings: StoreSettings = {
@@ -47,7 +50,9 @@ export const defaultStoreSettings: StoreSettings = {
   isStoreOpen: true,
   minimumOrderValue: 99,
   deliveryEstimateMin: 25,
-  deliveryEstimateMax: 45
+  deliveryEstimateMax: 45,
+  deliveryFee: 40,
+  freeDeliveryThreshold: 500
 };
 
 function parseRadius(value?: string) {
@@ -106,7 +111,9 @@ async function readStoreSettings(): Promise<StoreSettings> {
     isStoreOpen: byKey.get("isStoreOpen") !== "false",
     minimumOrderValue: Number(byKey.get("minimumOrderValue") || defaultStoreSettings.minimumOrderValue),
     deliveryEstimateMin: Number(byKey.get("deliveryEstimateMin") || defaultStoreSettings.deliveryEstimateMin),
-    deliveryEstimateMax: Number(byKey.get("deliveryEstimateMax") || defaultStoreSettings.deliveryEstimateMax)
+    deliveryEstimateMax: Number(byKey.get("deliveryEstimateMax") || defaultStoreSettings.deliveryEstimateMax),
+    deliveryFee: Number(byKey.get("deliveryFee") ?? defaultStoreSettings.deliveryFee),
+    freeDeliveryThreshold: Number(byKey.get("freeDeliveryThreshold") ?? defaultStoreSettings.freeDeliveryThreshold)
   };
 }
 
@@ -146,7 +153,9 @@ export async function saveStoreSettings(settings: StoreSettings) {
     ["isStoreOpen", String(settings.isStoreOpen)],
     ["minimumOrderValue", String(settings.minimumOrderValue)],
     ["deliveryEstimateMin", String(settings.deliveryEstimateMin)],
-    ["deliveryEstimateMax", String(settings.deliveryEstimateMax)]
+    ["deliveryEstimateMax", String(settings.deliveryEstimateMax)],
+    ["deliveryFee", String(settings.deliveryFee)],
+    ["freeDeliveryThreshold", String(settings.freeDeliveryThreshold)]
   ];
 
   await prisma.$transaction(

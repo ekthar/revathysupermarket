@@ -28,7 +28,8 @@ export default async function AdminOrdersPage() {
           id: true,
           name: true,
           quantity: true,
-          price: true
+          price: true,
+          gstRate: true
         }
       }
     },
@@ -94,7 +95,8 @@ export default async function AdminOrdersPage() {
           id: item.id,
           name: item.name,
           quantity: item.quantity,
-          price: Number(item.price)
+          price: Number(item.price),
+          gstRate: item.gstRate ? Number(item.gstRate) : null
         })),
         whatsappLogs: logsByOrder.get(order.id) ?? []
       }))}

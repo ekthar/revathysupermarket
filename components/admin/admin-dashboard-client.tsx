@@ -41,6 +41,17 @@ interface Props {
   recentOrders: RecentOrder[];
   monthlyRevenue: { month: string; revenue: number; orders: number }[];
   lowStockProducts: { id: string; name: string; stock: number; image: string }[];
+  // Enhanced metrics
+  gstRatePercent?: number;
+  todayGstCollection?: number;
+  monthGstCollection?: number;
+  monthRevenue?: number;
+  avgOrderValue?: number;
+  categorySales?: { name: string; revenue: number; quantity: number }[];
+  peakHours?: { hour: string; orders: number }[];
+  repeatCustomers?: number;
+  inventoryValuation?: number;
+  totalProducts?: number;
 }
 
 const statusColors: Record<string, string> = {
@@ -68,7 +79,10 @@ export function AdminDashboardClient({
   pendingOrders, packingOrders, deliveredOrders, receivedOrders,
   readyOrders, outForDeliveryOrders, totalCustomers,
   orderChange, revenueChange, customerChange,
-  recentOrders, monthlyRevenue, lowStockProducts
+  recentOrders, monthlyRevenue, lowStockProducts,
+  gstRatePercent = 0, todayGstCollection = 0, monthGstCollection = 0,
+  monthRevenue = 0, avgOrderValue = 0, categorySales = [],
+  peakHours = [], repeatCustomers = 0, inventoryValuation = 0, totalProducts = 0
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const todayDate = new Date().toLocaleDateString("en-IN", {
@@ -218,6 +232,127 @@ export function AdminDashboardClient({
           </div>
         </div>
       </div>
+
+      {/* Enhanced Metrics Row */}
+      {canSeeFinancials && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {gstRatePercent > 0 && (
+            <MetricCard
+              icon={IndianRupee}
+              iconBg="bg-teal-50 dark:bg-teal-950"
+              iconColor="text-teal-600"
+              value={todayGstCollection}
+              prefix="₹"
+              label={`GST (${gstRatePercent}%) Today`}
+            />
+          )}
+          <MetricCard
+            icon={TrendingUp}
+            iconBg="bg-indigo-50 dark:bg-indigo-950"
+            iconColor="text-indigo-600"
+            value={avgOrderValue}
+            prefix="₹"
+            label="Avg Order Value"
+          />
+          <MetricCard
+            icon={Users}
+            iconBg="bg-pink-50 dark:bg-pink-950"
+            iconColor="text-pink-600"
+            value={repeatCustomers}
+            label="Repeat Customers"
+          />
+          <MetricCard
+            icon={Package}
+            iconBg="bg-amber-50 dark:bg-amber-950"
+            iconColor="text-amber-600"
+            value={inventoryValuation}
+            prefix="₹"
+            label="Inventory Value"
+          />
+        </div>
+      )}
+
+      {/* Category Sales + Peak Hours */}
+      {canSeeFinancials && (categorySales.length > 0 || peakHours.length > 0) && (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {categorySales.length > 0 && (
+            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 shadow-sm">
+              <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white mb-3">Category-wise Sales</h2>
+              <div className="space-y-2">
+                {categorySales.map((cat, i) => {
+                  const maxRev = categorySales[0]?.revenue || 1;
+                  const pct = Math.round((cat.revenue / maxRev) * 100);
+                  return (
+                    <div key={cat.name} className="flex items-center gap-3">
+                      <span className="text-[10px] font-bold text-slate-400 w-4">{i + 1}</span>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-[11px] font-medium text-slate-700 dark:text-slate-300 truncate">{cat.name}</span>
+                          <span className="text-[11px] font-bold text-slate-900 dark:text-white shrink-0 ml-2">{formatCurrency(cat.revenue)}</span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                          <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                      </div>
+                      <span className="text-[9px] text-slate-400 w-12 text-right shrink-0">{cat.quantity} sold</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {peakHours.length > 0 && (
+            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 shadow-sm">
+              <h2 className="text-[14px] font-semibold text-slate-900 dark:text-white mb-3">Peak Hours Today</h2>
+              <div className="flex items-end gap-1 h-32">
+                {peakHours.map((h) => {
+                  const maxOrders = Math.max(...peakHours.map((p) => p.orders), 1);
+                  const height = Math.max(4, (h.orders / maxOrders) * 100);
+                  return (
+                    <div key={h.hour} className="flex-1 flex flex-col items-center gap-1">
+                      <span className="text-[8px] font-bold text-slate-500">{h.orders || ""}</span>
+                      <div
+                        className={`w-full rounded-t transition-all ${h.orders > 0 ? "bg-primary/70" : "bg-slate-100 dark:bg-slate-800"}`}
+                        style={{ height: `${height}%` }}
+                      />
+                      <span className="text-[7px] text-slate-400">{h.hour.split(":")[0]}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <p className="text-[10px] text-slate-400 mt-2 text-center">Orders by hour (6 AM - 10 PM)</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Month Summary Card */}
+      {canSeeFinancials && monthRevenue > 0 && (
+        <div className="rounded-2xl bg-gradient-to-r from-primary/10 to-emerald-50 dark:from-primary/5 dark:to-slate-900 border border-primary/20 p-4 shadow-sm">
+          <h2 className="text-[13px] font-semibold text-primary">This Month</h2>
+          <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div>
+              <p className="text-[18px] font-bold text-slate-900 dark:text-white">{formatCurrency(monthRevenue)}</p>
+              <p className="text-[10px] text-slate-500">Revenue</p>
+            </div>
+            {gstRatePercent > 0 && (
+              <div>
+                <p className="text-[18px] font-bold text-slate-900 dark:text-white">{formatCurrency(monthGstCollection)}</p>
+                <p className="text-[10px] text-slate-500">GST Collected</p>
+              </div>
+            )}
+            <div>
+              <p className="text-[18px] font-bold text-slate-900 dark:text-white">{totalProducts}</p>
+              <p className="text-[10px] text-slate-500">Active Products</p>
+            </div>
+            <div>
+              <p className="text-[18px] font-bold text-slate-900 dark:text-white">{Math.round((repeatCustomers / Math.max(totalCustomers, 1)) * 100)}%</p>
+              <p className="text-[10px] text-slate-500">Repeat Rate</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Recent Orders Table */}
       {recentOrders.length > 0 && (

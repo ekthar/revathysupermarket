@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
 import { BarChart3, Bell, ClipboardList, Home, LayoutDashboard, LogOut, Package, RotateCcw, Settings, ShoppingBag, Users } from "lucide-react";
 import { auth, signOut } from "@/auth";
@@ -16,6 +17,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const userName = session.user.name || session.user.email || "Staff";
   const settings = await getPublicStoreSettings();
 
+  // Fetch logo URL
+  const logoSetting = await prisma.setting.findUnique({ where: { key: "logoUrl" } }).catch(() => null);
+  const logoUrl = logoSetting?.value || null;
+
   // Fetch badge counts
   const [newOrderCount, pendingReturnCount] = await Promise.all([
     prisma.order.count({ where: { status: "ORDER_RECEIVED", acknowledgedAt: null } }).catch(() => 0),
@@ -26,6 +31,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin", label: "Dashboard", icon: "LayoutDashboard", show: true, badge: 0 },
     { href: "/admin/orders", label: "Orders", icon: "ShoppingBag", show: true, badge: newOrderCount },
     { href: "/admin/products", label: "Products", icon: "Package", show: canManageProducts(role), badge: 0 },
+    { href: "/admin/categories", label: "Categories", icon: "Package", show: canManageProducts(role), badge: 0 },
     { href: "/admin/returns", label: "Returns", icon: "RotateCcw", show: canManageReturns(role), badge: pendingReturnCount },
     { href: "/admin/customers", label: "Customers", icon: "Users", show: canViewReports(role), badge: 0 },
     { href: "/admin/reports", label: "Reports", icon: "BarChart3", show: canViewReports(role), badge: 0 },
@@ -33,6 +39,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/staff", label: "Staff", icon: "Users", show: canManageStaff(role), badge: 0 },
     { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "Bell", show: canViewReports(role), badge: 0 },
     { href: "/admin/promo-codes", label: "Promos", icon: "Bell", show: canManageSettings(role), badge: 0 },
+    { href: "/admin/offers", label: "Offers", icon: "Bell", show: canManageSettings(role), badge: 0 },
     { href: "/admin/push-notifications", label: "Push", icon: "Bell", show: canManageSettings(role), badge: 0 },
     { href: "/admin/audit-log", label: "Audit Log", icon: "ClipboardList", show: canViewReports(role), badge: 0 },
     { href: "/admin/settings", label: "Settings", icon: "Settings", show: canManageSettings(role), badge: 0 }
@@ -47,8 +54,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="max-w-7xl mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <Link href="/admin" className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <ShoppingBag className="h-4 w-4 text-white" />
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
+                {logoUrl ? (
+                  <img src={logoUrl} alt={settings.storeName} className="h-full w-full object-contain" />
+                ) : (
+                  <ShoppingBag className="h-4 w-4 text-white" />
+                )}
               </div>
               <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">{settings.storeName} Admin</span>
             </Link>

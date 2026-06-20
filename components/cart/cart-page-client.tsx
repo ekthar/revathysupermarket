@@ -1,29 +1,101 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2, Tag } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2, Tag, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
+
+type StoreConfig = {
+  gstRatePercent: number;
+  deliveryFee: number;
+  freeDeliveryThreshold: number;
+  minimumOrderValue: number;
+  storeName: string;
+  gstin: string;
+};
 
 export function CartPageClient() {
   const { items, subtotal, removeItem, updateQuantity } = useCart();
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoDescription, setPromoDescription] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
   const [removingId, setRemovingId] = useState<string | null>(null);
+  const [config, setConfig] = useState<StoreConfig>({
+    gstRatePercent: 0,
+    deliveryFee: 40,
+    freeDeliveryThreshold: 500,
+    minimumOrderValue: 99,
+    storeName: "",
+    gstin: ""
+  });
 
-  const deliveryFee = subtotal > 500 ? 0 : 40;
-  const promoDiscount = promoApplied ? Math.round(subtotal * 0.05) : 0;
-  const tax = Math.round(subtotal * 0.02);
-  const totalAmount = subtotal - promoDiscount + deliveryFee + tax;
+  // Fetch store settings on mount
+  useEffect(() => {
+    fetch("/api/store-settings")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data) setConfig(data); })
+      .catch(() => {});
+  }, []);
+
+  // Calculate dynamic values
+  const deliveryFee = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold ? 0 : config.deliveryFee;
+  
+  // GST is inclusive (already in price) - show breakdown for transparency
+  const gstRate = config.gstRatePercent;
+  const taxableValue = gstRate > 0 ? subtotal / (1 + gstRate / 100) : subtotal;
+  const gstAmount = gstRate > 0 ? subtotal - taxableValue : 0;
+  
+  const totalAmount = subtotal - promoDiscount + deliveryFee;
+  const belowMinimum = subtotal < config.minimumOrderValue && items.length > 0;
+
   const totalSavings = items.reduce((sum, item) => {
     if (item.discountPrice) return sum + (item.price - item.discountPrice) * item.quantity;
     return sum;
   }, 0) + promoDiscount;
 
-  function applyPromo() {
-    if (promoCode.trim().length >= 4) setPromoApplied(true);
+  async function applyPromo() {
+    const code = promoCode.trim();
+    if (code.length < 3) {
+      setPromoError("Enter a valid code");
+      return;
+    }
+    setPromoLoading(true);
+    setPromoError("");
+    try {
+      const res = await fetch("/api/promo-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code, subtotal })
+      });
+      const data = await res.json();
+      if (res.ok && data.valid) {
+        setPromoApplied(true);
+        setPromoDiscount(data.discount);
+        setPromoDescription(data.description);
+        setPromoError("");
+      } else {
+        setPromoError(data.error || "Invalid code");
+        setPromoApplied(false);
+        setPromoDiscount(0);
+      }
+    } catch {
+      setPromoError("Could not validate code");
+    } finally {
+      setPromoLoading(false);
+    }
+  }
+
+  function removePromo() {
+    setPromoApplied(false);
+    setPromoDiscount(0);
+    setPromoDescription("");
+    setPromoCode("");
+    setPromoError("");
   }
 
   function handleRemove(id: string) {
@@ -64,7 +136,17 @@ export function CartPageClient() {
         </div>
       </div>
 
-      {/* Cart Items - Swiggy minimal style (no images) */}
+      {/* Minimum order warning */}
+      {belowMinimum && (
+        <div className="mt-3 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3 flex items-start gap-2">
+          <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+          <p className="text-[12px] font-semibold text-amber-700 dark:text-amber-300">
+            Minimum order value is {formatCurrency(config.minimumOrderValue)}. Add {formatCurrency(config.minimumOrderValue - subtotal)} more to place order.
+          </p>
+        </div>
+      )}
+
+      {/* Cart Items */}
       <div className="mt-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden divide-y divide-slate-50 dark:divide-slate-800">
         <AnimatePresence initial={false}>
           {items.map((item) => {
@@ -80,18 +162,15 @@ export function CartPageClient() {
                 className="px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  {/* Veg/Non-veg indicator dot */}
                   <div className="h-4 w-4 rounded-sm border-2 border-emerald-500 flex items-center justify-center shrink-0">
                     <div className="h-2 w-2 rounded-full bg-emerald-500" />
                   </div>
 
-                  {/* Name + unit */}
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-semibold text-slate-800 dark:text-white truncate">{item.name}</p>
                     <p className="text-[11px] text-slate-400 mt-0.5">{item.unit || "per item"}</p>
                   </div>
 
-                  {/* Quantity stepper */}
                   <div className="flex items-center h-[30px] rounded-lg border border-primary/30 bg-primary/5 dark:bg-primary/10 overflow-hidden shrink-0">
                     <button
                       type="button"
@@ -110,7 +189,6 @@ export function CartPageClient() {
                     </button>
                   </div>
 
-                  {/* Price */}
                   <div className="text-right shrink-0 min-w-[60px]">
                     <p className="text-[13px] font-bold text-slate-900 dark:text-white">{formatCurrency(price * item.quantity)}</p>
                     {item.discountPrice && (
@@ -118,7 +196,6 @@ export function CartPageClient() {
                     )}
                   </div>
 
-                  {/* Remove */}
                   <button
                     type="button"
                     onClick={() => handleRemove(item.id)}
@@ -140,28 +217,32 @@ export function CartPageClient() {
           {promoApplied ? (
             <div className="flex-1 flex items-center justify-between">
               <div>
-                <p className="text-[12px] font-semibold text-emerald-600">Code applied: {promoCode}</p>
-                <p className="text-[10px] text-slate-400">You save {formatCurrency(promoDiscount)}</p>
+                <p className="text-[12px] font-semibold text-emerald-600">Code applied: {promoCode.toUpperCase()}</p>
+                <p className="text-[10px] text-slate-400">{promoDescription} &mdash; You save {formatCurrency(promoDiscount)}</p>
               </div>
-              <button type="button" onClick={() => setPromoApplied(false)} className="text-[11px] font-semibold text-red-500 press">Remove</button>
+              <button type="button" onClick={removePromo} className="text-[11px] font-semibold text-red-500 press">Remove</button>
             </div>
           ) : (
-            <>
-              <input
-                type="text"
-                value={promoCode}
-                onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
-                placeholder="Apply coupon"
-                className="flex-1 h-9 bg-transparent text-[13px] font-medium text-slate-800 dark:text-white outline-none placeholder:text-slate-400"
-              />
-              <button
-                type="button"
-                onClick={applyPromo}
-                className="text-[12px] font-bold text-primary press"
-              >
-                Apply
-              </button>
-            </>
+            <div className="flex-1">
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={promoCode}
+                  onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); }}
+                  placeholder="Apply coupon code"
+                  className="flex-1 h-9 bg-transparent text-[13px] font-medium text-slate-800 dark:text-white outline-none placeholder:text-slate-400"
+                />
+                <button
+                  type="button"
+                  onClick={applyPromo}
+                  disabled={promoLoading}
+                  className="text-[12px] font-bold text-primary press disabled:opacity-50"
+                >
+                  {promoLoading ? "..." : "Apply"}
+                </button>
+              </div>
+              {promoError && <p className="text-[10px] text-red-500 mt-1">{promoError}</p>}
+            </div>
           )}
         </div>
       </div>
@@ -174,6 +255,12 @@ export function CartPageClient() {
             <span className="text-slate-500 dark:text-slate-400">Item total</span>
             <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(subtotal)}</span>
           </div>
+          {gstRate > 0 && (
+            <div className="flex justify-between">
+              <span className="text-slate-500 dark:text-slate-400">GST ({gstRate}% inclusive)</span>
+              <span className="font-medium text-slate-500 dark:text-slate-400">{formatCurrency(gstAmount)}</span>
+            </div>
+          )}
           {promoApplied && (
             <div className="flex justify-between">
               <span className="text-slate-500 dark:text-slate-400">Coupon discount</span>
@@ -186,17 +273,16 @@ export function CartPageClient() {
               {deliveryFee === 0 ? <span className="text-emerald-600">FREE</span> : formatCurrency(deliveryFee)}
             </span>
           </div>
-          {deliveryFee === 0 && (
-            <p className="text-[10px] text-emerald-600 -mt-1">Free delivery on orders above {formatCurrency(500)}</p>
+          {deliveryFee === 0 && config.freeDeliveryThreshold > 0 && (
+            <p className="text-[10px] text-emerald-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
           )}
-          <div className="flex justify-between">
-            <span className="text-slate-500 dark:text-slate-400">Taxes & charges</span>
-            <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(tax)}</span>
-          </div>
           <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 flex justify-between">
             <span className="font-bold text-slate-900 dark:text-white">To Pay</span>
             <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(totalAmount)}</span>
           </div>
+          {gstRate > 0 && (
+            <p className="text-[10px] text-slate-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>
+          )}
         </div>
         {totalSavings > 0 && (
           <div className="mt-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900 px-3 py-2">
@@ -210,11 +296,12 @@ export function CartPageClient() {
       {/* Fixed bottom checkout button */}
       <div className="fixed bottom-[60px] md:bottom-0 inset-x-0 z-40 p-4 md:relative md:mt-5 md:p-0 bg-white/95 dark:bg-slate-950/95 backdrop-blur-md md:bg-transparent md:backdrop-blur-none border-t border-slate-100 dark:border-slate-800 md:border-0" style={{ paddingBottom: "var(--safe-bottom, 0px)" }}>
         <Link
-          href="/checkout"
-          className="flex h-[50px] w-full items-center justify-between rounded-xl bg-primary text-white shadow-md px-5 press"
+          href={belowMinimum ? "#" : "/checkout"}
+          onClick={(e) => { if (belowMinimum) e.preventDefault(); }}
+          className={`flex h-[50px] w-full items-center justify-between rounded-xl shadow-md px-5 press ${belowMinimum ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed" : "bg-primary text-white"}`}
         >
           <div>
-            <p className="text-[14px] font-bold">Proceed to Checkout</p>
+            <p className="text-[14px] font-bold">{belowMinimum ? "Add more items" : "Proceed to Checkout"}</p>
             <p className="text-[10px] text-white/70">{items.length} item{items.length > 1 ? "s" : ""}</p>
           </div>
           <span className="text-[16px] font-bold">{formatCurrency(totalAmount)}</span>

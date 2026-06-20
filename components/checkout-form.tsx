@@ -88,6 +88,10 @@ export function CheckoutForm({
   minimumOrderValue = 99,
   storeLatitude,
   storeLongitude,
+  deliveryFee: baseDeliveryFee = 40,
+  freeDeliveryThreshold = 500,
+  gstRatePercent = 0,
+  gstin = "",
   savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
@@ -97,6 +101,10 @@ export function CheckoutForm({
   minimumOrderValue?: number;
   storeLatitude?: number;
   storeLongitude?: number;
+  deliveryFee?: number;
+  freeDeliveryThreshold?: number;
+  gstRatePercent?: number;
+  gstin?: string;
   savedAddresses?: SavedAddress[];
 }) {
   const { items, subtotal, clearCart } = useCart();
@@ -113,9 +121,9 @@ export function CheckoutForm({
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [walletLoading, setWalletLoading] = useState(true);
 
-  const deliveryFee = subtotal > 500 ? 0 : 40;
-  const tax = Math.round(subtotal * 0.02);
-  const totalAmount = subtotal + deliveryFee + tax;
+  const deliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
+  const gstAmount = gstRatePercent > 0 ? Math.round(subtotal - subtotal / (1 + gstRatePercent / 100)) : 0;
+  const totalAmount = subtotal + deliveryFee;
 
   // Fetch wallet balance on mount
   useEffect(() => {
@@ -150,7 +158,7 @@ export function CheckoutForm({
   const pincodeOk = pincodeReady && isServiceablePincode(form.pincode, allowedPincodes);
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
-  const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting;
+  const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting && subtotal >= minimumOrderValue;
 
   useEffect(() => {
     if (!placedOrderId) return;
@@ -336,7 +344,9 @@ export function CheckoutForm({
                 <p className="text-[10px] text-slate-500 dark:text-slate-400">
                   {subtotal < minimumOrderValue
                     ? `Add ₹${minimumOrderValue - subtotal} more (min order ₹${minimumOrderValue})`
-                    : "Free delivery on orders above ₹500"}
+                    : freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold
+                      ? "Free delivery applied!"
+                      : `Free delivery on orders above ₹${freeDeliveryThreshold}`}
                 </p>
               </div>
             </div>
@@ -539,8 +549,8 @@ export function CheckoutForm({
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Tax</span>
-                <span className="font-semibold text-slate-700">{formatCurrency(tax)}</span>
+                <span className="text-slate-500">{gstRatePercent > 0 ? `GST (${gstRatePercent}% incl.)` : "Tax"}</span>
+                <span className="font-semibold text-slate-700">{formatCurrency(gstAmount)}</span>
               </div>
               <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-3 flex justify-between">
                 <span className="font-black text-slate-900 dark:text-white">Total Amount</span>

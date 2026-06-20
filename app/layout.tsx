@@ -40,13 +40,17 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     role: session.user.role
   } : null;
 
+  // Fetch logo URL from settings
+  const logoSetting = await import("@/lib/prisma").then(m => m.prisma.setting.findUnique({ where: { key: "logoUrl" } })).catch(() => null);
+  const logoUrl = logoSetting?.value || null;
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="pt-safe">
         <Providers>
           <ScrollProgress />
           <OnboardingTour />
-          <Header user={user} storeName={settings.storeName} storeAddress={settings.address} />
+          <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
           <div className="pb-safe">{children}</div>
           <ScrollToTop />
           <MobileBottomNav user={user} />

@@ -7,13 +7,15 @@ import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ArrowRight, CreditCard, LocateFixed, ShoppingBasket, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const STORAGE_KEY = "revathy:onboarding-seen:v1";
+import { SITE } from "@/lib/constants";
+
+const STORAGE_KEY = "store:onboarding-seen:v1";
 
 const slides = [
   {
     icon: ShoppingBasket,
     title: "Fresh groceries in a few taps",
-    text: "Browse Revathy Supermarket like a mobile app, add essentials, and keep your cart ready across visits."
+    text: `Browse ${SITE.name} like a mobile app, add essentials, and keep your cart ready across visits.`
   },
   {
     icon: LocateFixed,
@@ -79,7 +81,7 @@ export function WebOnboarding() {
                 <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-primary shadow-lg">
                   <Icon className="h-7 w-7" />
                 </span>
-                <p className="mt-5 text-xs font-black uppercase tracking-wide text-lime-fresh">Welcome to Revathy</p>
+          <p className="mt-5 text-xs font-black uppercase tracking-wide text-lime-fresh">Welcome to {SITE.name.split(" ")[0]}</p>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={slide.title}

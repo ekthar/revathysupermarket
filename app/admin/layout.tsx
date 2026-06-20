@@ -7,12 +7,14 @@ import { NewOrderAlert } from "@/components/admin/new-order-alert";
 import { prisma } from "@/lib/prisma";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { StoreToggleButton } from "@/components/admin/store-toggle-button";
+import { getPublicStoreSettings } from "@/lib/store-settings";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!isStaffRole(session?.user?.role)) return <>{children}</>;
   const role = session.user.role;
   const userName = session.user.name || session.user.email || "Staff";
+  const settings = await getPublicStoreSettings();
 
   // Fetch badge counts
   const [newOrderCount, pendingReturnCount] = await Promise.all([
@@ -48,7 +50,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <ShoppingBag className="h-4 w-4 text-white" />
               </div>
-              <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">Revathy Admin</span>
+              <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">{settings.storeName} Admin</span>
             </Link>
             <StoreToggleButton />
           </div>

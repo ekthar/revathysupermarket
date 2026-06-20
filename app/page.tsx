@@ -207,7 +207,7 @@ export default async function HomePage() {
       {/* Mobile: All products grid */}
       <section className="px-4 pt-6 pb-6 md:hidden">
         <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-bold text-slate-900">All Products</h2>
+          <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">All Products</h2>
           <Link href="/products" className="flex items-center text-[12px] font-medium text-primary">
             See all <ChevronRight className="h-3.5 w-3.5" />
           </Link>
@@ -225,33 +225,33 @@ export default async function HomePage() {
       </section>
 
       {/* Footer - Desktop */}
-      <footer className="hidden md:block border-t border-slate-100 mt-12">
+      <footer className="hidden md:block border-t border-slate-100 dark:border-slate-800 mt-12">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
           <div className="grid grid-cols-4 gap-8">
             <div>
-              <h3 className="font-display text-lg font-black text-slate-900">{settings.storeName}</h3>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+              <h3 className="font-display text-lg font-black text-slate-900 dark:text-white">{settings.storeName}</h3>
+              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
                 Skip the long lines and heavy bags, we&apos;ll handle the delivery for you.
               </p>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900">Main Pages</h4>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Main Pages</h4>
               <ul className="mt-3 space-y-2">
                 <li><Link href="/" className="text-sm text-slate-500 hover:text-slate-700">Home</Link></li>
                 <li><Link href="/products" className="text-sm text-slate-500 hover:text-slate-700">About Us</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900">Help</h4>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Help</h4>
               <ul className="mt-3 space-y-2">
-                <li><Link href="/products" className="text-sm text-slate-500 hover:text-slate-700">Help Center</Link></li>
-                <li><Link href="/products" className="text-sm text-slate-500 hover:text-slate-700">Return Policy</Link></li>
+                <li><Link href="/products" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Help Center</Link></li>
+                <li><Link href="/products" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Return Policy</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900">Contact Information</h4>
+              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Contact Information</h4>
               <ul className="mt-3 space-y-2">
-                <li className="text-sm text-slate-500">{settings.address || "Neyyattinkara, Kerala"}</li>
+                <li className="text-sm text-slate-500 dark:text-slate-400">{settings.address || "Kerala, India"}</li>
               </ul>
             </div>
           </div>

@@ -43,7 +43,7 @@ type SavedAddress = {
   isDefault: boolean;
 };
 
-const STORAGE_KEY = "revathy-customer-info";
+const STORAGE_KEY = "msm-customer-info";
 
 const initialState: CheckoutState = {
   customerName: "",
@@ -69,18 +69,12 @@ function loadSavedInfo(): Partial<CheckoutState> {
   return {};
 }
 
-// Save customer info to localStorage for next time
+// Save customer info to localStorage for next time (only name and phone - addresses are in DB)
 function saveCustomerInfo(form: CheckoutState) {
   try {
     const toSave = {
       customerName: form.customerName,
-      phone: form.phone,
-      houseName: form.houseName,
-      street: form.street,
-      landmark: form.landmark,
-      pincode: form.pincode,
-      latitude: form.latitude,
-      longitude: form.longitude
+      phone: form.phone
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
   } catch {}
@@ -92,6 +86,8 @@ export function CheckoutForm({
   deliveryEstimateMin = 25,
   deliveryEstimateMax = 45,
   minimumOrderValue = 99,
+  storeLatitude,
+  storeLongitude,
   savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
@@ -99,6 +95,8 @@ export function CheckoutForm({
   deliveryEstimateMin?: number;
   deliveryEstimateMax?: number;
   minimumOrderValue?: number;
+  storeLatitude?: number;
+  storeLongitude?: number;
   savedAddresses?: SavedAddress[];
 }) {
   const { items, subtotal, clearCart } = useCart();
@@ -142,8 +140,11 @@ export function CheckoutForm({
     const lat = Number(form.latitude);
     const lng = Number(form.longitude);
     if (!Number.isFinite(lat) || !Number.isFinite(lng) || !form.latitude || !form.longitude) return null;
-    return calculateDistanceKm({ lat, lng });
-  }, [form.latitude, form.longitude]);
+    const storeCoords = storeLatitude && storeLongitude
+      ? { lat: storeLatitude, lng: storeLongitude }
+      : undefined;
+    return calculateDistanceKm({ lat, lng }, storeCoords);
+  }, [form.latitude, form.longitude, storeLatitude, storeLongitude]);
 
   const pincodeReady = /^\d{6}$/.test(form.pincode);
   const pincodeOk = pincodeReady && isServiceablePincode(form.pincode, allowedPincodes);
@@ -285,7 +286,7 @@ export function CheckoutForm({
               <div className="flex justify-center">
                 <SuccessRing size={100} />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-black text-slate-900">Order Successful!</h2>
+              <h2 className="mt-6 font-display text-2xl font-black text-slate-900 dark:text-white">Order Successful!</h2>
               <p className="mt-2 text-sm text-slate-500 leading-relaxed">
                 We&apos;re preparing your order. See updates in My Orders.
               </p>
@@ -314,10 +315,10 @@ export function CheckoutForm({
         className="flex items-center justify-between py-3 md:hidden"
       >
         <div className="flex items-center gap-3">
-          <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 press">
-            <ArrowLeft className="h-4 w-4 text-slate-700" />
+          <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 press">
+            <ArrowLeft className="h-4 w-4 text-slate-700 dark:text-slate-300" />
           </Link>
-          <h1 className="text-lg font-black text-slate-900">Checkout</h1>
+          <h1 className="text-lg font-black text-slate-900 dark:text-white">Checkout</h1>
         </div>
       </motion.div>
 
@@ -400,14 +401,14 @@ export function CheckoutForm({
             transition={{ delay: 0.2 }}
             className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated"
           >
-            <h2 className="text-[15px] font-black text-slate-900 mb-4">Delivery Address</h2>
+            <h2 className="text-[15px] font-black text-slate-900 dark:text-white mb-4">Delivery Address</h2>
 
             {savedAddresses.length > 0 && (
               <div className="mb-4">
                 <select
                   defaultValue=""
                   onChange={(event) => applySavedAddress(event.target.value)}
-                  className="h-11 w-full rounded-full border border-slate-200 bg-slate-50 px-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary/30"
+                  className="h-11 w-full rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   <option value="">Choose saved address</option>
                   {savedAddresses.map((address) => (
@@ -420,7 +421,7 @@ export function CheckoutForm({
             )}
 
             {/* Location detection */}
-            <div className="rounded-2xl bg-slate-50 p-4 mb-4">
+            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4 mb-4">
               <div className="flex items-center gap-3">
                 <motion.div
                   animate={locationOk ? { scale: [1, 1.1, 1] } : {}}
@@ -430,7 +431,7 @@ export function CheckoutForm({
                   {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
                 </motion.div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-slate-800">
+                  <p className="text-[13px] font-bold text-slate-800 dark:text-white">
                     {locationOk ? `${distance?.toFixed(1)} KM from store` : "GPS verification needed"}
                   </p>
                   <p className="text-[11px] text-slate-500 mt-0.5">Delivery within {deliveryRadiusKm} KM only</p>
@@ -484,7 +485,7 @@ export function CheckoutForm({
                 <textarea
                   value={form.notes}
                   onChange={(event) => update("notes", event.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 bg-slate-50 p-3 text-[13px] outline-none resize-none h-20 focus:border-primary/40 transition-all"
+                  className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-[13px] text-slate-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 transition-all"
                   placeholder="Gate color, preferred time..."
                 />
               </label>
@@ -517,12 +518,12 @@ export function CheckoutForm({
           className="lg:sticky lg:top-[90px] h-fit"
         >
           <section className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated">
-            <h2 className="text-[15px] font-black text-slate-900">Order Summary</h2>
+            <h2 className="text-[15px] font-black text-slate-900 dark:text-white">Order Summary</h2>
             <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between text-[12px]">
-                  <span className="text-slate-600 truncate flex-1 mr-2">{item.name} x{item.quantity}</span>
-                  <span className="font-semibold text-slate-800 shrink-0">{formatCurrency((item.discountPrice ?? item.price) * item.quantity)}</span>
+                  <span className="text-slate-600 dark:text-slate-400 truncate flex-1 mr-2">{item.name} x{item.quantity}</span>
+                  <span className="font-semibold text-slate-800 dark:text-slate-200 shrink-0">{formatCurrency((item.discountPrice ?? item.price) * item.quantity)}</span>
                 </div>
               ))}
             </div>
@@ -541,14 +542,14 @@ export function CheckoutForm({
                 <span className="text-slate-500">Tax</span>
                 <span className="font-semibold text-slate-700">{formatCurrency(tax)}</span>
               </div>
-              <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between">
-                <span className="font-black text-slate-900">Total Amount</span>
-                <span className="font-black text-slate-900 text-[16px]">
+              <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-3 flex justify-between">
+                <span className="font-black text-slate-900 dark:text-white">Total Amount</span>
+                <span className="font-black text-slate-900 dark:text-white text-[16px]">
                   <span className="text-primary">{"₹"}</span> {totalAmount.toFixed(2)}
                 </span>
               </div>
             </div>
-            {message && <p className="mt-4 rounded-xl bg-slate-50 p-3 text-[12px] font-medium text-slate-600">{message}</p>}
+            {message && <p className="mt-4 rounded-xl bg-slate-50 dark:bg-slate-800 p-3 text-[12px] font-medium text-slate-600 dark:text-slate-300">{message}</p>}
             <motion.button
               type="submit"
               disabled={!canSubmit}
@@ -591,8 +592,8 @@ function PaymentMethodCard({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-bold text-slate-800">{label}</p>
-        <p className="text-[11px] text-slate-500 mt-0.5">{description}</p>
+        <p className="text-[13px] font-bold text-slate-800 dark:text-white">{label}</p>
+        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
       </div>
       <motion.div
         animate={active ? { scale: 1, backgroundColor: "#0F8A5F" } : { scale: 1, backgroundColor: "transparent" }}
@@ -632,7 +633,7 @@ function CheckoutField({
         inputMode={inputMode}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full h-11 rounded-xl border border-slate-200 bg-slate-50 px-3.5 text-[13px] outline-none focus:border-primary/40 focus:bg-white transition-all"
+        className="mt-1.5 w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/40 focus:bg-white dark:focus:bg-slate-700 transition-all"
       />
     </label>
   );

@@ -21,6 +21,34 @@ export async function POST(request: Request) {
   const parsed = addressSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid address." }, { status: 400 });
 
+  // Prevent duplicate addresses - check if same houseName + pincode + street already exists
+  const existing = await prisma.address.findFirst({
+    where: {
+      userId: session.user.id,
+      houseName: parsed.data.houseName,
+      pincode: parsed.data.pincode,
+      street: parsed.data.street
+    }
+  });
+
+  if (existing) {
+    // Update existing address instead of creating duplicate
+    if (parsed.data.isDefault) {
+      await prisma.address.updateMany({ where: { userId: session.user.id }, data: { isDefault: false } });
+    }
+    const updated = await prisma.address.update({
+      where: { id: existing.id },
+      data: {
+        label: parsed.data.label,
+        landmark: parsed.data.landmark,
+        latitude: parsed.data.latitude,
+        longitude: parsed.data.longitude,
+        isDefault: parsed.data.isDefault ?? existing.isDefault
+      }
+    });
+    return NextResponse.json({ address: updated });
+  }
+
   if (parsed.data.isDefault) {
     await prisma.address.updateMany({ where: { userId: session.user.id }, data: { isDefault: false } });
   }

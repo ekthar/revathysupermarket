@@ -4,11 +4,11 @@ export const STORE_COORDINATES = {
 };
 
 export const SITE = {
-  name: "Revathy Supermarket",
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://revathysupermarket.in",
+  name: process.env.NEXT_PUBLIC_STORE_NAME ?? "MSM Supermarket",
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://msmsupermarket.in",
   phone: "+91 98765 43210",
   whatsapp: "919876543210",
-  address: "Neyyattinkara, Kerala, India",
+  address: process.env.NEXT_PUBLIC_STORE_ADDRESS ?? "Kerala, India",
   deliveryRadiusKm: 5
 };
 

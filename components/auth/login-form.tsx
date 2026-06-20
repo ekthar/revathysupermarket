@@ -16,7 +16,7 @@ import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole, roleLabel } fr
 
 type Mode = "login" | "register";
 
-const highlights = ["Fresh local delivery", "COD & UPI on delivery", "Neyyattinkara service"];
+const highlights = ["Fresh local delivery", "COD & UPI on delivery", "Local service"];
 
 export function LoginForm({
   callbackUrl = "/dashboard",
@@ -98,7 +98,7 @@ export function LoginForm({
 
     try {
       await customerLogin(register.email, register.password);
-      showToast("Account created. Welcome to Revathy", "success");
+      showToast(`Account created. Welcome to ${SITE.name}`, "success");
       router.push(safeCallback);
       router.refresh();
     } catch {
@@ -128,7 +128,7 @@ export function LoginForm({
             Fresh groceries, made easy.
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-6 text-white/82 sm:text-base">
-            Create your account, save delivery details, track orders, and checkout faster from Neyyattinkara&apos;s local supermarket.
+            Create your account, save delivery details, track orders, and checkout faster from your local supermarket.
           </p>
           <div className="mt-6 grid gap-3">
             {highlights.map((item) => (

@@ -14,7 +14,10 @@
   --input: 220 13% 91%;
   --ring: 158 80% 30%;
   --radius: 0.75rem;
+  --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
 }
 
 .dark {
@@ -65,8 +68,9 @@ h1, h2, h3, h4, h5, h6, .font-display {
 .no-scrollbar::-webkit-scrollbar { display: none; }
 
 /* Safe padding */
+.pt-safe { padding-top: var(--safe-top); }
 .pb-safe { padding-bottom: calc(5rem + var(--safe-bottom)); }
-@media (min-width: 768px) { .pb-safe { padding-bottom: 0; } }
+@media (min-width: 768px) { .pb-safe { padding-bottom: 0; } .pt-safe { padding-top: 0; } }
 
 /* Premium card shadow */
 .card-shadow {

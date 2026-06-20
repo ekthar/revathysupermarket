@@ -1,4 +1,4 @@
-const CACHE = "revathy-supermarket-v2";
+const CACHE = "msm-supermarket-v2";
 const STATIC_ASSETS = ["/", "/products", "/cart", "/offline", "/manifest.webmanifest"];
 
 self.addEventListener("install", (event) => {
@@ -22,7 +22,7 @@ self.addEventListener("fetch", (event) => {
 
 self.addEventListener("push", (event) => {
   let payload = {
-    title: "New order - Revathy",
+    title: "New order!",
     body: "A new order is waiting in the admin panel.",
     url: "/admin/orders"
   };

@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Product } from "@/lib/types";
 
-const KEY = "revathy-recently-viewed";
+const KEY = "msm-recently-viewed";
 
 export function ProductRecentlyViewed({ product }: { product: Product }) {
   const [recent, setRecent] = useState<Product[]>([]);

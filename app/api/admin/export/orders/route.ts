@@ -32,7 +32,7 @@ export async function GET() {
   return new Response(rows.map((row) => row.map(csvCell).join(",")).join("\n"), {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",
-      "Content-Disposition": "attachment; filename=revathy-orders.csv"
+      "Content-Disposition": "attachment; filename=msm-orders.csv"
     }
   });
 }

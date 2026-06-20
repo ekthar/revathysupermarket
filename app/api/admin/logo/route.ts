@@ -11,7 +11,7 @@ const s3 = new S3Client({
     : undefined
 });
 
-const BUCKET = process.env.S3_BUCKET || "revathy-uploads";
+const BUCKET = process.env.S3_BUCKET || "msm-uploads";
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
 // POST /api/admin/logo - Upload store logo

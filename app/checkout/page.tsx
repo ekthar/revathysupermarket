@@ -5,9 +5,11 @@ import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/checkout-form";
 import { getStoreSettings } from "@/lib/store-settings";
 
+import { SITE } from "@/lib/constants";
+
 export const metadata: Metadata = {
   title: "Checkout",
-  description: "Place your Revathy Supermarket order with COD or UPI on delivery."
+  description: `Place your ${SITE.name} order with COD or UPI on delivery.`
 };
 
 export const dynamic = "force-dynamic";
@@ -18,7 +20,7 @@ export default async function CheckoutPage() {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <h1 className="font-display text-4xl font-black">Create an account to order</h1>
-        <p className="mt-3 text-muted-foreground">Revathy orders now require an account so tracking, returns, OTP delivery, and saved addresses work reliably.</p>
+        <p className="mt-3 text-muted-foreground">Orders require an account so tracking, returns, OTP delivery, and saved addresses work reliably.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <Link href="/register?callbackUrl=/checkout" className="rounded-2xl bg-primary px-5 py-3 text-sm font-black text-white">Create account</Link>
           <Link href="/login?callbackUrl=/checkout" className="rounded-2xl border border-border px-5 py-3 text-sm font-black">Log in</Link>
@@ -46,6 +48,8 @@ export default async function CheckoutPage() {
         deliveryEstimateMin={settings.deliveryEstimateMin}
         deliveryEstimateMax={settings.deliveryEstimateMax}
         minimumOrderValue={settings.minimumOrderValue}
+        storeLatitude={settings.storeLatitude}
+        storeLongitude={settings.storeLongitude}
         savedAddresses={addresses.map((address) => ({
           id: address.id,
           label: address.label,

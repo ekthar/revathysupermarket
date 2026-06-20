@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { safeProductImageUrl, PRODUCT_IMAGE_FALLBACK } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +14,11 @@ export function ProductImage({
   className?: string;
 }) {
   const [currentSrc, setCurrentSrc] = useState(safeProductImageUrl(src));
+
+  // Re-render when src prop changes (e.g., after admin updates image)
+  useEffect(() => {
+    setCurrentSrc(safeProductImageUrl(src));
+  }, [src]);
 
   return (
     // eslint-disable-next-line @next/next/no-img-element

@@ -276,13 +276,14 @@ model Order {
 }
 
 model OrderItem {
-  id        String  @id @default(cuid())
+  id        String   @id @default(cuid())
   orderId   String
   productId String?
   name      String
   quantity  Int
-  price     Decimal @db.Decimal(10, 2)
-  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  price     Decimal  @db.Decimal(10, 2)
+  gstRate   Decimal? @db.Decimal(5, 2)
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
 
   @@index([orderId])

@@ -21,7 +21,10 @@ export async function POST(request: Request) {
   if (unauthorized) return unauthorized;
 
   const bucket = process.env.CLOUDFLARE_R2_BUCKET;
-  if (!bucket) return NextResponse.json({ error: "Cloudflare R2 bucket is not configured." }, { status: 500 });
+  if (!bucket) return NextResponse.json({ error: "Cloudflare R2 bucket is not configured. Set CLOUDFLARE_R2_BUCKET env var." }, { status: 500 });
+
+  const publicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+  if (!publicUrl) return NextResponse.json({ error: "CLOUDFLARE_R2_PUBLIC_URL is not configured. Enable public access on your R2 bucket in Cloudflare Dashboard, then add the r2.dev URL to your Vercel env vars." }, { status: 500 });
 
   const formData = await request.formData();
   const file = formData.get("file");
@@ -40,5 +43,6 @@ export async function POST(request: Request) {
     })
   );
 
-  return NextResponse.json({ key, url: getR2PublicUrl(key) });
+  const url = `${publicUrl.replace(/\/$/, "")}/${key}`;
+  return NextResponse.json({ key, url });
 }

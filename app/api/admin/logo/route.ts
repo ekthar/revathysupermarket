@@ -42,6 +42,9 @@ export async function POST(request: Request) {
   const bucket = process.env.CLOUDFLARE_R2_BUCKET;
   if (!bucket) return NextResponse.json({ error: "Cloudflare R2 is not configured. Paste an image URL instead." }, { status: 500 });
 
+  const publicUrl = process.env.CLOUDFLARE_R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL;
+  if (!publicUrl) return NextResponse.json({ error: "CLOUDFLARE_R2_PUBLIC_URL not set. Enable public access on your R2 bucket in Cloudflare, then add the URL to Vercel env vars. Or paste an image URL instead." }, { status: 500 });
+
   const formData = await request.formData();
   const file = (formData.get("logo") ?? formData.get("file")) as File | null;
 
@@ -64,7 +67,7 @@ export async function POST(request: Request) {
       })
     );
 
-    const logoUrl = getR2PublicUrl(key);
+    const logoUrl = `${publicUrl.replace(/\/$/, "")}/${key}`;
 
     // Save to settings DB
     await prisma.setting.upsert({

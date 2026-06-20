@@ -174,6 +174,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border-radius: 1.25rem;
   aspect-ratio: 1 / 1.1;
   transition: transform 0.2s ease;
+  border: 1px solid rgba(0,0,0,0.04);
+}
+.dark .category-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  background-color: hsl(222 47% 12%) !important;
 }
 .category-card:hover { transform: translateY(-2px); }
 
@@ -572,3 +577,58 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* Admin orders dark mode fix */
 .dark .border-white\/70 { border-color: rgba(255,255,255,0.06); }
 .dark .bg-card\/95 { background: hsl(222 47% 9% / 0.95); }
+
+
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  /* Hide admin navigation, sidebar, and non-essential elements */
+  header, nav, aside,
+  .print\\:hidden,
+  [data-admin-nav],
+  [data-admin-sidebar] {
+    display: none !important;
+  }
+
+  /* Hide the admin layout wrapper styling */
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Remove layout grid and padding for full-width invoice */
+  .min-h-screen {
+    min-height: auto !important;
+    background: white !important;
+  }
+
+  /* Force white background everywhere */
+  main, .invoice-print-area {
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    max-width: 100% !important;
+  }
+
+  /* Remove shadows and borders */
+  * {
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  /* Remove grid layout for admin panel */
+  .lg\\:grid-cols-\\[200px_1fr\\] {
+    display: block !important;
+  }
+
+  /* Ensure invoice table prints well */
+  table {
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  /* Page break settings */
+  .page-break-before { page-break-before: always; }
+  .no-page-break { page-break-inside: avoid; }
+}

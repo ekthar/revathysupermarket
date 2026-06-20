@@ -50,7 +50,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       <NewOrderAlert />
 
       {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60">
+      <header data-admin-nav className="sticky top-0 z-40 bg-white/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60 print:hidden">
         <div className="max-w-7xl mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <Link href="/admin" className="flex items-center gap-2.5">
@@ -90,7 +90,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
       <div className="max-w-7xl mx-auto lg:grid lg:grid-cols-[200px_1fr] lg:gap-6 px-4 lg:px-6 py-5">
         {/* Sidebar - client component for active state */}
-        <AdminSidebar nav={nav.filter((n) => n.show)} />
+        <div data-admin-sidebar className="print:hidden">
+          <AdminSidebar nav={nav.filter((n) => n.show)} />
+        </div>
 
         {/* Main content */}
         <main className="min-w-0">{children}</main>

@@ -1,0 +1,226 @@
+name: Build Mobile Apps (APK & IPA)
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build type"
+        required: true
+        default: "debug"
+        type: choice
+        options:
+          - debug
+          - release
+  push:
+    tags:
+      - "v*"
+
+env:
+  APP_ID: "com.beesoftdevs.supermarket"
+  APP_NAME: "BEESOFT DEVS"
+  LIVE_URL: "https://revathysupermarket.vercel.app"
+
+jobs:
+  # ============================================
+  # BUILD ANDROID APK
+  # ============================================
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Java (JDK 17)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Create web directory (Capacitor requires it)
+        run: mkdir -p out && echo "<html><body>Loading...</body></html>" > out/index.html
+
+      - name: Add Android platform
+        run: npx cap add android
+
+      - name: Sync Capacitor
+        run: npx cap sync android
+
+      - name: Update Android app config for live URL
+        run: |
+          # Capacitor config already points to live URL
+          echo "Using live URL: ${{ env.LIVE_URL }}"
+
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+
+      - name: Build Debug APK
+        if: ${{ github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == '' }}
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: Build Release APK
+        if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
+        run: |
+          cd android
+          ./gradlew assembleRelease
+
+      - name: Upload Debug APK
+        if: ${{ github.event.inputs.build_type == 'debug' || github.event.inputs.build_type == '' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      - name: Upload Release APK
+        if: ${{ github.event.inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-apk
+          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          retention-days: 30
+
+      - name: Upload to Release (if tag push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            android/app/build/outputs/apk/release/app-release-unsigned.apk
+            android/app/build/outputs/apk/debug/app-debug.apk
+
+  # ============================================
+  # BUILD iOS IPA
+  # ============================================
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup Xcode
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: latest-stable
+
+      - name: Create web directory (Capacitor requires it)
+        run: mkdir -p out && echo "<html><body>Loading...</body></html>" > out/index.html
+
+      - name: Add iOS platform
+        run: npx cap add ios
+
+      - name: Sync Capacitor
+        run: npx cap sync ios
+
+      - name: Install CocoaPods
+        run: |
+          cd ios/App
+          pod install
+
+      - name: Build iOS (Unsigned - for local signing)
+        run: |
+          cd ios/App
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination generic/platform=iOS \
+            -archivePath build/App.xcarchive \
+            archive \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO
+
+      - name: Create unsigned IPA
+        run: |
+          cd ios/App/build/App.xcarchive/Products/Applications
+          mkdir -p Payload
+          cp -r App.app Payload/
+          zip -r ../../../../App-unsigned.ipa Payload
+          rm -rf Payload
+
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-ios-ipa
+          path: ios/App/build/App-unsigned.ipa
+          retention-days: 30
+
+      - name: Upload to Release (if tag push)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ios/App/build/App-unsigned.ipa
+
+  # ============================================
+  # SIGNED iOS BUILD (requires certificates)
+  # ============================================
+  # build-ios-signed:
+  #   name: Build Signed iOS IPA
+  #   runs-on: macos-latest
+  #   # Only runs if secrets are configured
+  #   if: ${{ secrets.IOS_CERTIFICATE_BASE64 != '' }}
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-node@v4
+  #       with:
+  #         node-version: "20"
+  #         cache: "npm"
+  #     - run: npm ci
+  #     - run: mkdir -p out && echo "<html></html>" > out/index.html
+  #     - run: npx cap add ios && npx cap sync ios
+  #     
+  #     - name: Install Apple Certificate
+  #       uses: apple-actions/import-codesign-certs@v2
+  #       with:
+  #         p12-file-base64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+  #         p12-password: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+  #     
+  #     - name: Install Provisioning Profile
+  #       uses: apple-actions/download-provisioning-profiles@v2
+  #       with:
+  #         bundle-id: ${{ env.APP_ID }}
+  #         issuer-id: ${{ secrets.APPSTORE_ISSUER_ID }}
+  #         api-key-id: ${{ secrets.APPSTORE_KEY_ID }}
+  #         api-private-key: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+  #     
+  #     - name: Build signed IPA
+  #       run: |
+  #         cd ios/App
+  #         pod install
+  #         xcodebuild -workspace App.xcworkspace -scheme App \
+  #           -configuration Release -sdk iphoneos \
+  #           -archivePath build/App.xcarchive archive
+  #         xcodebuild -exportArchive \
+  #           -archivePath build/App.xcarchive \
+  #           -exportPath build/export \
+  #           -exportOptionsPlist ExportOptions.plist
+  #     
+  #     - uses: actions/upload-artifact@v4
+  #       with:
+  #         name: app-ios-signed
+  #         path: ios/App/build/export/*.ipa

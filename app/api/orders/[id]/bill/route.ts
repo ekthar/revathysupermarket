@@ -21,7 +21,35 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 
     const settings = await getStoreSettingsForApi();
     const total = Number(order.total);
-    const gst = calculateInclusiveGst(total, settings.gstRatePercent);
+
+    // Calculate per-item GST (use item's gstRate if available, else global rate)
+    const items = order.items.map((item) => {
+      const amount = Number(item.price) * item.quantity;
+      const itemGstRate = item.gstRate !== null && item.gstRate !== undefined
+        ? Number(item.gstRate)
+        : settings.gstRatePercent;
+      const itemGst = calculateInclusiveGst(amount, itemGstRate);
+      return {
+        id: item.id,
+        name: item.name,
+        quantity: item.quantity,
+        price: Number(item.price),
+        amount,
+        gstRate: itemGstRate,
+        taxableValue: itemGst.taxableValue,
+        gstAmount: itemGst.gstAmount
+      };
+    });
+
+    // Aggregate GST totals
+    const totalTaxableValue = items.reduce((sum, i) => sum + i.taxableValue, 0);
+    const totalGstAmount = items.reduce((sum, i) => sum + i.gstAmount, 0);
+    const totalCgst = totalGstAmount / 2;
+    const totalSgst = totalGstAmount / 2;
+
+    // Determine display rate (uniform if all items same rate)
+    const uniqueRates = [...new Set(items.map((i) => i.gstRate))];
+    const displayRate = uniqueRates.length === 1 ? uniqueRates[0] : settings.gstRatePercent;
 
     return NextResponse.json({
       order: {
@@ -36,12 +64,15 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
         total,
         distanceKm: Number(order.distanceKm),
         createdAt: order.createdAt.toISOString(),
-        items: order.items.map((item) => ({
+        items: items.map((item) => ({
           id: item.id,
           name: item.name,
           quantity: item.quantity,
-          price: Number(item.price),
-          amount: Number(item.price) * item.quantity
+          price: item.price,
+          amount: item.amount,
+          gstRate: item.gstRate,
+          taxableValue: item.taxableValue,
+          gstAmount: item.gstAmount
         }))
       },
       store: {
@@ -53,7 +84,13 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
         gstBusinessName: gstBusinessName(settings),
         gstRatePercent: settings.gstRatePercent
       },
-      gst
+      gst: {
+        rate: displayRate,
+        taxableValue: totalTaxableValue,
+        gstAmount: totalGstAmount,
+        cgst: totalCgst,
+        sgst: totalSgst
+      }
     });
   } catch (error) {
     console.error("Bill load failed", error);

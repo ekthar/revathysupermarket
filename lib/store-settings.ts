@@ -78,14 +78,22 @@ async function readStoreSettings(): Promise<StoreSettings> {
   const settings = await prisma.setting.findMany().catch(() => []);
   const byKey = new Map(settings.map((setting) => [setting.key, setting.value]));
 
+  // For coordinates and address: env vars OVERRIDE DB values when set.
+  // This ensures that updating STORE_LAT/STORE_LNG in Vercel takes effect
+  // even if the DB has old seed data.
+  const envLat = process.env.STORE_LAT;
+  const envLng = process.env.STORE_LNG;
+  const envAddress = process.env.NEXT_PUBLIC_STORE_ADDRESS;
+  const envStoreName = process.env.NEXT_PUBLIC_STORE_NAME;
+
   return {
-    storeName: byKey.get("storeName") ?? defaultStoreSettings.storeName,
-    address: byKey.get("address") ?? defaultStoreSettings.address,
+    storeName: byKey.get("storeName") ?? envStoreName ?? defaultStoreSettings.storeName,
+    address: envAddress || byKey.get("address") || defaultStoreSettings.address,
     phone: byKey.get("phone") ?? defaultStoreSettings.phone,
     whatsapp: byKey.get("whatsapp") ?? defaultStoreSettings.whatsapp,
     deliveryRadiusKm: parseRadius(byKey.get("deliveryRadiusKm")),
-    storeLatitude: parseCoord(byKey.get("storeLatitude"), defaultStoreSettings.storeLatitude),
-    storeLongitude: parseCoord(byKey.get("storeLongitude"), defaultStoreSettings.storeLongitude),
+    storeLatitude: envLat ? parseCoord(envLat, defaultStoreSettings.storeLatitude) : parseCoord(byKey.get("storeLatitude"), defaultStoreSettings.storeLatitude),
+    storeLongitude: envLng ? parseCoord(envLng, defaultStoreSettings.storeLongitude) : parseCoord(byKey.get("storeLongitude"), defaultStoreSettings.storeLongitude),
     serviceablePincodes: parsePincodes(byKey.get("serviceablePincodes")),
     googleMapsUrl: byKey.get("googleMapsUrl") ?? "",
     instagramUrl: byKey.get("instagramUrl") ?? "",

@@ -33,6 +33,14 @@ export function normalizeImageUrl(value: string): string {
     }
   }
 
+  // R2/cloudflare URL without https:// prefix - fix it
+  if (trimmed.match(/^[\w-]+\.r2\.cloudflarestorage\.com\//)) {
+    return `https://${trimmed}`;
+  }
+  if (trimmed.match(/^[\w-]+\.r2\.dev\//)) {
+    return `https://${trimmed}`;
+  }
+
   return trimmed;
 }
 
@@ -51,14 +59,20 @@ export function isAllowedProductImageUrl(value: string) {
 
 /**
  * Returns a safe image URL for rendering.
- * Handles: bare R2 keys, unsplash page URLs, invalid URLs → fallback.
+ * Handles:
+ * - Bare R2 keys (like "products/uuid.jpg") → prefix with R2 public URL
+ * - R2 URLs without https:// → add https://
+ * - Unsplash page URLs → convert to direct image URL
+ * - Invalid/empty → fallback placeholder
  */
 export function safeProductImageUrl(value?: string | null) {
   if (!value) return PRODUCT_IMAGE_FALLBACK;
 
-  // Bare filename (R2 key without full URL) - try to prefix with R2 public URL
-  if (!value.startsWith("http") && !value.startsWith("/icons/")) {
-    const r2Base = typeof process !== "undefined" && (process.env?.CLOUDFLARE_R2_PUBLIC_URL || process.env?.NEXT_PUBLIC_R2_PUBLIC_URL);
+  // If it looks like a relative path / R2 key (no protocol, no domain pattern)
+  if (!value.startsWith("http") && !value.startsWith("/icons/") && !value.match(/^[\w-]+\.(r2\.(cloudflarestorage\.com|dev))\//)) {
+    const r2Base = typeof process !== "undefined"
+      ? (process.env?.CLOUDFLARE_R2_PUBLIC_URL || process.env?.NEXT_PUBLIC_R2_PUBLIC_URL)
+      : undefined;
     if (r2Base) {
       return `${String(r2Base).replace(/\/$/, "")}/${value.replace(/^\//, "")}`;
     }

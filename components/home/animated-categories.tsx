@@ -82,8 +82,8 @@ export function AnimatedCategories({
                   />
                 </div>
                 <div className="text-center">
-                  <p className="text-[13px] font-bold text-slate-800">{cat}</p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">
+                  <p className="text-[13px] font-bold text-slate-800 dark:text-white">{cat}</p>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
                     {allProducts.filter((p) => p.category === cat).length} Products
                   </p>
                 </div>
@@ -102,7 +102,7 @@ export function AnimatedCategories({
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="flex items-center justify-between"
         >
-          <h2 className="text-[15px] font-bold text-slate-900">What are you looking for?</h2>
+          <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">What are you looking for?</h2>
         </motion.div>
 
         <motion.div
@@ -116,7 +116,7 @@ export function AnimatedCategories({
             <motion.div key={cat} variants={itemVariants}>
               <Link
                 href={`/products?category=${encodeURIComponent(cat)}`}
-                className="flex flex-col items-center gap-1.5 rounded-xl bg-slate-50 py-3 px-1 press hover:bg-slate-100 transition-colors"
+                className="flex flex-col items-center gap-1.5 rounded-xl bg-slate-50 dark:bg-slate-800 py-3 px-1 press hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
               >
                 <motion.span
                   whileHover={{ scale: 1.2, rotate: 10 }}
@@ -125,7 +125,7 @@ export function AnimatedCategories({
                 >
                   {categoryIcons[cat] ?? "\ud83d\uded2"}
                 </motion.span>
-                <span className="text-[10px] font-medium text-slate-600 text-center leading-tight line-clamp-1">{cat}</span>
+                <span className="text-[10px] font-medium text-slate-600 dark:text-slate-300 text-center leading-tight line-clamp-1">{cat}</span>
               </Link>
             </motion.div>
           ))}

@@ -137,7 +137,15 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
       if (refresh.ok && data.orders) setOrders(data.orders);
       return;
     }
-    const data = await readApiResponse<{ error?: string }>(response);
+    const data = await readApiResponse<{ error?: string; code?: string }>(response);
+    if (response.status === 503 && data.code === "RATE_LIMIT_UNAVAILABLE") {
+      window.alert("Our ordering system is temporarily busy. Please wait a moment and try again.");
+      return;
+    }
+    if (response.status === 429 && data.code === "RATE_LIMITED") {
+      window.alert("Too many attempts. Please wait a moment before trying again.");
+      return;
+    }
     window.alert(data.error ?? "Approval update failed.");
   }
 
@@ -151,7 +159,19 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   async function submitFeedback() {
     if (!ratingOrderId) return;
     const response = await fetch(`/api/orders/${ratingOrderId}/feedback`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderRating, deliveryRating, tags: [], comment: feedbackComment || undefined }) });
-    if (!response.ok) { const data = await readApiResponse<{ error?: string }>(response); window.alert(data.error ?? "Feedback could not be saved."); return; }
+    if (!response.ok) {
+      const data = await readApiResponse<{ error?: string; code?: string }>(response);
+      if (response.status === 503 && data.code === "RATE_LIMIT_UNAVAILABLE") {
+        window.alert("Our ordering system is temporarily busy. Please wait a moment and try again.");
+        return;
+      }
+      if (response.status === 429 && data.code === "RATE_LIMITED") {
+        window.alert("Too many attempts. Please wait a moment before trying again.");
+        return;
+      }
+      window.alert(data.error ?? "Feedback could not be saved.");
+      return;
+    }
     setRatingOrderId(null); setFeedbackComment("");
   }
 

@@ -293,8 +293,18 @@ export function CheckoutForm({
         })
       });
 
-      const data = await readApiResponse<{ error?: string; orderId?: string; orderNumber?: string }>(response);
+      const data = await readApiResponse<{ error?: string; code?: string; orderId?: string; orderNumber?: string }>(response);
       setIsSubmitting(false);
+
+      if (response.status === 503 && data.code === "RATE_LIMIT_UNAVAILABLE") {
+        showToast("Our ordering system is temporarily busy. Please wait a moment and try again.", "error");
+        return;
+      }
+
+      if (response.status === 429 && data.code === "RATE_LIMITED") {
+        showToast("Too many attempts. Please wait a moment before trying again.", "error");
+        return;
+      }
 
       if (!response.ok) {
         showToast(data.error ?? "Order could not be placed", "error");

@@ -3,9 +3,9 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { Bell, ChevronDown, Heart, HelpCircle, MapPin, Menu, Search, ShoppingBag, Truck, User, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { usePathname, useRouter } from "next/navigation";
+import { Bell, ChevronDown, Heart, HelpCircle, ShoppingBag, Truck, User } from "lucide-react";
+import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { SITE } from "@/lib/constants";
@@ -23,19 +23,8 @@ export function Header({
   logoUrl?: string | null;
 }) {
   const pathname = usePathname();
-  const router = useRouter();
   const { totalItems } = useCart();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-
-  function handleSearch(e: React.FormEvent) {
-    e.preventDefault();
-    const q = searchQuery.trim();
-    if (q) {
-      router.push(`/products?q=${encodeURIComponent(q)}`);
-      setSearchQuery("");
-    }
-  }
 
   // Hide on login/welcome/staff/admin
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
@@ -66,20 +55,6 @@ export function Header({
               </span>
             </Link>
 
-            {/* Search bar - functional */}
-            <form onSubmit={handleSearch} className="flex-1 max-w-xl mx-8">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search Grocery Items..."
-                  className="w-full h-11 rounded-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 pl-11 pr-4 text-sm text-slate-900 dark:text-white outline-none placeholder:text-slate-400 focus:border-primary/50 focus:bg-white dark:focus:bg-slate-700 focus:shadow-sm transition-all"
-                />
-              </div>
-            </form>
-
             {/* Navigation links */}
             <nav className="hidden lg:flex items-center gap-6">
               {navLinks.map((link) => (
@@ -109,6 +84,10 @@ export function Header({
 
               <Link href="/account/favorites" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">
                 <Heart className="h-[18px] w-[18px] text-slate-600 dark:text-slate-300" />
+              </Link>
+
+              <Link href="/account/notifications" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">
+                <Bell className="h-[18px] w-[18px] text-slate-600 dark:text-slate-300" />
               </Link>
 
               <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">

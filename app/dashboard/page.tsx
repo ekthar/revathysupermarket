@@ -73,7 +73,7 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <main className="mx-auto min-h-screen max-w-7xl bg-[#F7F7FA] px-4 pb-28 pt-8 sm:px-6 sm:py-10 lg:px-8">
+    <main className="mx-auto min-h-screen max-w-7xl bg-background px-4 pb-28 pt-8 sm:px-6 sm:py-10 lg:px-8">
       <section className="rounded-[2rem] bg-black p-5 text-white shadow-[0_24px_65px_-40px_rgba(0,0,0,0.9)] sm:p-7">
         <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-400">Order tracking</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight tracking-[-0.06em]">My orders</h1>

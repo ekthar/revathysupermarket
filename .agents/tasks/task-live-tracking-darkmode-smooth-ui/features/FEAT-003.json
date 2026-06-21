@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Enhance mobile UI smoothness with premium animations, transitions, and micro-interactions. Make the app feel buttery smooth like a native iOS/Android app. Add haptic-like feedback, smoother page transitions, and polished micro-interactions throughout the customer-facing pages.",
+  "status": "completed",
+  "steps": [
+    "Enhance components/mobile-bottom-nav.tsx: Add a subtle spring animation when switching tabs (the active indicator should animate between positions using framer-motion layoutId). Add a scale-down + bounce-back animation on tap using whileTap={{ scale: 0.85 }} with spring physics. The cart badge count should animate with a pop effect when changing.",
+    "Enhance the home page recent orders section (components/home/recent-orders-section.tsx): Add staggered fade-in-up animations for each order card using framer-motion variants with staggerChildren. Add a subtle parallax scroll effect on the horizontal scroll cards.",
+    "Add a new component components/ui/haptic-button.tsx: A button wrapper that provides iOS-like press feedback - scales to 0.95 on press with a fast spring, has a subtle shadow reduction on press, and optionally triggers navigator.vibrate(10) on supported devices for haptic feedback.",
+    "Enhance the customer orders client (components/dashboard/customer-orders-client.tsx): Make the expand/collapse animation smoother by adding overflow-hidden during animation and using framer-motion layout animations. The status timeline steps should animate in with a staggered delay when expanded. Add a subtle pulse animation to the active status step.",
+    "Add smooth scroll-linked animations to the header: When scrolling down, the mobile header should shrink slightly (height reduces from 56px to 48px) with a smooth transition. The header background opacity should increase as user scrolls. Use a scroll event listener with requestAnimationFrame for performance.",
+    "Create components/ui/animated-page-wrapper.tsx: A wrapper component that provides consistent page enter/exit animations across all customer pages. Uses framer-motion with a slide-up + fade-in on enter (y: 20 to 0, opacity 0 to 1) with spring physics (stiffness: 260, damping: 25). Export and use in key pages like dashboard, cart, account."
+  ],
+  "acceptance_criteria": [
+    "Bottom nav tab switching has a visible smooth animation (active indicator moves with spring physics)",
+    "Order cards on the home page fade in with staggered timing",
+    "Interactive buttons have visible press feedback (scale down on touch)",
+    "The mobile header responds to scroll with a shrink/opacity change",
+    "Page content animates in smoothly on navigation",
+    "No jank or frame drops during animations (using will-change and GPU-accelerated properties)"
+  ],
+  "verification": [
+    "Run npx next build to verify no TypeScript or build errors",
+    "Verify new component files exist: components/ui/haptic-button.tsx, components/ui/animated-page-wrapper.tsx"
+  ],
+  "blocked_reason": null,
+  "findings": "All animations compile and build successfully. Used framer-motion layoutId for bottom nav tab indicator animation, spring physics for expand/collapse, staggered variants for timeline and order cards, and requestAnimationFrame-throttled scroll listener for header shrink. No jank expected since all animations use GPU-accelerated properties (transform, opacity) with will-change hints."
+}

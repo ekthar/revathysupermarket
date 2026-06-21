@@ -107,7 +107,7 @@ export function CartPageClient() {
 
   if (items.length === 0) {
     return (
-      <main className="flex min-h-[65dvh] flex-col items-center justify-center bg-[#F7F7FA] px-6 text-center">
+      <main className="flex min-h-[65dvh] flex-col items-center justify-center bg-background px-6 text-center">
         <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
           <ShoppingBag className="h-9 w-9 text-slate-300 dark:text-slate-600" />
         </div>
@@ -121,9 +121,9 @@ export function CartPageClient() {
   }
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl bg-[#F7F7FA] px-4 pb-36 pt-5 md:pb-8">
+    <main className="mx-auto min-h-screen max-w-2xl bg-background px-4 pb-36 pt-5 md:pb-8">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 -mx-4 bg-[#F7F7FA]/90 px-4 py-3 backdrop-blur-md">
+      <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/products" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 press">

@@ -29,10 +29,10 @@ export default async function AccountPage() {
   ]);
 
   return (
-    <main className="mx-auto min-h-screen max-w-lg space-y-4 bg-[#F7F7FA] px-4 pb-28 pt-8">
+    <main className="mx-auto min-h-screen max-w-lg space-y-4 bg-background px-4 pb-28 pt-8">
       <div className="text-center">
         <p className="text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">Profile</p>
-        <h1 className="font-display text-lg font-black tracking-[-0.04em] text-slate-950">Your account</h1>
+        <h1 className="font-display text-lg font-black tracking-[-0.04em] text-slate-950 dark:text-white">Your account</h1>
       </div>
 
       {/* Profile card */}
@@ -63,15 +63,15 @@ export default async function AccountPage() {
       </div>
 
       {/* Wallet Balance Card */}
-      <Link href="/account/wallet" className="block rounded-[1.35rem] bg-white p-4 text-slate-950 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] press">
+      <Link href="/account/wallet" className="block rounded-[1.35rem] bg-white dark:bg-slate-900 p-4 text-slate-950 dark:text-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] press">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30">
               <Wallet className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
               <p className="text-[11px] font-bold text-slate-400">Wallet Balance</p>
-              <p className="text-[20px] font-bold tracking-tight">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)}</p>
+              <p className="text-[20px] font-bold tracking-tight dark:text-white">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)}</p>
             </div>
           </div>
           <ChevronRight className="h-5 w-5 text-slate-300" />

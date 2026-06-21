@@ -65,6 +65,30 @@ export function RecentOrdersSection() {
 
   if (loading || orders.length === 0) return null;
 
+  const containerVariants = {
+    hidden: {},
+    visible: {
+      transition: {
+        staggerChildren: 0.08,
+        delayChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, x: 30, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      scale: 1,
+      transition: {
+        type: "spring",
+        stiffness: 260,
+        damping: 24,
+      },
+    },
+  };
+
   return (
     <section className="pt-5 md:hidden">
       <div className="px-4 flex items-center justify-between mb-3">
@@ -74,14 +98,18 @@ export function RecentOrdersSection() {
         </Link>
       </div>
 
-      {/* Horizontal scroll order cards - Foodizo style */}
-      <div className="flex gap-3 overflow-x-auto px-4 no-scrollbar pb-2">
-        {orders.map((order, idx) => (
+      {/* Horizontal scroll order cards - staggered entry */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="flex gap-3 overflow-x-auto px-4 no-scrollbar pb-2"
+      >
+        {orders.map((order) => (
           <motion.div
             key={order.id}
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.08 }}
+            variants={itemVariants}
+            className="will-change-transform"
           >
             <Link
               href="/dashboard"
@@ -120,7 +148,7 @@ export function RecentOrdersSection() {
             </Link>
           </motion.div>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

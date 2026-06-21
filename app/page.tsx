@@ -9,6 +9,7 @@ import { HeroSection } from "@/components/home/hero-section";
 import { AnimatedCategories } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
 import { HomeSearch } from "@/components/home/home-search";
+import { LiveOrderBanner } from "@/components/tracking/live-order-banner";
 import { categories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
@@ -104,6 +105,10 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-white dark:bg-slate-950">
       <HomeSearch products={allProducts} />
+
+      {/* Live Order Tracking Banner - shows when user has an active order */}
+      <LiveOrderBanner />
+
       {/* Hero Section - with parallax + floating card */}
       <HeroSection
         storeName={settings.storeName}

@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Fix dark mode theme across the entire app for consistency and polish. The app uses next-themes with class strategy. Many components have hardcoded light colors (bg-white, text-slate-900, bg-[#F7F7FA]) without dark mode equivalents. Fix these globally so the dark theme looks premium and cohesive.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Fix app/dashboard/page.tsx: Change bg-[#F7F7FA] to bg-background (uses CSS variable). Fix the black hero section to work in dark mode (it already looks fine in dark). Fix the customer-orders-client.tsx status bar that has hardcoded bg-white - add dark:bg-slate-900.",
     "Fix components/dashboard/customer-orders-client.tsx dark mode: (1) Status bar div has bg-white - add dark:bg-slate-900 dark:text-slate-400 dark:shadow-none. (2) Order article cards have bg-white - add dark:bg-slate-900. (3) Items section has bg-slate-50 - add dark:bg-slate-800. (4) Text colors: text-slate-900 needs dark:text-white, text-slate-700 needs dark:text-slate-300, text-slate-400/500 needs dark:text-slate-500. (5) Borders: border-slate-100 needs dark:border-slate-800. (6) Approval card bg-amber-50 needs dark:bg-amber-950/30.",
@@ -25,5 +25,5 @@
     "Grep for bg-[#F7F7FA] to confirm it has been replaced with bg-background or has dark: variant"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All bg-[#F7F7FA] instances replaced with bg-background across 7 files. Dark mode global CSS overrides in globals.css were already handling .dark .bg-white and .dark .text-slate-900 etc. but explicit dark: classes were added on components for reliability. Body dark gradient uses reduced opacity green tint (0.04 vs 0.08). ios-squircle-card and ios-map-placeholder got dark variants. The bg-background/90 opacity pattern works correctly with the CSS variable system in this project."
 }

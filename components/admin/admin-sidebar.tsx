@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { BarChart3, Bell, ClipboardList, LayoutDashboard, Package, RotateCcw, Settings, ShoppingBag, Users } from "lucide-react";
+import { BarChart3, Bell, ClipboardList, CreditCard, LayoutDashboard, MessageSquare, Package, RotateCcw, Settings, ShieldCheck, ShoppingBag, Tag, Ticket, Truck, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const iconMap: Record<string, React.ElementType> = {
@@ -14,7 +14,13 @@ const iconMap: Record<string, React.ElementType> = {
   BarChart3,
   Bell,
   ClipboardList,
-  Settings
+  Settings,
+  Truck,
+  MessageSquare,
+  Tag,
+  Ticket,
+  CreditCard,
+  ShieldCheck,
 };
 
 type NavItem = {

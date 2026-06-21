@@ -9,8 +9,8 @@ export default async function DeliveryPage() {
   const session = await auth();
   const orders = session?.user?.id
     ? await prisma.order.findMany({
-        where: { deliveryPartnerId: session.user.id, status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY"] } },
-        include: { items: true },
+        where: { deliveryPartnerId: session.user.id, status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING"] } },
+        include: { items: true, deliveryCollection: true },
         orderBy: { createdAt: "desc" }
       })
     : [];

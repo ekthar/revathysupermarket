@@ -3,7 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import Link from "next/link";
-import { Bell, ChevronDown, Heart, HelpCircle, ShoppingBag, Truck, User } from "lucide-react";
+import { Bell, Heart, HelpCircle, ShoppingBag, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -47,8 +47,6 @@ export function Header({
 
   // Hide on login/welcome/staff/admin
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
-
-  const shortAddress = storeAddress.split(",")[0]?.trim() || storeAddress;
 
   const navLinks = [
     { href: "/products", label: "Shop" },
@@ -151,17 +149,20 @@ export function Header({
           className="flex items-center justify-between px-4 transition-[height] duration-150 ease-out"
           style={{ height: `${56 - scrollProgress * 8}px` }}
         >
-          {/* Delivery address */}
+          {/* Store name branding */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800">
-              <Truck className="h-4 w-4 text-slate-700 dark:text-slate-300" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[10px] text-slate-400 font-medium">Delivery to</p>
-              <div className="flex items-center gap-0.5">
-                <p className="text-[13px] font-bold text-slate-900 dark:text-white truncate">{shortAddress}</p>
-                <ChevronDown className="h-3 w-3 text-slate-400 shrink-0" />
+            {logoUrl ? (
+              <img src={logoUrl} alt={storeName} className="h-8 w-8 rounded-xl object-contain" />
+            ) : (
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30">
+                <span className="text-sm font-black text-white">{storeName.charAt(0)}</span>
               </div>
+            )}
+            <div className="min-w-0">
+              <p className="font-display text-[15px] font-black tracking-tight text-slate-900 dark:text-white truncate">
+                {storeName}
+              </p>
+              <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">Fresh & Fast Delivery</p>
             </div>
           </Link>
 

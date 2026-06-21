@@ -22,7 +22,7 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
       <nav className="ios-bottom-bar md:hidden" data-disable-edge-swipe="true">
         <div className="ios-glass mx-auto w-full max-w-[24rem] rounded-[1.85rem] p-2 shadow-[0_24px_65px_-30px_rgba(15,23,42,0.55)]">
           <LayoutGroup>
-            <div className="grid min-h-[clamp(52px,8vh,58px)] grid-cols-4 items-center gap-1">
+            <div className="grid h-[58px] grid-cols-4 items-center gap-1">
               <NavTab href="/" icon={Home} label="Home" active={pathname === "/"} />
               <NavTab href="/products" icon={Search} label="Browse" active={pathname.startsWith("/products")} />
               <NavTab href="/cart" icon={ShoppingBag} label="Cart" active={isCartFlow} badge={totalItems} />

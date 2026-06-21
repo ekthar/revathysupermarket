@@ -21,7 +21,7 @@ export async function POST(request: Request) {
   const order = await prisma.order.findFirst({ where: { id: parsed.data.orderId, deliveryPartnerId: session.user.id }, select: { id: true, status: true, deliveryOtp: true, deliveryOtpAttempts: true, deliveryOtpExpiresAt: true, userId: true, orderNumber: true, deliveryCollection: true } });
   if (!order) return NextResponse.json({ error: "Assigned order not found.", code: "ORDER_NOT_FOUND" }, { status: 404 });
   if (order.status === "DELIVERED" && order.deliveryCollection?.completionReference) return NextResponse.json({ success: true, status: "DELIVERED", idempotent: true, completionReference: order.deliveryCollection.completionReference });
-  if (order.status !== "ARRIVING") return NextResponse.json({ error: "Confirm doorstep arrival before delivery.", code: "ARRIVAL_REQUIRED" }, { status: 409 });
+  if (!["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status)) return NextResponse.json({ error: "Order must be out for delivery before completion.", code: "DELIVERY_NOT_STARTED" }, { status: 409 });
   if (!order.deliveryCollection) return NextResponse.json({ error: "Record the collection, including a zero collection for wallet-paid orders.", code: "COLLECTION_REQUIRED" }, { status: 409 });
   if (["SHORT", "EXCESS"].includes(order.deliveryCollection.status)) return NextResponse.json({ error: "Collected amount must exactly match the remaining payable amount.", code: "COLLECTION_MISMATCH" }, { status: 409 });
   if (cents(order.deliveryCollection.cashCollected) + cents(order.deliveryCollection.upiCollected) !== cents(order.deliveryCollection.expectedAmount)) return NextResponse.json({ error: "Collection balance changed. Record it again.", code: "COLLECTION_MISMATCH" }, { status: 409 });
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const completionReference = `DEL-${crypto.randomUUID()}`;
   try {
     await prisma.$transaction(async (tx) => {
-      const claimed = await tx.order.updateMany({ where: { id: order.id, status: "ARRIVING" }, data: { status: "DELIVERED", paymentStatus: "PAID", deliveryConfirmedAt: now, deliveryOtpAttempts: 0 } });
+      const claimed = await tx.order.updateMany({ where: { id: order.id, status: { in: ["OUT_FOR_DELIVERY", "ARRIVING"] } }, data: { status: "DELIVERED", paymentStatus: "PAID", deliveryConfirmedAt: now, deliveryOtpAttempts: 0 } });
       if (claimed.count !== 1) throw new Error("ALREADY_COMPLETED");
       await tx.orderEvent.create({ data: { orderId: order.id, status: "DELIVERED", note: "OTP verified and collection balanced." } });
       await tx.deliveryCollection.update({ where: { orderId: order.id }, data: { completionReference, completedAt: now, status: Number(order.deliveryCollection!.cashCollected) === 0 && Number(order.deliveryCollection!.upiCollected) === 0 ? "SETTLED" : order.deliveryCollection!.status } });

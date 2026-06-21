@@ -1,10 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 import { createNotification } from "@/lib/notifications";
-import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 const schema = z.object({ id: z.string(), status: z.enum(["OPEN", "IN_PROGRESS", "WAITING_FOR_CUSTOMER", "RESOLVED", "CLOSED"]), reply: z.string().trim().max(2000).optional() });
 
@@ -18,8 +16,6 @@ export async function GET() {
 export async function PATCH(request: Request) {
   const permission = await requirePermission("requests.manage");
   if ("error" in permission) return permission.error;
-  const limit = await enforceRateLimit(`admin:support:${permission.ctx.userId}`, 60, 300);
-  if (limit.limited) return rateLimitResponse(limit.reset);
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Invalid support update.", code: "INVALID_SUPPORT_UPDATE" }, { status: 400 });
   const ticket = await prisma.$transaction(async (tx) => {

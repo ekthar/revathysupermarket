@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { CheckCircle2, ExternalLink, MapPin, Package, Phone, ShieldCheck, Truck } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
 import { statusLabels } from "@/lib/constants";
@@ -11,22 +11,17 @@ type DeliveryOrder = { id: string; orderNumber: string; customerName: string; ph
 
 export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
   const { showToast } = useToast();
-  const [entries, setEntries] = useState(orders);
+  // Doorstep distance gating is temporarily disabled. Treat active trips as ready
+  // for collection in the delivery UI while retaining the persisted trip state.
+  const [entries, setEntries] = useState<DeliveryOrder[]>(() => orders.map((entry) =>
+    entry.status === "OUT_FOR_DELIVERY" ? { ...entry, status: "ARRIVING" } : entry
+  ));
   const [loading, setLoading] = useState<string | null>(null);
   const [damageOrder, setDamageOrder] = useState<DeliveryOrder | null>(null);
   const [collectOrder, setCollectOrder] = useState<DeliveryOrder | null>(null);
   const [completeOrder, setCompleteOrder] = useState<DeliveryOrder | null>(null);
 
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    const watch = navigator.geolocation.watchPosition(async (position) => {
-      const response = await fetch("/api/delivery/location", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude }) }).catch(() => null);
-      if (response?.ok) { const data = await response.json(); if (data.status === "ARRIVING") setEntries((current) => current.map((entry) => entry.status === "OUT_FOR_DELIVERY" ? { ...entry, status: "ARRIVING" } : entry)); }
-    }, () => undefined, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
-    return () => navigator.geolocation.clearWatch(watch);
-  }, []);
-
-  async function pickup(order: DeliveryOrder) { setLoading(order.id); const response = await fetch(`/api/delivery/orders/${order.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "picked_up" }) }); const data = await readApiResponse<{ error?: string }>(response); setLoading(null); if (!response.ok) return showToast(data.error ?? "Pickup update failed", "error"); setEntries((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: "OUT_FOR_DELIVERY" } : entry)); }
+  async function pickup(order: DeliveryOrder) { setLoading(order.id); const response = await fetch(`/api/delivery/orders/${order.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "picked_up" }) }); const data = await readApiResponse<{ error?: string }>(response); setLoading(null); if (!response.ok) return showToast(data.error ?? "Pickup update failed", "error"); setEntries((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: "ARRIVING" } : entry)); }
 
   return <div className="mt-4 space-y-4">{entries.length === 0 ? <div className="rounded-3xl border border-dashed border-border p-10 text-center"><Package className="mx-auto h-12 w-12 text-slate-300"/><p className="mt-3 font-bold">No assigned orders</p></div> : entries.map((order) => <article key={order.id} className="overflow-hidden rounded-3xl border border-border bg-card shadow-soft"><div className="flex items-start justify-between gap-3 p-4"><div><div className="flex items-center gap-2"><h2 className="text-lg font-black">#{order.orderNumber}</h2><span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-black text-primary">{statusLabels[order.status]}</span></div><p className="mt-1 text-sm text-muted-foreground">{order.customerName}</p></div><p className="font-black">{formatCurrency(order.total)}</p></div><div className="px-4"><button onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}`, "_blank")} className="flex w-full items-start gap-2 rounded-2xl bg-muted p-3 text-left"><MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary"/><span className="flex-1 text-sm">{order.address}</span><ExternalLink className="h-4 w-4 text-muted-foreground"/></button></div><div className="mt-3 divide-y divide-border px-4">{order.items.map((item) => <div key={item.id} className="flex justify-between py-2 text-sm"><span>{item.name} × {item.quantity}</span><span className="font-bold">{formatCurrency(item.price * item.quantity)}</span></div>)}</div><div className="grid grid-cols-2 gap-2 p-4"><a href={`tel:${order.phone}`} className="flex h-11 items-center justify-center gap-2 rounded-2xl border border-border text-sm font-black"><Phone className="h-4 w-4"/>Call</a>{order.status === "READY_FOR_DELIVERY" && <button disabled={loading === order.id} onClick={() => pickup(order)} className="flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-black text-white"><Truck className="h-4 w-4"/>Confirm pickup</button>}{["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status) && <button onClick={() => setDamageOrder(order)} className="h-11 rounded-2xl border border-border text-sm font-black">Report damage</button>}{order.status === "ARRIVING" && <button onClick={() => setCollectOrder(order)} className="h-11 rounded-2xl bg-blue-600 text-sm font-black text-white">Record collection</button>}</div>{order.status === "OUT_FOR_DELIVERY" && <p className="px-4 pb-4 text-center text-xs font-bold text-amber-700">Collection unlocks automatically within 100 metres of the customer.</p>}{order.status === "ARRIVING" && order.collection && !["SHORT", "EXCESS"].includes(order.collection.status) && <div className="border-t border-border p-4"><button onClick={() => setCompleteOrder(order)} className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-slate-950 font-black text-white"><ShieldCheck className="h-4 w-4"/>OTP and slide to deliver</button></div>}</article>)}{damageOrder && <DamageDialog order={damageOrder} onClose={() => setDamageOrder(null)} onSaved={() => showToast("Damage adjustment recorded", "success")}/>} {collectOrder && <CollectionDialog order={collectOrder} onClose={() => setCollectOrder(null)} onSaved={(collection) => { setEntries((current) => current.map((entry) => entry.id === collectOrder.id ? { ...entry, collection } : entry)); setCollectOrder(null); }}/>} {completeOrder && <CompletionDialog order={completeOrder} onClose={() => setCompleteOrder(null)} onComplete={() => { setEntries((current) => current.filter((entry) => entry.id !== completeOrder.id)); setCompleteOrder(null); showToast("Delivery completed", "success"); }}/>}</div>;
 }

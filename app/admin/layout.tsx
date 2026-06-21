@@ -118,14 +118,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto lg:grid lg:grid-cols-[220px_1fr] lg:gap-6 px-4 lg:px-6 py-5">
-        {/* Sidebar - client component for active state */}
+      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-5">
+        {/* Responsive admin navigation */}
         <div className="print:hidden">
           <AdminSidebar nav={nav.filter((n) => n.show)} />
         </div>
 
         {/* Main content */}
-        <main className="min-w-0">{children}</main>
+        <main className="mt-5 min-w-0">{children}</main>
       </div>
     </div>
   );

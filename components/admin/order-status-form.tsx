@@ -13,7 +13,6 @@ const quickStatuses = [
   { value: "PACKING", label: "Packing", icon: PackageOpen },
   { value: "READY_FOR_DELIVERY", label: "Ready", icon: PackageCheck },
   { value: "OUT_FOR_DELIVERY", label: "Out", icon: Truck },
-  { value: "DELIVERED", label: "Delivered", icon: CheckCircle2 },
   { value: "CANCELLED", label: "Cancel", icon: XCircle }
 ] as const;
 

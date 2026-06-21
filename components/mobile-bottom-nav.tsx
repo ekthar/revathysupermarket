@@ -44,7 +44,7 @@ function NavTab({ href, icon: Icon, label, active, badge }: { href: string; icon
       href={href}
       className={cn(
         "relative flex min-w-0 flex-col items-center justify-center gap-[2px] rounded-2xl px-1 py-2 text-[10px] transition active:scale-[0.97]",
-        active ? "bg-black text-white shadow-[0_12px_22px_-14px_rgba(0,0,0,0.75)]" : "text-slate-500 hover:bg-white/65"
+        active ? "bg-black text-white shadow-[0_12px_22px_-14px_rgba(0,0,0,0.75)]" : "text-slate-500 hover:bg-white/65 dark:hover:bg-slate-800/65"
       )}
     >
       <motion.div whileTap={{ scale: 0.8 }}>

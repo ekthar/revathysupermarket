@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Fix dark mode theme across the entire app for consistency and polish. The app uses next-themes with class strategy. Many components have hardcoded light colors (bg-white, text-slate-900, bg-[#F7F7FA]) without dark mode equivalents. Fix these globally so the dark theme looks premium and cohesive.",
+  "status": "in_progress",
+  "steps": [
+    "Fix app/dashboard/page.tsx: Change bg-[#F7F7FA] to bg-background (uses CSS variable). Fix the black hero section to work in dark mode (it already looks fine in dark). Fix the customer-orders-client.tsx status bar that has hardcoded bg-white - add dark:bg-slate-900.",
+    "Fix components/dashboard/customer-orders-client.tsx dark mode: (1) Status bar div has bg-white - add dark:bg-slate-900 dark:text-slate-400 dark:shadow-none. (2) Order article cards have bg-white - add dark:bg-slate-900. (3) Items section has bg-slate-50 - add dark:bg-slate-800. (4) Text colors: text-slate-900 needs dark:text-white, text-slate-700 needs dark:text-slate-300, text-slate-400/500 needs dark:text-slate-500. (5) Borders: border-slate-100 needs dark:border-slate-800. (6) Approval card bg-amber-50 needs dark:bg-amber-950/30.",
+    "Fix components/home/recent-orders-section.tsx dark mode: Section header text-slate-900 needs dark:text-white. Order cards have bg-white and border-slate-100 already handled by global CSS overrides but verify the text colors are correct.",
+    "Fix components/mobile-bottom-nav.tsx dark mode: The active tab has bg-black text-white which works in both modes. The inactive tabs use text-slate-500 and hover:bg-white/65 - change hover to hover:bg-slate-800/65 for dark. The ios-glass class already has dark mode support.",
+    "Fix components/header.tsx dark mode: Mobile header uses ios-glass (has dark support). Desktop header bg-white needs explicit dark:bg-slate-950 (already has it - verify). Navigation link colors in dark mode.",
+    "Fix app/account/page.tsx dark mode: bg-[#F7F7FA] should become bg-background. Cards with bg-white should get dark:bg-slate-900. Text colors need dark variants.",
+    "Add a global rule in globals.css: .dark body background should use the dark CSS variable gradient (update the body radial gradient for dark mode to use a subtle dark green tint instead of the light one).",
+    "Fix the floating-cart-bar dark mode style (already has dark variant in globals.css - verify it works). Fix any remaining components that use bg-slate-50 without dark:bg-slate-800 equivalent."
+  ],
+  "acceptance_criteria": [
+    "Toggling to dark mode shows consistent dark backgrounds across all customer-facing pages",
+    "No white flashes or unstyled sections in dark mode",
+    "Text remains readable with proper contrast in dark mode",
+    "Cards, buttons, and interactive elements all have dark mode variants",
+    "The body background in dark mode uses a subtle dark gradient instead of the light green tint"
+  ],
+  "verification": [
+    "Run npx next build to verify no TypeScript or build errors",
+    "Grep for bg-[#F7F7FA] to confirm it has been replaced with bg-background or has dark: variant"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -313,7 +313,7 @@ export function CheckoutForm({
 
 
   return (
-    <form onSubmit={submit} className="mx-auto min-h-screen max-w-5xl bg-[#F7F7FA] px-4 pb-32 pt-4 md:pb-8">
+    <form onSubmit={submit} className="mx-auto min-h-screen max-w-5xl bg-background px-4 pb-32 pt-4 md:pb-8">
       {/* First order celebration */}
       <FirstOrderCelebration show={showCelebration} onDismiss={dismissCelebration} />
 

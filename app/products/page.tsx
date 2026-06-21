@@ -60,7 +60,7 @@ export default async function ProductsPage({
   const products = await getProducts();
   const initialCategory = category && ["All", ...new Set(products.map((product) => product.category))].includes(category) ? category : "All";
   return (
-    <main className="min-h-screen bg-[#F7F7FA] pb-24">
+    <main className="min-h-screen bg-background pb-24">
       <section className="overflow-hidden px-4 pb-1 pt-8 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="font-display text-[2rem] font-black leading-none tracking-[-0.06em] sm:text-5xl">Browse</h1>

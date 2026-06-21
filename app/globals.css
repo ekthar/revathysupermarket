@@ -94,6 +94,12 @@ body {
   letter-spacing: -0.01em;
 }
 
+.dark body {
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.04), transparent 28rem),
+    hsl(var(--background));
+}
+
 h1, h2, h3, h4, h5, h6, .font-display {
   font-family: "Manrope", -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
   letter-spacing: -0.02em;
@@ -147,6 +153,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
   box-shadow: 0 24px 70px -44px rgba(15, 23, 42, 0.58);
   border: 1px solid rgba(15, 23, 42, 0.04);
 }
+.dark .ios-squircle-card {
+  background: hsl(222 47% 9%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
 .ios-map-placeholder {
   min-height: 15rem;
   border-radius: 2rem;
@@ -155,6 +166,12 @@ h1, h2, h3, h4, h5, h6, .font-display {
     radial-gradient(circle at 22% 28%, rgba(34, 197, 94, 0.32), transparent 4rem),
     #e8edf2;
   overflow: hidden;
+}
+.dark .ios-map-placeholder {
+  background:
+    linear-gradient(135deg, rgba(15, 23, 42, 0.40), rgba(30, 41, 59, 0.35)),
+    radial-gradient(circle at 22% 28%, rgba(34, 197, 94, 0.2), transparent 4rem),
+    hsl(222 47% 9%);
 }
 .ios-native-scroll {
   -webkit-overflow-scrolling: touch;

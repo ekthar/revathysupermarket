@@ -112,7 +112,7 @@ export function RecentOrdersSection() {
             className="will-change-transform"
           >
             <Link
-              href="/dashboard"
+              href={!["DELIVERED", "CANCELLED"].includes(order.status) ? `/track/${order.id}` : "/dashboard"}
               className="block w-[200px] shrink-0 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm press"
             >
               {/* Order header */}

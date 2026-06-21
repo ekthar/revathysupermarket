@@ -129,8 +129,6 @@ h1, h2, h3, h4, h5, h6, .font-display {
   right: max(0.75rem, var(--safe-right));
   bottom: max(0.75rem, var(--safe-bottom));
   z-index: 70;
-  height: auto;
-  max-height: 5rem;
 }
 .ios-floating-action {
   position: fixed;

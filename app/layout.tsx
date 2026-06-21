@@ -15,9 +15,26 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: `${settings.storeName} | Fresh Groceries`, template: `%s | ${settings.storeName}` },
     description: `Order fresh groceries from ${settings.storeName}. COD & UPI on delivery.`,
     applicationName: settings.storeName,
-    appleWebApp: { capable: true, title: settings.storeName, statusBarStyle: "default" },
-    icons: { apple: "/icons/apple-touch-icon.png" },
-    manifest: "/manifest.webmanifest"
+    appleWebApp: {
+      capable: true,
+      title: settings.storeName,
+      statusBarStyle: "black-translucent"
+    },
+    icons: {
+      icon: [
+        { url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" },
+        { url: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }
+      ],
+      apple: [
+        { url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }
+      ]
+    },
+    manifest: "/manifest.webmanifest",
+    other: {
+      "mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-capable": "yes",
+      "apple-mobile-web-app-status-bar-style": "black-translucent"
+    }
   };
 }
 

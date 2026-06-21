@@ -5,6 +5,23 @@ import { rateLimit as localRateLimit } from "@/lib/rate-limit";
 import { createHash } from "crypto";
 
 const redisLimiters = new Map<string, Ratelimit>();
+let fallbackWarningLogged = false;
+
+function enforceLocalFallback(key: string, limit: number, windowSeconds: number) {
+  const local = localRateLimit(`fallback:${hashRateLimitKey(key)}`, limit, windowSeconds * 1000);
+  return {
+    limited: local.limited,
+    remaining: local.remaining,
+    reset: Date.now() + windowSeconds * 1000,
+    unavailable: true
+  };
+}
+
+function warnAboutFallback() {
+  if (fallbackWarningLogged) return;
+  fallbackWarningLogged = true;
+  console.warn("Distributed rate limiting is unavailable; using the in-process fallback.");
+}
 
 function getLimiter(limit: number, windowSeconds: number) {
   if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
@@ -21,19 +38,23 @@ function getLimiter(limit: number, windowSeconds: number) {
 }
 
 export async function enforceRateLimit(key: string, limit: number, windowSeconds = 60) {
-  const limiter = getLimiter(limit, windowSeconds);
+  let limiter: Ratelimit | null;
+  try {
+    limiter = getLimiter(limit, windowSeconds);
+  } catch {
+    warnAboutFallback();
+    return enforceLocalFallback(key, limit, windowSeconds);
+  }
   if (!limiter) {
-    if (process.env.NODE_ENV === "production") {
-      return { limited: true, remaining: 0, reset: 0, unavailable: true };
-    }
-    const local = localRateLimit(key, limit, windowSeconds * 1000);
-    return { limited: local.limited, remaining: local.remaining, reset: Date.now() + windowSeconds * 1000, unavailable: false };
+    warnAboutFallback();
+    return enforceLocalFallback(key, limit, windowSeconds);
   }
   try {
     const result = await limiter.limit(hashRateLimitKey(key));
     return { limited: !result.success, remaining: result.remaining, reset: result.reset, unavailable: false };
   } catch {
-    return { limited: true, remaining: 0, reset: 0, unavailable: true };
+    warnAboutFallback();
+    return enforceLocalFallback(key, limit, windowSeconds);
   }
 }
 

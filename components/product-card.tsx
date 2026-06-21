@@ -60,7 +60,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
             <h3 className="text-[13px] font-bold text-slate-800 leading-snug line-clamp-1">
               {product.name}
             </h3>
-            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Local Farmers</p>
+            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{product.unit || "Fresh pick"}</p>
           </Link>
           <div className="flex items-center gap-1 mt-1.5">
             <span className="text-[15px] font-black text-slate-900">{formatCurrency(price)}</span>
@@ -89,7 +89,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex items-center gap-1 px-3 py-2 rounded-lg bg-slate-100 text-[11px] font-bold text-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex items-center gap-1 rounded-full bg-black px-3 py-2 text-[11px] font-black text-white transition disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <Plus className="h-3 w-3" />
                 Add to Cart
@@ -108,7 +108,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
       whileHover={{ y: -3 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={cn(
-        "relative bg-white dark:bg-slate-900 rounded-2xl overflow-hidden card-elevated product-card-animated",
+        "relative overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.45)] ring-1 ring-black/[0.03] dark:bg-slate-900 product-card-animated",
         outOfStock && "opacity-50"
       )}
     >
@@ -129,7 +129,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
               initial={{ scale: 0, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
-              className="absolute top-2 left-2 flex items-center gap-1 bg-gradient-to-r from-orange-500 to-red-500 text-white text-[9px] font-bold px-2 py-1 rounded-full shadow-md"
+              className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-[9px] font-black text-white shadow-md"
             >
               <Clock className="h-2.5 w-2.5" />
               {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
@@ -153,7 +153,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
             "font-semibold text-slate-800 leading-snug line-clamp-2",
             compact ? "text-[11px]" : "text-[12px]"
           )}>{product.name}</h3>
-          <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Local Farmers</p>
+          <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{product.unit || "Fresh pack"}</p>
         </Link>
 
         <div className="flex items-end justify-between mt-2.5 gap-1">
@@ -185,10 +185,9 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex items-center gap-1 h-[30px] px-3 rounded-full bg-slate-100 text-[11px] font-bold text-slate-700 transition disabled:opacity-30 disabled:cursor-not-allowed"
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white shadow-[0_10px_20px_-12px_rgba(0,0,0,0.75)] transition disabled:cursor-not-allowed disabled:opacity-30"
               >
-                <Plus className="h-3 w-3" />
-                <span className="hidden sm:inline">Add</span>
+                <Plus className="h-4 w-4" />
               </motion.button>
             )}
           </AnimatePresence>
@@ -217,7 +216,7 @@ function QuantityStepper({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
         transition={{ type: "spring", stiffness: 400, damping: 20 }}
-        className="flex flex-col items-center h-[72px] w-[32px] rounded-full bg-primary overflow-hidden shadow-sm"
+        className="flex flex-col items-center h-[72px] w-[32px] rounded-full bg-black overflow-hidden shadow-sm"
       >
         <motion.button
           type="button"
@@ -260,7 +259,7 @@ function QuantityStepper({
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className="flex items-center h-[30px] rounded-full bg-primary overflow-hidden shadow-sm"
+      className="flex h-[30px] items-center overflow-hidden rounded-full bg-black shadow-sm"
     >
       <motion.button
         type="button"

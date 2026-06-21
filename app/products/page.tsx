@@ -60,14 +60,11 @@ export default async function ProductsPage({
   const products = await getProducts();
   const initialCategory = category && ["All", ...new Set(products.map((product) => product.category))].includes(category) ? category : "All";
   return (
-    <main>
-      <section className="overflow-hidden bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.14))] py-10 sm:py-14">
+    <main className="min-h-screen bg-[#F7F7FA] pb-24">
+      <section className="overflow-hidden px-4 pb-1 pt-8 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">Fresh today</span>
-          <h1 className="mt-4 font-display text-4xl font-black leading-tight sm:text-5xl">Shop groceries</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-muted-foreground sm:text-base">
-            Live search, category filtering, price filtering, and delivery-ready products from your local supermarket.
-          </p>
+          <h1 className="font-display text-[2rem] font-black leading-none tracking-[-0.06em] sm:text-5xl">Browse</h1>
+          <p className="mt-2 text-sm font-semibold text-slate-400">{products.length} products available</p>
         </div>
       </section>
       <ProductGrid items={products} initialCategory={initialCategory} initialQuery={q || ""} />

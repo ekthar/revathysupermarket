@@ -115,15 +115,15 @@ export function LoginForm({
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[2.25rem] bg-primary p-5 text-white shadow-[0_24px_70px_-34px_rgba(15,23,42,0.9)] sm:p-8"
+        className="relative overflow-hidden rounded-[2.25rem] bg-black p-5 text-white shadow-[0_24px_70px_-34px_rgba(15,23,42,0.9)] sm:p-8"
       >
         <div className="absolute -right-10 top-10 h-44 w-44 rounded-full bg-lime-fresh/25 blur-3xl" />
         <div className="absolute -bottom-16 left-6 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
         <div className="relative">
-          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-primary">
+          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-black">
             <ShoppingBasket className="h-7 w-7" />
           </div>
-          <p className="mt-6 text-xs font-black uppercase tracking-wide text-lime-fresh">{SITE.name}</p>
+          <p className="mt-6 text-xs font-black uppercase tracking-wide text-emerald-400">{SITE.name}</p>
           <h1 className="mt-3 font-display text-4xl font-black leading-tight sm:text-6xl">
             Fresh groceries, made easy.
           </h1>
@@ -138,7 +138,7 @@ export function LoginForm({
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-3 rounded-2xl bg-white/12 p-3 text-sm font-black backdrop-blur"
               >
-                <CheckCircle2 className="h-5 w-5 text-lime-fresh" />
+                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
                 {item}
               </motion.div>
             ))}
@@ -146,7 +146,7 @@ export function LoginForm({
         </div>
       </motion.div>
 
-      <div className="rounded-[2rem] border border-white/70 bg-card/95 p-4 shadow-soft backdrop-blur dark:border-white/10 sm:p-5">
+      <div className="rounded-[2rem] border border-white/70 bg-white/95 p-4 shadow-[0_24px_70px_-44px_rgba(15,23,42,0.65)] backdrop-blur dark:border-white/10 dark:bg-slate-900 sm:p-5">
         <div className="grid grid-cols-2 rounded-2xl bg-muted p-1">
           {[
             ["login", "Login"],
@@ -161,7 +161,7 @@ export function LoginForm({
               }}
               className={cn(
                 "h-11 rounded-xl text-sm font-black transition",
-                mode === value ? "bg-background text-primary shadow-sm" : "text-muted-foreground"
+                mode === value ? "bg-background text-black shadow-sm" : "text-muted-foreground"
               )}
             >
               {label}
@@ -184,22 +184,22 @@ export function LoginForm({
                   <LockKeyhole className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-xs font-black uppercase text-primary">Welcome back</p>
+                  <p className="text-xs font-black uppercase text-emerald-500">Welcome back</p>
                   <h2 className="font-display text-2xl font-black">Login to continue</h2>
                 </div>
               </div>
               <AuthInput icon={Mail} label="Email" type="email" value={login.email} onChange={(value) => setLogin((current) => ({ ...current, email: value }))} />
               <AuthInput icon={LockKeyhole} label="Password" type="password" value={login.password} onChange={(value) => setLogin((current) => ({ ...current, password: value }))} />
               {message && <p className="mt-4 rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p>}
-              <Button className="mt-5 w-full" size="lg" disabled={loading}>
+              <Button className="mt-5 w-full bg-black text-white hover:bg-black/90" size="lg" disabled={loading}>
                 {loading ? "Signing in" : "Login"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
               <div className="mt-4 flex justify-between text-sm font-semibold">
-                <button type="button" onClick={() => setMode("register")} className="text-primary">Create account</button>
-                <Link href="/forgot-password" className="text-primary">Forgot password</Link>
+                <button type="button" onClick={() => setMode("register")} className="text-black">Create account</button>
+                <Link href="/forgot-password" className="text-black">Forgot password</Link>
               </div>
-              <Link href="/admin/login" className="mt-4 block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-primary">
+              <Link href="/admin/login" className="mt-4 block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-black">
                 Staff member? Use Staff Login
               </Link>
             </motion.form>
@@ -213,11 +213,11 @@ export function LoginForm({
               className="mt-5"
             >
               <div className="flex items-center gap-3">
-                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-lime-fresh text-slate-950">
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-black text-white">
                   <Sparkles className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-xs font-black uppercase text-primary">New customer</p>
+                  <p className="text-xs font-black uppercase text-emerald-500">New customer</p>
                   <h2 className="font-display text-2xl font-black">Create your account</h2>
                 </div>
               </div>
@@ -226,11 +226,11 @@ export function LoginForm({
               <AuthInput icon={Mail} label="Email" type="email" value={register.email} onChange={(value) => setRegister((current) => ({ ...current, email: value }))} />
               <AuthInput icon={LockKeyhole} label="Password" type="password" value={register.password} onChange={(value) => setRegister((current) => ({ ...current, password: value }))} />
               {message && <p className="mt-4 rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p>}
-              <Button className="mt-5 w-full" size="lg" disabled={loading}>
+              <Button className="mt-5 w-full bg-black text-white hover:bg-black/90" size="lg" disabled={loading}>
                 {loading ? "Creating account" : "Create account"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
-              <button type="button" onClick={() => setMode("login")} className="mt-4 w-full text-sm font-bold text-primary">
+              <button type="button" onClick={() => setMode("login")} className="mt-4 w-full text-sm font-bold text-black">
                 Already have an account? Login
               </button>
             </motion.form>
@@ -258,7 +258,7 @@ function AuthInput({
     <label className="mt-4 block">
       <span className="text-sm font-bold">{label}</span>
       <span className="relative mt-2 block">
-        <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
+        <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
         <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} required className="h-12 rounded-2xl pl-11" />
       </span>
     </label>

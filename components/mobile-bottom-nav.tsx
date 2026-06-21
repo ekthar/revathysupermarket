@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardList, Home, Search, ShoppingBag, User } from "lucide-react";
+import { Home, Search, ShoppingBag, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 
 export function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
-  const { totalItems, subtotal } = useCart();
+  const { totalItems } = useCart();
 
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
 
@@ -19,58 +19,17 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
 
   return (
     <>
-      {/* Bottom Navigation - Foodizo style with elevated center cart */}
-      <nav className="fixed inset-x-0 bottom-0 z-50 md:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div className="bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-t border-slate-100/80 dark:border-slate-800/80 px-4">
-          <div className="flex items-end justify-around h-[56px] max-w-md mx-auto">
-            {/* Home */}
+      <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] md:hidden">
+        <div className="mx-auto max-w-[21rem] rounded-[1.75rem] border border-black/10 bg-white/92 p-2 shadow-[0_24px_65px_-30px_rgba(15,23,42,0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/92">
+          <div className="grid h-[52px] grid-cols-4 items-center gap-1">
             <NavTab href="/" icon={Home} label="Home" active={pathname === "/"} />
-
-            {/* Browse */}
-            <NavTab href="/products" icon={Search} label="Search" active={pathname.startsWith("/products")} />
-
-            {/* Center elevated Cart */}
-            <Link
-              href="/cart"
-              className="relative flex flex-col items-center -mt-4"
-            >
-              <motion.div
-                whileTap={{ scale: 0.9 }}
-                className={cn(
-                  "flex h-[52px] w-[52px] items-center justify-center rounded-full shadow-lg border-4 border-white dark:border-slate-950",
-                  pathname.startsWith("/cart")
-                    ? "bg-primary"
-                    : "bg-gradient-to-br from-primary to-emerald-500"
-                )}
-              >
-                <ShoppingBag className="h-5 w-5 text-white" />
-                {totalItems > 0 && (
-                  <motion.span
-                    key={totalItems}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-1 -right-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-orange-500 text-[8px] font-bold text-white px-0.5 shadow-sm"
-                  >
-                    {totalItems}
-                  </motion.span>
-                )}
-              </motion.div>
-              <span className={cn(
-                "text-[9px] font-semibold mt-1",
-                pathname.startsWith("/cart") ? "text-primary" : "text-slate-400"
-              )}>
-                Cart
-              </span>
-            </Link>
-
-            <NavTab href="/dashboard" icon={ClipboardList} label="Orders" active={pathname.startsWith("/dashboard")} />
-
-            {/* Account/Login */}
+            <NavTab href="/products" icon={Search} label="Browse" active={pathname.startsWith("/products")} />
+            <NavTab href="/cart" icon={ShoppingBag} label="Cart" active={isCartFlow} badge={totalItems} />
             <NavTab
               href={user?.id ? "/account" : "/login"}
               icon={User}
-              label={user?.id ? "Profile" : "Login"}
-              active={pathname.startsWith("/account") || pathname === "/login"}
+              label={user?.id ? "You" : "Login"}
+              active={pathname.startsWith("/account") || pathname === "/login" || pathname.startsWith("/dashboard")}
             />
           </div>
         </div>
@@ -79,19 +38,29 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
   );
 }
 
-function NavTab({ href, icon: Icon, label, active }: { href: string; icon: React.ElementType; label: string; active: boolean }) {
+function NavTab({ href, icon: Icon, label, active, badge }: { href: string; icon: React.ElementType; label: string; active: boolean; badge?: number }) {
   return (
     <Link
       href={href}
       className={cn(
-        "flex flex-col items-center justify-center gap-[2px] py-2 px-3",
-        active ? "text-primary" : "text-slate-400"
+        "relative flex h-11 flex-col items-center justify-center gap-[2px] rounded-2xl text-[10px] transition",
+        active ? "bg-black text-white shadow-[0_12px_22px_-14px_rgba(0,0,0,0.75)]" : "text-slate-500 hover:bg-slate-50"
       )}
     >
       <motion.div whileTap={{ scale: 0.8 }}>
         <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.8} />
       </motion.div>
-      <span className={cn("text-[9px]", active ? "font-bold" : "font-medium")}>
+      {badge ? (
+        <motion.span
+          key={badge}
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          className="absolute right-4 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-black text-white"
+        >
+          {badge}
+        </motion.span>
+      ) : null}
+      <span className={cn("leading-none", active ? "font-black" : "font-semibold")}>
         {label}
       </span>
     </Link>

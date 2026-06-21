@@ -7,7 +7,7 @@ import { awardDeliveredOrderBenefits } from "@/lib/loyalty";
 import { sendPushToUser } from "@/lib/push";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
-const schema = z.object({ orderId: z.string().min(1), otp: z.string().regex(/^\d{4}$/) });
+const schema = z.object({ orderId: z.string().min(1), otp: z.string().regex(/^\d{6}$/) });
 const cents = (value: Prisma.Decimal | number) => Math.round(Number(value) * 100);
 
 export async function POST(request: Request) {
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const limit = await enforceRateLimit(`delivery:complete:${session.user.id}`, 12, 300);
   if (limit.limited) return rateLimitResponse(limit.reset);
   const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Order and four-digit OTP are required.", code: "INVALID_COMPLETION" }, { status: 400 });
+  if (!parsed.success) return NextResponse.json({ error: "Order and six-digit OTP are required.", code: "INVALID_COMPLETION" }, { status: 400 });
 
   const order = await prisma.order.findFirst({ where: { id: parsed.data.orderId, deliveryPartnerId: session.user.id }, select: { id: true, status: true, deliveryOtp: true, deliveryOtpAttempts: true, deliveryOtpExpiresAt: true, userId: true, orderNumber: true, deliveryCollection: true } });
   if (!order) return NextResponse.json({ error: "Assigned order not found.", code: "ORDER_NOT_FOUND" }, { status: 404 });

@@ -65,10 +65,10 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
   }, [visibleCount, filtered.length]);
 
   return (
-    <section className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <div className="bg-white border-b border-slate-100 px-4 py-3 sm:static sm:border-0 sm:rounded-[1.75rem] sm:p-4 sm:card-shadow md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+    <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
+      <div className="rounded-[1.75rem] bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
-          <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
+          <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
           <Input
             value={query}
             onChange={(event) => {
@@ -79,15 +79,15 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
                 window.localStorage.setItem("msm-search-history", JSON.stringify([value.trim(), ...saved.filter((item) => item !== value.trim())].slice(0, 8)));
               }
             }}
-            placeholder="Search groceries"
-            className="h-12 rounded-2xl border-border bg-background/85 pl-11 shadow-sm"
+            placeholder="Search for items"
+            className="h-12 rounded-2xl border-0 bg-white pl-11 text-[15px] font-semibold shadow-[0_18px_42px_-30px_rgba(15,23,42,0.45)] placeholder:text-slate-400"
           />
         </label>
         <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 md:hidden">
           <button
             type="button"
             onClick={() => setFilterOpen(true)}
-            className="flex h-9 shrink-0 items-center gap-2 rounded-full bg-primary/10 px-3 text-xs font-black text-primary press"
+            className="flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-black px-4 text-xs font-black text-white press"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" />
             Filters
@@ -97,7 +97,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
               key={item}
               type="button"
               onClick={() => setCategory(item)}
-              className={category === item ? "h-9 shrink-0 rounded-full bg-primary px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-border bg-card/80 px-4 text-xs font-black text-foreground whitespace-nowrap"}
+              className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-black/5 bg-white px-4 text-xs font-black text-slate-700 shadow-sm whitespace-nowrap"}
             >
               {item}
             </button>
@@ -123,10 +123,10 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
           <option value="high">Price High To Low</option>
           <option value="newest">Newest</option>
         </select>
-        <div className="mt-3 md:col-span-3">
+        <div className="mt-3 hidden md:col-span-3 md:block">
           <div className="flex items-center justify-between text-xs font-black sm:text-sm">
             <span>Price up to Rs {maxPrice}</span>
-            <span className="rounded-full bg-lime-fresh/25 px-3 py-1 text-primary">{filtered.length} items</span>
+            <span className="rounded-full bg-black px-3 py-1 text-white">{filtered.length} items</span>
           </div>
           <input
             type="range"
@@ -141,7 +141,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
 
       {filtered.length > 0 ? (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
             {visibleItems.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
@@ -182,7 +182,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
                   onClick={() => { setSort(option.value); setFilterOpen(false); }}
                   className={`h-10 rounded-xl text-[12px] font-semibold transition-colors ${
                     sort === option.value
-                      ? "bg-primary text-white"
+                      ? "bg-black text-white"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                   }`}
                 >
@@ -220,7 +220,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
                   onClick={() => { setCategory(item); setFilterOpen(false); }}
                   className={`h-9 px-3 rounded-full text-[11px] font-semibold transition-colors ${
                     category === item
-                      ? "bg-primary text-white"
+                      ? "bg-black text-white"
                       : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
                   }`}
                 >
@@ -231,7 +231,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
           </div>
 
           {/* Results count */}
-          <p className="text-center text-[12px] font-semibold text-primary">{filtered.length} products found</p>
+          <p className="text-center text-[12px] font-semibold text-black">{filtered.length} products found</p>
         </div>
       </BottomSheet>
     </section>

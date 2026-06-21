@@ -4,7 +4,7 @@
 @tailwind utilities;
 
 :root {
-  --background: 0 0% 100%;
+  --background: 240 18% 97%;
   --foreground: 222 47% 11%;
   --card: 0 0% 100%;
   --card-foreground: 222 47% 11%;
@@ -12,7 +12,7 @@
   --muted-foreground: 220 9% 46%;
   --border: 220 13% 91%;
   --input: 220 13% 91%;
-  --ring: 158 80% 30%;
+  --ring: 0 0% 8%;
   --radius: 0.75rem;
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -78,7 +78,9 @@ body {
   min-height: 100dvh;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
-  background: hsl(var(--background));
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 28rem),
+    hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: "Inter Tight", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
   letter-spacing: -0.01em;
@@ -89,7 +91,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   letter-spacing: -0.02em;
 }
 
-::selection { background: rgba(15, 138, 95, 0.15); }
+::selection { background: rgba(0, 0, 0, 0.12); }
 
 /* iOS-style scrollbar */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
@@ -102,7 +104,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Premium card shadow */
 .card-shadow {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  box-shadow: 0 12px 35px -24px rgba(15, 23, 42, 0.35);
 }
 .dark .card-shadow {
   box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
@@ -119,8 +121,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Elevated card - used for product cards and modals */
 .card-elevated {
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 10px 15px -3px rgba(0,0,0,0.05);
-  border: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 18px 40px -30px rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(15,23,42,0.04);
 }
 .dark .card-elevated {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 15px -3px rgba(0,0,0,0.3);
@@ -141,11 +143,11 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Green gradient CTA button */
 .btn-gradient-green {
-  background: linear-gradient(135deg, #0F8A5F, #34D399);
+  background: linear-gradient(135deg, #050505, #262626);
   color: white;
   font-weight: 700;
   border-radius: 1rem;
-  box-shadow: 0 4px 14px -4px rgba(15, 138, 95, 0.4);
+  box-shadow: 0 16px 28px -18px rgba(0, 0, 0, 0.65);
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 .btn-gradient-green:active {
@@ -217,7 +219,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* Floating cart bar */
 .floating-cart-bar {
   position: fixed;
-  bottom: 1.5rem;
+  bottom: calc(5rem + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 50;
@@ -226,7 +228,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   justify-content: space-between;
   padding: 0.75rem 1rem 0.75rem 1.25rem;
   border-radius: 9999px;
-  background: #1a1a1a;
+  background: #050505;
   color: white;
   box-shadow: 0 20px 50px -20px rgba(0,0,0,0.5);
   width: calc(100% - 2rem);

@@ -29,45 +29,58 @@ export default async function AccountPage() {
   ]);
 
   return (
-    <main className="max-w-lg mx-auto px-4 py-5 space-y-4">
+    <main className="mx-auto min-h-screen max-w-lg space-y-4 bg-[#F7F7FA] px-4 pb-28 pt-8">
+      <div className="text-center">
+        <p className="text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">Profile</p>
+        <h1 className="font-display text-lg font-black tracking-[-0.04em] text-slate-950">Your account</h1>
+      </div>
+
       {/* Profile card */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow p-4">
+      <div className="relative overflow-hidden rounded-[1.75rem] bg-gradient-to-br from-emerald-500 via-emerald-600 to-teal-700 p-4 text-white shadow-[0_24px_65px_-36px_rgba(5,150,105,0.9)]">
+        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/12" />
+        <div className="absolute right-4 top-12 h-24 w-24 rounded-full bg-white/10" />
         <div className="flex items-center gap-3">
-          <div className="relative h-14 w-14 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-slate-800 flex items-center justify-center shrink-0">
+          <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20 ring-1 ring-white/35">
             {user?.image ? (
               <Image src={user.image} alt="Profile" fill sizes="56px" className="object-cover" />
             ) : (
-              <User className="h-6 w-6 text-primary/60" />
+              <User className="h-7 w-7 text-white" />
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[15px] font-semibold text-slate-900 dark:text-white truncate">{user?.name || "Customer"}</p>
-            <p className="text-[12px] text-slate-500 dark:text-slate-400 truncate">{user?.email || user?.phone || "No contact info"}</p>
+            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/75">Member · Gold</p>
+            <p className="text-[20px] font-black leading-tight text-white truncate">{user?.name || "Customer"}</p>
+            <p className="text-[12px] font-semibold text-white/80 truncate">{user?.email || user?.phone || "No contact info"}</p>
           </div>
-          <Link href="/account/edit" className="h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center press">
-            <Pencil className="h-4 w-4 text-slate-400 dark:text-slate-500" />
+          <Link href="/account/edit" className="flex h-9 w-9 items-center justify-center rounded-full bg-white/18 text-white press">
+            <Pencil className="h-4 w-4" />
           </Link>
+        </div>
+        <div className="relative mt-4 grid grid-cols-3 gap-2">
+          <Stat value={orderCount} label="Orders" />
+          <Stat value={new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)} label="Wallet" />
+          <Stat value={favoriteCount} label="Favorites" />
         </div>
       </div>
 
       {/* Wallet Balance Card */}
-      <Link href="/account/wallet" className="block rounded-2xl bg-gradient-to-br from-primary to-emerald-600 p-4 text-white shadow-md shadow-primary/15 press">
+      <Link href="/account/wallet" className="block rounded-[1.35rem] bg-white p-4 text-slate-950 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] press">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-white/15 flex items-center justify-center">
-              <Wallet className="h-5 w-5 text-white" />
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-50">
+              <Wallet className="h-5 w-5 text-emerald-500" />
             </div>
             <div>
-              <p className="text-[11px] text-white/70 font-medium">Wallet Balance</p>
+              <p className="text-[11px] font-bold text-slate-400">Wallet Balance</p>
               <p className="text-[20px] font-bold tracking-tight">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)}</p>
             </div>
           </div>
-          <ChevronRight className="h-5 w-5 text-white/60" />
+          <ChevronRight className="h-5 w-5 text-slate-300" />
         </div>
       </Link>
 
       {/* My Activity */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow overflow-hidden">
+      <div className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900">
         <p className="px-4 pt-3.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">My Activity</p>
         <AccountRow href="/dashboard" icon={Package} label="My Orders" detail={`${orderCount} orders`} />
         <AccountRow href="/account/edit" icon={MapPin} label="Saved Addresses" detail={`${addressCount} saved`} />
@@ -78,7 +91,7 @@ export default async function AccountPage() {
       </div>
 
       {/* Settings & Preferences */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow overflow-hidden">
+      <div className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900">
         <p className="px-4 pt-3.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Settings</p>
         <AccountRow href="/account/settings" icon={Settings} label="Preferences" detail="Notifications & theme" />
         {user?.phone && <AccountRow href="/account/edit" icon={Phone} label="Phone" detail={user.phone} />}
@@ -86,7 +99,7 @@ export default async function AccountPage() {
       </div>
 
       {/* Appearance */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow overflow-hidden">
+      <div className="overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900">
         <p className="px-4 pt-3.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Appearance</p>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
@@ -104,13 +117,22 @@ export default async function AccountPage() {
       <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
         <button
           type="submit"
-          className="flex w-full items-center justify-center gap-2 h-12 rounded-2xl bg-white dark:bg-slate-900 card-shadow text-[14px] font-medium text-red-500 press"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white text-[14px] font-bold text-red-500 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] press dark:bg-slate-900"
         >
           <LogOut className="h-4 w-4" />
           Logout
         </button>
       </form>
     </main>
+  );
+}
+
+function Stat({ value, label }: { value: string | number; label: string }) {
+  return (
+    <div className="rounded-2xl border border-white/20 bg-white/12 px-2 py-3 text-center backdrop-blur">
+      <p className="text-lg font-black leading-none">{value}</p>
+      <p className="mt-1 text-[9px] font-black uppercase tracking-wide text-white/70">{label}</p>
+    </div>
   );
 }
 

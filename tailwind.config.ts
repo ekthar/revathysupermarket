@@ -17,7 +17,11 @@ const config: Config = {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#0F8A5F",
+          DEFAULT: "#050505",
+          foreground: "#FFFFFF"
+        },
+        success: {
+          DEFAULT: "#22C55E",
           foreground: "#FFFFFF"
         },
         lime: {
@@ -43,8 +47,8 @@ const config: Config = {
         display: ['"Manrope"', "-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "system-ui", "sans-serif"]
       },
       boxShadow: {
-        premium: "0 20px 70px -35px rgba(15, 138, 95, 0.55)",
-        soft: "0 18px 45px -30px rgba(30, 41, 59, 0.4)"
+        premium: "0 24px 80px -42px rgba(5, 5, 5, 0.65)",
+        soft: "0 18px 45px -30px rgba(30, 41, 59, 0.35)"
       },
       borderRadius: {
         xl: "1.25rem",

@@ -313,7 +313,7 @@ export function CheckoutForm({
 
 
   return (
-    <form onSubmit={submit} className="max-w-5xl mx-auto px-4 pt-2 pb-32 md:pb-8">
+    <form onSubmit={submit} className="mx-auto min-h-screen max-w-5xl bg-[#F7F7FA] px-4 pb-32 pt-4 md:pb-8">
       {/* First order celebration */}
       <FirstOrderCelebration show={showCelebration} onDismiss={dismissCelebration} />
 
@@ -377,10 +377,10 @@ export function CheckoutForm({
         {/* Left column - Forms */}
         <div className="space-y-5">
           {/* Delivery ETA + Minimum Order Info */}
-          <div className="flex items-center justify-between rounded-xl bg-primary/5 dark:bg-primary/10 border border-primary/10 px-4 py-3">
+          <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-white px-4 py-3 shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)] dark:bg-slate-900">
             <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-primary/15 flex items-center justify-center">
-                <Clock className="h-4 w-4 text-primary" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
+                <Clock className="h-4 w-4" />
               </div>
               <div>
                 <p className="text-[12px] font-semibold text-slate-800 dark:text-white">Delivery in {deliveryEstimateMin}-{deliveryEstimateMax} min</p>
@@ -403,8 +403,8 @@ export function CheckoutForm({
           {slotsEnabled && <section className="rounded-2xl border border-slate-100 bg-white p-4 card-shadow dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-sm font-black text-slate-900 dark:text-white">Delivery time</h2>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setDeliveryMode("ASAP")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "ASAP" ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800"}`}>ASAP</button>
-              <button type="button" onClick={() => setDeliveryMode("SCHEDULED")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "SCHEDULED" ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800"}`}>Choose slot</button>
+              <button type="button" onClick={() => setDeliveryMode("ASAP")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "ASAP" ? "bg-black text-white" : "bg-slate-100 dark:bg-slate-800"}`}>ASAP</button>
+              <button type="button" onClick={() => setDeliveryMode("SCHEDULED")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "SCHEDULED" ? "bg-black text-white" : "bg-slate-100 dark:bg-slate-800"}`}>Choose slot</button>
             </div>
             {deliveryMode === "SCHEDULED" && <div className="mt-3 grid gap-2">
               {slots.length === 0 ? <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-700">No scheduled slots are available. Choose ASAP.</p> : slots.map((slot) => <label key={slot.id} className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm font-semibold">
@@ -427,7 +427,7 @@ export function CheckoutForm({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated"
+            className="rounded-[1.35rem] bg-white p-5 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900"
           >
             <h2 className="text-[15px] font-black text-slate-900 dark:text-white mb-4">Payment Method</h2>
             <div className="space-y-3">
@@ -474,7 +474,7 @@ export function CheckoutForm({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated"
+            className="rounded-[1.35rem] bg-white p-5 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900"
           >
             <h2 className="text-[15px] font-black text-slate-900 dark:text-white mb-4">Delivery Address</h2>
 
@@ -501,7 +501,7 @@ export function CheckoutForm({
                 <motion.div
                   animate={locationOk ? { scale: [1, 1.1, 1] } : {}}
                   transition={{ duration: 0.3 }}
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-green-100 text-green-700" : "bg-primary/10 text-primary"}`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-green-100 text-green-700" : "bg-black text-white"}`}
                 >
                   {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
                 </motion.div>
@@ -516,7 +516,7 @@ export function CheckoutForm({
                   onClick={useCurrentLocation}
                   disabled={locationState === "loading"}
                   whileTap={{ scale: 0.9 }}
-                  className="shrink-0 px-3 py-2 rounded-full bg-primary text-white text-[11px] font-bold"
+                  className="shrink-0 rounded-full bg-black px-3 py-2 text-[11px] font-bold text-white"
                 >
                   {locationState === "loading" ? "Finding..." : locationOk ? "Refresh" : "Detect"}
                 </motion.button>
@@ -567,7 +567,7 @@ export function CheckoutForm({
             </div>
 
             {/* Manual coordinates */}
-            <button type="button" onClick={() => setShowManualLocation((c) => !c)} className="mt-3 text-[12px] font-bold text-primary flex items-center gap-1">
+            <button type="button" onClick={() => setShowManualLocation((c) => !c)} className="mt-3 flex items-center gap-1 text-[12px] font-bold text-black">
               Enter coordinates manually
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showManualLocation ? "rotate-180" : ""}`} />
             </button>
@@ -592,7 +592,7 @@ export function CheckoutForm({
           transition={{ delay: 0.3 }}
           className="lg:sticky lg:top-[90px] h-fit"
         >
-          <section className="bg-white dark:bg-slate-900 rounded-2xl p-5 card-elevated">
+          <section className="rounded-[1.35rem] bg-white p-5 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900">
             <h2 className="text-[15px] font-black text-slate-900 dark:text-white">Order Summary</h2>
             <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
               {items.map((item) => (
@@ -620,7 +620,7 @@ export function CheckoutForm({
               <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-3 flex justify-between">
                 <span className="font-black text-slate-900 dark:text-white">Total Amount</span>
                 <span className="font-black text-slate-900 dark:text-white text-[16px]">
-                  <span className="text-primary">{"₹"}</span> {totalAmount.toFixed(2)}
+                  <span className="text-black">{"₹"}</span> {totalAmount.toFixed(2)}
                 </span>
               </div>
             </div>
@@ -630,7 +630,7 @@ export function CheckoutForm({
               disabled={!canSubmit}
               whileTap={{ scale: 0.97 }}
               whileHover={{ scale: canSubmit ? 1.01 : 1 }}
-              className="mt-5 flex h-[50px] w-full items-center justify-center rounded-2xl bg-gradient-to-r from-primary to-emerald-500 text-white text-[14px] font-bold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed disabled:from-slate-400 disabled:to-slate-500 transition-opacity"
+              className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-[14px] font-black text-white shadow-[0_18px_32px_-22px_rgba(0,0,0,0.8)] transition-opacity disabled:cursor-not-allowed disabled:bg-slate-400 disabled:opacity-40"
             >
               {isSubmitting ? "Placing order..." : "Pay Now"}
             </motion.button>
@@ -658,9 +658,9 @@ function PaymentMethodCard({
       type="button"
       onClick={onClick}
       whileTap={{ scale: 0.97 }}
-      animate={active ? { borderColor: "rgba(15,138,95,1)" } : { borderColor: "rgba(241,245,249,1)" }}
+      animate={active ? { borderColor: "rgba(5,5,5,1)" } : { borderColor: "rgba(241,245,249,1)" }}
       className={`w-full flex items-center gap-3 rounded-2xl p-4 text-left border-2 transition-colors ${
-        active ? "bg-primary/5" : "hover:border-slate-200"
+        active ? "bg-black/[0.03]" : "hover:border-slate-200"
       }`}
     >
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}>
@@ -671,9 +671,9 @@ function PaymentMethodCard({
         <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
       </div>
       <motion.div
-        animate={active ? { scale: 1, backgroundColor: "#0F8A5F" } : { scale: 1, backgroundColor: "transparent" }}
+        animate={active ? { scale: 1, backgroundColor: "#050505" } : { scale: 1, backgroundColor: "transparent" }}
         className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-          active ? "border-primary" : "border-slate-300"
+          active ? "border-black" : "border-slate-300"
         }`}
       >
         <AnimatePresence>

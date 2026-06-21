@@ -40,7 +40,7 @@ export async function enforceRateLimit(key: string, limit: number, windowSeconds
 export function rateLimitResponse(reset: number) {
   if (reset === 0) {
     return NextResponse.json(
-      { error: "Security rate limiting is temporarily unavailable. Please try again shortly.", code: "RATE_LIMIT_UNAVAILABLE" },
+      { error: "Security rate limiting is temporarily unavailable. Please try again shortly.", code: "RATE_LIMIT_UNAVAILABLE", detail: process.env.NODE_ENV === "production" ? "Server security configuration requires attention." : "Configure UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN, or run outside production for local fallback." },
       { status: 503, headers: { "Retry-After": "30" } }
     );
   }

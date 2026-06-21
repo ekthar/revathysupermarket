@@ -170,9 +170,9 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
       {returnOrder && <ReturnRequestSheet order={returnOrder} onClose={() => setReturnOrder(null)} />}
       {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
       {/* Status bar */}
-      <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-500">
+      <div className="flex items-center justify-between rounded-2xl bg-white px-3 py-2 text-[11px] font-semibold text-slate-500 shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)]">
         <span>{lastUpdated ? "Updated just now" : streamUnavailable ? "Fallback updates active" : "Live updates connected"}</span>
-        <RefreshCcw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin text-primary")} />
+        <RefreshCcw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin text-black")} />
       </div>
 
       {/* Orders list */}
@@ -201,7 +201,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               className={cn(
-                "rounded-2xl border bg-white dark:bg-slate-900 overflow-hidden transition-shadow",
+                "overflow-hidden rounded-[1.35rem] border bg-white shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)] transition-shadow dark:bg-slate-900",
                 cancelled ? "border-red-200" : "border-slate-100 dark:border-slate-800",
                 isExpanded && "shadow-md"
               )}
@@ -215,11 +215,11 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                 {/* Status icon */}
                 <div className={cn(
                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                  cancelled ? "bg-red-100" : delivered ? "bg-green-100" : "bg-primary/10"
+                  cancelled ? "bg-red-100" : delivered ? "bg-green-100" : "bg-black"
                 )}>
                   {cancelled ? <XCircle className="h-5 w-5 text-red-600" /> :
                    delivered ? <CheckCircle2 className="h-5 w-5 text-green-600" /> :
-                   <Package className="h-5 w-5 text-primary" />}
+                   <Package className="h-5 w-5 text-white" />}
                 </div>
 
                 {/* Order info */}
@@ -230,7 +230,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                       "text-[10px] font-bold px-2 py-0.5 rounded-full",
                       cancelled ? "bg-red-100 text-red-700" :
                       delivered ? "bg-green-100 text-green-700" :
-                      "bg-primary/10 text-primary"
+                      "bg-black text-white"
                     )}>
                       {statusLabels[order.status]}
                     </span>
@@ -273,12 +273,12 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                             <div key={status} className="flex items-center">
                               <div className={cn(
                                 "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold",
-                                index <= activeIndex ? "bg-primary text-white" : "bg-slate-100 text-slate-400"
+                                index <= activeIndex ? "bg-black text-white" : "bg-slate-100 text-slate-400"
                               )}>
                                 {index < activeIndex ? "✓" : index + 1}
                               </div>
                               {index < orderStatuses.length - 2 && (
-                                <div className={cn("h-[2px] w-4 sm:w-6", index < activeIndex ? "bg-primary" : "bg-slate-100")} />
+                                <div className={cn("h-[2px] w-4 sm:w-6", index < activeIndex ? "bg-black" : "bg-slate-100")} />
                               )}
                             </div>
                           ))}
@@ -320,7 +320,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                         <div className="mt-3">
                           <p className="text-[10px] text-slate-400 italic mb-2 md:hidden">← Swipe right to reorder</p>
                           <div className="grid grid-cols-3 gap-2">
-                            <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-[11px] font-bold text-white">
+                            <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-black text-[11px] font-bold text-white">
                               <RotateCcw className="h-3.5 w-3.5" /> Reorder
                             </button>
                             <button onClick={() => setReturnOrder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300">

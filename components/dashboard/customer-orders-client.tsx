@@ -9,7 +9,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { DeliveryOtpCard } from "@/components/dashboard/delivery-otp-card";
 import { OrderTrackingMap } from "@/components/dashboard/order-tracking-map";
 import { useCart } from "@/components/cart/cart-provider";
-import { SwipeableCard } from "@/components/ui/swipeable-card";
+import Link from "next/link";
 import type { Product } from "@/lib/types";
 
 const enableSseTracking = process.env.NEXT_PUBLIC_ENABLE_SSE_TRACKING !== "false";
@@ -188,14 +188,8 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
           const moreCount = visibleItems.length - 3;
 
           return (
-            <SwipeableCard
-              key={order.id}
-              onSwipeRight={delivered ? () => reorder(order) : undefined}
-              rightLabel="Reorder"
-              leftLabel=""
-              className="mb-3"
-            >
             <motion.article
+              key={order.id}
               layout={!isComplete}
               initial={isComplete ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
@@ -328,7 +322,6 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                       {Boolean(order.returnRequests?.length || order.supportTickets?.length) && <div className="mt-3 space-y-2 rounded-xl bg-muted p-3 text-[11px]">{order.returnRequests?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Return {item.returnNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}{order.supportTickets?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Ticket {item.ticketNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}</div>}
                       {delivered && (
                         <div className="mt-3">
-                          <p className="text-[10px] text-slate-400 italic mb-2 md:hidden">← Swipe right to reorder</p>
                           <div className="grid grid-cols-3 gap-2">
                             <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-black text-[11px] font-bold text-white">
                               <RotateCcw className="h-3.5 w-3.5" /> Reorder
@@ -343,12 +336,22 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
 
                       {/* Live tracking for active orders */}
                       {!isComplete && <LiveTrackingPanel order={order} live={liveOrders[order.id]} />}
+
+                      {/* Track Order link for active orders */}
+                      {!isComplete && (
+                        <Link
+                          href={`/track/${order.id}`}
+                          className="mt-3 flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-[12px] font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                        >
+                          <Navigation className="h-4 w-4" />
+                          Track Order
+                        </Link>
+                      )}
                     </div>
                   </motion.div>
                 )}
               </AnimatePresence>
             </motion.article>
-            </SwipeableCard>
           );
         })}
       </AnimatePresence>

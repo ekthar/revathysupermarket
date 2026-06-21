@@ -262,27 +262,37 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    transition={{ type: "spring", stiffness: 300, damping: 30, opacity: { duration: 0.2 } }}
                     className="overflow-hidden"
                   >
                     <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-800 pt-3">
                       {/* Status timeline - compact */}
                       {!cancelled && (
-                        <div className="flex items-center gap-1 mb-4 overflow-x-auto no-scrollbar pb-1">
+                        <motion.div
+                          initial="hidden"
+                          animate="visible"
+                          variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } }}
+                          className="flex items-center gap-1 mb-4 overflow-x-auto no-scrollbar pb-1"
+                        >
                           {orderStatuses.filter((s) => s !== "CANCELLED").map((status, index) => (
-                            <div key={status} className="flex items-center">
+                            <motion.div
+                              key={status}
+                              variants={{ hidden: { opacity: 0, scale: 0.7 }, visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 400, damping: 20 } } }}
+                              className="flex items-center"
+                            >
                               <div className={cn(
-                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold",
-                                index <= activeIndex ? "bg-black text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
+                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold transition-colors",
+                                index <= activeIndex ? "bg-black text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500",
+                                index === activeIndex && "ring-2 ring-black/20 animate-pulse"
                               )}>
                                 {index < activeIndex ? "✓" : index + 1}
                               </div>
                               {index < orderStatuses.length - 2 && (
-                                <div className={cn("h-[2px] w-4 sm:w-6", index < activeIndex ? "bg-black" : "bg-slate-100 dark:bg-slate-800")} />
+                                <div className={cn("h-[2px] w-4 sm:w-6 transition-colors", index < activeIndex ? "bg-black" : "bg-slate-100 dark:bg-slate-800")} />
                               )}
-                            </div>
+                            </motion.div>
                           ))}
-                        </div>
+                        </motion.div>
                       )}
 
                       {cancelled && (

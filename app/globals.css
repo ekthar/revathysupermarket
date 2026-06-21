@@ -600,3 +600,37 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* Admin orders dark mode fix */
 .dark .border-white\/70 { border-color: rgba(255,255,255,0.06); }
 .dark .bg-card\/95 { background: hsl(222 47% 9% / 0.95); }
+
+
+
+/* ===== PRINT STYLES ===== */
+@media print {
+  header, nav, aside, .print\:hidden {
+    display: none !important;
+  }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .min-h-screen {
+    min-height: auto !important;
+    background: white !important;
+  }
+  main {
+    background: white !important;
+    color: black !important;
+    max-width: 100% !important;
+  }
+  * {
+    box-shadow: none !important;
+  }
+  .lg\:grid-cols-\[200px_1fr\] {
+    display: block !important;
+  }
+}
+
+/* Category card dark mode fix */
+.dark .category-card {
+  border: 1px solid rgba(255,255,255,0.08);
+  background-color: hsl(222 47% 12%) !important;
+}

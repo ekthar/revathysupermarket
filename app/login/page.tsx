@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { SITE } from "@/lib/constants";
+import { prisma } from "@/lib/prisma";
 import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = {
@@ -19,7 +20,6 @@ export default async function LoginPage({
   const { callbackUrl } = await searchParams;
   const safeCallback = safeCallbackUrl(callbackUrl, "/dashboard", ["/", "/products", "/cart", "/checkout", "/dashboard", "/account", "/support"]);
 
-  // Already logged in → redirect to appropriate page
   if (session?.user?.id) {
     const role = session.user.role;
     if (role === "DELIVERY_PARTNER") redirect("/delivery");
@@ -27,5 +27,7 @@ export default async function LoginPage({
     redirect(safeCallback);
   }
 
-  return <OnboardingFlow callbackUrl={safeCallback} />;
+  const logoSetting = await prisma.setting.findUnique({ where: { key: "logoUrl" } }).catch(() => null);
+
+  return <OnboardingFlow callbackUrl={safeCallback} logoUrl={logoSetting?.value || null} />;
 }

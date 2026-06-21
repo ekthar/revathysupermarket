@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element */
+
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -18,7 +20,7 @@ import { safeCallbackUrl } from "@/lib/safe-redirect";
 type Step = "splash" | "name" | "phone" | "otp" | "location" | "done";
 const STEPS: Step[] = ["splash", "name", "phone", "otp", "location", "done"];
 
-export function OnboardingFlow({ callbackUrl = "/" }: { callbackUrl?: string }) {
+export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callbackUrl?: string; logoUrl?: string | null }) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const [step, setStep] = useState<Step>("splash");
@@ -167,9 +169,13 @@ export function OnboardingFlow({ callbackUrl = "/" }: { callbackUrl?: string }) 
                 initial={{ scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-primary text-white shadow-lg"
+                className="flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-primary text-white shadow-lg overflow-hidden"
               >
-                <ShoppingBasket className="h-10 w-10" />
+                {logoUrl ? (
+                  <img src={logoUrl} alt="" className="h-full w-full object-contain p-2" />
+                ) : (
+                  <ShoppingBasket className="h-10 w-10" />
+                )}
               </motion.div>
               <motion.h1
                 initial={{ opacity: 0, y: 12 }}

@@ -8,7 +8,8 @@ import { requirePermission } from "@/lib/auth-guard";
  * REQUESTED → UNDER_REVIEW → APPROVED → ITEM_RECEIVED → REFUNDED
  * REJECTED is a terminal state from REQUESTED or UNDER_REVIEW.
  */
-export async function PATCH(req: Request, { params }: { params: { id: string } }) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const body = await req.json();
   const { action, reason, refundAmount, refundMethod } = body as {
     action: "review" | "approve" | "reject" | "receive_item" | "refund";
@@ -29,7 +30,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const ctx = (await requirePermission("returns.manage") as any).ctx;
 
   const returnReq = await prisma.returnRequest.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: { order: { select: { total: true, userId: true, items: true } } },
   });
 
@@ -44,7 +45,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       if (returnReq.status !== "REQUESTED") {
         return NextResponse.json({ error: "Can only review from REQUESTED status", code: "INVALID_STATE" }, { status: 400 });
       }
-      await prisma.returnRequest.update({ where: { id: params.id }, data: { status: "UNDER_REVIEW", resolvedById: ctx.userId } });
+      await prisma.returnRequest.update({ where: { id }, data: { status: "UNDER_REVIEW", resolvedById: ctx.userId } });
       break;
 
     case "approve":
@@ -55,7 +56,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       const items = returnReq.items as any[];
       const maxRefund = items.reduce((sum: number, i: any) => sum + (Number(i.price) * (i.quantity || 1)), 0);
       await prisma.returnRequest.update({
-        where: { id: params.id },
+        where: { id },
         data: { status: "APPROVED", maxRefundAmount: maxRefund, resolvedById: ctx.userId, resolvedAt: now },
       });
       break;
@@ -68,7 +69,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         return NextResponse.json({ error: "Rejection reason is required", code: "VALIDATION_ERROR" }, { status: 400 });
       }
       await prisma.returnRequest.update({
-        where: { id: params.id },
+        where: { id },
         data: { status: "REJECTED", rejectionReason: reason, resolvedById: ctx.userId, resolvedAt: now },
       });
       break;
@@ -78,7 +79,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
         return NextResponse.json({ error: "Can only receive item after approval", code: "INVALID_STATE" }, { status: 400 });
       }
       await prisma.returnRequest.update({
-        where: { id: params.id },
+        where: { id },
         data: { status: "ITEM_RECEIVED", itemReceivedAt: now },
       });
       break;
@@ -99,7 +100,7 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       // Process refund transactionally
       await prisma.$transaction(async (tx) => {
         await tx.returnRequest.update({
-          where: { id: params.id },
+          where: { id },
           data: {
             status: "REFUNDED",
             refundAmount,
@@ -143,11 +144,11 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
       actorRole: ctx.role,
       action: `return.${action}`,
       targetType: "ReturnRequest",
-      targetId: params.id,
+      targetId: id,
       metadata: { action, reason, refundAmount },
     },
   });
 
-  const updated = await prisma.returnRequest.findUnique({ where: { id: params.id } });
+  const updated = await prisma.returnRequest.findUnique({ where: { id } });
   return NextResponse.json({ returnRequest: updated });
 }

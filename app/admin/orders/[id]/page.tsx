@@ -5,12 +5,13 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 import { OrderDetailClient } from "@/components/admin/order-detail-client";
 
-export default async function OrderDetailPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const result = await requirePermission("orders.view");
   if ("error" in result) return notFound();
 
   const order = await prisma.order.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
       items: { include: { product: { select: { id: true, name: true, image: true, slug: true } } } },
       user: { select: { id: true, name: true, email: true, phone: true } },

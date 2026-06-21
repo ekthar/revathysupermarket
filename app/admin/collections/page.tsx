@@ -11,7 +11,7 @@ export default async function CollectionsPage() {
     orderBy: { createdAt: "desc" },
     take: 100,
     include: {
-      order: { select: { orderNumber: true, customerName: true, total: true, deliveredAt: true } },
+      order: { select: { orderNumber: true, customerName: true, total: true } },
       partner: { select: { id: true, name: true, phone: true } },
       reconciledBy: { select: { name: true } },
     },

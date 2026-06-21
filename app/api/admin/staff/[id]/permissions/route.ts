@@ -3,7 +3,8 @@ import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/auth-guard";
 import { validatePermissionsForRole, isHighRisk, type PermissionKey, type StaffRole } from "@/lib/permissions";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const result = await requireOwner();
   if ("error" in result) return result.error;
 
@@ -12,7 +13,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   // Fetch the target user
   const targetUser = await prisma.user.findUnique({
-    where: { id: params.id },
+    where: { id },
     select: { id: true, role: true, authVersion: true },
   });
 
@@ -40,14 +41,14 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
   // Replace all permissions atomically + bump authVersion to invalidate sessions
   await prisma.$transaction(async (tx) => {
-    await tx.staffPermission.deleteMany({ where: { userId: params.id } });
+    await tx.staffPermission.deleteMany({ where: { userId: id } });
     if (permissions.length > 0) {
       await tx.staffPermission.createMany({
-        data: permissions.map((p) => ({ userId: params.id, permission: p, grantedBy: result.ctx.userId })),
+        data: permissions.map((p) => ({ userId: id, permission: p, grantedBy: result.ctx.userId })),
       });
     }
     await tx.user.update({
-      where: { id: params.id },
+      where: { id },
       data: { authVersion: { increment: 1 } },
     });
   });
@@ -59,7 +60,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
       actorRole: result.ctx.role,
       action: "staff.permissions.update",
       targetType: "User",
-      targetId: params.id,
+      targetId: id,
       metadata: { permissions, previousVersion: targetUser.authVersion },
     },
   });

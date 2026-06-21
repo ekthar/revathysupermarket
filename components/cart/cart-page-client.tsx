@@ -296,7 +296,7 @@ export function CartPageClient() {
       </div>
 
       {/* Fixed bottom checkout button */}
-      <div className="fixed bottom-[76px] inset-x-0 z-40 bg-transparent p-4 md:relative md:bottom-0 md:mt-5 md:p-0" style={{ paddingBottom: "var(--safe-bottom, 0px)" }}>
+      <div className="ios-floating-action md:relative md:bottom-0 md:left-auto md:right-auto md:mt-5 md:p-0">
         <Link
           href={belowMinimum ? "#" : "/checkout"}
           onClick={(e) => { if (belowMinimum) e.preventDefault(); }}

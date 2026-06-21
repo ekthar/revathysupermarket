@@ -19,9 +19,9 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
 
   return (
     <>
-      <nav className="fixed inset-x-0 bottom-0 z-50 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] md:hidden">
-        <div className="mx-auto max-w-[21rem] rounded-[1.75rem] border border-black/10 bg-white/92 p-2 shadow-[0_24px_65px_-30px_rgba(15,23,42,0.55)] backdrop-blur-xl dark:border-white/10 dark:bg-slate-950/92">
-          <div className="grid h-[52px] grid-cols-4 items-center gap-1">
+      <nav className="ios-bottom-bar md:hidden" data-disable-edge-swipe="true">
+        <div className="ios-glass mx-auto w-full max-w-[24rem] rounded-[1.85rem] p-2 shadow-[0_24px_65px_-30px_rgba(15,23,42,0.55)]">
+          <div className="grid min-h-[clamp(52px,8vh,58px)] grid-cols-4 items-center gap-1">
             <NavTab href="/" icon={Home} label="Home" active={pathname === "/"} />
             <NavTab href="/products" icon={Search} label="Browse" active={pathname.startsWith("/products")} />
             <NavTab href="/cart" icon={ShoppingBag} label="Cart" active={isCartFlow} badge={totalItems} />
@@ -43,8 +43,8 @@ function NavTab({ href, icon: Icon, label, active, badge }: { href: string; icon
     <Link
       href={href}
       className={cn(
-        "relative flex h-11 flex-col items-center justify-center gap-[2px] rounded-2xl text-[10px] transition",
-        active ? "bg-black text-white shadow-[0_12px_22px_-14px_rgba(0,0,0,0.75)]" : "text-slate-500 hover:bg-slate-50"
+        "relative flex min-w-0 flex-col items-center justify-center gap-[2px] rounded-2xl px-1 py-2 text-[10px] transition active:scale-[0.97]",
+        active ? "bg-black text-white shadow-[0_12px_22px_-14px_rgba(0,0,0,0.75)]" : "text-slate-500 hover:bg-white/65"
       )}
     >
       <motion.div whileTap={{ scale: 0.8 }}>
@@ -55,12 +55,12 @@ function NavTab({ href, icon: Icon, label, active, badge }: { href: string; icon
           key={badge}
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          className="absolute right-4 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-black text-white"
+          className="absolute right-[22%] top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-emerald-500 px-1 text-[9px] font-black text-white"
         >
           {badge}
         </motion.span>
       ) : null}
-      <span className={cn("leading-none", active ? "font-black" : "font-semibold")}>
+      <span className={cn("max-w-full truncate leading-none", active ? "font-black" : "font-semibold")}>
         {label}
       </span>
     </Link>

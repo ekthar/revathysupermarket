@@ -7,6 +7,7 @@ import { Providers } from "@/components/providers";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
+import { IosEdgeSwipeBack } from "@/components/ui/ios-edge-swipe-back";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -15,6 +16,11 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: `${settings.storeName} | Fresh Groceries`, template: `%s | ${settings.storeName}` },
     description: `Order fresh groceries from ${settings.storeName}. COD & UPI on delivery.`,
     applicationName: settings.storeName,
+    formatDetection: {
+      telephone: true,
+      address: true,
+      email: true
+    },
     appleWebApp: {
       capable: true,
       title: settings.storeName,
@@ -33,14 +39,16 @@ export async function generateMetadata(): Promise<Metadata> {
     other: {
       "mobile-web-app-capable": "yes",
       "apple-mobile-web-app-capable": "yes",
-      "apple-mobile-web-app-status-bar-style": "black-translucent"
+      "apple-mobile-web-app-status-bar-style": "black-translucent",
+      "apple-mobile-web-app-title": settings.storeName,
+      "msapplication-TileColor": "#050505"
     }
   };
 }
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FFFFFF" },
+    { media: "(prefers-color-scheme: light)", color: "#F7F7FA" },
     { media: "(prefers-color-scheme: dark)", color: "#020617" }
   ],
   width: "device-width",
@@ -67,6 +75,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="pt-safe">
         <Providers>
           <ScrollProgress />
+          <IosEdgeSwipeBack />
           <OnboardingTour />
           <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
           <div className="pb-safe">{children}</div>

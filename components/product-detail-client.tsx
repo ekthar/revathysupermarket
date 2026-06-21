@@ -229,7 +229,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
       </div>
 
       {/* Mobile: Fixed bottom add-to-cart bar */}
-      <div className="md:hidden fixed bottom-[56px] inset-x-0 z-40 bg-white dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 p-3" style={{ paddingBottom: "var(--safe-bottom, 0px)" }}>
+      <div className="ios-floating-action md:hidden">
         <AnimatePresence mode="wait">
           {cartItem ? (
             <motion.div

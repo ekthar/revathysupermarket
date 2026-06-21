@@ -110,7 +110,7 @@ export function InstallAppPrompt() {
 
   return (
     <aside
-      className="fixed inset-x-3 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-[80] mx-auto max-w-md rounded-3xl border border-primary/20 bg-white p-5 shadow-2xl dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:mx-0"
+      className="fixed left-[max(0.75rem,var(--safe-left))] right-[max(0.75rem,var(--safe-right))] bottom-[calc(6rem+var(--safe-bottom))] z-[80] mx-auto max-w-md rounded-3xl border border-black/10 bg-white p-5 shadow-2xl dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:mx-0"
       aria-label="Install application"
     >
       <button
@@ -123,7 +123,7 @@ export function InstallAppPrompt() {
       </button>
 
       <div className="flex gap-3 pr-9">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-black text-white">
           {ios ? <Share className="h-5 w-5" /> : <Download className="h-5 w-5" />}
         </span>
         <div>
@@ -139,15 +139,15 @@ export function InstallAppPrompt() {
             <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Add to Home Screen:</p>
             <ol className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
               <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">1</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">1</span>
                 <span>Tap the <Share className="inline h-4 w-4 text-blue-500 -mt-0.5" /> Share button in Safari</span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">2</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">2</span>
                 <span>Scroll down and tap <Plus className="inline h-4 w-4 -mt-0.5" /> <strong>Add to Home Screen</strong></span>
               </li>
               <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">3</span>
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">3</span>
                 <span>Tap <strong>Add</strong> in the top right</span>
               </li>
             </ol>
@@ -158,7 +158,7 @@ export function InstallAppPrompt() {
         <button
           type="button"
           onClick={install}
-          className="mt-3 h-11 w-full rounded-2xl bg-primary text-sm font-black text-white active:scale-[0.98] transition-transform"
+          className="mt-3 h-11 w-full rounded-2xl bg-black text-sm font-black text-white transition-transform active:scale-[0.98]"
         >
           Install app
         </button>

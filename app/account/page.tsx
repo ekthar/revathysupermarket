@@ -48,7 +48,6 @@ export default async function AccountPage() {
             )}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-black uppercase tracking-[0.18em] text-white/75">Member · Gold</p>
             <p className="text-[20px] font-black leading-tight text-white truncate">{user?.name || "Customer"}</p>
             <p className="text-[12px] font-semibold text-white/80 truncate">{user?.email || user?.phone || "No contact info"}</p>
           </div>

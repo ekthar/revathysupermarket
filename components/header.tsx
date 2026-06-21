@@ -127,7 +127,7 @@ export function Header({
       </header>
 
       {/* Mobile Header */}
-      <header className="sticky top-0 z-40 md:hidden bg-white/98 dark:bg-slate-950/98 backdrop-blur-md border-b border-slate-100/80 dark:border-slate-800/80" style={{ paddingTop: "var(--safe-top)" }}>
+      <header className="ios-sticky-tracking-header ios-glass md:hidden">
         <div className="flex items-center justify-between px-4 h-[56px]">
           {/* Delivery address */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0 press">

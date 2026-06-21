@@ -21,8 +21,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
       { name: "My orders", short_name: "Orders", url: "/dashboard", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "Open cart", short_name: "Cart", url: "/cart", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
     ],
-    background_color: "#FFFFFF",
-    theme_color: "#0F8A5F",
+    background_color: "#F7F7FA",
+    theme_color: "#050505",
     icons: [
       {
         src: "/icons/icon-192.png",

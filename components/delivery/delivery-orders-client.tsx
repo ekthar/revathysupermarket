@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { CheckCircle2, ExternalLink, MapPin, Package, Phone, ShieldCheck, Truck } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
 import { statusLabels } from "@/lib/constants";
@@ -20,6 +20,21 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
   const [damageOrder, setDamageOrder] = useState<DeliveryOrder | null>(null);
   const [collectOrder, setCollectOrder] = useState<DeliveryOrder | null>(null);
   const [completeOrder, setCompleteOrder] = useState<DeliveryOrder | null>(null);
+
+  // Keep publishing the partner's position for customer live tracking. Arrival
+  // and collection are intentionally not gated by distance while that feature
+  // is temporarily disabled.
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    const watch = navigator.geolocation.watchPosition((position) => {
+      void fetch("/api/delivery/location", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude })
+      }).catch(() => null);
+    }, () => undefined, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
+    return () => navigator.geolocation.clearWatch(watch);
+  }, []);
 
   async function pickup(order: DeliveryOrder) { setLoading(order.id); const response = await fetch(`/api/delivery/orders/${order.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "picked_up" }) }); const data = await readApiResponse<{ error?: string }>(response); setLoading(null); if (!response.ok) return showToast(data.error ?? "Pickup update failed", "error"); setEntries((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: "ARRIVING" } : entry)); }
 

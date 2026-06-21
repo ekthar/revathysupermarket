@@ -16,22 +16,14 @@ export async function POST(request: Request) {
   const parsed = deliveryLocationSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid location." }, { status: 400 });
 
-  const activeOrder = await prisma.order.findFirst({ where: { deliveryPartnerId: session.user.id, status: { in: ["OUT_FOR_DELIVERY", "ARRIVING"] } }, select: { id: true, status: true, latitude: true, longitude: true, userId: true } });
+  const activeOrder = await prisma.order.findFirst({ where: { deliveryPartnerId: session.user.id, status: { in: ["OUT_FOR_DELIVERY", "ARRIVING"] } }, select: { id: true, status: true, latitude: true, longitude: true } });
   const distanceMetres = activeOrder ? distanceInMetres(parsed.data.latitude, parsed.data.longitude, Number(activeOrder.latitude), Number(activeOrder.longitude)) : null;
-  const shouldArrive = activeOrder?.status === "OUT_FOR_DELIVERY" && distanceMetres !== null && distanceMetres <= 100;
   await prisma.$transaction(async (tx) => {
     await tx.user.update({ where: { id: session.user.id }, data: { currentLatitude: parsed.data.latitude, currentLongitude: parsed.data.longitude, locationUpdatedAt: new Date() } });
     if (activeOrder) await tx.deliveryLocationEvent.create({ data: { orderId: activeOrder.id, deliveryPartnerId: session.user.id, latitude: parsed.data.latitude, longitude: parsed.data.longitude } });
-    if (activeOrder && shouldArrive) {
-      const changed = await tx.order.updateMany({ where: { id: activeOrder.id, status: "OUT_FOR_DELIVERY" }, data: { status: "ARRIVING" } });
-      if (changed.count === 1) {
-        await tx.orderEvent.create({ data: { orderId: activeOrder.id, status: "ARRIVING", note: `Delivery partner is within ${Math.round(distanceMetres!)} metres.` } });
-        if (activeOrder.userId) await tx.notification.create({ data: { userId: activeOrder.userId, orderId: activeOrder.id, title: "Your order is near", body: "Your delivery partner is near your doorstep.", type: "delivery" } });
-      }
-    }
     await tx.deliveryLocationEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } });
   });
-  return NextResponse.json({ ok: true, status: shouldArrive ? "ARRIVING" : activeOrder?.status, distanceMetres });
+  return NextResponse.json({ ok: true, status: activeOrder?.status, distanceMetres });
 }
 
 function distanceInMetres(lat1: number, lon1: number, lat2: number, lon2: number) {

@@ -2,11 +2,11 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
-import { requireOrderStaff } from "@/lib/authz";
+import { requirePackingStaff } from "@/lib/authz";
 
 export async function POST(_request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  const unauthorized = requireOrderStaff(session);
+  const unauthorized = requirePackingStaff(session);
   if (unauthorized) return unauthorized;
 
   const { id } = await params;

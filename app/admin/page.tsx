@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
-import { canViewReports } from "@/lib/authz";
+import { canManageProducts, canViewReports } from "@/lib/authz";
 import { AdminDashboardClient } from "@/components/admin/admin-dashboard-client";
 import { getStoreSettings } from "@/lib/store-settings";
 
@@ -9,6 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const session = await auth();
   const canSeeFinancials = canViewReports(session?.user?.role);
+  const canManageCatalogue = canManageProducts(session?.user?.role);
   const userName = session?.user?.name?.split(" ")[0] || "Admin";
 
   const today = new Date();
@@ -37,7 +38,8 @@ export default async function AdminPage() {
     peakHoursData,
     repeatCustomerCount,
     inventoryValuation,
-    totalProducts
+    totalProducts,
+    databaseHealthy
   ] = await Promise.all([
     prisma.order.count({ where: { createdAt: { gte: today } } }).catch(() => 0),
     prisma.order.count({ where: { status: { in: ["ORDER_RECEIVED", "ACCEPTED", "PACKING"] } } }).catch(() => 0),
@@ -96,7 +98,7 @@ export default async function AdminPage() {
     // Peak hours (today's orders by hour)
     getPeakHours(today),
     // Repeat customers (customers with > 1 order)
-    prisma.order.groupBy({ by: ["userId"], having: { userId: { _count: { gt: 1 } } }, _count: true }).then((r) => r.length).catch(() => 0),
+    prisma.order.groupBy({ by: ["userId"], where: { userId: { not: null } }, having: { userId: { _count: { gt: 1 } } }, _count: true }).then((r) => r.length).catch(() => 0),
     // Inventory valuation
     canSeeFinancials
       ? prisma.product.aggregate({ _sum: { stock: true }, where: { isActive: true } }).then((r) => {
@@ -108,7 +110,8 @@ export default async function AdminPage() {
         }).catch(() => 0)
       : Promise.resolve(0),
     // Total active products
-    prisma.product.count({ where: { isActive: true } }).catch(() => 0)
+    prisma.product.count({ where: { isActive: true } }).catch(() => 0),
+    prisma.$queryRaw`SELECT 1`.then(() => true).catch(() => false)
   ]);
 
   const hour = new Date().getHours();
@@ -132,6 +135,8 @@ export default async function AdminPage() {
       userName={userName}
       greeting={greeting}
       canSeeFinancials={canSeeFinancials}
+      canManageCatalogue={canManageCatalogue}
+      databaseHealthy={databaseHealthy}
       totalRevenue={totalRevenue}
       todayOrders={todayOrders}
       pendingOrders={pendingOrders}

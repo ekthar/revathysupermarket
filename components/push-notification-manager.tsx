@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Bell, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,6 +23,28 @@ export function PushNotificationManager() {
   const [subscribing, setSubscribing] = useState(false);
   const publicKey = process.env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY;
 
+  const silentResubscribe = useCallback(async () => {
+    if (!publicKey) return;
+    try {
+      const registration = await navigator.serviceWorker.ready;
+      let subscription = await registration.pushManager.getSubscription();
+      if (!subscription) {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: publicKeyToUint8Array(publicKey)
+        });
+      }
+      const response = await fetch("/api/push-subscriptions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(subscription.toJSON())
+      });
+      if (response.ok) {
+        localStorage.setItem(SUBSCRIBED_KEY, "true");
+      }
+    } catch {}
+  }, [publicKey]);
+
   useEffect(() => {
     if (!publicKey) return;
     if (!session?.user) return;
@@ -42,27 +64,7 @@ export function PushNotificationManager() {
 
     const timer = setTimeout(() => setShowPrompt(true), 2000);
     return () => clearTimeout(timer);
-  }, [publicKey, session?.user]);
-
-  async function silentResubscribe() {
-    if (!publicKey) return;
-    try {
-      const registration = await navigator.serviceWorker.ready;
-      let subscription = await registration.pushManager.getSubscription();
-      if (!subscription) {
-        subscription = await registration.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: publicKeyToUint8Array(publicKey)
-        });
-      }
-      await fetch("/api/push-subscriptions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscription.toJSON())
-      });
-      localStorage.setItem(SUBSCRIBED_KEY, "true");
-    } catch {}
-  }
+  }, [publicKey, session?.user, silentResubscribe]);
 
   async function enableNotifications() {
     if (!publicKey) return;
@@ -116,13 +118,14 @@ export function PushNotificationManager() {
     <AnimatePresence>
       {showPrompt && (
         <motion.div
+          data-push-prompt
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
           className="fixed bottom-20 md:bottom-6 left-4 right-4 md:left-auto md:right-6 md:w-[360px] z-[60] rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 shadow-xl p-4"
         >
-          <button type="button" onClick={dismiss} className="absolute top-3 right-3 h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center press">
+          <button type="button" onClick={dismiss} aria-label="Dismiss notification prompt" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center press">
             <X className="h-3 w-3 text-slate-500" />
           </button>
           <div className="flex items-start gap-3">

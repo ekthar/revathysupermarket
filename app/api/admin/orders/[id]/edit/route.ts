@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateOrderSubtotal } from "@/lib/billing";
-import { requireOrderStaff } from "@/lib/authz";
+import { requirePackingStaff } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { orderEditSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
@@ -11,7 +11,7 @@ const AUTO_APPROVE_DELTA = Number(process.env.ORDER_EDIT_AUTO_APPROVE_DELTA ?? 5
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  const unauthorized = requireOrderStaff(session);
+  const unauthorized = requirePackingStaff(session);
   if (unauthorized) return unauthorized;
 
   const { id } = await params;

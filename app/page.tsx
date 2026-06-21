@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { ChevronRight, ChevronUp, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
@@ -7,6 +8,7 @@ import { RecentOrdersSection } from "@/components/home/recent-orders-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { AnimatedCategories } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
+import { HomeSearch } from "@/components/home/home-search";
 import { categories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
@@ -101,6 +103,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-slate-950">
+      <HomeSearch products={allProducts} />
       {/* Hero Section - with parallax + floating card */}
       <HeroSection
         storeName={settings.storeName}
@@ -181,10 +184,12 @@ export default async function HomePage() {
           {/* Side banner */}
           <div className="hidden lg:block">
             <div className="sticky top-[90px] rounded-3xl overflow-hidden aspect-[3/4] relative">
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600&h=800&fit=crop"
                 alt="Fresh Fruits & Vegetables"
-                className="w-full h-full object-cover"
+                fill
+                sizes="380px"
+                className="object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 p-6">

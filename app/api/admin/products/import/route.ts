@@ -5,6 +5,10 @@ import { auth } from "@/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { requireProductStaff } from "@/lib/authz";
 import { normalizeProductSheetRow, upsertProductSheetRows, validateProductSheetRow } from "@/lib/admin-product-bulk";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+
+const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
+const MAX_IMPORT_ROWS = 2000;
 
 function parseRows(buffer: ArrayBuffer, filename: string) {
   const workbook = XLSX.read(Buffer.from(buffer), { type: "buffer" });
@@ -18,12 +22,17 @@ export async function POST(request: Request) {
     const session = await auth();
     const unauthorized = requireProductStaff(session);
     if (unauthorized) return unauthorized;
+    const limit = await enforceRateLimit(`product-import:${session!.user!.id}`, 10, 3600);
+    if (limit.limited) return rateLimitResponse(limit.reset);
     const formData = await request.formData();
     const file = formData.get("file");
     const commit = formData.get("commit") === "true";
     if (!(file instanceof File)) return NextResponse.json({ error: "Upload an XLSX or CSV file." }, { status: 400 });
+    if (file.size <= 0 || file.size > MAX_IMPORT_BYTES) return NextResponse.json({ error: "Product files must be smaller than 2MB.", code: "IMPORT_TOO_LARGE" }, { status: 400 });
+    if (!/\.(xlsx|csv)$/i.test(file.name)) return NextResponse.json({ error: "Only XLSX and CSV files are accepted.", code: "INVALID_IMPORT_TYPE" }, { status: 400 });
 
     const rows = parseRows(await file.arrayBuffer(), file.name);
+    if (rows.length > MAX_IMPORT_ROWS) return NextResponse.json({ error: `Import at most ${MAX_IMPORT_ROWS} products at a time.`, code: "IMPORT_ROW_LIMIT" }, { status: 400 });
     const preview = rows.map((row, index) => ({ row: index + 1, product: row, errors: validateProductSheetRow(row) }));
     const invalidRows = preview.filter((row) => row.errors.length > 0);
 

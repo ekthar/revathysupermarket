@@ -1,14 +1,14 @@
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
-import { rateLimit } from "@/lib/rate-limit";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { clientIp } from "@/lib/request-security";
 import { registerSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
   try {
-    const ip = request.headers.get("x-forwarded-for") ?? "local";
-    const limit = rateLimit(`register:${ip}`, 5);
-    if (limit.limited) return NextResponse.json({ error: "Too many registration attempts." }, { status: 429 });
+    const limit = await enforceRateLimit(`register:${clientIp(request)}`, 5, 900);
+    if (limit.limited) return rateLimitResponse(limit.reset);
 
     const body = await request.json();
     const parsed = registerSchema.safeParse(body);

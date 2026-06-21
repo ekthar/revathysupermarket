@@ -9,6 +9,7 @@ import { prisma } from "@/lib/prisma";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { StoreToggleButton } from "@/components/admin/store-toggle-button";
 import { getPublicStoreSettings } from "@/lib/store-settings";
+import { InstallAppButton } from "@/components/install-app-button";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -28,25 +29,28 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   ]);
 
   const nav = [
-    { href: "/admin", label: "Dashboard", icon: "LayoutDashboard", show: true, badge: 0 },
-    { href: "/admin/orders", label: "Orders", icon: "ShoppingBag", show: true, badge: newOrderCount },
-    { href: "/admin/products", label: "Products", icon: "Package", show: canManageProducts(role), badge: 0 },
-    { href: "/admin/categories", label: "Categories", icon: "Package", show: canManageProducts(role), badge: 0 },
-    { href: "/admin/returns", label: "Returns", icon: "RotateCcw", show: canManageReturns(role), badge: pendingReturnCount },
-    { href: "/admin/customers", label: "Customers", icon: "Users", show: canViewReports(role), badge: 0 },
-    { href: "/admin/reports", label: "Reports", icon: "BarChart3", show: canViewReports(role), badge: 0 },
-    { href: "/admin/billing", label: "Billing", icon: "BarChart3", show: canViewReports(role), badge: 0 },
-    { href: "/admin/staff", label: "Staff", icon: "Users", show: canManageStaff(role), badge: 0 },
-    { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "Bell", show: canViewReports(role), badge: 0 },
-    { href: "/admin/promo-codes", label: "Promos", icon: "Bell", show: canManageSettings(role), badge: 0 },
-    { href: "/admin/offers", label: "Offers", icon: "Bell", show: canManageSettings(role), badge: 0 },
-    { href: "/admin/push-notifications", label: "Push", icon: "Bell", show: canManageSettings(role), badge: 0 },
-    { href: "/admin/audit-log", label: "Audit Log", icon: "ClipboardList", show: canViewReports(role), badge: 0 },
-    { href: "/admin/settings", label: "Settings", icon: "Settings", show: canManageSettings(role), badge: 0 }
+    { href: "/admin", label: "Dashboard", icon: "LayoutDashboard", group: "Operations", show: true, badge: 0 },
+    { href: "/admin/orders", label: "Orders", icon: "ShoppingBag", group: "Operations", show: true, badge: newOrderCount },
+    { href: "/admin/returns", label: "Returns", icon: "RotateCcw", group: "Operations", show: canManageReturns(role), badge: pendingReturnCount },
+    { href: "/admin/support", label: "Support", icon: "Bell", group: "Operations", show: canViewReports(role), badge: 0 },
+    { href: "/admin/delivery-slots", label: "Delivery Slots", icon: "ClipboardList", group: "Operations", show: canManageSettings(role), badge: 0 },
+    { href: "/admin/products", label: "Products", icon: "Package", group: "Catalogue", show: canManageProducts(role), badge: 0 },
+    { href: "/admin/categories", label: "Categories", icon: "Package", group: "Catalogue", show: canManageProducts(role), badge: 0 },
+    { href: "/admin/customers", label: "Customers", icon: "Users", group: "Customers", show: canViewReports(role), badge: 0 },
+    { href: "/admin/feedback", label: "Feedback", icon: "Users", group: "Customers", show: canViewReports(role), badge: 0 },
+    { href: "/admin/promo-codes", label: "Promos", icon: "Bell", group: "Marketing", show: canManageSettings(role), badge: 0 },
+    { href: "/admin/offers", label: "Offers", icon: "Bell", group: "Marketing", show: canManageSettings(role), badge: 0 },
+    { href: "/admin/push-notifications", label: "Push", icon: "Bell", group: "Marketing", show: canManageSettings(role), badge: 0 },
+    { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "Bell", group: "Marketing", show: canViewReports(role), badge: 0 },
+    { href: "/admin/reports", label: "Reports", icon: "BarChart3", group: "Finance", show: canViewReports(role), badge: 0 },
+    { href: "/admin/billing", label: "Billing", icon: "BarChart3", group: "Finance", show: canViewReports(role), badge: 0 },
+    { href: "/admin/staff", label: "Staff", icon: "Users", group: "Administration", show: canManageStaff(role), badge: 0 },
+    { href: "/admin/audit-log", label: "Audit Log", icon: "ClipboardList", group: "Administration", show: canViewReports(role), badge: 0 },
+    { href: "/admin/settings", label: "Settings", icon: "Settings", group: "Administration", show: canManageSettings(role), badge: 0 }
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8f9fb] dark:bg-slate-950">
+    <div className="admin-shell min-h-screen bg-[#f8f9fb] dark:bg-slate-950">
       <NewOrderAlert />
 
       {/* Top bar */}
@@ -63,7 +67,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
               </div>
               <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">{settings.storeName} Admin</span>
             </Link>
-            <StoreToggleButton />
+            <StoreToggleButton initialIsOpen={settings.isStoreOpen} />
+            <div className="hidden md:block"><InstallAppButton compact /></div>
           </div>
           <div className="flex items-center gap-4">
             <Link href="/" className="text-[12px] font-semibold text-primary flex items-center gap-1.5 hover:underline px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10">

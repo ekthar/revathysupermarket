@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { countRecentOtps, createOtpToken, normalizeIndianPhone, otpRateLimitPer10Min } from "@/lib/otp";
-import { rateLimit } from "@/lib/rate-limit";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { clientIp } from "@/lib/request-security";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 
 const schema = z.object({
@@ -9,9 +10,8 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
-  const ip = request.headers.get("x-forwarded-for") ?? "local";
-  const limit = rateLimit(`otp-send:${ip}`, 12);
-  if (limit.limited) return NextResponse.json({ error: "Too many OTP requests. Please try again shortly." }, { status: 429 });
+  const limit = await enforceRateLimit(`otp-send:${clientIp(request)}`, 12, 600);
+  if (limit.limited) return rateLimitResponse(limit.reset);
 
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid WhatsApp phone number." }, { status: 400 });

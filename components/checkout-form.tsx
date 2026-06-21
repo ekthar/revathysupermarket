@@ -42,6 +42,7 @@ type SavedAddress = {
   longitude: number;
   isDefault: boolean;
 };
+type DeliverySlot = { id: string; startsAt: string; endsAt: string; remaining: number; available: boolean };
 
 const STORAGE_KEY = "msm-customer-info";
 
@@ -107,6 +108,8 @@ export function CheckoutForm({
   gstin?: string;
   savedAddresses?: SavedAddress[];
 }) {
+  const rewardsEnabled = process.env.NEXT_PUBLIC_ENABLE_REWARDS !== "false";
+  const slotsEnabled = process.env.NEXT_PUBLIC_ENABLE_DELIVERY_SLOTS !== "false";
   const { items, subtotal, clearCart } = useCart();
   const { showToast } = useToast();
   const [form, setForm] = useState(initialState);
@@ -120,6 +123,13 @@ export function CheckoutForm({
 
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [walletLoading, setWalletLoading] = useState(true);
+  const [deliveryMode, setDeliveryMode] = useState<"ASAP" | "SCHEDULED">("ASAP");
+  const [slots, setSlots] = useState<DeliverySlot[]>([]);
+  const [deliverySlotId, setDeliverySlotId] = useState("");
+  const [promoCode, setPromoCode] = useState("");
+  const [loyaltyBalance, setLoyaltyBalance] = useState(0);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [loyaltyRules, setLoyaltyRules] = useState({ pointValueRupees: 0.25, maxRedemptionPercent: 20 });
 
   const deliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const gstAmount = gstRatePercent > 0 ? Math.round(subtotal - subtotal / (1 + gstRatePercent / 100)) : 0;
@@ -133,6 +143,17 @@ export function CheckoutForm({
       .catch(() => setWalletBalance(0))
       .finally(() => setWalletLoading(false));
   }, []);
+
+  useEffect(() => {
+    Promise.all([
+      slotsEnabled ? fetch("/api/delivery-slots").then((res) => res.ok ? res.json() : { slots: [] }) : Promise.resolve({ slots: [] }),
+      rewardsEnabled ? fetch("/api/account/loyalty").then((res) => res.ok ? res.json() : { balance: 0 }) : Promise.resolve({ balance: 0 })
+    ]).then(([slotData, loyaltyData]) => {
+      setSlots(slotData.slots ?? []);
+      setLoyaltyBalance(loyaltyData.balance ?? 0);
+      if (loyaltyData.config) setLoyaltyRules({ pointValueRupees: loyaltyData.config.pointValueRupees ?? 0.25, maxRedemptionPercent: loyaltyData.config.maxRedemptionPercent ?? 20 });
+    }).catch(() => undefined);
+  }, [rewardsEnabled, slotsEnabled]);
 
   // Load saved customer info on mount (name, phone, address persist)
   useEffect(() => {
@@ -158,7 +179,7 @@ export function CheckoutForm({
   const pincodeOk = pincodeReady && isServiceablePincode(form.pincode, allowedPincodes);
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
-  const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting && subtotal >= minimumOrderValue;
+  const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
 
   useEffect(() => {
     if (!placedOrderId) return;
@@ -246,7 +267,11 @@ export function CheckoutForm({
             name: item.name,
             quantity: item.quantity,
             price: item.discountPrice ?? item.price
-          }))
+          })),
+          deliveryMode,
+          deliverySlotId: deliveryMode === "SCHEDULED" ? deliverySlotId : undefined,
+          promoCode: promoCode.trim() || undefined,
+          loyaltyPoints
         })
       });
 
@@ -356,6 +381,28 @@ export function CheckoutForm({
               </span>
             )}
           </div>
+
+          {slotsEnabled && <section className="rounded-2xl border border-slate-100 bg-white p-4 card-shadow dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="text-sm font-black text-slate-900 dark:text-white">Delivery time</h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button type="button" onClick={() => setDeliveryMode("ASAP")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "ASAP" ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800"}`}>ASAP</button>
+              <button type="button" onClick={() => setDeliveryMode("SCHEDULED")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "SCHEDULED" ? "bg-primary text-white" : "bg-slate-100 dark:bg-slate-800"}`}>Choose slot</button>
+            </div>
+            {deliveryMode === "SCHEDULED" && <div className="mt-3 grid gap-2">
+              {slots.length === 0 ? <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-700">No scheduled slots are available. Choose ASAP.</p> : slots.map((slot) => <label key={slot.id} className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm font-semibold">
+                <input type="radio" name="delivery-slot" value={slot.id} checked={deliverySlotId === slot.id} disabled={!slot.available} onChange={() => setDeliverySlotId(slot.id)} />
+                <span>{new Date(slot.startsAt).toLocaleString("en-IN", { weekday: "short", hour: "numeric", minute: "2-digit" })} – {new Date(slot.endsAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}</span>
+                <span className="ml-auto text-xs text-muted-foreground">{slot.remaining} left</span>
+              </label>)}
+            </div>}
+          </section>}
+
+          {rewardsEnabled && <section className="rounded-2xl border border-slate-100 bg-white p-4 card-shadow dark:border-slate-800 dark:bg-slate-900">
+            <h2 className="text-sm font-black text-slate-900 dark:text-white">Offers and rewards</h2>
+            <label className="mt-3 block text-xs font-bold text-muted-foreground">Promo code<input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" placeholder="Optional promo code" /></label>
+            <label className="mt-3 block text-xs font-bold text-muted-foreground">Use points ({loyaltyBalance} available)<input type="number" min="0" max={loyaltyBalance} value={loyaltyPoints} onChange={(event) => setLoyaltyPoints(Math.min(loyaltyBalance, Math.max(0, Number(event.target.value))))} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" /></label>
+            <p className="mt-2 text-xs text-muted-foreground">Each point is worth ₹{loyaltyRules.pointValueRupees}. Up to {loyaltyRules.maxRedemptionPercent}% of the order can be paid with points. Final discounts are verified securely when you place the order.</p>
+          </section>}
 
           {/* Payment Method */}
           <motion.section

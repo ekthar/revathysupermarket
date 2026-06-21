@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { SITE } from "@/lib/constants";
+import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -16,14 +17,15 @@ export default async function LoginPage({
 }) {
   const session = await auth();
   const { callbackUrl } = await searchParams;
+  const safeCallback = safeCallbackUrl(callbackUrl, "/dashboard", ["/", "/products", "/cart", "/checkout", "/dashboard", "/account", "/support"]);
 
   // Already logged in → redirect to appropriate page
   if (session?.user?.id) {
     const role = session.user.role;
     if (role === "DELIVERY_PARTNER") redirect("/delivery");
     if (role && role !== "CUSTOMER" && role !== "INVALID") redirect("/admin");
-    redirect(callbackUrl || "/dashboard");
+    redirect(safeCallback);
   }
 
-  return <OnboardingFlow callbackUrl={callbackUrl ?? "/"} />;
+  return <OnboardingFlow callbackUrl={safeCallback} />;
 }

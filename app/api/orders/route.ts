@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateDistanceKm } from "@/lib/distance";
-import { rateLimit } from "@/lib/rate-limit";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { clientIp } from "@/lib/request-security";
 import { isStaffRole } from "@/lib/authz";
 import { checkoutSchema } from "@/lib/validations";
 import { isServiceablePincode } from "@/lib/delivery";
 import { getStoreSettingsForApi, isStoreCurrentlyOpen } from "@/lib/store-settings";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
+import { checkoutErrorResponse, createAuthoritativeOrder } from "@/lib/order-checkout";
 
 function orderNumber() {
   const date = new Date();
@@ -27,9 +29,8 @@ async function createOrderNumber() {
 
 export async function POST(request: Request) {
   try {
-    const ip = request.headers.get("x-forwarded-for") ?? "local";
-    const limit = rateLimit(`order:${ip}`, 10);
-    if (limit.limited) return NextResponse.json({ error: "Too many order attempts. Please try again shortly." }, { status: 429 });
+    const limit = await enforceRateLimit(`order:${clientIp(request)}`, 10, 600);
+    if (limit.limited) return rateLimitResponse(limit.reset);
 
     const session = await auth();
     if (!session?.user?.id) {
@@ -48,6 +49,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: storeStatus.message }, { status: 400 });
     }
 
+    /* Client totals are display-only; minimum value is checked from database prices below.
     // Check minimum order value
     const orderSubtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     if (orderSubtotal < settings.minimumOrderValue) {
@@ -57,6 +59,7 @@ export async function POST(request: Request) {
       );
     }
 
+    */
     if (!isServiceablePincode(data.pincode, settings.serviceablePincodes)) {
       return NextResponse.json(
         { error: "Sorry, this pincode is not currently serviceable." },
@@ -75,6 +78,29 @@ export async function POST(request: Request) {
       );
     }
 
+    {
+      const order = await createAuthoritativeOrder({
+        data,
+        userId: session.user.id,
+        orderNumber: await createOrderNumber(),
+        distanceKm,
+        settings
+      });
+
+      const existingAddress = await prisma.address.findFirst({
+        where: { userId: session.user.id, houseName: data.houseName, pincode: data.pincode, street: data.street }
+      }).catch(() => null);
+      if (!existingAddress) {
+        await prisma.address.create({ data: { userId: session.user.id, label: "Home", houseName: data.houseName, street: data.street, landmark: data.landmark, pincode: data.pincode, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+      } else {
+        await prisma.address.update({ where: { id: existingAddress.id }, data: { landmark: data.landmark, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+      }
+      await sendWhatsAppTemplate({ to: order.phone, template: "order_confirmed", params: [order.orderNumber, String(order.items.length), Number(order.total).toFixed(2), order.paymentMethod], orderId: order.id }).catch(() => null);
+      await notifyOrderStatus(session.user.id, order.orderNumber, "ORDER_RECEIVED", order.id).catch(() => null);
+      return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber, total: Number(order.total) });
+    }
+
+    /* Replaced by createAuthoritativeOrder above.
     const subtotal = data.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const requestedProductIds = data.items.map((item) => item.productId).filter(Boolean);
     const existingProducts = requestedProductIds.length > 0
@@ -222,7 +248,10 @@ export async function POST(request: Request) {
     await notifyOrderStatus(session.user.id, order.orderNumber, "ORDER_RECEIVED", order.id).catch(() => null);
 
     return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber });
+    */
   } catch (error) {
+    const checkoutError = checkoutErrorResponse(error);
+    if (checkoutError) return NextResponse.json({ error: checkoutError.error, code: checkoutError.code }, { status: checkoutError.status });
     console.error("Order create failed", error);
     return NextResponse.json({ error: "Order could not be placed. Please try again." }, { status: 500 });
   }

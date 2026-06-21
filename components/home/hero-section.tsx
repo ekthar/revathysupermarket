@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronUp } from "lucide-react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
@@ -95,10 +96,12 @@ export function HeroSection({
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                   className="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-lg max-w-[160px]"
                 >
-                  <img
+                  <Image
                     src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=120&h=80&fit=crop"
                     alt="Fresh Vegetables"
-                    className="w-full h-16 object-cover rounded-xl"
+                    width={136}
+                    height={64}
+                    className="h-16 w-full rounded-xl object-cover"
                   />
                   <p className="mt-2 text-[11px] font-bold text-slate-800">Fresh Vegetables</p>
                   <p className="text-[11px] font-bold text-primary">₹18.00</p>

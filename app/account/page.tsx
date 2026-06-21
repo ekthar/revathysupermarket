@@ -1,9 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { ChevronRight, CreditCard, Heart, HelpCircle, LogOut, MapPin, Package, Pencil, Phone, Settings, User, Wallet } from "lucide-react";
+import { ChevronRight, CreditCard, Gift, Heart, HelpCircle, LogOut, MapPin, Package, Pencil, Phone, Settings, User, Wallet } from "lucide-react";
 import { ThemeToggleInline } from "@/components/ui/theme-toggle-inline";
+import { InstallAppButton } from "@/components/install-app-button";
 
 export const dynamic = "force-dynamic";
 
@@ -31,9 +33,9 @@ export default async function AccountPage() {
       {/* Profile card */}
       <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow p-4">
         <div className="flex items-center gap-3">
-          <div className="h-14 w-14 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-slate-800 flex items-center justify-center shrink-0">
+          <div className="relative h-14 w-14 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-slate-800 flex items-center justify-center shrink-0">
             {user?.image ? (
-              <img src={user.image} alt="Profile" className="h-full w-full object-cover" />
+              <Image src={user.image} alt="Profile" fill sizes="56px" className="object-cover" />
             ) : (
               <User className="h-6 w-6 text-primary/60" />
             )}
@@ -71,6 +73,7 @@ export default async function AccountPage() {
         <AccountRow href="/account/edit" icon={MapPin} label="Saved Addresses" detail={`${addressCount} saved`} />
         <AccountRow href="/account/favorites" icon={Heart} label="Favorites" detail={`${favoriteCount} items`} iconColor="text-red-400" />
         <AccountRow href="/account/wallet" icon={Wallet} label="Wallet" detail={walletBalance > 0 ? `${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)}` : "No balance"} iconColor="text-emerald-500" />
+        <AccountRow href="/account/loyalty" icon={Gift} label="Rewards & referrals" detail="Points and invites" iconColor="text-amber-500" />
         <AccountRow href="/account/settings" icon={CreditCard} label="Payment Methods" detail="COD & UPI" />
       </div>
 
@@ -79,7 +82,7 @@ export default async function AccountPage() {
         <p className="px-4 pt-3.5 pb-1 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Settings</p>
         <AccountRow href="/account/settings" icon={Settings} label="Preferences" detail="Notifications & theme" />
         {user?.phone && <AccountRow href="/account/edit" icon={Phone} label="Phone" detail={user.phone} />}
-        <AccountRow href="/account/settings" icon={HelpCircle} label="Help & Support" detail="Contact us" />
+        <AccountRow href="/support" icon={HelpCircle} label="Help & Support" detail="Tickets & WhatsApp" />
       </div>
 
       {/* Appearance */}
@@ -97,6 +100,7 @@ export default async function AccountPage() {
       </div>
 
       {/* Logout */}
+      <InstallAppButton />
       <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
         <button
           type="submit"

@@ -5,6 +5,8 @@ import { deliverySummary } from "@/lib/delivery";
 import { getStoreSettings } from "@/lib/store-settings";
 import { SettingsManagementClient } from "@/components/admin/settings-management-client";
 import { MapPin } from "lucide-react";
+import { getLoyaltyConfig } from "@/lib/loyalty-config";
+import { LoyaltySettingsClient } from "@/components/admin/loyalty-settings-client";
 
 export const dynamic = "force-dynamic";
 
@@ -19,13 +21,14 @@ export default async function AdminSettingsPage() {
     );
   }
 
-  const [settings, banners, templateRows] = await Promise.all([
+  const [settings, banners, templateRows, loyaltyConfig] = await Promise.all([
     getStoreSettings(),
     prisma.banner.findMany({
       select: { id: true, title: true, subtitle: true, image: true, href: true, isActive: true },
       orderBy: { createdAt: "desc" }
     }).catch(() => []),
-    prisma.setting.findMany({ where: { key: { startsWith: "whatsappTemplateStatus." } } }).catch(() => [])
+    prisma.setting.findMany({ where: { key: { startsWith: "whatsappTemplateStatus." } } }).catch(() => []),
+    getLoyaltyConfig()
   ]);
   const templateStatuses = Object.fromEntries(templateRows.map((row) => [row.key.replace("whatsappTemplateStatus.", ""), row.value]));
 
@@ -47,6 +50,7 @@ export default async function AdminSettingsPage() {
         }}
         templateStatuses={templateStatuses}
       />
+      <LoyaltySettingsClient initialConfig={loyaltyConfig} />
       <div className="mt-5 rounded-[1.75rem] border border-white/70 bg-primary p-5 text-white shadow-soft dark:border-white/10">
         <MapPin className="h-6 w-6 text-lime-fresh" />
         <h3 className="mt-3 font-display text-2xl font-black">Delivery radius</h3>

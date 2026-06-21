@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Home, Search, ShoppingBag, User } from "lucide-react";
+import { ClipboardList, Home, Search, ShoppingBag, User } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
@@ -27,7 +27,7 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
             <NavTab href="/" icon={Home} label="Home" active={pathname === "/"} />
 
             {/* Browse */}
-            <NavTab href="/products" icon={Search} label="Stores" active={pathname.startsWith("/products")} />
+            <NavTab href="/products" icon={Search} label="Search" active={pathname.startsWith("/products")} />
 
             {/* Center elevated Cart */}
             <Link
@@ -62,6 +62,8 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
                 Cart
               </span>
             </Link>
+
+            <NavTab href="/dashboard" icon={ClipboardList} label="Orders" active={pathname.startsWith("/dashboard")} />
 
             {/* Account/Login */}
             <NavTab

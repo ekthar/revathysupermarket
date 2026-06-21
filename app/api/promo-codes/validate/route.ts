@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 const validateSchema = z.object({
   code: z.string().min(1).transform((v) => v.toUpperCase().trim()),
@@ -15,6 +16,8 @@ export async function POST(request: Request) {
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Please log in to apply promo codes." }, { status: 401 });
     }
+    const limit = await enforceRateLimit(`promo-validate:${session.user.id}`, 30, 600);
+    if (limit.limited) return rateLimitResponse(limit.reset);
 
     const body = await request.json();
     const parsed = validateSchema.safeParse(body);

@@ -39,7 +39,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     status: order.status,
     deliveryOtp: ["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY"].includes(order.status) ? order.deliveryOtp : null,
     destination: { latitude: Number(order.latitude), longitude: Number(order.longitude) },
-    deliveryPartnerLocation: order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude ? {
+    deliveryPartnerLocation: order.status === "OUT_FOR_DELIVERY" && order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude && order.deliveryPartner.locationUpdatedAt && Date.now() - order.deliveryPartner.locationUpdatedAt.getTime() < 5 * 60_000 ? {
       latitude: Number(order.deliveryPartner.currentLatitude),
       longitude: Number(order.deliveryPartner.currentLongitude),
       updatedAt: order.deliveryPartner.locationUpdatedAt?.toISOString()

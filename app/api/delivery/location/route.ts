@@ -13,13 +13,11 @@ export async function POST(request: Request) {
   const parsed = deliveryLocationSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid location." }, { status: 400 });
 
-  await prisma.user.update({
-    where: { id: session.user.id },
-    data: {
-      currentLatitude: parsed.data.latitude,
-      currentLongitude: parsed.data.longitude,
-      locationUpdatedAt: new Date()
-    }
+  const activeOrder = await prisma.order.findFirst({ where: { deliveryPartnerId: session.user.id, status: "OUT_FOR_DELIVERY" }, select: { id: true } });
+  await prisma.$transaction(async (tx) => {
+    await tx.user.update({ where: { id: session.user.id }, data: { currentLatitude: parsed.data.latitude, currentLongitude: parsed.data.longitude, locationUpdatedAt: new Date() } });
+    if (activeOrder) await tx.deliveryLocationEvent.create({ data: { orderId: activeOrder.id, deliveryPartnerId: session.user.id, latitude: parsed.data.latitude, longitude: parsed.data.longitude } });
+    await tx.deliveryLocationEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } });
   });
   return NextResponse.json({ ok: true });
 }

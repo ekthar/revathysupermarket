@@ -56,70 +56,115 @@ enum OrderStatus {
   CANCELLED
 }
 
+enum DeliveryMode {
+  ASAP
+  SCHEDULED
+}
+
+enum LoyaltyTransactionType {
+  EARN
+  REDEEM
+  REVERSE
+  REFERRAL
+  ADJUSTMENT
+}
+
+enum ReferralStatus {
+  PENDING
+  REWARDED
+  CANCELLED
+}
+
+enum SupportTicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_FOR_CUSTOMER
+  RESOLVED
+  CLOSED
+}
+
+enum SupportPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String?   @unique
-  emailVerified DateTime?
-  image         String?
-  passwordHash  String?
-  phone         String?   @unique
-  phoneVerified Boolean   @default(false)
-  role          Role      @default(CUSTOMER)
-  isActive      Boolean   @default(true)
-  lastLoginAt   DateTime?
-  failedLoginAttempts Int  @default(0)
-  lockedUntil   DateTime?
-  passwordVersion Int     @default(0)
-  vehicleInfo   String?
-  currentLatitude Decimal? @db.Decimal(9, 6)
-  currentLongitude Decimal? @db.Decimal(9, 6)
-  locationUpdatedAt DateTime?
-  accounts      Account[]
-  sessions      Session[]
-  addresses     Address[]
-  orders        Order[]
-  assignedOrders Order[] @relation("OrderDeliveryPartner")
-  acknowledgedOrders Order[] @relation("OrderAcknowledgedBy")
-  pushSubscriptions PushSubscription[]
-  auditLogs     AuditLog[]
-  orderEditLogs OrderEditLog[]
-  resolvedReturns ReturnRequest[] @relation("ReturnResolvedBy")
-  walletTransactions WalletTransaction[]
-  passwordResetTokens PasswordResetToken[]
-  otpTokens     OtpToken[]
-  favorites     Favorite[]
-  settings      UserSettings?
-  notifications Notification[]
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id                     String                  @id @default(cuid())
+  name                   String?
+  email                  String?                 @unique
+  emailVerified          DateTime?
+  image                  String?
+  passwordHash           String?
+  phone                  String?                 @unique
+  phoneVerified          Boolean                 @default(false)
+  role                   Role                    @default(CUSTOMER)
+  isActive               Boolean                 @default(true)
+  lastLoginAt            DateTime?
+  failedLoginAttempts    Int                     @default(0)
+  lockedUntil            DateTime?
+  passwordVersion        Int                     @default(0)
+  vehicleInfo            String?
+  currentLatitude        Decimal?                @db.Decimal(9, 6)
+  currentLongitude       Decimal?                @db.Decimal(9, 6)
+  locationUpdatedAt      DateTime?
+  accounts               Account[]
+  sessions               Session[]
+  addresses              Address[]
+  orders                 Order[]
+  assignedOrders         Order[]                 @relation("OrderDeliveryPartner")
+  acknowledgedOrders     Order[]                 @relation("OrderAcknowledgedBy")
+  pushSubscriptions      PushSubscription[]
+  auditLogs              AuditLog[]
+  orderEditLogs          OrderEditLog[]
+  resolvedReturns        ReturnRequest[]         @relation("ReturnResolvedBy")
+  walletTransactions     WalletTransaction[]
+  passwordResetTokens    PasswordResetToken[]
+  otpTokens              OtpToken[]
+  favorites              Favorite[]
+  settings               UserSettings?
+  notifications          Notification[]
+  loyaltyAccount         LoyaltyAccount?
+  loyaltyTransactions    LoyaltyTransaction[]
+  promoRedemptions       PromoRedemption[]
+  referralsMade          Referral[]              @relation("ReferralReferrer")
+  referralReceived       Referral?               @relation("ReferralReferred")
+  supportTickets         SupportTicket[]         @relation("SupportCustomer")
+  assignedSupportTickets SupportTicket[]         @relation("SupportAssignee")
+  supportMessages        SupportMessage[]
+  feedback               OrderFeedback[]
+  deliveryLocationEvents DeliveryLocationEvent[]
+  referralCode           String?                 @unique
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
 }
 
 model OtpToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   phone     String
   tokenHash String
   expiresAt DateTime
-  attempts  Int      @default(0)
+  attempts  Int       @default(0)
   usedAt    DateTime?
   userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
 
   @@index([phone, expiresAt])
   @@index([userId])
 }
 
 model WhatsAppLog {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   phone     String
   orderId   String?
   template  String
   messageId String?
-  status    String   @default("sent")
+  status    String    @default("sent")
   error     String?
   statusAt  DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   @@index([orderId])
   @@index([phone])
@@ -153,13 +198,13 @@ model Session {
 }
 
 model PasswordResetToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   userId    String
-  tokenHash String   @unique
+  tokenHash String    @unique
   expiresAt DateTime
   usedAt    DateTime?
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
 
   @@index([userId])
   @@index([expiresAt])
@@ -232,44 +277,57 @@ model Address {
 }
 
 model Order {
-  id            String        @id @default(cuid())
-  orderNumber   String        @unique
-  userId        String?
-  customerName  String
-  phone         String
-  houseName     String
-  street        String
-  landmark      String
-  pincode       String
-  notes         String?
-  latitude      Decimal       @db.Decimal(9, 6)
-  longitude     Decimal       @db.Decimal(9, 6)
-  distanceKm    Decimal       @db.Decimal(6, 2)
-  paymentMethod PaymentMethod
-  paymentStatus PaymentStatus @default(PENDING)
-  status        OrderStatus   @default(ORDER_RECEIVED)
-  subtotal      Decimal       @db.Decimal(10, 2)
-  total         Decimal       @db.Decimal(10, 2)
-  acknowledgedAt DateTime?
-  acknowledgedById String?
-  editApprovalStatus String?
+  id                      String                  @id @default(cuid())
+  orderNumber             String                  @unique
+  userId                  String?
+  customerName            String
+  phone                   String
+  houseName               String
+  street                  String
+  landmark                String
+  pincode                 String
+  notes                   String?
+  latitude                Decimal                 @db.Decimal(9, 6)
+  longitude               Decimal                 @db.Decimal(9, 6)
+  distanceKm              Decimal                 @db.Decimal(6, 2)
+  paymentMethod           PaymentMethod
+  paymentStatus           PaymentStatus           @default(PENDING)
+  status                  OrderStatus             @default(ORDER_RECEIVED)
+  subtotal                Decimal                 @db.Decimal(10, 2)
+  discount                Decimal                 @default(0) @db.Decimal(10, 2)
+  deliveryFee             Decimal                 @default(0) @db.Decimal(10, 2)
+  total                   Decimal                 @db.Decimal(10, 2)
+  acknowledgedAt          DateTime?
+  acknowledgedById        String?
+  editApprovalStatus      String?
   editApprovalRequestedAt DateTime?
-  deliveryPartnerId String?
-  deliveryOtp String?
-  deliveryOtpAttempts Int @default(0)
-  deliveryOtpExpiresAt DateTime?
-  deliveryConfirmedAt DateTime?
-  staffNote String?
-  user          User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
-  acknowledgedBy User?        @relation("OrderAcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
-  deliveryPartner User?       @relation("OrderDeliveryPartner", fields: [deliveryPartnerId], references: [id], onDelete: SetNull)
-  items         OrderItem[]
-  statusEvents  OrderEvent[]
-  editLogs      OrderEditLog[]
-  returnRequests ReturnRequest[]
-  walletTransactions WalletTransaction[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  deliveryPartnerId       String?
+  deliveryOtp             String?
+  deliveryOtpAttempts     Int                     @default(0)
+  deliveryOtpExpiresAt    DateTime?
+  deliveryConfirmedAt     DateTime?
+  staffNote               String?
+  deliveryMode            DeliveryMode            @default(ASAP)
+  deliverySlotId          String?
+  estimatedDeliveryAt     DateTime?
+  loyaltyPointsRedeemed   Int                     @default(0)
+  loyaltyPointsEarned     Int                     @default(0)
+  user                    User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  acknowledgedBy          User?                   @relation("OrderAcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
+  deliveryPartner         User?                   @relation("OrderDeliveryPartner", fields: [deliveryPartnerId], references: [id], onDelete: SetNull)
+  items                   OrderItem[]
+  statusEvents            OrderEvent[]
+  editLogs                OrderEditLog[]
+  returnRequests          ReturnRequest[]
+  walletTransactions      WalletTransaction[]
+  deliverySlot            DeliverySlot?           @relation(fields: [deliverySlotId], references: [id], onDelete: SetNull)
+  loyaltyTransactions     LoyaltyTransaction[]
+  promoRedemptions        PromoRedemption[]
+  supportTickets          SupportTicket[]
+  feedback                OrderFeedback?
+  deliveryLocationEvents  DeliveryLocationEvent[]
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
 
   @@index([status])
   @@index([acknowledgedAt])
@@ -277,6 +335,8 @@ model Order {
   @@index([deliveryPartnerId])
   @@index([createdAt])
   @@index([userId])
+  @@index([deliverySlotId])
+  @@index([estimatedDeliveryAt])
 }
 
 model OrderItem {
@@ -304,20 +364,20 @@ model OrderEvent {
 }
 
 model OrderEditLog {
-  id           String   @id @default(cuid())
-  orderId      String
-  editedById   String?
-  action       String
-  originalItem Json?
-  newItem      Json?
-  priceDelta   Decimal  @default(0) @db.Decimal(10, 2)
-  reason       String?
-  requiresCustomerApproval Boolean @default(false)
-  customerDecision String?
-  decidedAt    DateTime?
-  order        Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  editedBy     User?    @relation(fields: [editedById], references: [id], onDelete: SetNull)
-  createdAt    DateTime @default(now())
+  id                       String    @id @default(cuid())
+  orderId                  String
+  editedById               String?
+  action                   String
+  originalItem             Json?
+  newItem                  Json?
+  priceDelta               Decimal   @default(0) @db.Decimal(10, 2)
+  reason                   String?
+  requiresCustomerApproval Boolean   @default(false)
+  customerDecision         String?
+  decidedAt                DateTime?
+  order                    Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  editedBy                 User?     @relation(fields: [editedById], references: [id], onDelete: SetNull)
+  createdAt                DateTime  @default(now())
 
   @@index([orderId])
   @@index([editedById])
@@ -325,23 +385,23 @@ model OrderEditLog {
 }
 
 model ReturnRequest {
-  id              String       @id @default(cuid())
+  id              String        @id @default(cuid())
   orderId         String
   items           Json
   reason          String
   photoUrl        String?
   note            String?
-  status          ReturnStatus @default(REQUESTED)
+  status          ReturnStatus  @default(REQUESTED)
   refundMethod    RefundMethod?
-  refundAmount    Decimal?     @db.Decimal(10, 2)
+  refundAmount    Decimal?      @db.Decimal(10, 2)
   refundReference String?
   resolutionNote  String?
   resolvedById    String?
   resolvedAt      DateTime?
-  order           Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  resolvedBy      User?        @relation("ReturnResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @updatedAt
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  resolvedBy      User?         @relation("ReturnResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([orderId])
   @@index([status])
@@ -369,7 +429,7 @@ model PushSubscription {
   id        String   @id @default(cuid())
   userId    String
   endpoint  String   @unique
-  p256dh     String
+  p256dh    String
   auth      String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt DateTime @default(now())
@@ -396,16 +456,16 @@ model AuditLog {
 }
 
 model Banner {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   title     String
   subtitle  String?
   image     String
   href      String?
-  isActive  Boolean  @default(true)
+  isActive  Boolean   @default(true)
   startsAt  DateTime?
   endsAt    DateTime?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 }
 
 model Setting {
@@ -457,42 +517,175 @@ model Notification {
 }
 
 model PromoCode {
-  id              String    @id @default(cuid())
-  code            String    @unique
-  description     String?
-  discountType    String    @default("percentage")
-  discountValue   Decimal   @db.Decimal(10, 2)
-  minimumOrder    Decimal   @default(0) @db.Decimal(10, 2)
-  maxDiscount     Decimal?  @db.Decimal(10, 2)
-  usageLimit      Int?
-  usedCount       Int       @default(0)
-  isActive        Boolean   @default(true)
-  startsAt        DateTime?
-  expiresAt       DateTime?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String            @id @default(cuid())
+  code          String            @unique
+  description   String?
+  discountType  String            @default("percentage")
+  discountValue Decimal           @db.Decimal(10, 2)
+  minimumOrder  Decimal           @default(0) @db.Decimal(10, 2)
+  maxDiscount   Decimal?          @db.Decimal(10, 2)
+  usageLimit    Int?
+  usedCount     Int               @default(0)
+  isActive      Boolean           @default(true)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  redemptions   PromoRedemption[]
 
   @@index([code])
   @@index([isActive, expiresAt])
 }
 
+model DeliverySlot {
+  id          String   @id @default(cuid())
+  serviceDate DateTime @db.Date
+  startsAt    DateTime
+  endsAt      DateTime
+  capacity    Int
+  bookedCount Int      @default(0)
+  isActive    Boolean  @default(true)
+  orders      Order[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@unique([serviceDate, startsAt, endsAt])
+  @@index([serviceDate, isActive])
+}
+
+model LoyaltyAccount {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  balance        Int      @default(0)
+  lifetimeEarned Int      @default(0)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model LoyaltyTransaction {
+  id        String                 @id @default(cuid())
+  userId    String
+  orderId   String?
+  type      LoyaltyTransactionType
+  points    Int
+  reason    String
+  user      User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order     Order?                 @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  createdAt DateTime               @default(now())
+
+  @@index([userId, createdAt])
+  @@index([orderId])
+}
+
+model Referral {
+  id             String         @id @default(cuid())
+  referrerId     String
+  referredUserId String         @unique
+  status         ReferralStatus @default(PENDING)
+  rewardedAt     DateTime?
+  referrer       User           @relation("ReferralReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredUser   User           @relation("ReferralReferred", fields: [referredUserId], references: [id], onDelete: Cascade)
+  createdAt      DateTime       @default(now())
+
+  @@index([referrerId, status])
+}
+
+model PromoRedemption {
+  id          String    @id @default(cuid())
+  promoCodeId String
+  userId      String
+  orderId     String
+  discount    Decimal   @db.Decimal(10, 2)
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Restrict)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order       Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+
+  @@unique([promoCodeId, userId])
+  @@index([promoCodeId, createdAt])
+  @@index([userId])
+}
+
+model SupportTicket {
+  id           String              @id @default(cuid())
+  ticketNumber String              @unique
+  customerId   String
+  orderId      String?
+  assigneeId   String?
+  subject      String
+  status       SupportTicketStatus @default(OPEN)
+  priority     SupportPriority     @default(NORMAL)
+  customer     User                @relation("SupportCustomer", fields: [customerId], references: [id], onDelete: Cascade)
+  order        Order?              @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  assignee     User?               @relation("SupportAssignee", fields: [assigneeId], references: [id], onDelete: SetNull)
+  messages     SupportMessage[]
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  @@index([customerId, createdAt])
+  @@index([status, priority])
+  @@index([assigneeId])
+}
+
+model SupportMessage {
+  id        String        @id @default(cuid())
+  ticketId  String
+  authorId  String
+  body      String        @db.Text
+  ticket    SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  createdAt DateTime      @default(now())
+
+  @@index([ticketId, createdAt])
+}
+
+model OrderFeedback {
+  id             String   @id @default(cuid())
+  orderId        String   @unique
+  userId         String
+  orderRating    Int
+  deliveryRating Int
+  tags           String[]
+  comment        String?
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt      DateTime @default(now())
+
+  @@index([userId, createdAt])
+}
+
+model DeliveryLocationEvent {
+  id                String   @id @default(cuid())
+  orderId           String
+  deliveryPartnerId String
+  latitude          Decimal  @db.Decimal(9, 6)
+  longitude         Decimal  @db.Decimal(9, 6)
+  order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  deliveryPartner   User     @relation(fields: [deliveryPartnerId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+
+  @@index([orderId, createdAt])
+  @@index([deliveryPartnerId, createdAt])
+}
+
 model Offer {
-  id              String    @id @default(cuid())
-  title           String
-  description     String?
-  discountType    String    @default("percentage")  // percentage or fixed
-  discountValue   Decimal   @db.Decimal(10, 2)
-  categoryId      String?
-  productId       String?
-  minQuantity     Int       @default(1)
-  maxDiscount     Decimal?  @db.Decimal(10, 2)
-  isActive        Boolean   @default(true)
-  startsAt        DateTime?
-  expiresAt       DateTime?
-  image           String?
-  badge           String?    // e.g. "20% OFF", "BUY 2 GET 1"
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  discountType  String    @default("percentage") // percentage or fixed
+  discountValue Decimal   @db.Decimal(10, 2)
+  categoryId    String?
+  productId     String?
+  minQuantity   Int       @default(1)
+  maxDiscount   Decimal?  @db.Decimal(10, 2)
+  isActive      Boolean   @default(true)
+  startsAt      DateTime?
+  expiresAt     DateTime?
+  image         String?
+  badge         String? // e.g. "20% OFF", "BUY 2 GET 1"
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
   @@index([isActive, expiresAt])
   @@index([categoryId])

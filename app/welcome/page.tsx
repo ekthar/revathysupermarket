@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { SITE } from "@/lib/constants";
+import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = {
   title: "Welcome",
@@ -16,10 +17,11 @@ export default async function WelcomePage({
 }) {
   const session = await auth();
   const { callbackUrl } = await searchParams;
+  const safeCallback = safeCallbackUrl(callbackUrl, "/", ["/", "/products", "/cart", "/checkout", "/dashboard", "/account", "/support"]);
 
   if (session?.user?.id) {
-    redirect(callbackUrl || "/");
+    redirect(safeCallback);
   }
 
-  return <OnboardingFlow callbackUrl={callbackUrl ?? "/"} />;
+  return <OnboardingFlow callbackUrl={safeCallback} />;
 }

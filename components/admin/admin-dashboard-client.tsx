@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import {
   ArrowRight, ArrowUpRight, ArrowDownRight, Calendar, Clock,
@@ -26,6 +27,8 @@ interface Props {
   userName: string;
   greeting: string;
   canSeeFinancials: boolean;
+  canManageCatalogue: boolean;
+  databaseHealthy: boolean;
   totalRevenue: number;
   todayOrders: number;
   pendingOrders: number;
@@ -75,7 +78,7 @@ const statusLabels: Record<string, string> = {
 };
 
 export function AdminDashboardClient({
-  userName, greeting, canSeeFinancials, totalRevenue, todayOrders,
+  userName, greeting, canSeeFinancials, canManageCatalogue, databaseHealthy, totalRevenue, todayOrders,
   pendingOrders, packingOrders, deliveredOrders, receivedOrders,
   readyOrders, outForDeliveryOrders, totalCustomers,
   orderChange, revenueChange, customerChange,
@@ -91,6 +94,7 @@ export function AdminDashboardClient({
 
   return (
     <div className="space-y-5">
+      {!databaseHealthy && <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-bold text-red-700">Live store data is temporarily unavailable. Metrics may be incomplete; retry before making operational decisions.</div>}
       {/* Welcome header with search & date */}
       <div className="rounded-2xl bg-gradient-to-br from-primary/10 via-emerald-50 to-lime-50 dark:from-primary/5 dark:via-slate-900 dark:to-slate-900 p-5">
         <div className="flex items-start justify-between gap-4">
@@ -119,6 +123,13 @@ export function AdminDashboardClient({
           />
         </div>
       </div>
+
+      <section aria-labelledby="attention-heading" className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900 dark:bg-amber-950/20">
+        <h2 id="attention-heading" className="font-display text-lg font-black text-amber-900 dark:text-amber-100">Needs attention now</h2>
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+          {[{ label: "New orders", value: receivedOrders, href: "/admin/orders" }, { label: "Packing", value: packingOrders, href: "/admin/orders" }, { label: "Ready to assign", value: readyOrders, href: "/admin/orders" }, { label: "Low stock", value: lowStockProducts.length, href: "/admin/products" }].map((item) => <Link key={item.label} href={item.href} className="rounded-xl bg-white p-3 shadow-sm dark:bg-slate-900"><p className="text-2xl font-black text-slate-900 dark:text-white">{item.value}</p><p className="text-xs font-bold text-slate-500">{item.label}</p></Link>)}
+        </div>
+      </section>
 
       {/* Key metrics with week-over-week comparison */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -462,8 +473,8 @@ export function AdminDashboardClient({
           <div className="divide-y divide-orange-50 dark:divide-orange-900/20">
             {lowStockProducts.slice(0, 5).map((product) => (
               <div key={product.id} className="flex items-center gap-3 px-4 py-2.5">
-                <div className="h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 overflow-hidden shrink-0">
-                  {product.image && <img src={product.image} alt="" className="h-full w-full object-cover" />}
+                <div className="relative h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 overflow-hidden shrink-0">
+                  {product.image && <Image src={product.image} alt="" fill sizes="32px" className="object-cover" />}
                 </div>
                 <span className="text-[12px] font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{product.name}</span>
                 <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
@@ -488,27 +499,27 @@ export function AdminDashboardClient({
           <p className="text-[12px] font-semibold text-slate-900 dark:text-white mt-3">Manage Orders</p>
           <p className="text-[10px] text-slate-400 mt-0.5">{pendingOrders} pending</p>
         </Link>
-        <Link href="/admin/products" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
+        {canManageCatalogue && <Link href="/admin/products" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
           <div className="h-9 w-9 rounded-xl bg-purple-50 dark:bg-purple-950 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
             <Package className="h-4 w-4 text-purple-600" />
           </div>
           <p className="text-[12px] font-semibold text-slate-900 dark:text-white mt-3">Products</p>
           <p className="text-[10px] text-slate-400 mt-0.5">Add & manage</p>
-        </Link>
-        <Link href="/admin/customers" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
+        </Link>}
+        {canSeeFinancials && <Link href="/admin/customers" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
           <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
             <Users className="h-4 w-4 text-blue-600" />
           </div>
           <p className="text-[12px] font-semibold text-slate-900 dark:text-white mt-3">Customers</p>
           <p className="text-[10px] text-slate-400 mt-0.5">{totalCustomers} registered</p>
-        </Link>
-        <Link href="/admin/reports" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
+        </Link>}
+        {canSeeFinancials && <Link href="/admin/reports" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
           <div className="h-9 w-9 rounded-xl bg-amber-50 dark:bg-amber-950 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </div>
           <p className="text-[12px] font-semibold text-slate-900 dark:text-white mt-3">Reports</p>
           <p className="text-[10px] text-slate-400 mt-0.5">Sales & analytics</p>
-        </Link>
+        </Link>}
       </div>
     </div>
   );

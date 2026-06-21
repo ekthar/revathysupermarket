@@ -16,7 +16,11 @@ export function isOwnerRole(role?: string | null) {
 }
 
 export function canManageOrders(role?: string | null) {
-  return isStaffRole(role);
+  return isOwnerRole(role) || role === "MANAGER" || role === "STAFF";
+}
+
+export function canPackOrders(role?: string | null) {
+  return canManageOrders(role) || role === "PACKING_STAFF";
 }
 
 export function canManageSettings(role?: string | null) {
@@ -49,6 +53,11 @@ export function unauthorized() {
 
 export function requireOrderStaff(session: Session | null) {
   if (!canManageOrders(session?.user?.role)) return unauthorized();
+  return null;
+}
+
+export function requirePackingStaff(session: Session | null) {
+  if (!canPackOrders(session?.user?.role)) return unauthorized();
   return null;
 }
 

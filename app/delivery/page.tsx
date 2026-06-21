@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { DeliveryOrdersClient } from "@/components/delivery/delivery-orders-client";
+import { InstallAppButton } from "@/components/install-app-button";
 
 export const dynamic = "force-dynamic";
 
@@ -19,6 +20,7 @@ export default async function DeliveryPage() {
       <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5">
         <p className="text-xs font-black uppercase text-primary">Delivery partner</p>
         <h1 className="mt-2 font-display text-4xl font-black">Assigned orders</h1>
+        <div className="mt-4 max-w-xs"><InstallAppButton /></div>
       </section>
       <DeliveryOrdersClient
         orders={orders.map((order) => ({

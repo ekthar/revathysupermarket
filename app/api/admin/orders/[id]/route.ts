@@ -2,21 +2,25 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
-import { requireOrderStaff } from "@/lib/authz";
+import { requirePackingStaff } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { orderStatusSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
+import { awardDeliveredOrderBenefits, releaseCancelledOrderReservations } from "@/lib/loyalty";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
-  const unauthorized = requireOrderStaff(session);
+  const unauthorized = requirePackingStaff(session);
   if (unauthorized) return unauthorized;
   const { id } = await params;
 
   const body = await request.json();
   const parsed = orderStatusSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+  if (session?.user?.role === "PACKING_STAFF" && !["ACCEPTED", "PACKING", "READY_FOR_DELIVERY"].includes(parsed.data.status)) {
+    return NextResponse.json({ error: "Packing staff cannot apply this order status.", code: "FORBIDDEN_STATUS" }, { status: 403 });
+  }
 
   const before = await prisma.order.findUnique({
     where: { id },
@@ -52,15 +56,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   if (before && before.status !== parsed.data.status) {
     // Restore inventory on cancellation
     if (parsed.data.status === "CANCELLED") {
-      const orderItems = await prisma.orderItem.findMany({ where: { orderId: id }, select: { productId: true, quantity: true } });
-      for (const item of orderItems) {
-        if (item.productId) {
-          await prisma.product.update({
-            where: { id: item.productId },
-            data: { stock: { increment: item.quantity } }
-          }).catch(() => null);
-        }
-      }
+      await releaseCancelledOrderReservations(id);
     }
 
     // Send in-app notification
@@ -75,6 +71,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       await sendWhatsAppTemplate({ to: before.phone, template: "out_for_delivery", params: [before.orderNumber, before.deliveryOtp ?? ""], orderId: id });
     }
     if (parsed.data.status === "DELIVERED") {
+      await awardDeliveredOrderBenefits(id);
       await sendWhatsAppTemplate({ to: before.phone, template: "delivered", params: [before.orderNumber], orderId: id });
     }
   }

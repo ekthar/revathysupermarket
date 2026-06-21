@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AdminLoginForm } from "@/components/auth/admin-login-form";
 import { SITE } from "@/lib/constants";
+import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 export const metadata: Metadata = {
   title: "Staff Login",
@@ -16,11 +17,12 @@ export default async function AdminLoginPage({
 }) {
   const session = await auth();
   const { callbackUrl, reason } = await searchParams;
+  const safeCallback = safeCallbackUrl(callbackUrl, "/admin", ["/admin"]);
 
   // If already authenticated as staff, redirect to admin
   const staffRoles = ["ADMIN", "OWNER", "MANAGER", "PACKING_STAFF", "STAFF"];
   if (session?.user?.id && staffRoles.includes(session.user.role ?? "")) {
-    redirect(callbackUrl || "/admin");
+    redirect(safeCallback);
   }
 
   return (
@@ -40,7 +42,7 @@ export default async function AdminLoginPage({
             </p>
           )}
         </div>
-        <AdminLoginForm callbackUrl={callbackUrl} />
+        <AdminLoginForm callbackUrl={safeCallback} />
         <p className="mt-6 text-center text-xs text-slate-400">
           Customer? <a href="/login" className="font-semibold text-primary hover:underline">Use customer login</a>
         </p>

@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageSettings } from "@/lib/authz";
 import { getR2PublicUrl } from "@/lib/r2";
+import { allowedExternalImageUrl, validateImageFile } from "@/lib/security";
 
 const MAX_SIZE = 2 * 1024 * 1024; // 2MB
 
@@ -30,6 +31,7 @@ export async function POST(request: Request) {
     const body = await request.json();
     const logoUrl = body.logoUrl?.trim();
     if (!logoUrl) return NextResponse.json({ error: "No URL provided." }, { status: 400 });
+    if (!allowedExternalImageUrl(logoUrl)) return NextResponse.json({ error: "Use an approved HTTPS image host.", code: "INVALID_IMAGE_URL" }, { status: 400 });
     await prisma.setting.upsert({
       where: { key: "logoUrl" },
       update: { value: logoUrl },
@@ -46,20 +48,21 @@ export async function POST(request: Request) {
   const file = (formData.get("logo") ?? formData.get("file")) as File | null;
 
   if (!file) return NextResponse.json({ error: "No file provided." }, { status: 400 });
-  if (file.size > MAX_SIZE) return NextResponse.json({ error: "Logo too large. Max 2MB." }, { status: 400 });
-  if (!file.type.startsWith("image/")) return NextResponse.json({ error: "Only image files allowed." }, { status: 400 });
-
-  const ext = file.name.split(".").pop() || "png";
-  const key = `branding/logo-${Date.now()}.${ext}`;
-  const buffer = Buffer.from(await file.arrayBuffer());
+  let validated: Awaited<ReturnType<typeof validateImageFile>>;
+  try {
+    validated = await validateImageFile(file, MAX_SIZE);
+  } catch (error) {
+    return NextResponse.json({ error: error instanceof Error ? error.message : "Invalid image.", code: "INVALID_IMAGE" }, { status: 400 });
+  }
+  const key = `branding/logo-${Date.now()}.${validated.extension}`;
 
   try {
     await r2Client().send(
       new PutObjectCommand({
         Bucket: bucket,
         Key: key,
-        Body: buffer,
-        ContentType: file.type,
+        Body: validated.bytes,
+        ContentType: validated.contentType,
         CacheControl: "public, max-age=31536000, immutable"
       })
     );

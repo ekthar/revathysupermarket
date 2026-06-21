@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Camera, Check, Chrome, Loader2, Mail, Phone, Save, Trash2, User } from "lucide-react";
 import { signIn } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -158,9 +159,9 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
 
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="h-20 w-20 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-slate-800 flex items-center justify-center">
+            <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-slate-800 flex items-center justify-center">
               {image ? (
-                <img src={image} alt="Profile" className="h-full w-full object-cover" />
+                <Image src={image} alt="Profile" fill sizes="80px" unoptimized className="object-cover" />
               ) : (
                 <User className="h-8 w-8 text-primary/60" />
               )}

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
+import Image from "next/image";
 
 type Banner = {
   id: string;
@@ -72,10 +73,12 @@ export function PromoBanners({ banners }: { banners?: Banner[] }) {
               </div>
               {banner.image && (
                 <div className="relative w-24 h-24 shrink-0 self-center">
-                  <img
+                  <Image
                     src={banner.image}
                     alt=""
-                    className="w-full h-full object-cover rounded-2xl"
+                    fill
+                    sizes="96px"
+                    className="rounded-2xl object-cover"
                     loading="lazy"
                   />
                 </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Product } from "@/lib/types";
@@ -73,11 +74,13 @@ export function AnimatedCategories({
                 href={`/products?category=${encodeURIComponent(cat)}`}
                 className={`category-card category-card-animated ${categoryColors[cat] || "bg-slate-50"} p-4 flex flex-col items-center justify-center gap-3 press`}
               >
-                <div className="w-16 h-16 rounded-2xl overflow-hidden">
-                  <img
+                <div className="relative w-16 h-16 rounded-2xl overflow-hidden">
+                  <Image
                     src={categoryImages[cat] || "https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&h=200&fit=crop"}
                     alt={cat}
-                    className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                    fill
+                    sizes="64px"
+                    className="object-cover transition-transform duration-500 hover:scale-110"
                     loading="lazy"
                   />
                 </div>

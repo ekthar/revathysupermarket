@@ -6,6 +6,7 @@ import { isDeliveryRole } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { deliveryActionSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
+import { awardDeliveredOrderBenefits } from "@/lib/loyalty";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -83,6 +84,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       statusEvents: { create: { status: nextStatus, note: `Marked ${parsed.data.action} by delivery partner.` } }
     }
   });
+  if (parsed.data.action === "delivered") await awardDeliveredOrderBenefits(id);
   await sendWhatsAppTemplate({
     to: order.phone,
     template: parsed.data.action === "picked_up" ? "out_for_delivery" : "delivered",

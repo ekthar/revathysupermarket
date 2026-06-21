@@ -16,6 +16,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: `Order fresh groceries from ${settings.storeName}. COD & UPI on delivery.`,
     applicationName: settings.storeName,
     appleWebApp: { capable: true, title: settings.storeName, statusBarStyle: "default" },
+    icons: { apple: "/icons/apple-touch-icon.png" },
     manifest: "/manifest.webmanifest"
   };
 }

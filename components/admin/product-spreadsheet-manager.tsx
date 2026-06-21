@@ -176,7 +176,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
           <input
             ref={fileInputRef}
             type="file"
-            accept=".xlsx,.xls,.csv"
+            accept=".xlsx,.csv"
             className="sr-only"
             onChange={(event) => {
               const file = event.target.files?.[0];

@@ -17,6 +17,10 @@ export const checkoutSchema = z.object({
   pincode: z.string().regex(/^\d{6}$/),
   notes: z.string().optional(),
   paymentMethod: z.enum(["COD", "UPI_ON_DELIVERY", "WALLET"]),
+  deliveryMode: z.enum(["ASAP", "SCHEDULED"]).default("ASAP"),
+  deliverySlotId: z.string().optional(),
+  promoCode: z.string().trim().max(40).optional(),
+  loyaltyPoints: z.coerce.number().int().min(0).default(0),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   items: z

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { verifyLatestOtp } from "@/lib/otp";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { clientIp } from "@/lib/request-security";
 
 const schema = z.object({
   phone: z.string().min(10),
@@ -10,6 +12,8 @@ const schema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limit = await enforceRateLimit(`otp-verify:${clientIp(request)}`, 20, 600);
+  if (limit.limited) return rateLimitResponse(limit.reset);
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Enter the 6-digit verification code." }, { status: 400 });
 

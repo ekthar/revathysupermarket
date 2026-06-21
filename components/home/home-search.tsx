@@ -39,9 +39,9 @@ export function HomeSearch({ products }: { products: Product[] }) {
         </div>
 
         {/* Filter icon button */}
-        <button className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white shrink-0 press">
+        <Link href="/products" aria-label="Open product filters" className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-white shrink-0 press">
           <SlidersHorizontal className="h-4 w-4" />
-        </button>
+        </Link>
 
         <AnimatePresence>
           {focused && results.length > 0 && (

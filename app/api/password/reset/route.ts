@@ -4,8 +4,12 @@ import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
 import { resetPasswordSchema } from "@/lib/validations";
 import { hashPasswordResetToken } from "@/lib/password-reset";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { clientIp } from "@/lib/request-security";
 
 export async function POST(request: Request) {
+  const limit = await enforceRateLimit(`password-reset:${clientIp(request)}`, 10, 900);
+  if (limit.limited) return rateLimitResponse(limit.reset);
   const body = await request.json();
   const parsed = resetPasswordSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid reset details." }, { status: 400 });

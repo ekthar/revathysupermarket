@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, Star, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { orderStatuses, statusLabels } from "@/lib/constants";
 import { readApiResponse } from "@/lib/client-api";
@@ -82,6 +82,10 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
   const [liveOrders, setLiveOrders] = useState<Record<string, LiveOrderState>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [ratingOrderId, setRatingOrderId] = useState<string | null>(null);
+  const [orderRating, setOrderRating] = useState(5);
+  const [deliveryRating, setDeliveryRating] = useState(5);
+  const [feedbackComment, setFeedbackComment] = useState("");
   // Swiggy-style: delivered/cancelled orders are collapsed by default
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     const active = new Set<string>();
@@ -165,6 +169,13 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
     window.location.href = "/cart";
   }
 
+  async function submitFeedback() {
+    if (!ratingOrderId) return;
+    const response = await fetch(`/api/orders/${ratingOrderId}/feedback`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderRating, deliveryRating, tags: [], comment: feedbackComment || undefined }) });
+    if (!response.ok) { const data = await readApiResponse<{ error?: string }>(response); window.alert(data.error ?? "Feedback could not be saved."); return; }
+    setRatingOrderId(null); setFeedbackComment("");
+  }
+
   if (orders.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-dashed border-border p-10 text-center">
@@ -177,6 +188,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
 
   return (
     <div className="space-y-3">
+      {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
       {/* Status bar */}
       <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-500">
         <span>{lastUpdated ? "Updated just now" : "Live updates every 8s"}</span>
@@ -326,13 +338,14 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
                       {delivered && (
                         <div className="mt-3">
                           <p className="text-[10px] text-slate-400 italic mb-2 md:hidden">← Swipe right to reorder</p>
-                          <div className="flex gap-2">
+                          <div className="grid grid-cols-3 gap-2">
                             <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-[11px] font-bold text-white">
                               <RotateCcw className="h-3.5 w-3.5" /> Reorder
                             </button>
                             <button onClick={() => requestReturn(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                               <RotateCcw className="h-3.5 w-3.5" /> Return
                             </button>
+                            <button onClick={() => setRatingOrderId(order.id)} className="h-9 flex items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 text-[11px] font-bold text-amber-700"><Star className="h-3.5 w-3.5" /> Rate</button>
                           </div>
                         </div>
                       )}

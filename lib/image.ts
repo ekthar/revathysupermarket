@@ -49,9 +49,12 @@ export function isAllowedProductImageUrl(value: string) {
   try {
     const url = new URL(value);
     if (url.protocol !== "https:") return false;
-    if (["localhost", "127.0.0.1", "::1"].includes(url.hostname)) return false;
-    if (url.pathname.startsWith("/admin") || url.pathname.startsWith("/api")) return false;
-    return true;
+    const configuredHosts = [process.env.NEXT_PUBLIC_R2_PUBLIC_URL, process.env.NEXT_PUBLIC_IMAGE_HOST]
+      .flatMap((item) => {
+        if (!item) return [];
+        try { return [new URL(item).hostname]; } catch { return []; }
+      });
+    return url.hostname === "images.unsplash.com" || url.hostname.endsWith(".r2.cloudflarestorage.com") || url.hostname.endsWith(".r2.dev") || url.hostname.endsWith(".amazonaws.com") || configuredHosts.includes(url.hostname);
   } catch {
     return value.startsWith("/icons/");
   }

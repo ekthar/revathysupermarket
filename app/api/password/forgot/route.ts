@@ -3,8 +3,12 @@ import crypto from "crypto";
 import { prisma } from "@/lib/prisma";
 import { hashPasswordResetToken } from "@/lib/password-reset";
 import { forgotPasswordSchema } from "@/lib/validations";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { clientIp } from "@/lib/request-security";
 
 export async function POST(request: Request) {
+  const limit = await enforceRateLimit(`password-forgot:${clientIp(request)}`, 5, 900);
+  if (limit.limited) return rateLimitResponse(limit.reset);
   const body = await request.json();
   const parsed = forgotPasswordSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Enter a valid email." }, { status: 400 });

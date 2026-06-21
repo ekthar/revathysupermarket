@@ -20,6 +20,8 @@ Production-ready grocery ordering website for MSM Supermarket, Kerala.
 5. Seed sample data with `npm run seed`.
 6. Start development with `npm run dev`.
 
+For the full platform features, also configure `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN`, `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY`, and `WHATSAPP_APP_SECRET`. Apply reviewed production migrations with `npm run db:migrate` before enabling the new UI.
+
 Admin seed login:
 
 - Email: `admin@msmsupermarket.in`
@@ -37,6 +39,9 @@ The store coordinates are configured in `lib/constants.ts`. Checkout uses Havers
 4. Use the default build command: `npm run build`.
 5. Run Prisma migrations against production before the first launch.
 6. Configure Cloudflare R2 public URLs for product and banner images.
+7. Restrict Google Maps keys to the production hostname and only the required Maps APIs.
+8. Rotate database and R2 credentials before launch; `.env.example` contains placeholders only.
+9. Configure Upstash Redis and verify the free-tier quota against expected OTP, checkout, and admin traffic.
 
 ## Folder Structure
 

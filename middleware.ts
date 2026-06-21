@@ -1,16 +1,14 @@
 import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
+import { isSameOriginRequest } from "@/lib/request-security";
 
 const { auth } = NextAuth(authConfig);
 const staffRoles = new Set(["ADMIN", "STAFF", "OWNER", "MANAGER", "PACKING_STAFF"]);
 
 export default auth((request) => {
   const isMutatingRequest = !["GET", "HEAD", "OPTIONS"].includes(request.method);
-  if (isMutatingRequest) {
-    const origin = request.headers.get("origin");
-    if (origin && new URL(origin).host !== request.nextUrl.host) {
-      return new Response("Forbidden", { status: 403 });
-    }
+  if (isMutatingRequest && !isSameOriginRequest(request)) {
+    return new Response("Forbidden", { status: 403 });
   }
 
   const isAdminRoute = request.nextUrl.pathname.startsWith("/admin");

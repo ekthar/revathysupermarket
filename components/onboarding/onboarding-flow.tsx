@@ -13,6 +13,7 @@ import { ProgressDots } from "@/components/onboarding/progress-dots";
 import { readApiResponse } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
 import { SITE } from "@/lib/constants";
+import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 type Step = "splash" | "name" | "phone" | "otp" | "location" | "done";
 const STEPS: Step[] = ["splash", "name", "phone", "otp", "location", "done"];
@@ -30,7 +31,7 @@ export function OnboardingFlow({ callbackUrl = "/" }: { callbackUrl?: string }) 
   const [locationAddress, setLocationAddress] = useState("");
   const [locating, setLocating] = useState(false);
 
-  const safeCallback = callbackUrl.startsWith("/") && !callbackUrl.startsWith("/admin") ? callbackUrl : "/";
+  const safeCallback = safeCallbackUrl(callbackUrl, "/", ["/", "/products", "/cart", "/checkout", "/dashboard", "/account", "/support"]);
   const currentIndex = STEPS.indexOf(step);
 
   // Auto-advance splash

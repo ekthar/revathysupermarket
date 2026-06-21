@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { updateWhatsAppMessageStatus } from "@/lib/whatsapp-business";
+import { verifyHmacSignature } from "@/lib/security";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -14,10 +15,15 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = await request.json().catch(() => null);
-  const statuses = body?.entry?.flatMap((entry: { changes?: Array<{ value?: { statuses?: unknown[] } }> }) =>
+  const rawBody = await request.text();
+  if (!verifyHmacSignature(rawBody, request.headers.get("x-hub-signature-256"), process.env.WHATSAPP_APP_SECRET)) {
+    return NextResponse.json({ error: "Invalid webhook signature.", code: "INVALID_SIGNATURE" }, { status: 401 });
+  }
+  let body: { entry?: Array<{ changes?: Array<{ value?: { statuses?: unknown[] } }> }> } | null = null;
+  try { body = JSON.parse(rawBody || "null"); } catch { return NextResponse.json({ error: "Invalid webhook payload.", code: "INVALID_PAYLOAD" }, { status: 400 }); }
+  const statuses = (body?.entry?.flatMap((entry: { changes?: Array<{ value?: { statuses?: unknown[] } }> }) =>
     entry.changes?.flatMap((change) => change.value?.statuses ?? []) ?? []
-  ) ?? [];
+  ) ?? []) as Array<{ id?: string; status?: string }>;
 
   await Promise.all(
     statuses.map((status: { id?: string; status?: string }) =>

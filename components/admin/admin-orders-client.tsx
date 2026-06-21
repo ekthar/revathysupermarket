@@ -52,6 +52,7 @@ export function AdminOrdersClient({
   const [localOrders, setLocalOrders] = useState(orders);
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "new" | "pending" | "packing" | "delivered">("all");
+  const [view, setView] = useState<"board" | "list">("board");
   const [now, setNow] = useState(() => Date.now());
   const [ackLoading, setAckLoading] = useState<string | null>(null);
   const [editLoading, setEditLoading] = useState<string | null>(null);
@@ -116,6 +117,7 @@ export function AdminOrdersClient({
   useEffect(() => {
     let active = true;
     async function refreshOrders() {
+      if (document.hidden) return;
       const response = await fetch("/api/orders", { cache: "no-store" });
       const data = await readApiResponse<{ orders?: Array<AdminOrder & {
         houseName?: string;
@@ -395,8 +397,20 @@ export function AdminOrdersClient({
             </button>
           ))}
         </div>
+        <div className="mt-3 flex gap-2">
+          <button type="button" onClick={() => setView("board")} className={cn("h-10 rounded-full px-4 text-xs font-black", view === "board" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white/80 dark:bg-slate-800")}>Operations board</button>
+          <button type="button" onClick={() => setView("list")} className={cn("h-10 rounded-full px-4 text-xs font-black", view === "list" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white/80 dark:bg-slate-800")}>Detailed list</button>
+        </div>
       </div>
-      <div className="mt-5 grid gap-4">
+      {view === "board" && <div className="mt-5 grid gap-3 overflow-x-auto pb-2 lg:grid-cols-6">
+        {[
+          ["ORDER_RECEIVED", "New"], ["ACCEPTED", "Accepted"], ["PACKING", "Packing"], ["READY_FOR_DELIVERY", "Ready"], ["OUT_FOR_DELIVERY", "Out for delivery"], ["DELIVERED", "Completed"]
+        ].map(([status, label]) => {
+          const columnOrders = localOrders.filter((order) => order.status === status).slice(0, status === "DELIVERED" ? 10 : 30);
+          return <section key={status} className="min-w-[240px] rounded-2xl bg-slate-100/80 p-3 dark:bg-slate-900"><div className="flex items-center justify-between"><h3 className="text-sm font-black">{label}</h3><span className="rounded-full bg-white px-2 py-1 text-xs font-black dark:bg-slate-800">{columnOrders.length}</span></div><div className="mt-3 grid gap-2">{columnOrders.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-xs text-muted-foreground">No orders</p> : columnOrders.map((order) => <button key={order.id} type="button" onClick={() => { setQuery(order.orderNumber); setView("list"); }} className="rounded-xl bg-white p-3 text-left shadow-sm dark:bg-slate-800"><div className="flex justify-between gap-2"><span className="text-xs font-black">#{order.orderNumber.slice(-6)}</span><span className="text-xs font-black text-primary">{formatCurrency(order.total)}</span></div><p className="mt-1 truncate text-xs font-semibold">{order.customerName}</p><p className="mt-1 text-[11px] text-muted-foreground">{order.items.length} items · {timeSince(order.createdAt, now)}</p>{status === "READY_FOR_DELIVERY" && !order.deliveryPartnerId ? <p className="mt-2 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-black text-amber-700">Driver needed</p> : null}</button>)}</div></section>;
+        })}
+      </div>}
+      <div className={cn("mt-5 grid gap-4", view === "board" && "hidden")}>
         {filtered.length === 0 ? (
           <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">No orders found.</div>
         ) : filtered.map((order) => (

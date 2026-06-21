@@ -100,7 +100,7 @@ export function Header({
             {/* Right actions */}
             <div className="flex items-center gap-3 ml-6">
               <Link
-                href="/products"
+                href="/support"
                 className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
               >
                 <HelpCircle className="h-4 w-4" />

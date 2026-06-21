@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Bell, Phone, ShoppingBag, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+import { useToast } from "@/components/toast-provider";
 
 type NewOrder = {
   id: string;
@@ -16,6 +18,8 @@ type NewOrder = {
 };
 
 export function NewOrderAlert() {
+  const pathname = usePathname();
+  const { showToast } = useToast();
   const [orders, setOrders] = useState<NewOrder[]>([]);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const [acknowledging, setAcknowledging] = useState<string | null>(null);
@@ -52,6 +56,7 @@ export function NewOrderAlert() {
   }, []);
 
   useEffect(() => {
+    if (pathname === "/admin/orders") return;
     let active = true;
 
     async function poll() {
@@ -73,23 +78,28 @@ export function NewOrderAlert() {
 
     poll();
     const interval = setInterval(poll, 5000);
-    return () => { active = false; clearInterval(interval); };
-  }, [playSound]);
+    return () => { active = false; clearInterval(interval); audioRef.current?.close().catch(() => undefined); audioRef.current = null; };
+  }, [pathname, playSound]);
 
   async function acknowledge(orderId: string) {
     setAcknowledging(orderId);
     try {
-      await fetch(`/api/admin/orders/${orderId}/acknowledge`, { method: "POST" });
+      const response = await fetch(`/api/admin/orders/${orderId}/acknowledge`, { method: "POST" });
+      if (!response.ok) {
+        showToast("Order could not be acknowledged", "error");
+        return;
+      }
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
     } catch {
-      // Fail silently
+      showToast("Order could not be acknowledged", "error");
+    } finally {
+      setAcknowledging(null);
     }
-    setAcknowledging(null);
   }
 
   const visible = orders.filter((o) => !dismissed.has(o.id));
 
-  if (visible.length === 0) return null;
+  if (pathname === "/admin/orders" || visible.length === 0) return null;
 
   return (
     <div className="fixed top-16 inset-x-0 z-[60] pointer-events-none px-4 flex flex-col items-center gap-2">
@@ -114,6 +124,7 @@ export function NewOrderAlert() {
               </div>
               <button
                 type="button"
+                aria-label={`Dismiss alert for order ${order.orderNumber}`}
                 onClick={() => setDismissed((s) => new Set([...s, order.id]))}
                 className="h-7 w-7 rounded-full bg-white/80 flex items-center justify-center text-slate-400 hover:text-slate-600"
               >

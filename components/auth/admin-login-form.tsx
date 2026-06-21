@@ -6,6 +6,7 @@ import { signIn } from "next-auth/react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { safeCallbackUrl } from "@/lib/safe-redirect";
 
 export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null }) {
   const router = useRouter();
@@ -15,7 +16,7 @@ export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null })
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const target = callbackUrl || "/admin";
+  const target = safeCallbackUrl(callbackUrl, "/admin", ["/admin"]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -71,6 +72,7 @@ export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null })
             />
             <button
               type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
             >

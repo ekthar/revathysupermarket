@@ -7,6 +7,7 @@ import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { PushNotificationManager } from "@/components/push-notification-manager";
 import { ToastProvider } from "@/components/toast-provider";
 import { ProfileSync } from "@/components/profile-sync";
+import { InstallAppPrompt } from "@/components/install-app-prompt";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <ProfileSync />
             <ServiceWorkerRegister />
             <PushNotificationManager />
+            <InstallAppPrompt />
           </CartProvider>
         </ToastProvider>
       </ThemeProvider>

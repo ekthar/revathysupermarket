@@ -2,6 +2,12 @@
 
 ## Before deployment
 
+- Configure `UPSTASH_REDIS_REST_URL` and `UPSTASH_REDIS_REST_TOKEN`; production mutations intentionally fail closed without distributed rate limiting.
+- Verify `/api/health/security` reports `rateLimiting: available` in staging and production.
+- Deploy `20260621180000_admin_operations_workflow` followed by `20260621200000_corrective_workflow` before enabling the corrected admin, return, pricing, collection and delivery routes.
+- Confirm existing staff received role-default permissions and historical orders retained their snapshotted delivery fees.
+- Smoke-test cash, split cash/UPI, wallet-only delivery, a return refund and a support resolution before launch.
+
 - Rotate the PostgreSQL and Cloudflare R2 credentials that previously appeared in `.env.example` and invalidate the old values.
 - Configure `AUTH_SECRET`, production URLs, R2/S3, WhatsApp, `WHATSAPP_APP_SECRET`, Upstash and the restricted Google Maps browser key.
 - Review `prisma/migrations/20260621160000_single_store_platform/migration.sql` against a recent database snapshot.

@@ -32,5 +32,8 @@ export default async function CollectionsPage() {
     discrepancyCount: grouped.discrepancy.length,
   };
 
-  return <CollectionsClient collections={collections as any} grouped={grouped as any} totals={totals} />;
+  const plain = collections.map((entry) => ({ ...entry, expectedAmount: Number(entry.expectedAmount), cashCollected: Number(entry.cashCollected), upiCollected: Number(entry.upiCollected), walletApplied: Number(entry.walletApplied), adjustmentAmount: Number(entry.adjustmentAmount), createdAt: entry.createdAt.toISOString(), updatedAt: entry.updatedAt.toISOString(), reconciledAt: entry.reconciledAt?.toISOString() ?? null, order: { ...entry.order, total: Number(entry.order.total) } }));
+  const ids = new Map(plain.map((entry) => [entry.id, entry]));
+  const plainGrouped = { pending: grouped.pending.map((entry) => ids.get(entry.id)!), upiPending: grouped.upiPending.map((entry) => ids.get(entry.id)!), settled: grouped.settled.map((entry) => ids.get(entry.id)!), discrepancy: grouped.discrepancy.map((entry) => ids.get(entry.id)!) };
+  return <CollectionsClient collections={plain} grouped={plainGrouped} totals={totals} />;
 }

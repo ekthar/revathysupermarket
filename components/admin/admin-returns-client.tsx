@@ -1,110 +1,72 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { BellRing, CheckCircle2, RotateCcw, XCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CheckCircle2, PackageCheck, RotateCcw, Search, XCircle } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/toast-provider";
 
-type AdminReturn = {
-  id: string;
-  orderNumber: string;
-  customerName: string;
-  paymentMethod: string;
-  status: string;
-  reason: string;
-  note: string | null;
-  refundAmount: number;
-  items: unknown;
-  createdAt: string;
+type ReturnItem = { orderItemId?: string; name?: string; quantity?: number; price?: number; amount?: number };
+type AdminReturn = { id: string; returnNumber?: string; orderNumber: string; customerName: string; paymentMethod: string; status: string; reason: string; note: string | null; refundAmount: number; items: unknown; createdAt: string };
+type Action = "review" | "approve" | "reject" | "receive_item" | "refund";
+
+const actionsByStatus: Record<string, Array<{ action: Action; label: string; tone: string }>> = {
+  REQUESTED: [{ action: "review", label: "Start review", tone: "bg-slate-900 text-white" }, { action: "approve", label: "Approve", tone: "bg-primary text-white" }, { action: "reject", label: "Reject", tone: "bg-red-600 text-white" }],
+  UNDER_REVIEW: [{ action: "approve", label: "Approve", tone: "bg-primary text-white" }, { action: "reject", label: "Reject", tone: "bg-red-600 text-white" }],
+  APPROVED: [{ action: "receive_item", label: "Item received", tone: "bg-blue-600 text-white" }, { action: "refund", label: "Issue refund", tone: "bg-lime-fresh text-slate-950" }],
+  ITEM_RECEIVED: [{ action: "refund", label: "Issue refund", tone: "bg-lime-fresh text-slate-950" }]
 };
 
 export function AdminReturnsClient({ returns }: { returns: AdminReturn[] }) {
   const { showToast } = useToast();
-  const [localReturns, setLocalReturns] = useState(returns);
-  const [loading, setLoading] = useState<string | null>(null);
-  const knownReturnIds = useRef(new Set(returns.map((entry) => entry.id)));
+  const [entries, setEntries] = useState(returns);
+  const [filter, setFilter] = useState("ACTIVE");
+  const [query, setQuery] = useState("");
+  const [dialog, setDialog] = useState<{ entry: AdminReturn; action: Action } | null>(null);
+  const [note, setNote] = useState("");
+  const [amount, setAmount] = useState("");
+  const [method, setMethod] = useState("WALLET");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
-    async function refreshReturns() {
+    async function refresh() {
+      if (document.visibilityState !== "visible") return;
       const response = await fetch("/api/admin/returns", { cache: "no-store" });
       const data = await readApiResponse<{ returns?: AdminReturn[] }>(response);
-      if (!active || !response.ok || !data.returns) return;
-      const freshRequests = data.returns.filter((entry) => !knownReturnIds.current.has(entry.id) && entry.status === "REQUESTED");
-      if (freshRequests.length > 0) {
-        freshRequests.forEach((entry) => knownReturnIds.current.add(entry.id));
-        showToast(`${freshRequests.length} new return request${freshRequests.length === 1 ? "" : "s"}`, "success");
-      }
-      setLocalReturns(data.returns);
+      if (active && response.ok && data.returns) setEntries(data.returns);
     }
-    const interval = window.setInterval(refreshReturns, 7000);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, [showToast]);
+    const interval = window.setInterval(refresh, 30000);
+    return () => { active = false; window.clearInterval(interval); };
+  }, []);
 
-  async function resolveReturn(id: string, status: "APPROVED" | "REJECTED" | "REFUNDED") {
-    const resolutionNote = window.prompt(status === "REJECTED" ? "Reason for rejection" : "Resolution note") ?? "";
-    if (!resolutionNote.trim()) return;
-    const refundReference = status === "REFUNDED" ? window.prompt("Refund reference / confirmation") ?? "" : "";
-    const current = localReturns.find((entry) => entry.id === id);
-    setLoading(id);
-    const response = await fetch(`/api/admin/returns/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        status,
-        resolutionNote,
-        refundReference,
-        refundAmount: current?.refundAmount,
-        refundMethod: status === "REFUNDED" ? (current?.paymentMethod === "UPI_ON_DELIVERY" ? "UPI" : "CASH") : undefined
-      })
-    });
-    const data = await readApiResponse<{ error?: string }>(response);
-    setLoading(null);
-    if (!response.ok) {
-      showToast(data.error ?? "Return update failed", "error");
-      return;
-    }
-    setLocalReturns((entries) => entries.map((entry) => entry.id === id ? { ...entry, status } : entry));
-    showToast("Return updated", "success");
+  const visible = useMemo(() => entries.filter((entry) => {
+    const active = !["REFUNDED", "REJECTED"].includes(entry.status);
+    const matchesFilter = filter === "ALL" || (filter === "ACTIVE" ? active : entry.status === filter);
+    const text = `${entry.returnNumber ?? ""} ${entry.orderNumber} ${entry.customerName} ${entry.reason}`.toLowerCase();
+    return matchesFilter && text.includes(query.toLowerCase());
+  }), [entries, filter, query]);
+
+  function openAction(entry: AdminReturn, action: Action) {
+    setDialog({ entry, action }); setNote(""); setAmount(String(entry.refundAmount || "")); setMethod(entry.paymentMethod === "UPI_ON_DELIVERY" ? "UPI" : "WALLET");
   }
 
-  return (
-    <div>
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-primary">Returns queue</p>
-        <h2 className="mt-2 font-display text-4xl font-black leading-tight">Returns & refunds</h2>
-        <p className="mt-2 flex items-center gap-2 text-sm font-bold text-muted-foreground">
-          <BellRing className="h-4 w-4 text-primary" />
-          Auto-refreshes every few seconds for new customer requests.
-        </p>
-      </div>
-      <div className="mt-5 grid gap-4">
-        {localReturns.length === 0 ? <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">No returns yet.</div> : localReturns.map((entry) => (
-          <article key={entry.id} className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
-            <div className="flex flex-wrap justify-between gap-3">
-              <div>
-                <h3 className="font-display text-2xl font-bold">#{entry.orderNumber}</h3>
-                <p className="text-sm text-muted-foreground">{entry.customerName} · {entry.reason}</p>
-                {entry.note ? <p className="mt-2 text-sm">{entry.note}</p> : null}
-              </div>
-              <div className="text-right">
-                <p className="font-black">{formatCurrency(entry.refundAmount)}</p>
-                <p className="mt-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{entry.status}</p>
-              </div>
-            </div>
-            <pre className="mt-3 overflow-x-auto rounded-2xl bg-muted p-3 text-xs">{JSON.stringify(entry.items, null, 2)}</pre>
-            <div className="mt-4 grid grid-cols-3 gap-2">
-              <button disabled={loading === entry.id} onClick={() => resolveReturn(entry.id, "APPROVED")} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-black text-white disabled:opacity-60"><CheckCircle2 className="h-4 w-4" />Approve</button>
-              <button disabled={loading === entry.id} onClick={() => resolveReturn(entry.id, "REFUNDED")} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-lime-fresh text-xs font-black text-slate-950 disabled:opacity-60"><RotateCcw className="h-4 w-4" />Refunded</button>
-              <button disabled={loading === entry.id} onClick={() => resolveReturn(entry.id, "REJECTED")} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-red-600 text-xs font-black text-white disabled:opacity-60"><XCircle className="h-4 w-4" />Reject</button>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
+  async function submit() {
+    if (!dialog) return;
+    if (dialog.action === "reject" && !note.trim()) return showToast("Enter a rejection reason", "error");
+    setLoading(true);
+    const response = await fetch(`/api/admin/returns/${dialog.entry.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: dialog.action, reason: note || undefined, refundAmount: dialog.action === "refund" ? Number(amount) : undefined, refundMethod: dialog.action === "refund" ? method : undefined }) });
+    const data = await readApiResponse<{ error?: string; returnRequest?: { status: string } }>(response);
+    setLoading(false);
+    if (!response.ok) return showToast(data.error ?? "Return update failed", "error");
+    setEntries((current) => current.map((entry) => entry.id === dialog.entry.id ? { ...entry, status: data.returnRequest?.status ?? entry.status } : entry));
+    setDialog(null); showToast("Return updated", "success");
+  }
+
+  return <div className="space-y-5">
+    <header className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7"><p className="text-xs font-black uppercase text-primary">Operations</p><h1 className="mt-2 font-display text-3xl font-black sm:text-4xl">Returns & refunds</h1><p className="mt-2 text-sm text-muted-foreground">Review items, receive goods and issue traceable refunds.</p></header>
+    <div className="grid gap-2 sm:grid-cols-[1fr_auto]"><label className="relative"><Search className="absolute left-3 top-3.5 h-4 w-4 text-muted-foreground"/><input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search return, order or customer" className="h-11 w-full rounded-2xl border border-border bg-background pl-10 pr-3 text-sm"/></label><select value={filter} onChange={(e) => setFilter(e.target.value)} className="h-11 rounded-2xl border border-border bg-background px-3 text-sm font-bold"><option value="ACTIVE">Active</option><option value="ALL">All</option><option value="REQUESTED">Requested</option><option value="UNDER_REVIEW">Under review</option><option value="APPROVED">Approved</option><option value="ITEM_RECEIVED">Item received</option><option value="REFUNDED">Refunded</option><option value="REJECTED">Rejected</option></select></div>
+    {visible.length === 0 ? <div className="rounded-3xl border border-dashed border-border p-10 text-center text-muted-foreground">No returns in this queue.</div> : <div className="grid gap-4">{visible.map((entry) => { const items = Array.isArray(entry.items) ? entry.items as ReturnItem[] : []; return <article key={entry.id} className="rounded-3xl border border-border bg-card p-4 shadow-soft"><div className="flex flex-wrap items-start justify-between gap-3"><div><p className="text-xs font-black uppercase text-primary">{entry.returnNumber ?? `Order #${entry.orderNumber}`}</p><h2 className="mt-1 text-xl font-black">#{entry.orderNumber} · {entry.customerName}</h2><p className="mt-1 text-sm text-muted-foreground">{entry.reason.replaceAll("_", " ")} · {new Date(entry.createdAt).toLocaleString("en-IN")}</p></div><span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary">{entry.status.replaceAll("_", " ")}</span></div><div className="mt-4 divide-y divide-border rounded-2xl bg-muted/60 px-3">{items.map((item, index) => <div key={item.orderItemId ?? index} className="flex items-center justify-between gap-3 py-3 text-sm"><div><p className="font-bold">{item.name ?? "Item"}</p><p className="text-xs text-muted-foreground">Quantity {item.quantity ?? 0} × {formatCurrency(Number(item.price ?? 0))}</p></div><p className="font-black">{formatCurrency(Number(item.amount ?? Number(item.price ?? 0) * Number(item.quantity ?? 0)))}</p></div>)}</div>{entry.note && <p className="mt-3 rounded-xl bg-muted p-3 text-sm">{entry.note}</p>}<div className="mt-4 flex flex-wrap gap-2">{(actionsByStatus[entry.status] ?? []).map((item) => <button key={item.action} onClick={() => openAction(entry, item.action)} className={`inline-flex h-11 items-center gap-2 rounded-2xl px-4 text-xs font-black ${item.tone}`}>{item.action === "reject" ? <XCircle className="h-4 w-4"/> : item.action === "refund" ? <RotateCcw className="h-4 w-4"/> : item.action === "receive_item" ? <PackageCheck className="h-4 w-4"/> : <CheckCircle2 className="h-4 w-4"/>}{item.label}</button>)}</div></article>; })}</div>}
+    {dialog && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-3 sm:items-center" role="dialog" aria-modal="true"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 className="text-xl font-black">{dialog.action.replace("_", " ")} return</h2><p className="mt-1 text-sm text-muted-foreground">{dialog.entry.returnNumber} · #{dialog.entry.orderNumber}</p>{dialog.action === "refund" && <><label className="mt-4 block text-sm font-bold">Refund amount<input type="number" min="0.01" step="0.01" value={amount} onChange={(e) => setAmount(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"/></label><label className="mt-3 block text-sm font-bold">Method<select value={method} onChange={(e) => setMethod(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"><option value="WALLET">Wallet</option><option value="UPI">UPI</option><option value="CASH">Cash</option></select></label></>}<label className="mt-4 block text-sm font-bold">{dialog.action === "reject" ? "Reason" : "Resolution note"}<textarea value={note} onChange={(e) => setNote(e.target.value)} className="mt-2 min-h-24 w-full rounded-xl border border-border bg-background p-3"/></label><div className="mt-4 grid grid-cols-2 gap-2"><button onClick={() => setDialog(null)} className="h-11 rounded-2xl border border-border font-bold">Cancel</button><button disabled={loading} onClick={submit} className="h-11 rounded-2xl bg-primary font-black text-white disabled:opacity-50">{loading ? "Saving…" : "Confirm"}</button></div></div></div>}
+  </div>;
 }

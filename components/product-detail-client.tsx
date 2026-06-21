@@ -138,9 +138,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
               <Truck className="h-5 w-5 text-primary shrink-0" />
               <div>
                 <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">
-                  {storeConfig.freeDeliveryThreshold > 0
-                    ? `Free delivery on orders above ${formatCurrency(storeConfig.freeDeliveryThreshold)}`
-                    : `Delivery fee: ${formatCurrency(storeConfig.deliveryFee)}`}
+                  Delivery from ₹30 based on distance{storeConfig.freeDeliveryThreshold > 0 ? ` · free above ${formatCurrency(storeConfig.freeDeliveryThreshold)}` : ""}
                 </p>
                 <p className="text-[11px] text-slate-500">Delivered within 15-30 minutes</p>
               </div>
@@ -224,9 +222,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
             <Truck className="h-4 w-4 text-primary shrink-0" />
             <p className="text-[12px] text-slate-600 dark:text-slate-400">
-              {storeConfig.freeDeliveryThreshold > 0
-                ? `Free delivery above ${formatCurrency(storeConfig.freeDeliveryThreshold)}`
-                : `Delivery: ${formatCurrency(storeConfig.deliveryFee)}`} • 15-30 min
+              Delivery from ₹30 by distance{storeConfig.freeDeliveryThreshold > 0 ? ` · free above ${formatCurrency(storeConfig.freeDeliveryThreshold)}` : ""} · 15-30 min
             </p>
           </div>
         </motion.div>

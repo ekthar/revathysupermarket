@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, Star, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { orderStatuses, statusLabels } from "@/lib/constants";
@@ -12,7 +12,7 @@ import { useCart } from "@/components/cart/cart-provider";
 import { SwipeableCard } from "@/components/ui/swipeable-card";
 import type { Product } from "@/lib/types";
 
-const enableSseTracking = process.env.NEXT_PUBLIC_ENABLE_SSE_TRACKING === "true";
+const enableSseTracking = process.env.NEXT_PUBLIC_ENABLE_SSE_TRACKING !== "false";
 
 export type CustomerOrder = {
   id: string;
@@ -36,6 +36,8 @@ export type CustomerOrder = {
     reason?: string | null;
     createdAt: string;
   }>;
+  returnRequests?: Array<{ id: string; returnNumber: string; status: string }>;
+  supportTickets?: Array<{ id: string; ticketNumber: string; status: string }>;
 };
 type LiveOrderState = {
   status?: keyof typeof statusLabels;
@@ -76,7 +78,7 @@ function formatTime(dateStr: string) {
   return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
 
-export function CustomerOrdersClient({ initialOrders }: { initialOrders: CustomerOrder[] }) {
+export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = null }: { initialOrders: CustomerOrder[]; initialHistoryCursor?: string | null }) {
   const { addItems } = useCart();
   const [orders, setOrders] = useState(initialOrders);
   const [liveOrders, setLiveOrders] = useState<Record<string, LiveOrderState>>({});
@@ -86,6 +88,10 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
   const [orderRating, setOrderRating] = useState(5);
   const [deliveryRating, setDeliveryRating] = useState(5);
   const [feedbackComment, setFeedbackComment] = useState("");
+  const [returnOrder, setReturnOrder] = useState<CustomerOrder | null>(null);
+  const [historyCursor, setHistoryCursor] = useState(initialHistoryCursor);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [streamUnavailable, setStreamUnavailable] = useState(!enableSseTracking);
   // Swiggy-style: delivered/cancelled orders are collapsed by default
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     const active = new Set<string>();
@@ -97,11 +103,6 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
     return active;
   });
 
-  const activeStreamOrders = useMemo(
-    () => enableSseTracking ? orders.filter((order) => !["DELIVERED", "CANCELLED"].includes(order.status)) : [],
-    [orders]
-  );
-
   function toggleExpand(orderId: string) {
     setExpandedIds((prev) => {
       const next = new Set(prev);
@@ -112,36 +113,21 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
   }
 
   useEffect(() => {
-    let active = true;
-    async function refresh() {
-      setIsRefreshing(true);
-      const response = await fetch("/api/orders", { cache: "no-store" });
-      const data = await readApiResponse<{ orders?: CustomerOrder[] }>(response);
-      if (!active) return;
-      if (response.ok && data.orders) {
-        setOrders(data.orders);
-        setLastUpdated(new Date());
-      }
-      setIsRefreshing(false);
-    }
-    const interval = window.setInterval(refresh, 8000);
-    return () => { active = false; window.clearInterval(interval); };
+    if (!enableSseTracking) return;
+    const source = new EventSource("/api/orders/live-stream");
+    source.onmessage = (event) => { const updates = JSON.parse(event.data) as Array<LiveOrderState & { id: string }>; setStreamUnavailable(false); setLastUpdated(new Date()); setLiveOrders((current) => Object.fromEntries(updates.map((item) => [item.id, item]))); setOrders((current) => current.map((entry) => { const update = updates.find((item) => item.id === entry.id); return update?.status ? { ...entry, status: update.status } : entry; })); };
+    source.onerror = () => { source.close(); setStreamUnavailable(true); };
+    return () => source.close();
   }, []);
 
   useEffect(() => {
-    if (!enableSseTracking) return;
-    const sources = activeStreamOrders.map((order) => {
-      const source = new EventSource(`/api/orders/${order.id}/stream`);
-      source.onmessage = (event) => {
-        const data = JSON.parse(event.data) as LiveOrderState;
-        setLiveOrders((current) => ({ ...current, [order.id]: data }));
-        if (data.status) setOrders((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: data.status! } : entry));
-      };
-      source.onerror = () => source.close();
-      return source;
-    });
-    return () => sources.forEach((source) => source.close());
-  }, [activeStreamOrders]);
+    if (!streamUnavailable) return;
+    let active = true;
+    async function refresh() { if (document.visibilityState !== "visible" || !navigator.onLine) return; setIsRefreshing(true); const response = await fetch("/api/orders/live", { cache: "no-store" }).catch(() => null); if (response?.ok && active) { const data = await response.json() as { orders: Array<LiveOrderState & { id: string }> }; setOrders((current) => current.map((entry) => { const update = data.orders.find((item) => item.id === entry.id); return update?.status ? { ...entry, status: update.status } : entry; })); setLiveOrders(Object.fromEntries(data.orders.map((item) => [item.id, item]))); setLastUpdated(new Date()); } if (active) setIsRefreshing(false); }
+    refresh(); const interval = window.setInterval(refresh, 30000); return () => { active = false; window.clearInterval(interval); };
+  }, [streamUnavailable]);
+
+  async function loadOlderOrders() { if (!historyCursor || historyLoading) return; setHistoryLoading(true); const response = await fetch(`/api/orders/history?cursor=${encodeURIComponent(historyCursor)}`, { cache: "no-store" }); const data = await readApiResponse<{ orders?: CustomerOrder[]; nextCursor?: string | null }>(response); setHistoryLoading(false); if (response.ok && data.orders) { setOrders((current) => [...current, ...data.orders!.filter((order) => !current.some((existing) => existing.id === order.id))]); setHistoryCursor(data.nextCursor ?? null); } }
 
   async function decideEdit(orderId: string, decision: "approved" | "rejected") {
     const response = await fetch(`/api/orders/${orderId}/approval`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ decision }) });
@@ -153,13 +139,6 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
     }
     const data = await readApiResponse<{ error?: string }>(response);
     window.alert(data.error ?? "Approval update failed.");
-  }
-
-  async function requestReturn(order: CustomerOrder) {
-    const reason = window.prompt("Return reason: wrong_item, damaged, quality_issue, changed_mind, other", "quality_issue");
-    if (!reason) return;
-    const response = await fetch(`/api/orders/${order.id}/returns`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, items: order.items.map((item) => ({ orderItemId: item.id, quantity: item.quantity })), note: "Requested from customer dashboard" }) });
-    if (response.ok) window.alert("Return request submitted.");
   }
 
   function reorder(order: CustomerOrder) {
@@ -188,10 +167,11 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
 
   return (
     <div className="space-y-3">
+      {returnOrder && <ReturnRequestSheet order={returnOrder} onClose={() => setReturnOrder(null)} />}
       {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
       {/* Status bar */}
       <div className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 text-[11px] font-semibold text-slate-500">
-        <span>{lastUpdated ? "Updated just now" : "Live updates every 8s"}</span>
+        <span>{lastUpdated ? "Updated just now" : streamUnavailable ? "Fallback updates active" : "Live updates connected"}</span>
         <RefreshCcw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin text-primary")} />
       </div>
 
@@ -216,8 +196,8 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
               className="mb-3"
             >
             <motion.article
-              layout
-              initial={{ opacity: 0, y: 12 }}
+              layout={!isComplete}
+              initial={isComplete ? false : { opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               className={cn(
@@ -335,6 +315,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
                       </div>
 
                       {/* Actions for delivered orders */}
+                      {Boolean(order.returnRequests?.length || order.supportTickets?.length) && <div className="mt-3 space-y-2 rounded-xl bg-muted p-3 text-[11px]">{order.returnRequests?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Return {item.returnNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}{order.supportTickets?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Ticket {item.ticketNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}</div>}
                       {delivered && (
                         <div className="mt-3">
                           <p className="text-[10px] text-slate-400 italic mb-2 md:hidden">← Swipe right to reorder</p>
@@ -342,7 +323,7 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
                             <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-primary text-[11px] font-bold text-white">
                               <RotateCcw className="h-3.5 w-3.5" /> Reorder
                             </button>
-                            <button onClick={() => requestReturn(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            <button onClick={() => setReturnOrder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300">
                               <RotateCcw className="h-3.5 w-3.5" /> Return
                             </button>
                             <button onClick={() => setRatingOrderId(order.id)} className="h-9 flex items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 text-[11px] font-bold text-amber-700"><Star className="h-3.5 w-3.5" /> Rate</button>
@@ -361,8 +342,33 @@ export function CustomerOrdersClient({ initialOrders }: { initialOrders: Custome
           );
         })}
       </AnimatePresence>
+      {historyCursor && <button disabled={historyLoading} onClick={loadOlderOrders} className="h-11 w-full rounded-2xl border border-border bg-background text-sm font-black disabled:opacity-50">{historyLoading ? "Loading…" : "Load older orders"}</button>}
     </div>
   );
+}
+
+function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose: () => void }) {
+  const [quantities, setQuantities] = useState<Record<string, number>>({});
+  const [reason, setReason] = useState("quality_issue");
+  const [note, setNote] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [photoUrl, setPhotoUrl] = useState("");
+  const selected = order.items.filter((item) => (quantities[item.id] ?? 0) > 0);
+  const estimate = selected.reduce((sum, item) => sum + item.price * (quantities[item.id] ?? 0), 0);
+
+  async function submit() {
+    if (!selected.length) return setError("Select at least one item.");
+    setLoading(true); setError("");
+    const response = await fetch(`/api/orders/${order.id}/returns`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, note: note || undefined, photoUrl: photoUrl || undefined, items: selected.map((item) => ({ orderItemId: item.id, quantity: quantities[item.id] })) }) });
+    const data = await readApiResponse<{ error?: string; returnRequest?: { returnNumber?: string } }>(response);
+    setLoading(false);
+    if (!response.ok) return setError(data.error ?? "Return request could not be submitted.");
+    window.alert(`Return ${data.returnRequest?.returnNumber ?? "request"} submitted.`); onClose();
+  }
+
+  async function upload(file?: File) { if (!file) return; setLoading(true); const body = new FormData(); body.set("file", file); const response = await fetch("/api/evidence/upload", { method: "POST", body }); const data = await response.json(); setLoading(false); if (!response.ok) return setError(data.error ?? "Evidence upload failed"); setPhotoUrl(data.url); }
+  return <div className="fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/60 p-2 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="return-title"><div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-start justify-between gap-3"><div><h2 id="return-title" className="font-display text-2xl font-black">Request a return</h2><p className="text-sm text-muted-foreground">Order #{order.orderNumber}</p></div><button onClick={onClose} aria-label="Close return form" className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"><XCircle className="h-5 w-5"/></button></div><div className="mt-4 divide-y divide-border rounded-2xl border border-border">{order.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 p-3"><div><p className="text-sm font-bold">{item.name}</p><p className="text-xs text-muted-foreground">{formatCurrency(item.price)} · purchased {item.quantity}</p></div><select aria-label={`Return quantity for ${item.name}`} value={quantities[item.id] ?? 0} onChange={(e) => setQuantities((current) => ({ ...current, [item.id]: Number(e.target.value) }))} className="h-10 rounded-xl border border-border bg-background px-3">{Array.from({ length: item.quantity + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}</select></div>)}</div><label className="mt-4 block text-sm font-bold">Reason<select value={reason} onChange={(e) => setReason(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"><option value="wrong_item">Wrong item</option><option value="damaged">Damaged</option><option value="quality_issue">Quality issue</option><option value="changed_mind">Changed my mind</option><option value="other">Other</option></select></label><label className="mt-4 block text-sm font-bold">Tell us what happened<textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-xl border border-border bg-background p-3"/></label><label className="mt-4 block text-sm font-bold">Evidence photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} className="mt-2 block w-full text-sm"/></label>{photoUrl && <p className="mt-2 text-xs font-bold text-emerald-700">Photo uploaded</p>}<div className="mt-4 flex items-center justify-between rounded-xl bg-muted p-3 text-sm"><span>Estimated refund</span><strong>{formatCurrency(estimate)}</strong></div>{error && <p className="mt-3 text-sm font-bold text-red-600">{error}</p>}<button disabled={loading || !selected.length} onClick={submit} className="mt-4 h-12 w-full rounded-2xl bg-primary font-black text-white disabled:opacity-50">{loading ? "Submitting…" : "Submit return request"}</button></div></div>;
 }
 
 function OrderEditApprovalCard({ order, onDecision }: { order: CustomerOrder; onDecision: (decision: "approved" | "rejected") => void }) {

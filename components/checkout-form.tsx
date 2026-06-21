@@ -130,8 +130,11 @@ export function CheckoutForm({
   const [loyaltyBalance, setLoyaltyBalance] = useState(0);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [loyaltyRules, setLoyaltyRules] = useState({ pointValueRupees: 0.25, maxRedemptionPercent: 20 });
+  const [quotedDeliveryFee, setQuotedDeliveryFee] = useState<number | null>(null);
+  const [feeQuoteLoading, setFeeQuoteLoading] = useState(false);
 
-  const deliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
+  const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
+  const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
   const gstAmount = gstRatePercent > 0 ? Math.round(subtotal - subtotal / (1 + gstRatePercent / 100)) : 0;
   const totalAmount = subtotal + deliveryFee;
 
@@ -180,6 +183,21 @@ export function CheckoutForm({
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
   const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
+
+  useEffect(() => {
+    const latitude = Number(form.latitude);
+    const longitude = Number(form.longitude);
+    if (!locationOk || !Number.isFinite(latitude) || !Number.isFinite(longitude)) { setQuotedDeliveryFee(null); return; }
+    const controller = new AbortController();
+    const timer = window.setTimeout(async () => {
+      setFeeQuoteLoading(true);
+      const response = await fetch("/api/delivery-fee/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ latitude, longitude, subtotal }), signal: controller.signal }).catch(() => null);
+      if (response?.ok) { const data = await response.json(); setQuotedDeliveryFee(Number(data.fee)); }
+      else setQuotedDeliveryFee(null);
+      setFeeQuoteLoading(false);
+    }, 300);
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [form.latitude, form.longitude, locationOk, subtotal]);
 
   useEffect(() => {
     if (!placedOrderId) return;
@@ -592,7 +610,7 @@ export function CheckoutForm({
               <div className="flex justify-between">
                 <span className="text-slate-500">Delivery</span>
                 <span className="font-semibold text-slate-700">
-                  {deliveryFee === 0 ? <span className="text-green-600">FREE</span> : formatCurrency(deliveryFee)}
+                  {feeQuoteLoading ? <span className="text-muted-foreground">Calculating…</span> : deliveryFee === 0 ? <span className="text-green-600">FREE</span> : formatCurrency(deliveryFee)}
                 </span>
               </div>
               <div className="flex justify-between">

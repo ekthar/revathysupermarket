@@ -1,0 +1,13 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import { collectionBalance, validateDamageAdjustment } from "../lib/delivery-money";
+import { findDeliveryFeeSlab, validateSlabs } from "../lib/delivery-fee";
+import { getPermissionCeiling, validatePermissionsForRole } from "../lib/permissions";
+
+const slabs = [{ minKm: 0, maxKm: 2, fee: 30 }, { minKm: 2, maxKm: 3.5, fee: 50 }, { minKm: 3.5, maxKm: 5, fee: 70 }];
+test("delivery slabs use deterministic shared boundaries", () => { assert.equal(findDeliveryFeeSlab(slabs, 2)?.fee, 30); assert.equal(findDeliveryFeeSlab(slabs, 2.01)?.fee, 50); assert.equal(findDeliveryFeeSlab(slabs, 5)?.fee, 70); assert.equal(findDeliveryFeeSlab(slabs, 5.01), null); });
+test("slab validation rejects gaps and overlaps", () => { assert.equal(validateSlabs(slabs, 5).valid, true); assert.equal(validateSlabs([{ minKm: 0, maxKm: 2 }, { minKm: 3, maxKm: 5 }], 5).valid, false); assert.equal(validateSlabs([{ minKm: 0, maxKm: 3 }, { minKm: 2, maxKm: 5 }], 5).valid, false); });
+test("collection supports exact cash, UPI split and wallet remainder", () => { assert.deepEqual(collectionBalance({ total: 500, adjustment: 0, wallet: 0, cash: 500, upi: 0 }).status, "PENDING_HANDOVER"); assert.equal(collectionBalance({ total: 500, adjustment: 50, wallet: 100, cash: 200, upi: 150 }).balanced, true); assert.equal(collectionBalance({ total: 500, adjustment: 0, wallet: 0, cash: 499, upi: 0 }).status, "SHORT"); assert.equal(collectionBalance({ total: 500, adjustment: 0, wallet: 0, cash: 501, upi: 0 }).status, "EXCESS"); });
+test("wallet is excluded from doorstep expected amount exactly once", () => { const result = collectionBalance({ total: 500, adjustment: 50, wallet: 400, cash: 50, upi: 0 }); assert.equal(result.expected, 50); assert.equal(result.balanced, true); });
+test("damage enforcement respects quantity, item value and cumulative cap", () => { assert.equal(validateDamageAdjustment({ orderTotal: 1000, itemUnitPrice: 100, purchasedQuantity: 2, previouslyAdjustedQuantity: 0, quantity: 1, previousReduction: 0, reduction: 100 }).valid, true); assert.equal(validateDamageAdjustment({ orderTotal: 1000, itemUnitPrice: 100, purchasedQuantity: 2, previouslyAdjustedQuantity: 2, quantity: 1, previousReduction: 0, reduction: 50 }).valid, false); assert.equal(validateDamageAdjustment({ orderTotal: 1000, itemUnitPrice: 500, purchasedQuantity: 1, previouslyAdjustedQuantity: 0, quantity: 1, previousReduction: 150, reduction: 100 }).needsApproval, true); });
+test("packing and delivery permission ceilings stay narrow", () => { assert.deepEqual(getPermissionCeiling("PACKING_STAFF"), ["orders.view"]); assert.equal(validatePermissionsForRole("DELIVERY_PARTNER", ["staff.manage"]).valid, false); });

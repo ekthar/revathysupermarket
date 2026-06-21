@@ -52,12 +52,12 @@ export function unauthorized() {
 }
 
 export function requireOrderStaff(session: Session | null) {
-  if (!canManageOrders(session?.user?.role)) return unauthorized();
+  if (!isOwnerRole(session?.user?.role) && !session?.user?.permissions?.includes("orders.manage")) return unauthorized();
   return null;
 }
 
 export function requirePackingStaff(session: Session | null) {
-  if (!canPackOrders(session?.user?.role)) return unauthorized();
+  if (!isOwnerRole(session?.user?.role) && session?.user?.role !== "PACKING_STAFF" && !session?.user?.permissions?.includes("orders.manage")) return unauthorized();
   return null;
 }
 
@@ -67,16 +67,16 @@ export function requireOwner(session: Session | null) {
 }
 
 export function requireReturnStaff(session: Session | null) {
-  if (!canManageReturns(session?.user?.role)) return unauthorized();
+  if (!isOwnerRole(session?.user?.role) && !session?.user?.permissions?.some((permission) => permission === "returns.view" || permission === "returns.manage")) return unauthorized();
   return null;
 }
 
 export function requireProductStaff(session: Session | null) {
-  if (!canManageProducts(session?.user?.role)) return unauthorized();
+  if (!isOwnerRole(session?.user?.role) && !session?.user?.permissions?.includes("catalogue.manage")) return unauthorized();
   return null;
 }
 
 export function requireReportStaff(session: Session | null) {
-  if (!canViewReports(session?.user?.role)) return unauthorized();
+  if (!isOwnerRole(session?.user?.role) && !session?.user?.permissions?.includes("reports.view")) return unauthorized();
   return null;
 }

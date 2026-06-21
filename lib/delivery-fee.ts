@@ -3,9 +3,17 @@ import { prisma } from "@/lib/prisma";
 export interface DeliveryFeeResult {
   fee: number;
   distanceKm: number;
-  slabApplied: { minKm: number; maxKm: number; fee: number } | null;
+  slabApplied: { id: string; minKm: number; maxKm: number; fee: number } | null;
   freeDelivery: boolean;
   freeDeliveryThreshold: number;
+}
+
+export function findDeliveryFeeSlab<T extends { minKm: number | { toString(): string }; maxKm: number | { toString(): string } }>(slabs: T[], distanceKm: number) {
+  return slabs.find((item, index) => {
+    const minimum = Number(item.minKm);
+    const maximum = Number(item.maxKm);
+    return index === 0 ? distanceKm >= minimum && distanceKm <= maximum : distanceKm > minimum && distanceKm <= maximum;
+  }) ?? null;
 }
 
 /**
@@ -33,7 +41,7 @@ export async function calculateDeliveryFee(
   const freeDeliveryThreshold = Number(freeThresholdSetting?.value || "500");
 
   // Check free delivery first
-  if (subtotal >= freeDeliveryThreshold) {
+  if (freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold) {
     return {
       fee: 0,
       distanceKm,
@@ -44,13 +52,7 @@ export async function calculateDeliveryFee(
   }
 
   // Find matching slab
-  const matchingSlab = slabs.find(
-    (s) => distanceKm > Number(s.minKm) ? distanceKm <= Number(s.maxKm) : distanceKm >= Number(s.minKm) && distanceKm <= Number(s.maxKm)
-  );
-
-  // Edge case: distance is exactly 0 or within first slab
-  const firstSlab = slabs.find((s) => Number(s.minKm) === 0 || distanceKm <= Number(s.maxKm));
-  const slab = matchingSlab || firstSlab;
+  const slab = findDeliveryFeeSlab(slabs, distanceKm);
 
   if (!slab) {
     // No slab covers this distance — out of delivery range
@@ -66,7 +68,7 @@ export async function calculateDeliveryFee(
   return {
     fee: Number(slab.fee),
     distanceKm,
-    slabApplied: { minKm: Number(slab.minKm), maxKm: Number(slab.maxKm), fee: Number(slab.fee) },
+    slabApplied: { id: slab.id, minKm: Number(slab.minKm), maxKm: Number(slab.maxKm), fee: Number(slab.fee) },
     freeDelivery: false,
     freeDeliveryThreshold,
   };

@@ -7,42 +7,21 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const session = await auth();
-  const orders = session?.user?.id
-    ? await prisma.order.findMany({
-        where: { userId: session.user.id },
-        include: {
-          items: {
-            include: {
-              product: {
-                include: { category: true }
-              }
-            }
-          },
-          deliveryPartner: {
-            select: {
-              currentLatitude: true,
-              currentLongitude: true,
-              locationUpdatedAt: true
-            }
-          },
-          editLogs: {
-            where: { requiresCustomerApproval: true, customerDecision: null },
-            orderBy: { createdAt: "asc" },
-            select: {
-              id: true,
-              action: true,
-              originalItem: true,
-              newItem: true,
-              priceDelta: true,
-              reason: true,
-              createdAt: true
-            }
-          },
-          statusEvents: { orderBy: { createdAt: "asc" } }
-        },
+  const include = {
+    items: { include: { product: { select: { id: true, slug: true, name: true, price: true, discountPrice: true, image: true, stock: true, unit: true, createdAt: true, category: { select: { name: true } } } } } },
+    deliveryPartner: { select: { currentLatitude: true, currentLongitude: true, locationUpdatedAt: true } },
+    returnRequests: { select: { id: true, returnNumber: true, status: true }, orderBy: { createdAt: "desc" as const }, take: 3 },
+    supportTickets: { select: { id: true, ticketNumber: true, status: true }, orderBy: { updatedAt: "desc" as const }, take: 3 },
+    editLogs: { where: { requiresCustomerApproval: true, customerDecision: null }, orderBy: { createdAt: "asc" as const }, select: { id: true, action: true, originalItem: true, newItem: true, priceDelta: true, reason: true, createdAt: true } }
+  };
+  const [activeOrders, completedOrders] = session?.user?.id ? await Promise.all([
+    prisma.order.findMany({
+        where: { userId: session.user.id, status: { notIn: ["DELIVERED", "CANCELLED"] } }, include,
         orderBy: { createdAt: "desc" }
-      })
-    : [];
+      }),
+    prisma.order.findMany({ where: { userId: session.user.id, status: { in: ["DELIVERED", "CANCELLED"] } }, include, orderBy: { createdAt: "desc" }, take: 10 })
+  ]) : [[], []];
+  const orders = [...activeOrders, ...completedOrders];
   const plainOrders: CustomerOrder[] = orders.map((order) => ({
     id: order.id,
     orderNumber: order.orderNumber,
@@ -67,11 +46,11 @@ export default async function DashboardPage() {
         price: Number(item.product.price),
         discountPrice: item.product.discountPrice ? Number(item.product.discountPrice) : undefined,
         image: item.product.image,
-        description: item.product.description,
+        description: "",
         stock: item.product.stock,
-        popularity: item.product.popularity,
+        popularity: 0,
         unit: item.product.unit,
-        isFeatured: item.product.isFeatured,
+        isFeatured: false,
         createdAt: item.product.createdAt.toISOString()
       } : null
     })),
@@ -88,7 +67,9 @@ export default async function DashboardPage() {
       priceDelta: Number(log.priceDelta),
       reason: log.reason,
       createdAt: log.createdAt.toISOString()
-    }))
+    })),
+    returnRequests: order.returnRequests,
+    supportTickets: order.supportTickets
   }));
 
   return (
@@ -99,7 +80,7 @@ export default async function DashboardPage() {
         <p className="mt-2 text-sm text-muted-foreground">Follow every order from received to delivered.</p>
       </section>
       <div className="mt-6">
-        <CustomerOrdersClient initialOrders={plainOrders} />
+        <CustomerOrdersClient initialOrders={plainOrders} initialHistoryCursor={completedOrders.length === 10 ? completedOrders.at(-1)?.id ?? null : null} />
       </div>
     </main>
   );

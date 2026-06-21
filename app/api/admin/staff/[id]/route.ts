@@ -19,10 +19,11 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const data = {
     isActive: parsed.data.isActive,
     passwordHash: parsed.data.password ? await bcrypt.hash(parsed.data.password, 12) : undefined,
-    passwordVersion: parsed.data.password ? { increment: 1 } : undefined
+    passwordVersion: parsed.data.password ? { increment: 1 } : undefined,
+    authVersion: parsed.data.password || parsed.data.isActive !== undefined ? { increment: 1 } : undefined
   };
   const staff = await prisma.user.update({ where: { id }, data, select: { id: true, role: true } });
-  if (parsed.data.password) await prisma.session.deleteMany({ where: { userId: id } });
+  if (parsed.data.password || parsed.data.isActive !== undefined) await prisma.session.deleteMany({ where: { userId: id } });
   await writeAuditLog({
     actorId: session?.user?.id,
     actorRole: session?.user?.role,

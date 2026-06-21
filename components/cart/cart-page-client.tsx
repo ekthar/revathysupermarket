@@ -43,7 +43,9 @@ export function CartPageClient() {
   }, []);
 
   // Calculate dynamic values
-  const deliveryFee = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold ? 0 : config.deliveryFee;
+  const qualifiesFreeDelivery = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold;
+  // The exact fee depends on the checkout address and is calculated server-side.
+  const deliveryFee = 0;
   
   // GST is inclusive (already in price) - show breakdown for transparency
   const gstRate = config.gstRatePercent;
@@ -270,14 +272,14 @@ export function CartPageClient() {
           <div className="flex justify-between">
             <span className="text-slate-500 dark:text-slate-400">Delivery fee</span>
             <span className="font-medium text-slate-700 dark:text-slate-300">
-              {deliveryFee === 0 ? <span className="text-emerald-600">FREE</span> : formatCurrency(deliveryFee)}
+              {qualifiesFreeDelivery ? <span className="text-emerald-600">FREE</span> : <span>Calculated at checkout</span>}
             </span>
           </div>
-          {deliveryFee === 0 && config.freeDeliveryThreshold > 0 && (
+          {qualifiesFreeDelivery && (
             <p className="text-[10px] text-emerald-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
           )}
           <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 flex justify-between">
-            <span className="font-bold text-slate-900 dark:text-white">To Pay</span>
+            <span className="font-bold text-slate-900 dark:text-white">Cart total</span>
             <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(totalAmount)}</span>
           </div>
           {gstRate > 0 && (

@@ -319,6 +319,9 @@ model Order {
   subtotal                Decimal                 @db.Decimal(10, 2)
   discount                Decimal                 @default(0) @db.Decimal(10, 2)
   deliveryFee             Decimal                 @default(0) @db.Decimal(10, 2)
+  deliveryFeeSlabId       String?
+  deliveryFeeMinKm        Decimal?                @db.Decimal(6, 2)
+  deliveryFeeMaxKm        Decimal?                @db.Decimal(6, 2)
   total                   Decimal                 @db.Decimal(10, 2)
   acknowledgedAt          DateTime?
   acknowledgedById        String?
@@ -360,20 +363,22 @@ model Order {
   @@index([deliveryPartnerId])
   @@index([createdAt])
   @@index([userId])
+  @@index([userId, createdAt])
   @@index([deliverySlotId])
   @@index([estimatedDeliveryAt])
 }
 
 model OrderItem {
-  id        String   @id @default(cuid())
-  orderId   String
-  productId String?
-  name      String
-  quantity  Int
-  price     Decimal  @db.Decimal(10, 2)
-  gstRate   Decimal? @db.Decimal(5, 2)
-  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  id                  String               @id @default(cuid())
+  orderId             String
+  productId           String?
+  name                String
+  quantity            Int
+  price               Decimal              @db.Decimal(10, 2)
+  gstRate             Decimal?             @db.Decimal(5, 2)
+  order               Order                @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product             Product?             @relation(fields: [productId], references: [id], onDelete: SetNull)
+  deliveryAdjustments DeliveryAdjustment[]
 
   @@index([orderId])
   @@index([productId])
@@ -410,51 +415,56 @@ model OrderEditLog {
 }
 
 model ReturnRequest {
-  id              String        @id @default(cuid())
-  returnNumber    String        @unique @default(cuid())
-  orderId         String
-  items           Json
-  reason          String
-  photoUrl        String?
-  evidenceUrls    String[]
-  note            String?
-  status          ReturnStatus  @default(REQUESTED)
-  refundMethod    RefundMethod?
-  refundAmount    Decimal?      @db.Decimal(10, 2)
-  maxRefundAmount Decimal?      @db.Decimal(10, 2)
-  refundReference String?
-  resolutionNote  String?
-  rejectionReason String?
-  resolvedById    String?
-  resolvedAt      DateTime?
-  itemReceivedAt  DateTime?
-  refundedAt      DateTime?
-  eligibleUntil   DateTime?
-  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  resolvedBy      User?         @relation("ReturnResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                String             @id @default(cuid())
+  returnNumber      String             @unique @default(cuid())
+  orderId           String
+  items             Json
+  reason            String
+  photoUrl          String?
+  evidenceUrls      String[]
+  note              String?
+  status            ReturnStatus       @default(REQUESTED)
+  refundMethod      RefundMethod?
+  refundAmount      Decimal?           @db.Decimal(10, 2)
+  maxRefundAmount   Decimal?           @db.Decimal(10, 2)
+  refundReference   String?
+  resolutionNote    String?
+  rejectionReason   String?
+  resolvedById      String?
+  resolvedAt        DateTime?
+  itemReceivedAt    DateTime?
+  refundedAt        DateTime?
+  eligibleUntil     DateTime?
+  order             Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  resolvedBy        User?              @relation("ReturnResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
+  walletTransaction WalletTransaction?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
 
   @@index([orderId])
   @@index([status])
+  @@index([orderId, status])
   @@index([resolvedById])
   @@index([createdAt])
   @@index([returnNumber])
 }
 
 model WalletTransaction {
-  id        String   @id @default(cuid())
-  userId    String
-  orderId   String?
-  amount    Decimal  @db.Decimal(10, 2)
-  type      String
-  reason    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  order     Order?   @relation(fields: [orderId], references: [id], onDelete: SetNull)
-  createdAt DateTime @default(now())
+  id              String         @id @default(cuid())
+  userId          String
+  orderId         String?
+  returnRequestId String?        @unique
+  amount          Decimal        @db.Decimal(10, 2)
+  type            String
+  reason          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  order           Order?         @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  returnRequest   ReturnRequest? @relation(fields: [returnRequestId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
 
   @@index([userId])
   @@index([orderId])
+  @@index([returnRequestId])
   @@index([createdAt])
 }
 
@@ -725,8 +735,6 @@ model Offer {
   @@index([productId])
 }
 
-
-
 model StaffPermission {
   id         String   @id @default(cuid())
   userId     String
@@ -753,46 +761,51 @@ model DeliveryFeeSlab {
 }
 
 model DeliveryAdjustment {
-  id             String       @id @default(cuid())
-  orderId        String
-  partnerId      String
-  itemName       String
-  quantity       Int
-  reason         String
-  reductionAmount Decimal     @db.Decimal(10, 2)
-  evidenceUrl    String?
-  status         DamageStatus @default(RECORDED)
-  approvedById   String?
-  approvedAt     DateTime?
-  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  partner        User         @relation(fields: [partnerId], references: [id], onDelete: Cascade)
-  createdAt      DateTime     @default(now())
-  updatedAt      DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  orderId         String
+  orderItemId     String?
+  partnerId       String
+  itemName        String
+  quantity        Int
+  reason          String
+  reductionAmount Decimal      @db.Decimal(10, 2)
+  evidenceUrl     String?
+  status          DamageStatus @default(RECORDED)
+  approvedById    String?
+  approvedAt      DateTime?
+  order           Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  orderItem       OrderItem?   @relation(fields: [orderItemId], references: [id], onDelete: SetNull)
+  partner         User         @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   @@index([orderId])
+  @@index([orderItemId])
   @@index([partnerId])
   @@index([status])
 }
 
 model DeliveryCollection {
-  id                String           @id @default(cuid())
-  orderId           String           @unique
-  partnerId         String
-  expectedAmount    Decimal          @db.Decimal(10, 2)
-  cashCollected     Decimal          @default(0) @db.Decimal(10, 2)
-  upiCollected      Decimal          @default(0) @db.Decimal(10, 2)
-  walletApplied     Decimal          @default(0) @db.Decimal(10, 2)
-  adjustmentAmount  Decimal          @default(0) @db.Decimal(10, 2)
-  upiReference      String?
-  status            CollectionStatus @default(PENDING_HANDOVER)
-  discrepancyReason String?
-  reconciledById    String?
-  reconciledAt      DateTime?
-  order             Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  partner           User             @relation("CollectionPartner", fields: [partnerId], references: [id], onDelete: Cascade)
-  reconciledBy      User?            @relation("CollectionReconciler", fields: [reconciledById], references: [id], onDelete: SetNull)
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
+  id                  String           @id @default(cuid())
+  orderId             String           @unique
+  partnerId           String
+  expectedAmount      Decimal          @db.Decimal(10, 2)
+  cashCollected       Decimal          @default(0) @db.Decimal(10, 2)
+  upiCollected        Decimal          @default(0) @db.Decimal(10, 2)
+  walletApplied       Decimal          @default(0) @db.Decimal(10, 2)
+  adjustmentAmount    Decimal          @default(0) @db.Decimal(10, 2)
+  upiReference        String?
+  status              CollectionStatus @default(PENDING_HANDOVER)
+  discrepancyReason   String?
+  reconciledById      String?
+  reconciledAt        DateTime?
+  completionReference String?          @unique
+  completedAt         DateTime?
+  order               Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  partner             User             @relation("CollectionPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  reconciledBy        User?            @relation("CollectionReconciler", fields: [reconciledById], references: [id], onDelete: SetNull)
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
 
   @@index([partnerId, createdAt])
   @@index([status])

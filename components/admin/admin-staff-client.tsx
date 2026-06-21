@@ -1,106 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { KeyRound, UserPlus, UserX } from "lucide-react";
+import { useMemo, useState } from "react";
+import { KeyRound, ShieldCheck, UserPlus, UserX } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { roleLabel } from "@/lib/roles";
+import { HIGH_RISK_PERMISSIONS, PERMISSIONS, PERMISSION_GROUPS, ROLE_PRESETS, getPermissionCeiling, type PermissionKey, type StaffRole } from "@/lib/permissions";
 
-type StaffMember = {
-  id: string;
-  name: string | null;
-  email: string | null;
-  phone: string | null;
-  role: string;
-  isActive: boolean;
-  lastLoginAt: string | null;
-  vehicleInfo: string | null;
-};
+type StaffMember = { id: string; name: string | null; email: string | null; phone: string | null; role: string; isActive: boolean; lastLoginAt: string | null; vehicleInfo: string | null; permissions: string[] };
+const roles: Array<{ value: Exclude<StaffRole, "OWNER" | "ADMIN">; label: string }> = [{ value: "MANAGER", label: "Manager" }, { value: "STAFF", label: "Staff" }, { value: "PACKING_STAFF", label: "Packing Staff" }, { value: "DELIVERY_PARTNER", label: "Delivery Partner" }];
 
 export function AdminStaffClient({ staff }: { staff: StaffMember[] }) {
-  const { showToast } = useToast();
-  const [members, setMembers] = useState(staff);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", role: "MANAGER", password: "", vehicleInfo: "" });
-  const designationOptions = [
-    { value: "OWNER", label: "Owner", note: "Full store access" },
-    { value: "MANAGER", label: "Manager", note: "Orders, products, customers, returns" },
-    { value: "PACKING_STAFF", label: "Packing Staff", note: "Packing workflow and stock review" },
-    { value: "DELIVERY_PARTNER", label: "Delivery Partner", note: "Assigned delivery orders only" },
-    { value: "STAFF", label: "Staff", note: "General staff access" }
-  ];
+  const { showToast } = useToast(); const [members, setMembers] = useState(staff); const [step, setStep] = useState(1); const [editing, setEditing] = useState<StaffMember | null>(null);
+  const [form, setForm] = useState({ name: "", email: "", phone: "", password: "", role: "MANAGER" as Exclude<StaffRole, "OWNER" | "ADMIN">, vehicleInfo: "", permissions: [...ROLE_PRESETS.MANAGER] as PermissionKey[] });
+  const ceiling = useMemo(() => getPermissionCeiling(form.role), [form.role]);
+  function setRole(role: typeof form.role) { setForm((current) => ({ ...current, role, permissions: [...ROLE_PRESETS[role]], vehicleInfo: role === "DELIVERY_PARTNER" ? current.vehicleInfo : "" })); }
+  function toggle(permission: PermissionKey) { if (!ceiling.includes(permission)) return; setForm((current) => ({ ...current, permissions: current.permissions.includes(permission) ? current.permissions.filter((item) => item !== permission) : [...current.permissions, permission] })); }
+  async function create() { const response = await fetch("/api/admin/staff", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) }); const data = await readApiResponse<{ error?: string; staff?: { id: string } }>(response); if (!response.ok || !data.staff) return showToast(data.error ?? "Staff creation failed", "error"); setMembers((current) => [{ id: data.staff!.id, name: form.name, email: form.email, phone: form.phone || null, role: form.role, isActive: true, lastLoginAt: null, vehicleInfo: form.vehicleInfo || null, permissions: form.permissions }, ...current]); setStep(1); setForm({ name: "", email: "", phone: "", password: "", role: "MANAGER", vehicleInfo: "", permissions: [...ROLE_PRESETS.MANAGER] }); showToast("Staff account created", "success"); }
+  async function updateStaff(id: string, patch: { isActive?: boolean; password?: string }) { const response = await fetch(`/api/admin/staff/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }); const data = await readApiResponse<{ error?: string }>(response); if (!response.ok) return showToast(data.error ?? "Staff update failed", "error"); if (patch.isActive !== undefined) setMembers((current) => current.map((member) => member.id === id ? { ...member, isActive: patch.isActive! } : member)); showToast("Staff updated", "success"); }
+  async function savePermissions(member: StaffMember, permissions: PermissionKey[]) { const response = await fetch(`/api/admin/staff/${member.id}/permissions`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ permissions }) }); const data = await readApiResponse<{ error?: string }>(response); if (!response.ok) return showToast(data.error ?? "Permission update failed", "error"); setMembers((current) => current.map((item) => item.id === member.id ? { ...item, permissions } : item)); setEditing(null); showToast("Permissions updated; active sessions were invalidated", "success"); }
 
-  async function addStaff(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const response = await fetch("/api/admin/staff", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(form)
-    });
-    const data = await readApiResponse<{ error?: string; staff?: { id: string } }>(response);
-    if (!response.ok || !data.staff) {
-      showToast(data.error ?? "Staff create failed", "error");
-      return;
-    }
-    setMembers((current) => [{ id: data.staff!.id, name: form.name, email: form.email, phone: form.phone, role: form.role, isActive: true, lastLoginAt: null, vehicleInfo: form.vehicleInfo }, ...current]);
-    setForm({ name: "", email: "", phone: "", role: "MANAGER", password: "", vehicleInfo: "" });
-    showToast("Staff account created", "success");
-  }
-
-  async function updateStaff(id: string, patch: { isActive?: boolean; password?: string }) {
-    const response = await fetch(`/api/admin/staff/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(patch)
-    });
-    const data = await readApiResponse<{ error?: string }>(response);
-    if (!response.ok) {
-      showToast(data.error ?? "Staff update failed", "error");
-      return;
-    }
-    if (patch.isActive !== undefined) setMembers((current) => current.map((member) => member.id === id ? { ...member, isActive: patch.isActive! } : member));
-    showToast("Staff updated", "success");
-  }
-
-  return (
-    <div>
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-primary">Owner controls</p>
-        <h2 className="mt-2 font-display text-4xl font-black leading-tight">Staff</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Create staff accounts with clear designations and access boundaries.</p>
-      </div>
-      <form onSubmit={addStaff} className="mt-5 grid gap-3 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:grid-cols-2">
-        {(["name", "email", "phone", "password", "vehicleInfo"] as const).map((key) => (
-          <input key={key} value={form[key]} onChange={(event) => setForm((current) => ({ ...current, [key]: event.target.value }))} placeholder={key} type={key === "password" ? "password" : key === "email" ? "email" : "text"} className="h-11 rounded-2xl border border-border bg-background px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" />
-        ))}
-        <label className="sm:col-span-2">
-          <span className="text-sm font-bold">Designation</span>
-          <select value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))} className="mt-2 h-11 w-full rounded-2xl border border-border bg-background px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary">
-            {designationOptions.map((option) => <option key={option.value} value={option.value}>{option.label} - {option.note}</option>)}
-          </select>
-        </label>
-        <button className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-black text-white"><UserPlus className="h-4 w-4" />Add staff</button>
-      </form>
-      <div className="mt-5 grid gap-3">
-        {members.map((member) => (
-          <article key={member.id} className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="font-black">{member.name ?? member.email ?? member.phone ?? "Staff member"}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{member.email} - {member.phone ?? "No phone"} - {roleLabel(member.role)}</p>
-                <p className="mt-1 text-xs font-bold text-muted-foreground">Last login: {member.lastLoginAt ? new Date(member.lastLoginAt).toLocaleString("en-IN") : "Never"}</p>
-              </div>
-              <span className={member.isActive ? "rounded-full bg-primary/10 px-3 py-1 text-xs font-black text-primary" : "rounded-full bg-red-100 px-3 py-1 text-xs font-black text-red-700"}>{member.isActive ? "Active" : "Inactive"}</span>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <button onClick={() => updateStaff(member.id, { isActive: !member.isActive })} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-xs font-black"><UserX className="h-4 w-4" />{member.isActive ? "Deactivate" : "Reactivate"}</button>
-              <button onClick={() => {
-                const password = window.prompt("Temporary password");
-                if (password) updateStaff(member.id, { password });
-              }} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-black text-white"><KeyRound className="h-4 w-4" />Reset password</button>
-            </div>
-          </article>
-        ))}
-      </div>
-    </div>
-  );
+  return <div className="space-y-5"><header className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7"><p className="text-xs font-black uppercase text-primary">Owner controls</p><h1 className="mt-2 font-display text-3xl font-black sm:text-4xl">Staff & feature access</h1><p className="mt-2 text-sm text-muted-foreground">Create role-based accounts and choose exactly which workspaces they can access.</p></header><section className="rounded-3xl border border-border bg-card p-4"><div className="mb-5 flex gap-2">{[1,2,3,4].map((value) => <span key={value} className={`flex h-8 flex-1 items-center justify-center rounded-full text-xs font-black ${step >= value ? "bg-primary text-white" : "bg-muted text-muted-foreground"}`}>{value}</span>)}</div>{step === 1 && <div className="grid gap-3 sm:grid-cols-2">{(["name","email","phone","password"] as const).map((key) => <label key={key} className="text-sm font-bold capitalize">{key}<input required value={form[key]} onChange={(e) => setForm((current) => ({ ...current, [key]: e.target.value }))} type={key === "password" ? "password" : key === "email" ? "email" : "text"} className="mt-2 h-11 w-full rounded-2xl border border-border bg-background px-4"/></label>)}</div>}{step === 2 && <div className="grid gap-2 sm:grid-cols-2">{roles.map((role) => <button key={role.value} onClick={() => setRole(role.value)} className={`rounded-2xl border p-4 text-left ${form.role === role.value ? "border-primary bg-primary/10" : "border-border"}`}><p className="font-black">{role.label}</p><p className="mt-1 text-xs text-muted-foreground">{ROLE_PRESETS[role.value].length} default permissions</p></button>)}{form.role === "DELIVERY_PARTNER" && <label className="sm:col-span-2 text-sm font-bold">Vehicle information<input value={form.vehicleInfo} onChange={(e) => setForm((current) => ({ ...current, vehicleInfo: e.target.value }))} className="mt-2 h-11 w-full rounded-2xl border border-border px-4"/></label>}</div>}{step === 3 && <PermissionPicker selected={form.permissions} ceiling={ceiling} onToggle={toggle}/>} {step === 4 && <div className="rounded-2xl bg-muted p-4"><p className="text-lg font-black">Review account</p><dl className="mt-3 grid gap-2 text-sm"><div className="flex justify-between"><dt>Name</dt><dd className="font-bold">{form.name}</dd></div><div className="flex justify-between"><dt>Role</dt><dd className="font-bold">{roleLabel(form.role)}</dd></div><div className="flex justify-between"><dt>Features</dt><dd className="font-bold">{form.permissions.length}</dd></div></dl></div>}<div className="mt-5 flex justify-between gap-2"><button disabled={step === 1} onClick={() => setStep((value) => value - 1)} className="h-11 rounded-2xl border border-border px-5 font-black disabled:opacity-40">Back</button>{step < 4 ? <button disabled={step === 1 && (!form.name || !form.email || form.password.length < 8)} onClick={() => setStep((value) => value + 1)} className="h-11 rounded-2xl bg-primary px-5 font-black text-white disabled:opacity-40">Continue</button> : <button onClick={create} className="inline-flex h-11 items-center gap-2 rounded-2xl bg-primary px-5 font-black text-white"><UserPlus className="h-4 w-4"/>Create staff</button>}</div></section><div className="grid gap-3">{members.map((member) => <article key={member.id} className="rounded-3xl border border-border bg-card p-4"><div className="flex flex-wrap justify-between gap-3"><div><h2 className="font-black">{member.name ?? member.email}</h2><p className="text-sm text-muted-foreground">{member.email} · {roleLabel(member.role)} · {member.permissions.length || (member.role === "OWNER" || member.role === "ADMIN" ? "Full" : 0)} features</p></div><span className={`rounded-full px-3 py-1 text-xs font-black ${member.isActive ? "bg-primary/10 text-primary" : "bg-red-100 text-red-700"}`}>{member.isActive ? "Active" : "Inactive"}</span></div><div className="mt-4 flex flex-wrap gap-2">{!["OWNER","ADMIN"].includes(member.role) && <button onClick={() => setEditing(member)} className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-3 text-xs font-black text-white"><ShieldCheck className="h-4 w-4"/>Permissions</button>}<button onClick={() => updateStaff(member.id, { isActive: !member.isActive })} className="inline-flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-xs font-black"><UserX className="h-4 w-4"/>{member.isActive ? "Deactivate" : "Reactivate"}</button><button onClick={() => { const password = window.prompt("Temporary password (minimum 8 characters)"); if (password) updateStaff(member.id, { password }); }} className="inline-flex h-10 items-center gap-2 rounded-xl border border-border px-3 text-xs font-black"><KeyRound className="h-4 w-4"/>Reset password</button></div></article>)}</div>{editing && <PermissionEditor member={editing} onClose={() => setEditing(null)} onSave={savePermissions}/>}</div>;
 }
+
+function PermissionPicker({ selected, ceiling, onToggle }: { selected: PermissionKey[]; ceiling: PermissionKey[]; onToggle: (permission: PermissionKey) => void }) { return <div className="space-y-4">{Object.entries(PERMISSION_GROUPS).map(([group, permissions]) => <fieldset key={group}><legend className="text-sm font-black">{group}</legend><div className="mt-2 grid gap-2 sm:grid-cols-2">{permissions.map((permission) => { const allowed = ceiling.includes(permission); return <label key={permission} className={`flex items-start gap-3 rounded-xl border p-3 ${allowed ? "border-border" : "opacity-40"}`}><input type="checkbox" disabled={!allowed} checked={selected.includes(permission)} onChange={() => onToggle(permission)} className="mt-1"/><span><span className="text-sm font-bold">{PERMISSIONS[permission]}</span>{HIGH_RISK_PERMISSIONS.includes(permission) && <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-black text-red-700">HIGH RISK</span>}</span></label>; })}</div></fieldset>)}</div>; }
+function PermissionEditor({ member, onClose, onSave }: { member: StaffMember; onClose: () => void; onSave: (member: StaffMember, permissions: PermissionKey[]) => void }) { const role = member.role as StaffRole; const ceiling = getPermissionCeiling(role); const [selected, setSelected] = useState(member.permissions.filter((permission): permission is PermissionKey => permission in PERMISSIONS)); return <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-2 sm:items-center" role="dialog" aria-modal="true"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-background p-5 sm:rounded-3xl"><h2 className="text-xl font-black">Permissions · {member.name}</h2><div className="mt-4"><PermissionPicker selected={selected} ceiling={ceiling} onToggle={(permission) => setSelected((current) => current.includes(permission) ? current.filter((item) => item !== permission) : [...current, permission])}/></div><div className="mt-5 grid grid-cols-2 gap-2"><button onClick={onClose} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button onClick={() => onSave(member, selected)} className="h-11 rounded-2xl bg-primary font-black text-white">Save & sign out user</button></div></div></div>; }

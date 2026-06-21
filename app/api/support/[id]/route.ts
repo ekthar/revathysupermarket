@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 const schema = z.object({ message: z.string().trim().min(1).max(2000) });
 
@@ -17,6 +18,8 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 });
+  const limit = await enforceRateLimit(`support:message:${session.user.id}`, 30, 300);
+  if (limit.limited) return rateLimitResponse(limit.reset);
   const { id } = await params;
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Message is required.", code: "INVALID_MESSAGE" }, { status: 400 });

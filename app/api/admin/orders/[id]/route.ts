@@ -18,6 +18,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const body = await request.json();
   const parsed = orderStatusSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid status." }, { status: 400 });
+  if (parsed.data.status === "DELIVERED") return NextResponse.json({ error: "Delivery must be completed by the assigned partner using OTP and a balanced collection.", code: "DELIVERY_COMPLETION_REQUIRED" }, { status: 409 });
   if (session?.user?.role === "PACKING_STAFF" && !["ACCEPTED", "PACKING", "READY_FOR_DELIVERY"].includes(parsed.data.status)) {
     return NextResponse.json({ error: "Packing staff cannot apply this order status.", code: "FORBIDDEN_STATUS" }, { status: 403 });
   }
@@ -34,8 +35,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     data: {
       status: parsed.data.status,
       staffNote: parsed.data.staffNote,
-      paymentStatus: parsed.data.status === "DELIVERED" ? "PAID" : undefined,
-      deliveryConfirmedAt: parsed.data.status === "DELIVERED" ? new Date() : undefined,
       statusEvents: { create: { status: parsed.data.status, note: "Updated by staff." } }
     }
   });
@@ -69,10 +68,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
     if (parsed.data.status === "OUT_FOR_DELIVERY") {
       await sendWhatsAppTemplate({ to: before.phone, template: "out_for_delivery", params: [before.orderNumber, before.deliveryOtp ?? ""], orderId: id });
-    }
-    if (parsed.data.status === "DELIVERED") {
-      await awardDeliveredOrderBenefits(id);
-      await sendWhatsAppTemplate({ to: before.phone, template: "delivered", params: [before.orderNumber], orderId: id });
     }
   }
   return NextResponse.json({ order });

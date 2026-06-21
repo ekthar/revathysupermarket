@@ -1,80 +1,36 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { z } from "zod";
 import { auth } from "@/auth";
+import { prisma } from "@/lib/prisma";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { allowedExternalImageUrl } from "@/lib/security";
+import { validateDamageAdjustment } from "@/lib/delivery-money";
 
-/**
- * POST /api/delivery/damage
- * Record doorstep damage. Instant reductions capped at item value and 20% of order total.
- * Larger requests routed to admin approval.
- */
-export async function POST(req: Request) {
+const schema = z.object({ orderId: z.string().min(1), orderItemId: z.string().min(1), quantity: z.coerce.number().int().positive(), reason: z.string().trim().min(3).max(300), reductionAmount: z.coerce.number().positive(), evidenceUrl: z.string().url().optional() });
+
+export async function POST(request: Request) {
   const session = await auth();
-  if (!session?.user?.id || session.user.role !== "DELIVERY_PARTNER") {
-    return NextResponse.json({ error: "Unauthorized", code: "UNAUTHENTICATED" }, { status: 401 });
-  }
+  if (!session?.user?.id || session.user.role !== "DELIVERY_PARTNER") return NextResponse.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 });
+  const limit = await enforceRateLimit(`delivery:damage:${session.user.id}`, 20, 3600);
+  if (limit.limited) return rateLimitResponse(limit.reset);
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Enter a valid item, quantity, reason and reduction.", code: "INVALID_DAMAGE", fieldErrors: parsed.error.flatten().fieldErrors }, { status: 400 });
+  const { orderId, orderItemId, quantity, reason, reductionAmount, evidenceUrl } = parsed.data;
+  if (evidenceUrl && !allowedExternalImageUrl(evidenceUrl)) return NextResponse.json({ error: "Evidence must use an approved image host.", code: "INVALID_EVIDENCE" }, { status: 400 });
 
-  const body = await req.json();
-  const { orderId, itemName, quantity, reason, reductionAmount, evidenceUrl } = body as {
-    orderId: string;
-    itemName: string;
-    quantity: number;
-    reason: string;
-    reductionAmount: number;
-    evidenceUrl?: string;
-  };
+  const order = await prisma.order.findFirst({ where: { id: orderId, deliveryPartnerId: session.user.id, status: { in: ["OUT_FOR_DELIVERY", "ARRIVING"] } }, include: { items: true, deliveryAdjustments: { where: { status: { in: ["APPROVED", "PENDING_APPROVAL"] } } } } });
+  if (!order) return NextResponse.json({ error: "Active assigned order not found.", code: "ORDER_NOT_FOUND" }, { status: 404 });
+  const item = order.items.find((entry) => entry.id === orderItemId);
+  if (!item) return NextResponse.json({ error: "Order item not found.", code: "ITEM_NOT_FOUND" }, { status: 404 });
+  const previousQuantity = order.deliveryAdjustments.filter((entry) => entry.orderItemId === orderItemId).reduce((sum, entry) => sum + entry.quantity, 0);
+  const previousReductions = order.deliveryAdjustments.reduce((sum, entry) => sum + Number(entry.reductionAmount), 0);
+  const decision = validateDamageAdjustment({ orderTotal: Number(order.total), itemUnitPrice: Number(item.price), purchasedQuantity: item.quantity, previouslyAdjustedQuantity: previousQuantity, quantity, previousReduction: previousReductions, reduction: reductionAmount });
+  if (!decision.valid) return NextResponse.json({ error: decision.code === "QUANTITY_EXCEEDED" ? "Adjusted quantity exceeds the purchased quantity." : "Reduction cannot exceed the selected item value.", code: decision.code }, { status: 409 });
+  const orderCap = decision.orderCap ?? Number(order.total) * 0.2;
+  const needsApproval = decision.needsApproval;
+  const evidenceThreshold = Number(process.env.DELIVERY_DAMAGE_EVIDENCE_THRESHOLD ?? 100);
+  if (reductionAmount >= evidenceThreshold && !evidenceUrl) return NextResponse.json({ error: "Evidence photo is required for this reduction.", code: "EVIDENCE_REQUIRED" }, { status: 400 });
 
-  if (!orderId || !itemName || !quantity || !reason || reductionAmount === undefined) {
-    return NextResponse.json({ error: "Missing required fields", code: "VALIDATION_ERROR" }, { status: 400 });
-  }
-
-  if (reductionAmount <= 0) {
-    return NextResponse.json({ error: "Reduction amount must be positive", code: "VALIDATION_ERROR" }, { status: 400 });
-  }
-
-  // Verify order
-  const order = await prisma.order.findUnique({
-    where: { id: orderId },
-    select: { id: true, status: true, deliveryPartnerId: true, total: true, items: true },
-  });
-
-  if (!order || order.deliveryPartnerId !== session.user.id) {
-    return NextResponse.json({ error: "Order not found or not assigned to you", code: "NOT_FOUND" }, { status: 404 });
-  }
-
-  if (!["ARRIVING", "OUT_FOR_DELIVERY"].includes(order.status)) {
-    return NextResponse.json({ error: "Can only record damage during delivery", code: "INVALID_STATE" }, { status: 400 });
-  }
-
-  // Cap: 20% of order total
-  const maxAutoReduction = Number(order.total) * 0.2;
-  const needsApproval = reductionAmount > maxAutoReduction;
-
-  // Find item value cap
-  const orderItems = order.items as any[];
-  const matchedItem = orderItems.find((i: any) => i.name?.toLowerCase() === itemName.toLowerCase());
-  if (matchedItem && reductionAmount > Number(matchedItem.price) * matchedItem.quantity) {
-    return NextResponse.json({ error: "Reduction cannot exceed item value", code: "EXCEEDS_ITEM_VALUE" }, { status: 400 });
-  }
-
-  const adjustment = await prisma.deliveryAdjustment.create({
-    data: {
-      orderId,
-      partnerId: session.user.id,
-      itemName,
-      quantity,
-      reason,
-      reductionAmount,
-      evidenceUrl: evidenceUrl || null,
-      status: needsApproval ? "PENDING_APPROVAL" : "APPROVED",
-      approvedAt: needsApproval ? null : new Date(),
-    },
-  });
-
-  return NextResponse.json({
-    adjustment,
-    needsApproval,
-    message: needsApproval
-      ? `Reduction of ₹${reductionAmount} exceeds 20% cap (₹${maxAutoReduction.toFixed(0)}). Sent for admin approval.`
-      : `Damage recorded and ₹${reductionAmount} reduction approved.`,
-  });
+  const adjustment = await prisma.deliveryAdjustment.create({ data: { orderId, orderItemId, partnerId: session.user.id, itemName: item.name, quantity, reason, reductionAmount, evidenceUrl: evidenceUrl ?? null, status: needsApproval ? "PENDING_APPROVAL" : "APPROVED", approvedAt: needsApproval ? null : new Date() } });
+  return NextResponse.json({ adjustment, needsApproval, orderCap, remainingInstantLimit: Math.max(0, orderCap - previousReductions - (needsApproval ? 0 : reductionAmount)) }, { status: 201 });
 }

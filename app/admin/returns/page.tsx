@@ -26,6 +26,7 @@ export default async function AdminReturnsPage() {
     <AdminReturnsClient
       returns={returns.map((entry) => ({
         id: entry.id,
+        returnNumber: entry.returnNumber,
         orderNumber: entry.order.orderNumber,
         customerName: entry.order.customerName,
         paymentMethod: entry.order.paymentMethod,

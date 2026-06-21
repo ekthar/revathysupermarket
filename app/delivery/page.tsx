@@ -31,7 +31,14 @@ export default async function DeliveryPage() {
           address: `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`,
           status: order.status,
           total: Number(order.total),
-          items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity }))
+          items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price) })),
+          collection: order.deliveryCollection ? {
+            expectedAmount: Number(order.deliveryCollection.expectedAmount),
+            cashCollected: Number(order.deliveryCollection.cashCollected),
+            upiCollected: Number(order.deliveryCollection.upiCollected),
+            upiReference: order.deliveryCollection.upiReference,
+            status: order.deliveryCollection.status
+          } : null
         }))}
       />
     </main>

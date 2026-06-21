@@ -1,154 +1,86 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
+import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 
-/**
- * PATCH /api/admin/returns/[id]
- * Update return status through the workflow:
- * REQUESTED → UNDER_REVIEW → APPROVED → ITEM_RECEIVED → REFUNDED
- * REJECTED is a terminal state from REQUESTED or UNDER_REVIEW.
- */
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+const schema = z.object({
+  action: z.enum(["review", "approve", "reject", "receive_item", "refund"]).optional(),
+  status: z.enum(["APPROVED", "REJECTED", "REFUNDED"]).optional(),
+  reason: z.string().trim().max(500).optional(),
+  resolutionNote: z.string().trim().max(500).optional(),
+  refundAmount: z.coerce.number().positive().optional(),
+  refundMethod: z.enum(["CASH", "UPI", "GATEWAY", "WALLET"]).optional(),
+  refundReference: z.string().trim().max(120).optional()
+});
+
+export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const parsed = schema.safeParse(await request.json().catch(() => null));
+  if (!parsed.success) return NextResponse.json({ error: "Invalid return update.", code: "INVALID_RETURN_UPDATE", fieldErrors: parsed.error.flatten().fieldErrors }, { status: 400 });
+  const legacyAction = parsed.data.status === "APPROVED" ? "approve" : parsed.data.status === "REJECTED" ? "reject" : parsed.data.status === "REFUNDED" ? "refund" : undefined;
+  const action = parsed.data.action ?? legacyAction;
+  if (!action) return NextResponse.json({ error: "Return action is required.", code: "ACTION_REQUIRED" }, { status: 400 });
+
+  const permission = await requirePermission(action === "refund" ? "returns.refund" : "returns.manage");
+  if ("error" in permission) return permission.error;
+  const limit = await enforceRateLimit(`admin:return:${permission.ctx.userId}`, 30, 300);
+  if (limit.limited) return rateLimitResponse(limit.reset);
   const { id } = await params;
-  const body = await req.json();
-  const { action, reason, refundAmount, refundMethod } = body as {
-    action: "review" | "approve" | "reject" | "receive_item" | "refund";
-    reason?: string;
-    refundAmount?: number;
-    refundMethod?: string;
+  const reason = parsed.data.reason ?? parsed.data.resolutionNote;
+
+  const current = await prisma.returnRequest.findUnique({ where: { id }, include: { order: { select: { id: true, total: true, userId: true, phone: true, orderNumber: true } } } });
+  if (!current) return NextResponse.json({ error: "Return not found.", code: "RETURN_NOT_FOUND" }, { status: 404 });
+
+  const transitions: Record<typeof action, { from: string[]; to: "UNDER_REVIEW" | "APPROVED" | "REJECTED" | "ITEM_RECEIVED" | "REFUNDED" }> = {
+    review: { from: ["REQUESTED"], to: "UNDER_REVIEW" },
+    approve: { from: ["REQUESTED", "UNDER_REVIEW"], to: "APPROVED" },
+    reject: { from: ["REQUESTED", "UNDER_REVIEW"], to: "REJECTED" },
+    receive_item: { from: ["APPROVED"], to: "ITEM_RECEIVED" },
+    refund: { from: ["APPROVED", "ITEM_RECEIVED"], to: "REFUNDED" }
   };
-
-  // Different permissions for different actions
-  if (action === "refund") {
-    const result = await requirePermission("returns.refund");
-    if ("error" in result) return result.error;
-  } else {
-    const result = await requirePermission("returns.manage");
-    if ("error" in result) return result.error;
+  const transition = transitions[action];
+  if (!transition.from.includes(current.status)) {
+    if (action === "refund" && current.status === "REFUNDED") return NextResponse.json({ returnRequest: current, idempotent: true });
+    return NextResponse.json({ error: `Cannot ${action.replace("_", " ")} a ${current.status.toLowerCase()} return.`, code: "INVALID_RETURN_STATE" }, { status: 409 });
   }
-
-  const ctx = (await requirePermission("returns.manage") as any).ctx;
-
-  const returnReq = await prisma.returnRequest.findUnique({
-    where: { id },
-    include: { order: { select: { total: true, userId: true, items: true } } },
-  });
-
-  if (!returnReq) {
-    return NextResponse.json({ error: "Return not found", code: "NOT_FOUND" }, { status: 404 });
-  }
+  if (action === "reject" && !reason) return NextResponse.json({ error: "Rejection reason is required.", code: "REASON_REQUIRED" }, { status: 400 });
 
   const now = new Date();
-
-  switch (action) {
-    case "review":
-      if (returnReq.status !== "REQUESTED") {
-        return NextResponse.json({ error: "Can only review from REQUESTED status", code: "INVALID_STATE" }, { status: 400 });
-      }
-      await prisma.returnRequest.update({ where: { id }, data: { status: "UNDER_REVIEW", resolvedById: ctx.userId } });
-      break;
-
-    case "approve":
-      if (!["REQUESTED", "UNDER_REVIEW"].includes(returnReq.status)) {
-        return NextResponse.json({ error: "Can only approve from REQUESTED/UNDER_REVIEW", code: "INVALID_STATE" }, { status: 400 });
-      }
-      // Calculate max refund from order item snapshot
-      const items = returnReq.items as any[];
-      const maxRefund = items.reduce((sum: number, i: any) => sum + (Number(i.price) * (i.quantity || 1)), 0);
-      await prisma.returnRequest.update({
-        where: { id },
-        data: { status: "APPROVED", maxRefundAmount: maxRefund, resolvedById: ctx.userId, resolvedAt: now },
-      });
-      break;
-
-    case "reject":
-      if (!["REQUESTED", "UNDER_REVIEW"].includes(returnReq.status)) {
-        return NextResponse.json({ error: "Can only reject from REQUESTED/UNDER_REVIEW", code: "INVALID_STATE" }, { status: 400 });
-      }
-      if (!reason) {
-        return NextResponse.json({ error: "Rejection reason is required", code: "VALIDATION_ERROR" }, { status: 400 });
-      }
-      await prisma.returnRequest.update({
-        where: { id },
-        data: { status: "REJECTED", rejectionReason: reason, resolvedById: ctx.userId, resolvedAt: now },
-      });
-      break;
-
-    case "receive_item":
-      if (returnReq.status !== "APPROVED") {
-        return NextResponse.json({ error: "Can only receive item after approval", code: "INVALID_STATE" }, { status: 400 });
-      }
-      await prisma.returnRequest.update({
-        where: { id },
-        data: { status: "ITEM_RECEIVED", itemReceivedAt: now },
-      });
-      break;
-
-    case "refund":
-      if (!["APPROVED", "ITEM_RECEIVED"].includes(returnReq.status)) {
-        return NextResponse.json({ error: "Can only refund after approval/item receipt", code: "INVALID_STATE" }, { status: 400 });
-      }
-      if (!refundAmount || refundAmount <= 0) {
-        return NextResponse.json({ error: "Valid refund amount required", code: "VALIDATION_ERROR" }, { status: 400 });
-      }
-      if (returnReq.maxRefundAmount && refundAmount > Number(returnReq.maxRefundAmount)) {
-        if (!reason) {
-          return NextResponse.json({ error: "Reason required for refund exceeding max", code: "VALIDATION_ERROR" }, { status: 400 });
-        }
-      }
-
-      // Process refund transactionally
-      await prisma.$transaction(async (tx) => {
-        await tx.returnRequest.update({
-          where: { id },
-          data: {
-            status: "REFUNDED",
-            refundAmount,
-            refundMethod: (refundMethod as any) || "WALLET",
-            refundedAt: now,
-            resolutionNote: reason || `Refund of ₹${refundAmount} processed`,
-          },
-        });
-
-        // Credit wallet if refund method is wallet
-        if (!refundMethod || refundMethod === "WALLET") {
-          if (returnReq.order.userId) {
-            await tx.walletTransaction.create({
-              data: {
-                userId: returnReq.order.userId,
-                orderId: returnReq.orderId,
-                amount: refundAmount,
-                type: "credit",
-                reason: `Refund for return ${returnReq.returnNumber}`,
-              },
-            });
-          }
-        }
-
-        // Update order payment status
-        await tx.order.update({
-          where: { id: returnReq.orderId },
-          data: { paymentStatus: refundAmount >= Number(returnReq.order.total) ? "REFUNDED" : "PARTIALLY_REFUNDED" },
-        });
-      });
-      break;
-
-    default:
-      return NextResponse.json({ error: "Invalid action", code: "VALIDATION_ERROR" }, { status: 400 });
+  const amount = parsed.data.refundAmount ?? Number(current.maxRefundAmount ?? current.refundAmount ?? 0);
+  if (action === "refund" && (amount <= 0 || amount > Number(current.maxRefundAmount ?? 0))) {
+    return NextResponse.json({ error: "Refund amount exceeds the verified refundable amount.", code: "INVALID_REFUND_AMOUNT" }, { status: 400 });
   }
 
-  // Audit
-  await prisma.auditLog.create({
-    data: {
-      actorId: ctx.userId,
-      actorRole: ctx.role,
-      action: `return.${action}`,
-      targetType: "ReturnRequest",
-      targetId: id,
-      metadata: { action, reason, refundAmount },
-    },
-  });
+  const updated = await prisma.$transaction(async (tx) => {
+    const claimed = await tx.returnRequest.updateMany({ where: { id, status: { in: transition.from as never[] } }, data: {
+      status: transition.to,
+      resolvedById: permission.ctx.userId,
+      resolvedAt: ["APPROVED", "REJECTED", "REFUNDED"].includes(transition.to) ? now : undefined,
+      itemReceivedAt: transition.to === "ITEM_RECEIVED" ? now : undefined,
+      refundedAt: transition.to === "REFUNDED" ? now : undefined,
+      rejectionReason: transition.to === "REJECTED" ? reason : undefined,
+      resolutionNote: reason,
+      refundAmount: transition.to === "REFUNDED" ? amount : undefined,
+      refundMethod: transition.to === "REFUNDED" ? (parsed.data.refundMethod ?? "WALLET") : undefined,
+      refundReference: transition.to === "REFUNDED" ? parsed.data.refundReference : undefined
+    } });
+    if (claimed.count !== 1) throw new Error("RETURN_ALREADY_UPDATED");
 
-  const updated = await prisma.returnRequest.findUnique({ where: { id } });
+    if (transition.to === "REFUNDED") {
+      if ((parsed.data.refundMethod ?? "WALLET") === "WALLET" && current.order.userId) {
+        await tx.walletTransaction.create({ data: { userId: current.order.userId, orderId: current.order.id, returnRequestId: id, amount, type: "credit", reason: `Refund for return ${current.returnNumber}` } });
+      }
+      const totals = await tx.returnRequest.aggregate({ where: { orderId: current.order.id, status: "REFUNDED" }, _sum: { refundAmount: true } });
+      await tx.order.update({ where: { id: current.order.id }, data: { paymentStatus: Number(totals._sum.refundAmount ?? 0) >= Number(current.order.total) ? "REFUNDED" : "PARTIALLY_REFUNDED" } });
+    }
+    await tx.auditLog.create({ data: { actorId: permission.ctx.userId, actorRole: permission.ctx.role as never, action: `return.${action}`, targetType: "ReturnRequest", targetId: id, metadata: { reason, amount: transition.to === "REFUNDED" ? amount : undefined } } });
+    return tx.returnRequest.findUniqueOrThrow({ where: { id } });
+  }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
+
+  if (["APPROVED", "REFUNDED"].includes(updated.status)) {
+    await sendWhatsAppTemplate({ to: current.order.phone, template: "return_approved", params: [current.order.orderNumber, Number(updated.refundAmount ?? updated.maxRefundAmount ?? 0).toFixed(2), updated.refundMethod ?? "WALLET"], orderId: current.order.id }).catch(() => null);
+  }
   return NextResponse.json({ returnRequest: updated });
 }

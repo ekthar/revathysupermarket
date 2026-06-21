@@ -6,7 +6,6 @@ import { isDeliveryRole } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { deliveryActionSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
-import { awardDeliveredOrderBenefits } from "@/lib/loyalty";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -58,6 +57,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   if (parsed.data.action === "delivered") {
+    return NextResponse.json({ error: "Use the collection and slide-to-deliver workflow.", code: "DELIVERY_COMPLETION_REQUIRED" }, { status: 409 });
+    /* Legacy completion is intentionally disabled.
     if (order.deliveryOtpExpiresAt && order.deliveryOtpExpiresAt < new Date()) {
       return NextResponse.json({ error: "Delivery OTP has expired. Ask admin to regenerate it." }, { status: 400 });
     }
@@ -71,36 +72,33 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       });
       return NextResponse.json({ error: "Delivery OTP is incorrect." }, { status: 400 });
     }
+    */
   }
 
-  const nextStatus = parsed.data.action === "picked_up" ? "OUT_FOR_DELIVERY" : "DELIVERED";
+  const nextStatus = "OUT_FOR_DELIVERY";
   await prisma.order.update({
     where: { id },
     data: {
       status: nextStatus,
-      deliveryConfirmedAt: parsed.data.action === "delivered" ? new Date() : undefined,
-      paymentStatus: parsed.data.action === "delivered" ? "PAID" : undefined,
-      deliveryOtpAttempts: parsed.data.action === "delivered" ? 0 : undefined,
       statusEvents: { create: { status: nextStatus, note: `Marked ${parsed.data.action} by delivery partner.` } }
     }
   });
-  if (parsed.data.action === "delivered") await awardDeliveredOrderBenefits(id);
   await sendWhatsAppTemplate({
     to: order.phone,
-    template: parsed.data.action === "picked_up" ? "out_for_delivery" : "delivered",
-    params: parsed.data.action === "picked_up" ? [order.orderNumber, order.deliveryOtp ?? ""] : [order.orderNumber],
+    template: "out_for_delivery",
+    params: [order.orderNumber, order.deliveryOtp ?? ""],
     orderId: order.id
   });
   await writeAuditLog({
     actorId: session.user.id,
     actorRole: session.user.role,
-    action: parsed.data.action === "picked_up" ? "delivery_picked_up" : "delivery_delivered",
+    action: "delivery_picked_up",
     targetType: "Order",
     targetId: id
   });
   await sendPushToUser(order.userId, {
-    title: parsed.data.action === "picked_up" ? "Order picked up" : "Order delivered",
-    body: parsed.data.action === "picked_up" ? `Order #${order.orderNumber} is on the way.` : `Order #${order.orderNumber} was delivered.`,
+    title: "Order picked up",
+    body: `Order #${order.orderNumber} is on the way.`,
     url: "/dashboard",
     orderId: id
   });

@@ -37,9 +37,7 @@ export function DeliveryEta({ minMinutes, maxMinutes, className = "", compact = 
           Delivery in {minMinutes}-{maxMinutes} min
         </p>
         <p className="text-[10px] text-slate-400">
-          {config.freeDeliveryThreshold > 0
-            ? `Free delivery on orders above ${formatCurrency(config.freeDeliveryThreshold)}`
-            : `Delivery fee: ${formatCurrency(config.deliveryFee)}`}
+          From ₹30 by distance{config.freeDeliveryThreshold > 0 ? ` · free above ${formatCurrency(config.freeDeliveryThreshold)}` : ""}
         </p>
       </div>
     </div>

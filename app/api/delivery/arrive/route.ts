@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 /**
  * POST /api/delivery/arrive
@@ -12,6 +13,8 @@ export async function POST(req: Request) {
   if (!session?.user?.id || session.user.role !== "DELIVERY_PARTNER") {
     return NextResponse.json({ error: "Unauthorized", code: "UNAUTHENTICATED" }, { status: 401 });
   }
+  const limit = await enforceRateLimit(`delivery:arrive:${session.user.id}`, 30, 300);
+  if (limit.limited) return rateLimitResponse(limit.reset);
 
   const body = await req.json();
   const { orderId, latitude, longitude } = body as { orderId: string; latitude: number; longitude: number };

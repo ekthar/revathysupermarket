@@ -95,5 +95,5 @@ export async function requireOwner(): Promise<{ ctx: AuthContext } | { error: Ne
 export async function canAccess(required: PermissionKey | PermissionKey[]): Promise<boolean> {
   const ctx = await getAuthContext();
   if (!ctx) return false;
-  return hasPermission(ctx, Array.isArray(required) ? required[0] : required);
+  return hasPermission(ctx, required);
 }

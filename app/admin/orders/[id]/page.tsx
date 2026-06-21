@@ -3,7 +3,6 @@ import Link from "next/link";
 import { ArrowLeft, Clock, CreditCard, MapPin, Package, Phone, RotateCcw, Truck, User } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
-import { OrderDetailClient } from "@/components/admin/order-detail-client";
 
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

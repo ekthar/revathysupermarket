@@ -97,26 +97,12 @@ export const ROLE_PRESETS: Record<StaffRole, PermissionKey[]> = {
 };
 
 // Permissions that delivery/packing roles are NEVER allowed to receive
-const RESTRICTED_FOR_DELIVERY: PermissionKey[] = [
-  "collections.reconcile", "staff.manage", "settings.manage",
-  "pricing.manage", "marketing.view", "marketing.manage",
-  "audit.view", "customers.manage",
-];
-
-const RESTRICTED_FOR_PACKING: PermissionKey[] = [
-  "collections.reconcile", "staff.manage", "settings.manage",
-  "pricing.manage", "marketing.view", "marketing.manage",
-  "audit.view", "customers.manage", "dispatch.manage",
-  "returns.refund", "collections.view",
-];
-
 // ─── Permission Ceiling (what a role CAN have at maximum) ────────────────────────
 export function getPermissionCeiling(role: StaffRole): PermissionKey[] {
   if (role === "OWNER" || role === "ADMIN") return Object.keys(PERMISSIONS) as PermissionKey[];
 
   const allPerms = Object.keys(PERMISSIONS) as PermissionKey[];
-  if (role === "DELIVERY_PARTNER") return allPerms.filter((p) => !RESTRICTED_FOR_DELIVERY.includes(p));
-  if (role === "PACKING_STAFF") return allPerms.filter((p) => !RESTRICTED_FOR_PACKING.includes(p));
+  if (role === "DELIVERY_PARTNER" || role === "PACKING_STAFF") return [...ROLE_PRESETS[role]];
 
   return allPerms;
 }

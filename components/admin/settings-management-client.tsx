@@ -197,7 +197,7 @@ export function SettingsManagementClient({
             <p className="text-xs font-bold text-muted-foreground">Delivery fee, free delivery threshold, and minimum order value.</p>
           </div>
         </div>
-        <Input value={form.deliveryFee} onChange={(event) => update("deliveryFee", Number(event.target.value))} type="number" min="0" max="500" step="1" placeholder="Delivery fee (₹)" className="h-12 rounded-2xl" />
+        <div className="rounded-2xl border border-border bg-muted p-3 text-sm"><p className="font-black">Distance-based delivery pricing is active</p><a href="/admin/pricing" className="mt-1 inline-block font-bold text-primary underline">Manage delivery fee ranges</a></div>
         <Input value={form.freeDeliveryThreshold} onChange={(event) => update("freeDeliveryThreshold", Number(event.target.value))} type="number" min="0" max="50000" step="1" placeholder="Free delivery above (₹, 0 = never free)" className="h-12 rounded-2xl" />
         <Input value={form.minimumOrderValue} onChange={(event) => update("minimumOrderValue", Number(event.target.value))} type="number" min="0" max="10000" step="1" placeholder="Minimum order value (₹)" className="h-12 rounded-2xl" />
         <Input value={form.deliveryEstimateMin} onChange={(event) => update("deliveryEstimateMin", Number(event.target.value))} type="number" min="5" max="120" step="5" placeholder="Delivery estimate min (mins)" className="h-12 rounded-2xl" />

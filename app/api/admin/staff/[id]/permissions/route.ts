@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireOwner } from "@/lib/auth-guard";
 import { validatePermissionsForRole, isHighRisk, type PermissionKey, type StaffRole } from "@/lib/permissions";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const result = await requireOwner();
   if ("error" in result) return result.error;
+  const limit = await enforceRateLimit(`admin:permissions:${result.ctx.userId}`, 30, 3600);
+  if (limit.limited) return rateLimitResponse(limit.reset);
 
   const body = await req.json();
   const { permissions } = body as { permissions: PermissionKey[] };
@@ -51,6 +54,7 @@ export async function PUT(req: Request, { params }: { params: Promise<{ id: stri
       where: { id },
       data: { authVersion: { increment: 1 } },
     });
+    await tx.session.deleteMany({ where: { userId: id } });
   });
 
   // Audit log

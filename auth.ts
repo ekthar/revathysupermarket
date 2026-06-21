@@ -13,12 +13,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
+        const versions = await prisma.user.findUnique({ where: { id: user.id }, select: { passwordVersion: true, authVersion: true } }).catch(() => null);
         token.id = user.id;
         token.role = (user as { role?: string }).role;
         token.name = user.name;
         token.email = user.email;
         token.phone = (user as { phone?: string | null }).phone ?? null;
-        token.passwordVersion = (user as { passwordVersion?: number }).passwordVersion ?? 0;
+        token.passwordVersion = versions?.passwordVersion ?? 0;
+        token.authVersion = versions?.authVersion ?? 0;
       }
       return token;
     },
@@ -27,11 +29,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const user = token.id
           ? await prisma.user.findUnique({
               where: { id: token.id as string },
-              select: { passwordVersion: true, isActive: true, role: true, name: true, email: true, phone: true }
+              select: { passwordVersion: true, authVersion: true, isActive: true, role: true, name: true, email: true, phone: true, staffPermissions: { select: { permission: true } } }
             }).catch(() => null)
           : null;
         const tokenVersion = Number(token.passwordVersion ?? 0);
-        if (!user?.isActive || user.passwordVersion !== tokenVersion) {
+        const tokenAuthVersion = Number(token.authVersion ?? 0);
+        if (!user?.isActive || user.passwordVersion !== tokenVersion || user.authVersion !== tokenAuthVersion) {
           session.user.id = "";
           session.user.role = "INVALID";
           session.user.passwordVersion = tokenVersion;
@@ -43,6 +46,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.email = user.email ?? "";
         session.user.phone = user.phone ?? null;
         session.user.passwordVersion = user.passwordVersion;
+        session.user.authVersion = user.authVersion;
+        session.user.permissions = user.staffPermissions.map((entry) => entry.permission);
       }
       return session;
     }

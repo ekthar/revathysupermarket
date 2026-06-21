@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Banknote, CheckCircle, AlertTriangle, CreditCard } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useToast } from "@/components/toast-provider";
 
 type Collection = {
   id: string;
@@ -18,15 +19,28 @@ type Collection = {
   discrepancyReason: string | null;
   createdAt: string;
   order: { orderNumber: string; customerName: string; total: number };
-  partner: { id: string; name: string; phone: string };
-  reconciledBy: { name: string } | null;
+  partner: { id: string; name: string | null; phone: string | null };
+  reconciledBy: { name: string | null } | null;
 };
 
 type Grouped = { pending: Collection[]; upiPending: Collection[]; settled: Collection[]; discrepancy: Collection[] };
 type Totals = { pendingCash: number; pendingUpi: number; settledTotal: number; discrepancyCount: number };
 
 export function CollectionsClient({ collections, grouped, totals }: { collections: Collection[]; grouped: Grouped; totals: Totals }) {
+  void collections;
+  const { showToast } = useToast();
   const [tab, setTab] = useState<"pending" | "upi" | "settled" | "discrepancy">("pending");
+  const [hidden, setHidden] = useState<Set<string>>(new Set());
+
+  async function reconcile(collection: Collection) {
+    const discrepancy = collection.status === "SHORT" || collection.status === "EXCESS";
+    const reason = discrepancy ? window.prompt("Explain how this discrepancy was resolved")?.trim() : undefined;
+    if (discrepancy && !reason) return;
+    const response = await fetch(`/api/admin/collections/${collection.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: discrepancy ? "resolve_discrepancy" : "settle", reason }) });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return showToast(data.error ?? "Reconciliation failed", "error");
+    setHidden((current) => new Set(current).add(collection.id)); showToast("Collection settled", "success");
+  }
 
   const tabs = [
     { key: "pending" as const, label: "Pending Cash", count: grouped.pending.length, icon: Banknote, color: "text-yellow-600" },
@@ -85,7 +99,7 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
         </div>
       ) : (
         <div className="space-y-2">
-          {currentList.map((c) => (
+          {currentList.filter((c) => !hidden.has(c.id)).map((c) => (
             <div key={c.id} className="rounded-xl bg-white border border-slate-200 p-4">
               <div className="flex items-center justify-between mb-2">
                 <div>
@@ -101,6 +115,7 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
                 <div><p className="text-slate-400">Wallet</p><p className="font-bold">₹{Number(c.walletApplied).toFixed(0)}</p></div>
               </div>
               {c.discrepancyReason && <p className="mt-2 text-xs text-red-600 bg-red-50 rounded-lg px-2 py-1">{c.discrepancyReason}</p>}
+              {c.status !== "SETTLED" && <button onClick={() => reconcile(c)} className="mt-3 h-10 rounded-xl bg-primary px-4 text-xs font-black text-white">{c.status === "SHORT" || c.status === "EXCESS" ? "Resolve discrepancy" : c.upiCollected > 0 ? "Verify UPI & settle" : "Confirm cash handover"}</button>}
             </div>
           ))}
         </div>

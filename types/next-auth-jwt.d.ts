@@ -5,6 +5,7 @@ declare module "next-auth/jwt" {
     id?: string;
     role?: string;
     passwordVersion?: number;
+    authVersion?: number;
     name?: string | null;
     email?: string | null;
     phone?: string | null;

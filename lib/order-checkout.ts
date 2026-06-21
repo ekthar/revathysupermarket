@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { checkoutSchema } from "@/lib/validations";
 import type { StoreSettings } from "@/lib/store-settings";
 import { getLoyaltyConfig } from "@/lib/loyalty-config";
+import { calculateDeliveryFee } from "@/lib/delivery-fee";
 
 type CheckoutInput = z.infer<typeof checkoutSchema>;
 
@@ -33,6 +34,8 @@ export async function createAuthoritativeOrder({
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   if (subtotal < settings.minimumOrderValue) throw new Error("MINIMUM_ORDER");
   const loyaltyConfig = await getLoyaltyConfig();
+  const feeQuote = await calculateDeliveryFee(distanceKm, subtotal);
+  if (feeQuote.fee < 0 || !feeQuote.freeDelivery && !feeQuote.slabApplied) throw new Error("DELIVERY_OUT_OF_RANGE");
 
   return prisma.$transaction(async (tx) => {
     let estimatedDeliveryAt = new Date(Date.now() + settings.deliveryEstimateMax * 60_000);
@@ -85,7 +88,7 @@ export async function createAuthoritativeOrder({
 
     const loyaltyDiscount = pointsRedeemed * loyaltyConfig.pointValueRupees;
     const discount = Math.min(subtotal, promoDiscount + loyaltyDiscount);
-    const deliveryFee = settings.freeDeliveryThreshold > 0 && subtotal >= settings.freeDeliveryThreshold ? 0 : settings.deliveryFee;
+    const deliveryFee = feeQuote.fee;
     const total = Math.max(0, subtotal - discount + deliveryFee);
     let walletDeduction = 0;
     let paymentStatus: "PENDING" | "PAID" = "PENDING";
@@ -119,6 +122,9 @@ export async function createAuthoritativeOrder({
         subtotal,
         discount,
         deliveryFee,
+        deliveryFeeSlabId: feeQuote.slabApplied?.id,
+        deliveryFeeMinKm: feeQuote.slabApplied?.minKm,
+        deliveryFeeMaxKm: feeQuote.slabApplied?.maxKm,
         total,
         deliveryMode: data.deliveryMode,
         deliverySlotId: data.deliveryMode === "SCHEDULED" ? data.deliverySlotId : null,
@@ -147,5 +153,6 @@ export function checkoutErrorResponse(error: unknown) {
   if (message === "PROMO_INVALID" || message === "PROMO_EXHAUSTED") return { status: 409, error: "That promo code is no longer available.", code: message };
   if (message === "LOYALTY_BALANCE") return { status: 409, error: "Your points balance changed. Review and try again.", code: message };
   if (message === "WALLET_BALANCE") return { status: 409, error: "Insufficient wallet balance.", code: message };
+  if (message === "DELIVERY_OUT_OF_RANGE") return { status: 400, error: "No delivery-fee range covers this address.", code: message };
   return null;
 }

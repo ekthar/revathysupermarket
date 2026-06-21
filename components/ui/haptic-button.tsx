@@ -13,6 +13,11 @@ type HapticButtonProps = HTMLMotionProps<"button"> & {
  * iOS-like press feedback button.
  * Scales down on press with a fast spring, reduces shadow,
  * and optionally triggers navigator.vibrate for haptic feedback.
+ *
+ * Note: navigator.vibrate() is not supported on iOS Safari (the Vibration API
+ * is not implemented in WebKit). On iPhones, the press-scale animation still
+ * provides visual feedback, but actual haptic vibration will only work on
+ * Android devices and other supporting browsers.
  */
 export const HapticButton = forwardRef<HTMLButtonElement, HapticButtonProps>(
   ({ children, className, haptic = true, pressScale = 0.95, onTapStart, ...props }, ref) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -126,34 +126,70 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
     setEtaMinutes(calculateEta(data.deliveryPartnerLocation));
   }, [data.deliveryPartnerLocation, calculateEta]);
 
-  // SSE live updates
+  // SSE live updates with exponential backoff reconnection
+  const retryCountRef = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const MAX_RETRIES = 5;
+  const BASE_DELAY_MS = 1000;
+  const MAX_DELAY_MS = 30000;
+
   useEffect(() => {
-    const source = new EventSource(`/api/orders/${data.id}/stream`);
-    source.onmessage = (event) => {
-      try {
-        const update = JSON.parse(event.data) as {
-          status?: string;
-          deliveryPartnerLocation?: {
-            latitude: number;
-            longitude: number;
-            updatedAt?: string;
-          } | null;
-        };
-        setData((prev) => ({
-          ...prev,
-          ...(update.status && { status: update.status }),
-          ...(update.deliveryPartnerLocation !== undefined && {
-            deliveryPartnerLocation: update.deliveryPartnerLocation,
-          }),
-        }));
-      } catch {
-        // ignore parse errors
+    let source: EventSource | null = null;
+    let cancelled = false;
+
+    function connect() {
+      if (cancelled) return;
+      source = new EventSource(`/api/orders/${data.id}/stream`);
+
+      source.onmessage = (event) => {
+        // Reset retry counter on successful message
+        retryCountRef.current = 0;
+        try {
+          const update = JSON.parse(event.data) as {
+            status?: string;
+            deliveryPartnerLocation?: {
+              latitude: number;
+              longitude: number;
+              updatedAt?: string;
+            } | null;
+          };
+          setData((prev) => ({
+            ...prev,
+            ...(update.status && { status: update.status }),
+            ...(update.deliveryPartnerLocation !== undefined && {
+              deliveryPartnerLocation: update.deliveryPartnerLocation,
+            }),
+          }));
+        } catch {
+          // ignore parse errors
+        }
+      };
+
+      source.onerror = () => {
+        source?.close();
+        if (cancelled) return;
+
+        if (retryCountRef.current < MAX_RETRIES) {
+          const delay = Math.min(
+            BASE_DELAY_MS * Math.pow(2, retryCountRef.current),
+            MAX_DELAY_MS
+          );
+          retryCountRef.current += 1;
+          retryTimerRef.current = setTimeout(connect, delay);
+        }
+        // After MAX_RETRIES, stop attempting to reconnect
+      };
+    }
+
+    connect();
+
+    return () => {
+      cancelled = true;
+      source?.close();
+      if (retryTimerRef.current) {
+        clearTimeout(retryTimerRef.current);
       }
     };
-    source.onerror = () => {
-      source.close();
-    };
-    return () => source.close();
   }, [data.id]);
 
   const currentStep = getStepIndex(data.status);

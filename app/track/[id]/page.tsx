@@ -45,7 +45,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ id:
     orderNumber: order.orderNumber,
     status: order.status,
     deliveryOtp:
-      ["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY", "ARRIVING"].includes(order.status)
+      ["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status)
         ? order.deliveryOtp
         : null,
     destination: {

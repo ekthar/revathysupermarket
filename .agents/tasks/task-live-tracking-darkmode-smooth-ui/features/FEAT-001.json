@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Create a new full-screen Live Order Tracking page at app/track/[id]/page.tsx with a premium mobile-first design matching the provided screenshot. This includes: a LIVE ORDER banner with status and ETA at the top (tappable), a back arrow, rider info panel with avatar/name, a map/tracking visual with green delivery icon overlay, an ARRIVING IN countdown timer, call and message action buttons, and a 4-step order status timeline stepper (Order received, Packing your bag, Out for delivery, Delivered). The UI should use clean white cards with rounded corners, Framer Motion animations, and full dark mode support.",
+  "status": "in_progress",
+  "steps": [
+    "Create app/track/[id]/page.tsx as a server component that fetches order tracking data via prisma (order status, delivery partner info, status events, coordinates). Verify the user owns the order or has staff role. Pass data to a client component.",
+    "Create components/tracking/live-order-tracking.tsx as the main client component. Structure: (1) Fixed top LIVE ORDER banner with green pulse dot, order status text, ETA in minutes, 'TAP TO TRACK' label - styled as a green/black gradient pill. (2) Back arrow button (router.back()). (3) Rider info card showing rider name and avatar circle with 'Your rider' label. (4) Map/tracking visual area using ios-map-placeholder CSS class with a green delivery truck icon overlaid (animated with framer-motion float). (5) 'ARRIVING IN X min' large bold countdown section. (6) Action buttons row: Call (phone icon, links to tel:) and Message (chat icon). (7) Order status timeline/stepper with 4 stages: 'Order received' (subtitle: 'We got it. The store is preparing.'), 'Packing your bag' (subtitle: 'Hand-picked items, carefully packed.'), 'Out for delivery' (subtitle: 'Your rider is on the way.'), 'Delivered' (subtitle: 'Enjoy your fresh groceries!'). Active/completed steps get green checkmarks, current step pulses.",
+    "Add real-time updates using EventSource to /api/orders/[id]/stream endpoint (already exists). Update status and rider location live. Recalculate ETA using Haversine distance (copy pattern from customer-orders-client.tsx distanceKm function) when rider location updates.",
+    "Add the live order tracking banner as a floating component (components/tracking/live-order-banner.tsx) that appears on the home page when there's an active order. Shows status + ETA + 'TAP TO TRACK' and links to /track/[orderId]. Use framer-motion AnimatePresence for smooth enter/exit.",
+    "Ensure full dark mode support: dark backgrounds (slate-900/950), light text, proper border colors, card backgrounds using CSS variable system from globals.css.",
+    "Add smooth page transitions: use framer-motion for staggered entry of timeline steps, spring animations on the map area, and a slide-up entrance for the whole page."
+  ],
+  "acceptance_criteria": [
+    "Visiting /track/[orderId] shows the live tracking screen with all described UI elements",
+    "The page connects to SSE stream and updates status/location in real-time",
+    "ETA recalculates when rider location changes",
+    "Call button links to tel: with rider/store phone",
+    "Order status timeline correctly highlights completed/current/pending steps",
+    "Dark mode renders correctly with proper contrast and colors",
+    "Animations are smooth (framer-motion spring transitions, staggered timeline)"
+  ],
+  "verification": [
+    "Run npx next build to verify no TypeScript errors and the page compiles",
+    "Verify the new route exists at app/track/[id]/page.tsx",
+    "Verify the component file exists at components/tracking/live-order-tracking.tsx"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -33,8 +33,10 @@ enum PaymentStatus {
 
 enum ReturnStatus {
   REQUESTED
+  UNDER_REVIEW
   APPROVED
   REJECTED
+  ITEM_RECEIVED
   REFUNDED
 }
 
@@ -52,6 +54,7 @@ enum OrderStatus {
   PACKING
   READY_FOR_DELIVERY
   OUT_FOR_DELIVERY
+  ARRIVING
   DELIVERED
   CANCELLED
 }
@@ -90,6 +93,21 @@ enum SupportPriority {
   URGENT
 }
 
+enum CollectionStatus {
+  PENDING_HANDOVER
+  UPI_AWAITING_VERIFICATION
+  SETTLED
+  SHORT
+  EXCESS
+}
+
+enum DamageStatus {
+  RECORDED
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
 model User {
   id                     String                  @id @default(cuid())
   name                   String?
@@ -109,6 +127,7 @@ model User {
   currentLatitude        Decimal?                @db.Decimal(9, 6)
   currentLongitude       Decimal?                @db.Decimal(9, 6)
   locationUpdatedAt      DateTime?
+  authVersion            Int                     @default(0)
   accounts               Account[]
   sessions               Session[]
   addresses              Address[]
@@ -135,6 +154,10 @@ model User {
   supportMessages        SupportMessage[]
   feedback               OrderFeedback[]
   deliveryLocationEvents DeliveryLocationEvent[]
+  staffPermissions       StaffPermission[]
+  deliveryCollections    DeliveryCollection[]    @relation("CollectionPartner")
+  reconciledCollections  DeliveryCollection[]    @relation("CollectionReconciler")
+  deliveryAdjustments    DeliveryAdjustment[]
   referralCode           String?                 @unique
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
@@ -326,6 +349,8 @@ model Order {
   supportTickets          SupportTicket[]
   feedback                OrderFeedback?
   deliveryLocationEvents  DeliveryLocationEvent[]
+  deliveryCollection      DeliveryCollection?
+  deliveryAdjustments     DeliveryAdjustment[]
   createdAt               DateTime                @default(now())
   updatedAt               DateTime                @updatedAt
 
@@ -386,18 +411,25 @@ model OrderEditLog {
 
 model ReturnRequest {
   id              String        @id @default(cuid())
+  returnNumber    String        @unique @default(cuid())
   orderId         String
   items           Json
   reason          String
   photoUrl        String?
+  evidenceUrls    String[]
   note            String?
   status          ReturnStatus  @default(REQUESTED)
   refundMethod    RefundMethod?
   refundAmount    Decimal?      @db.Decimal(10, 2)
+  maxRefundAmount Decimal?      @db.Decimal(10, 2)
   refundReference String?
   resolutionNote  String?
+  rejectionReason String?
   resolvedById    String?
   resolvedAt      DateTime?
+  itemReceivedAt  DateTime?
+  refundedAt      DateTime?
+  eligibleUntil   DateTime?
   order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
   resolvedBy      User?         @relation("ReturnResolvedBy", fields: [resolvedById], references: [id], onDelete: SetNull)
   createdAt       DateTime      @default(now())
@@ -407,6 +439,7 @@ model ReturnRequest {
   @@index([status])
   @@index([resolvedById])
   @@index([createdAt])
+  @@index([returnNumber])
 }
 
 model WalletTransaction {
@@ -690,4 +723,78 @@ model Offer {
   @@index([isActive, expiresAt])
   @@index([categoryId])
   @@index([productId])
+}
+
+
+
+model StaffPermission {
+  id         String   @id @default(cuid())
+  userId     String
+  permission String
+  grantedBy  String?
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, permission])
+  @@index([userId])
+  @@index([permission])
+}
+
+model DeliveryFeeSlab {
+  id        String   @id @default(cuid())
+  minKm     Decimal  @db.Decimal(6, 2)
+  maxKm     Decimal  @db.Decimal(6, 2)
+  fee       Decimal  @db.Decimal(10, 2)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, minKm])
+}
+
+model DeliveryAdjustment {
+  id             String       @id @default(cuid())
+  orderId        String
+  partnerId      String
+  itemName       String
+  quantity       Int
+  reason         String
+  reductionAmount Decimal     @db.Decimal(10, 2)
+  evidenceUrl    String?
+  status         DamageStatus @default(RECORDED)
+  approvedById   String?
+  approvedAt     DateTime?
+  order          Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  partner        User         @relation(fields: [partnerId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([orderId])
+  @@index([partnerId])
+  @@index([status])
+}
+
+model DeliveryCollection {
+  id                String           @id @default(cuid())
+  orderId           String           @unique
+  partnerId         String
+  expectedAmount    Decimal          @db.Decimal(10, 2)
+  cashCollected     Decimal          @default(0) @db.Decimal(10, 2)
+  upiCollected      Decimal          @default(0) @db.Decimal(10, 2)
+  walletApplied     Decimal          @default(0) @db.Decimal(10, 2)
+  adjustmentAmount  Decimal          @default(0) @db.Decimal(10, 2)
+  upiReference      String?
+  status            CollectionStatus @default(PENDING_HANDOVER)
+  discrepancyReason String?
+  reconciledById    String?
+  reconciledAt      DateTime?
+  order             Order            @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  partner           User             @relation("CollectionPartner", fields: [partnerId], references: [id], onDelete: Cascade)
+  reconciledBy      User?            @relation("CollectionReconciler", fields: [reconciledById], references: [id], onDelete: SetNull)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  @@index([partnerId, createdAt])
+  @@index([status])
+  @@index([reconciledById])
 }

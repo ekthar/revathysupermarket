@@ -1,8 +1,8 @@
 /* eslint-disable @next/next/no-img-element */
 import Link from "next/link";
-import { BarChart3, Bell, ClipboardList, Home, LayoutDashboard, LogOut, Package, RotateCcw, Settings, ShoppingBag, Users } from "lucide-react";
+import { BarChart3, Bell, ClipboardList, CreditCard, Home, LayoutDashboard, LogOut, MessageSquare, Package, RotateCcw, Settings, ShieldCheck, ShoppingBag, Tag, Ticket, Truck, Users } from "lucide-react";
 import { auth, signOut } from "@/auth";
-import { canManageProducts, canManageReturns, canManageSettings, canManageStaff, canViewReports, isStaffRole } from "@/lib/authz";
+import { isStaffRole } from "@/lib/authz";
 import { roleLabel } from "@/lib/roles";
 import { NewOrderAlert } from "@/components/admin/new-order-alert";
 import { prisma } from "@/lib/prisma";
@@ -10,6 +10,8 @@ import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { StoreToggleButton } from "@/components/admin/store-toggle-button";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 import { InstallAppButton } from "@/components/install-app-button";
+import { getAuthContext } from "@/lib/auth-guard";
+import { hasPermission, hasFullAccess, type AuthContext } from "@/lib/permissions";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -22,31 +24,53 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const logoSetting = await prisma.setting.findUnique({ where: { key: "logoUrl" } }).catch(() => null);
   const logoUrl = logoSetting?.value || null;
 
+  // Get permission context
+  const ctx = await getAuthContext();
+  const can = (perm: string) => {
+    if (!ctx) return false;
+    if (hasFullAccess(ctx.role)) return true;
+    return ctx.permissions.includes(perm);
+  };
+
   // Fetch badge counts
-  const [newOrderCount, pendingReturnCount] = await Promise.all([
+  const [newOrderCount, pendingReturnCount, openRequestCount] = await Promise.all([
     prisma.order.count({ where: { status: "ORDER_RECEIVED", acknowledgedAt: null } }).catch(() => 0),
-    prisma.returnRequest.count({ where: { status: "REQUESTED" } }).catch(() => 0)
+    prisma.returnRequest.count({ where: { status: "REQUESTED" } }).catch(() => 0),
+    prisma.supportTicket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }).catch(() => 0),
   ]);
 
   const nav = [
-    { href: "/admin", label: "Dashboard", icon: "LayoutDashboard", group: "Operations", show: true, badge: 0 },
-    { href: "/admin/orders", label: "Orders", icon: "ShoppingBag", group: "Operations", show: true, badge: newOrderCount },
-    { href: "/admin/returns", label: "Returns", icon: "RotateCcw", group: "Operations", show: canManageReturns(role), badge: pendingReturnCount },
-    { href: "/admin/support", label: "Support", icon: "Bell", group: "Operations", show: canViewReports(role), badge: 0 },
-    { href: "/admin/delivery-slots", label: "Delivery Slots", icon: "ClipboardList", group: "Operations", show: canManageSettings(role), badge: 0 },
-    { href: "/admin/products", label: "Products", icon: "Package", group: "Catalogue", show: canManageProducts(role), badge: 0 },
-    { href: "/admin/categories", label: "Categories", icon: "Package", group: "Catalogue", show: canManageProducts(role), badge: 0 },
-    { href: "/admin/customers", label: "Customers", icon: "Users", group: "Customers", show: canViewReports(role), badge: 0 },
-    { href: "/admin/feedback", label: "Feedback", icon: "Users", group: "Customers", show: canViewReports(role), badge: 0 },
-    { href: "/admin/promo-codes", label: "Promos", icon: "Bell", group: "Marketing", show: canManageSettings(role), badge: 0 },
-    { href: "/admin/offers", label: "Offers", icon: "Bell", group: "Marketing", show: canManageSettings(role), badge: 0 },
-    { href: "/admin/push-notifications", label: "Push", icon: "Bell", group: "Marketing", show: canManageSettings(role), badge: 0 },
-    { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "Bell", group: "Marketing", show: canViewReports(role), badge: 0 },
-    { href: "/admin/reports", label: "Reports", icon: "BarChart3", group: "Finance", show: canViewReports(role), badge: 0 },
-    { href: "/admin/billing", label: "Billing", icon: "BarChart3", group: "Finance", show: canViewReports(role), badge: 0 },
-    { href: "/admin/staff", label: "Staff", icon: "Users", group: "Administration", show: canManageStaff(role), badge: 0 },
-    { href: "/admin/audit-log", label: "Audit Log", icon: "ClipboardList", group: "Administration", show: canViewReports(role), badge: 0 },
-    { href: "/admin/settings", label: "Settings", icon: "Settings", group: "Administration", show: canManageSettings(role), badge: 0 }
+    // Operations
+    { href: "/admin", label: "Command Centre", icon: "LayoutDashboard", group: "Operations", show: true, badge: 0 },
+    { href: "/admin/orders", label: "Orders", icon: "ShoppingBag", group: "Operations", show: can("orders.view"), badge: newOrderCount },
+    { href: "/admin/requests", label: "Customer Requests", icon: "MessageSquare", group: "Operations", show: can("requests.view"), badge: openRequestCount },
+    { href: "/admin/dispatch", label: "Dispatch", icon: "Truck", group: "Operations", show: can("dispatch.view"), badge: 0 },
+    { href: "/admin/returns", label: "Returns", icon: "RotateCcw", group: "Operations", show: can("returns.view"), badge: pendingReturnCount },
+
+    // Catalogue
+    { href: "/admin/products", label: "Products", icon: "Package", group: "Catalogue", show: can("catalogue.view"), badge: 0 },
+    { href: "/admin/categories", label: "Categories", icon: "Package", group: "Catalogue", show: can("catalogue.view"), badge: 0 },
+
+    // Customers
+    { href: "/admin/customers", label: "Customers", icon: "Users", group: "Customers", show: can("customers.view"), badge: 0 },
+    { href: "/admin/feedback", label: "Feedback", icon: "Users", group: "Customers", show: can("customers.view"), badge: 0 },
+
+    // Marketing
+    { href: "/admin/offers", label: "Offers", icon: "Tag", group: "Marketing", show: can("marketing.view"), badge: 0 },
+    { href: "/admin/promo-codes", label: "Promos", icon: "Ticket", group: "Marketing", show: can("marketing.view"), badge: 0 },
+    { href: "/admin/push-notifications", label: "Push", icon: "Bell", group: "Marketing", show: can("marketing.manage"), badge: 0 },
+    { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "MessageSquare", group: "Marketing", show: can("marketing.view"), badge: 0 },
+
+    // Finance
+    { href: "/admin/collections", label: "Collections", icon: "CreditCard", group: "Finance", show: can("collections.view"), badge: 0 },
+    { href: "/admin/billing", label: "Billing", icon: "BarChart3", group: "Finance", show: can("reports.view"), badge: 0 },
+    { href: "/admin/reports", label: "Reports", icon: "BarChart3", group: "Finance", show: can("reports.view"), badge: 0 },
+
+    // Administration
+    { href: "/admin/staff", label: "Staff", icon: "ShieldCheck", group: "Administration", show: can("staff.manage"), badge: 0 },
+    { href: "/admin/delivery-slots", label: "Delivery Slots", icon: "ClipboardList", group: "Administration", show: can("settings.manage"), badge: 0 },
+    { href: "/admin/settings", label: "Settings", icon: "Settings", group: "Administration", show: can("settings.manage"), badge: 0 },
+    { href: "/admin/audit-log", label: "Audit Log", icon: "ClipboardList", group: "Administration", show: can("audit.view"), badge: 0 },
   ];
 
   return (
@@ -93,7 +117,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto lg:grid lg:grid-cols-[200px_1fr] lg:gap-6 px-4 lg:px-6 py-5">
+      <div className="max-w-7xl mx-auto lg:grid lg:grid-cols-[220px_1fr] lg:gap-6 px-4 lg:px-6 py-5">
         {/* Sidebar - client component for active state */}
         <div className="print:hidden">
           <AdminSidebar nav={nav.filter((n) => n.show)} />

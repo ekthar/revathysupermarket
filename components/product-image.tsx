@@ -25,7 +25,9 @@ export function ProductImage({
     <img
       src={currentSrc}
       alt={alt}
-      className={cn("h-full w-full object-cover", className)}
+      width={640}
+      height={640}
+      className={cn("block h-full min-w-0 max-w-full object-cover", className)}
       loading="lazy"
       onError={() => setCurrentSrc(PRODUCT_IMAGE_FALLBACK)}
     />

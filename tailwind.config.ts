@@ -43,8 +43,8 @@ const config: Config = {
         }
       },
       fontFamily: {
-        sans: ['"Inter Tight"', "-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "system-ui", "sans-serif"],
-        display: ['"Manrope"', "-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "system-ui", "sans-serif"]
+        sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "system-ui", "sans-serif"],
+        display: ["var(--font-display)", "-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "system-ui", "sans-serif"]
       },
       boxShadow: {
         premium: "0 24px 80px -42px rgba(5, 5, 5, 0.65)",

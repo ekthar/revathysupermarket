@@ -344,7 +344,7 @@ function EditProductModal({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="absolute inset-x-0 bottom-0 max-h-[92vh] overflow-y-auto rounded-t-[2rem] bg-background p-4 shadow-2xl sm:left-auto sm:right-6 sm:top-6 sm:h-[calc(100vh-3rem)] sm:w-[440px] sm:rounded-[2rem]"
+        className="stable-dialog absolute inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-[2rem] bg-background p-4 shadow-2xl sm:left-auto sm:right-6 sm:top-6 sm:h-[calc(100dvh-3rem)] sm:w-[440px] sm:rounded-[2rem]"
       >
         <div className="sticky top-0 z-10 -mx-4 -mt-4 flex items-center justify-between border-b border-border bg-background/95 p-4 backdrop-blur">
           <div>

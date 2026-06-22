@@ -47,7 +47,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
                 onClose();
               }
             }}
-            className="fixed inset-x-0 bottom-0 z-[71] bg-white dark:bg-slate-900 rounded-t-3xl max-h-[85vh] overflow-hidden shadow-2xl"
+            className="stable-dialog fixed inset-x-0 bottom-0 z-[91] max-h-[85dvh] overflow-hidden rounded-t-3xl bg-white shadow-2xl dark:bg-slate-900"
           >
             {/* Drag handle */}
             <div className="flex justify-center pt-3 pb-2">
@@ -65,7 +65,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
             )}
 
             {/* Content */}
-            <div className="overflow-y-auto max-h-[calc(85vh-80px)] px-5 py-4">
+            <div className="max-h-[calc(85dvh-80px)] overflow-y-auto px-5 py-4">
               {children}
             </div>
           </motion.div>

@@ -6,7 +6,6 @@ import Link from "next/link";
 import { Bell, Heart, HelpCircle, ShoppingBag, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { SITE } from "@/lib/constants";
 import type { SessionIdentity } from "@/components/session-identity-card";
@@ -24,26 +23,6 @@ export function Header({
 }) {
   const pathname = usePathname();
   const { totalItems } = useCart();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const rafRef = useRef<number>(0);
-
-  useEffect(() => {
-    function handleScroll() {
-      if (rafRef.current) return;
-      rafRef.current = requestAnimationFrame(() => {
-        // Clamp scroll between 0 and 60px for transition range
-        const progress = Math.min(window.scrollY / 60, 1);
-        setScrollProgress(progress);
-        rafRef.current = 0;
-      });
-    }
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, []);
 
   // Hide on login/welcome/staff/admin
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
@@ -65,7 +44,7 @@ export function Header({
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 press">
               {logoUrl && (
-                <img src={logoUrl} alt={storeName} className="h-9 w-9 rounded-lg object-contain" />
+                <img src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" />
               )}
               <span className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
                 {storeName}
@@ -144,15 +123,12 @@ export function Header({
       </header>
 
       {/* Mobile Header */}
-      <header className="ios-sticky-tracking-header ios-glass md:hidden" style={{ willChange: "height, backdrop-filter" }}>
-        <div
-          className="flex items-center justify-between px-4 transition-[height] duration-150 ease-out"
-          style={{ height: `${56 - scrollProgress * 8}px` }}
-        >
+      <header className="ios-sticky-tracking-header ios-glass md:hidden">
+        <div className="flex h-14 items-center justify-between px-4">
           {/* Store name branding */}
           <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
             {logoUrl ? (
-              <img src={logoUrl} alt={storeName} className="h-8 w-8 rounded-xl object-contain" />
+              <img src={logoUrl} alt={storeName} width={32} height={32} className="h-8 w-8 rounded-xl object-contain" />
             ) : (
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30">
                 <span className="text-sm font-black text-white">{storeName.charAt(0)}</span>

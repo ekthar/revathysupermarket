@@ -26,14 +26,25 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
   // is temporarily disabled.
   useEffect(() => {
     if (!navigator.geolocation) return;
+    let lastPublishedAt = 0;
+    let request: AbortController | null = null;
     const watch = navigator.geolocation.watchPosition((position) => {
+      const now = Date.now();
+      if (document.visibilityState === "hidden" || now - lastPublishedAt < 5000) return;
+      lastPublishedAt = now;
+      request?.abort();
+      request = new AbortController();
       void fetch("/api/delivery/location", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude })
+        body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+        signal: request.signal
       }).catch(() => null);
     }, () => undefined, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });
-    return () => navigator.geolocation.clearWatch(watch);
+    return () => {
+      request?.abort();
+      navigator.geolocation.clearWatch(watch);
+    };
   }, []);
 
   async function pickup(order: DeliveryOrder) { setLoading(order.id); const response = await fetch(`/api/delivery/orders/${order.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "picked_up" }) }); const data = await readApiResponse<{ error?: string }>(response); setLoading(null); if (!response.ok) return showToast(data.error ?? "Pickup update failed", "error"); setEntries((current) => current.map((entry) => entry.id === order.id ? { ...entry, status: "ARRIVING" } : entry)); }
@@ -47,4 +58,4 @@ function CollectionDialog({ order, onClose, onSaved }: { order: DeliveryOrder; o
 
 function CompletionDialog({ order, onClose, onComplete }: { order: DeliveryOrder; onClose: () => void; onComplete: () => void }) { const [otp, setOtp] = useState(""); const [slide, setSlide] = useState(0); const [error, setError] = useState(""); const [loading, setLoading] = useState(false); async function complete() { if (slide < 90) return setError("Slide fully to confirm delivery."); setLoading(true); const response = await fetch("/api/delivery/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ orderId: order.id, otp }) }); const data = await response.json(); setLoading(false); if (!response.ok) { setSlide(0); return setError(data.error ?? "Delivery could not be completed"); } onComplete(); } return <Dialog title="Complete delivery" onClose={onClose}><label className="block text-sm font-bold">Customer OTP<input inputMode="numeric" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))} className="mt-2 h-14 w-full rounded-2xl border border-border text-center text-2xl font-black tracking-[0.4em]"/></label><label className="mt-5 block text-sm font-bold">Slide to deliver<input aria-label="Slide to confirm delivery" type="range" min="0" max="100" value={slide} onChange={(e) => setSlide(Number(e.target.value))} className="mt-3 w-full accent-primary"/></label>{error && <p className="mt-3 text-sm font-bold text-red-600">{error}</p>}<button disabled={loading || otp.length !== 6 || slide < 90} onClick={complete} className="mt-4 h-12 w-full rounded-2xl bg-slate-950 font-black text-white disabled:opacity-40">{loading ? "Completing…" : "Confirm delivery"}</button></Dialog>; }
 
-function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-2 sm:items-center" role="dialog" aria-modal="true"><div className="max-h-[92vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-center justify-between"><h2 className="text-xl font-black">{title}</h2><button onClick={onClose} className="h-10 rounded-xl px-3 text-sm font-bold">Close</button></div><div className="mt-4">{children}</div></div></div>; }
+function Dialog({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) { return <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-2 sm:items-center" role="dialog" aria-modal="true"><div className="stable-dialog max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-center justify-between"><h2 className="text-xl font-black">{title}</h2><button onClick={onClose} className="h-10 rounded-xl px-3 text-sm font-bold">Close</button></div><div className="mt-4">{children}</div></div></div>; }

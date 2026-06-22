@@ -273,11 +273,10 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
               <AnimatePresence>
                 {isExpanded && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 30, opacity: { duration: 0.2 } }}
-                    className="overflow-hidden"
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.16 }}
                   >
                     <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-800 pt-3">
                       {/* Status timeline - compact */}

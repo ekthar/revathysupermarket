@@ -583,7 +583,7 @@ export function CheckoutForm({
             </button>
             <AnimatePresence>
               {showManualLocation && (
-                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
                   <div className="mt-3 grid gap-3 sm:grid-cols-2">
                     <CheckoutField label="Latitude" value={form.latitude} onChange={(v) => update("latitude", v)} />
                     <CheckoutField label="Longitude" value={form.longitude} onChange={(v) => update("longitude", v)} />

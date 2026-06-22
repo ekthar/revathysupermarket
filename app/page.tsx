@@ -14,6 +14,8 @@ import { categories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 import type { Product } from "@/lib/types";
+import { auth } from "@/auth";
+import { getActiveOrderSummary } from "@/lib/live-order";
 
 export const revalidate = 60;
 
@@ -75,11 +77,13 @@ const categoryIcons: Record<string, string> = {
 };
 
 export default async function HomePage() {
-  const [settings, banner, dbProducts, promoBanners] = await Promise.all([
+  const session = await auth();
+  const [settings, banner, dbProducts, promoBanners, activeOrder] = await Promise.all([
     getPublicStoreSettings(),
     getHomepageBanner(),
     getHomepageProducts(),
-    getPromoBanners()
+    getPromoBanners(),
+    getActiveOrderSummary(session?.user?.id)
   ]);
 
   const allProducts: Product[] = dbProducts.length > 0
@@ -107,7 +111,7 @@ export default async function HomePage() {
       <HomeSearch products={allProducts} />
 
       {/* Live Order Tracking Banner - shows when user has an active order */}
-      <LiveOrderBanner />
+      <LiveOrderBanner initialOrder={activeOrder} />
 
       {/* Hero Section - with parallax + floating card */}
       <HeroSection

@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 
 interface AnimatedPageWrapperProps {
@@ -31,7 +30,7 @@ export function AnimatedPageWrapper({
         damping: 25,
         delay,
       }}
-      className={cn("will-change-transform", className)}
+      className={className}
     >
       {children}
     </motion.div>
@@ -93,7 +92,7 @@ export function StaggeredItem({
           },
         },
       }}
-      className={cn("will-change-transform", className)}
+      className={className}
     >
       {children}
     </motion.div>

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { CustomerOrdersClient, type CustomerOrder } from "@/components/dashboard/customer-orders-client";
 import { LiveOrderBanner } from "@/components/tracking/live-order-banner";
 import type { Product } from "@/lib/types";
+import { estimateOrderEta } from "@/lib/live-order";
 
 export const dynamic = "force-dynamic";
 
@@ -81,7 +82,12 @@ export default async function DashboardPage() {
         <p className="mt-2 text-sm font-medium text-white/65">Follow every order from received to delivered.</p>
       </section>
       <div className="mt-6">
-        <LiveOrderBanner />
+        <LiveOrderBanner initialOrder={activeOrders[0] ? {
+          id: activeOrders[0].id,
+          orderNumber: activeOrders[0].orderNumber,
+          status: activeOrders[0].status,
+          eta: estimateOrderEta(activeOrders[0].status)
+        } : null} />
         <CustomerOrdersClient initialOrders={plainOrders} initialHistoryCursor={completedOrders.length === 10 ? completedOrders.at(-1)?.id ?? null : null} />
       </div>
     </main>

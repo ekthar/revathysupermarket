@@ -157,9 +157,9 @@ export function CartPageClient() {
               <motion.div
                 key={item.id}
                 layout
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: removingId === item.id ? 0 : 1, height: "auto" }}
-                exit={{ opacity: 0, height: 0 }}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: removingId === item.id ? 0 : 1, x: 0 }}
+                exit={{ opacity: 0, x: -8 }}
                 transition={{ duration: 0.2 }}
                 className="px-4 py-3"
               >

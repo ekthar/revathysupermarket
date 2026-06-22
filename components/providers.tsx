@@ -8,20 +8,23 @@ import { PushNotificationManager } from "@/components/push-notification-manager"
 import { ToastProvider } from "@/components/toast-provider";
 import { ProfileSync } from "@/components/profile-sync";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
+import { MotionConfig } from "framer-motion";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-        <ToastProvider>
-          <CartProvider>
-            {children}
-            <ProfileSync />
-            <ServiceWorkerRegister />
-            <PushNotificationManager />
-            <InstallAppPrompt />
-          </CartProvider>
-        </ToastProvider>
+        <MotionConfig reducedMotion="user">
+          <ToastProvider>
+            <CartProvider>
+              {children}
+              <ProfileSync />
+              <ServiceWorkerRegister />
+              <PushNotificationManager />
+              <InstallAppPrompt />
+            </CartProvider>
+          </ToastProvider>
+        </MotionConfig>
       </ThemeProvider>
     </SessionProvider>
   );

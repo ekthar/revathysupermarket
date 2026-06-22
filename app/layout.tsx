@@ -9,6 +9,11 @@ import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
 import { IosEdgeSwipeBack } from "@/components/ui/ios-edge-swipe-back";
 import { getPublicStoreSettings } from "@/lib/store-settings";
+import { Inter_Tight, Manrope } from "next/font/google";
+import { ViewportStability } from "@/components/ui/viewport-stability";
+
+const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicStoreSettings();
@@ -71,9 +76,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const logoUrl = logoSetting?.value || null;
 
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className={`${interTight.variable} ${manrope.variable}`}>
       <body className="pt-safe">
         <Providers>
+          <ViewportStability />
           <ScrollProgress />
           <IosEdgeSwipeBack />
           <OnboardingTour />

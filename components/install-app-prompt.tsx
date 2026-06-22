@@ -110,7 +110,8 @@ export function InstallAppPrompt() {
 
   return (
     <aside
-      className="fixed left-[max(0.75rem,var(--safe-left))] right-[max(0.75rem,var(--safe-right))] bottom-[calc(6rem+var(--safe-bottom))] z-[80] mx-auto max-w-md rounded-3xl border border-black/10 bg-white p-5 shadow-2xl dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:mx-0"
+      data-hide-on-keyboard="true"
+      className="fixed left-[max(0.75rem,var(--safe-left))] right-[max(0.75rem,var(--safe-right))] bottom-[calc(var(--mobile-nav-height)+var(--safe-bottom)+0.5rem)] z-[80] mx-auto max-w-md rounded-3xl border border-black/10 bg-white p-5 shadow-2xl transition-[opacity,transform] dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:mx-0"
       aria-label="Install application"
     >
       <button

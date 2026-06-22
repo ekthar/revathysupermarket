@@ -103,11 +103,10 @@ export function CancelledOrdersClient({ orders }: { orders: CancelledOrder[] }) 
               <AnimatePresence>
                 {expandedId === order.id && (
                   <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.2 }}
-                    className="overflow-hidden"
                   >
                     <div className="px-4 pb-4 space-y-3">
                       {/* Reason */}

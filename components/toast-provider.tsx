@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={value}>
       {children}
-      <div className="pointer-events-none fixed inset-x-0 bottom-[calc(6rem+var(--safe-bottom))] z-[88] mx-auto flex max-w-sm flex-col items-center gap-2 px-4 md:bottom-8">
+      <div data-hide-on-keyboard="true" className="pointer-events-none fixed inset-x-0 bottom-[calc(var(--mobile-nav-height)+var(--safe-bottom)+0.5rem)] z-[88] mx-auto flex max-w-sm flex-col items-center gap-2 px-4 transition-[opacity,transform] md:bottom-8">
         <AnimatePresence initial={false}>
           {toasts.map((toast) => {
             const Icon = icons[toast.tone];

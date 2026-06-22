@@ -5,13 +5,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Truck } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
-
-type ActiveOrder = {
-  id: string;
-  orderNumber: string;
-  status: string;
-  eta?: number | null;
-};
+import { estimateOrderEta, type ActiveOrderSummary } from "@/lib/live-order";
 
 const statusLabels: Record<string, string> = {
   ORDER_RECEIVED: "Order received",
@@ -23,21 +17,8 @@ const statusLabels: Record<string, string> = {
   ARRIVING: "Arriving soon",
 };
 
-function estimateEta(status: string): number {
-  const map: Record<string, number> = {
-    ORDER_RECEIVED: 20,
-    AWAITING_CUSTOMER_APPROVAL: 18,
-    ACCEPTED: 16,
-    PACKING: 14,
-    READY_FOR_DELIVERY: 10,
-    OUT_FOR_DELIVERY: 8,
-    ARRIVING: 3,
-  };
-  return map[status] || 15;
-}
-
-export function LiveOrderBanner() {
-  const [activeOrder, setActiveOrder] = useState<ActiveOrder | null>(null);
+export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: ActiveOrderSummary | null }) {
+  const [activeOrder, setActiveOrder] = useState<ActiveOrderSummary | null>(initialOrder);
 
   useEffect(() => {
     let active = true;
@@ -48,28 +29,16 @@ export function LiveOrderBanner() {
     // /api/orders/active endpoint to reduce payload size.
     async function fetchActiveOrder() {
       try {
-        const response = await fetch("/api/orders", { cache: "no-store" });
+        if (document.visibilityState === "hidden") return;
+        const response = await fetch("/api/orders/live", { cache: "no-store" });
         if (!response.ok) return;
         const data = await readApiResponse<{ orders?: Array<{ id: string; orderNumber: string; status: string }> }>(response);
         if (!active || !data.orders) return;
-
-        const liveStatuses = [
-          "ORDER_RECEIVED",
-          "AWAITING_CUSTOMER_APPROVAL",
-          "ACCEPTED",
-          "PACKING",
-          "READY_FOR_DELIVERY",
-          "OUT_FOR_DELIVERY",
-          "ARRIVING",
-        ];
-        const found = data.orders.find((o) => liveStatuses.includes(o.status));
+        const found = data.orders[0];
         if (found) {
-          setActiveOrder({
-            id: found.id,
-            orderNumber: found.orderNumber,
-            status: found.status,
-            eta: estimateEta(found.status),
-          });
+          setActiveOrder((current) => current?.id === found.id && current.status === found.status
+            ? current
+            : { ...found, eta: estimateOrderEta(found.status) });
         } else {
           setActiveOrder(null);
         }
@@ -80,9 +49,11 @@ export function LiveOrderBanner() {
 
     fetchActiveOrder();
     const interval = setInterval(fetchActiveOrder, 30000);
+    document.addEventListener("visibilitychange", fetchActiveOrder);
     return () => {
       active = false;
       clearInterval(interval);
+      document.removeEventListener("visibilitychange", fetchActiveOrder);
     };
   }, []);
 
@@ -94,7 +65,7 @@ export function LiveOrderBanner() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: -20, scale: 0.95 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="mx-4 mb-4"
+          className="mx-4 mb-4 min-h-[78px]"
         >
           <Link
             href={`/track/${activeOrder.id}`}

@@ -123,7 +123,8 @@ export function PushNotificationManager() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="fixed left-[max(1rem,var(--safe-left))] right-[max(1rem,var(--safe-right))] bottom-[calc(6rem+var(--safe-bottom))] z-[60] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:w-[360px]"
+          data-hide-on-keyboard="true"
+          className="fixed left-[max(1rem,var(--safe-left))] right-[max(1rem,var(--safe-right))] bottom-[calc(var(--mobile-nav-height)+var(--safe-bottom)+0.5rem)] z-[60] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:w-[360px]"
         >
           <button type="button" onClick={dismiss} aria-label="Dismiss notification prompt" className="absolute top-3 right-3 h-6 w-6 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center press">
             <X className="h-3 w-3 text-slate-500" />

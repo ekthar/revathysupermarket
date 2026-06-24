@@ -815,3 +815,47 @@ model DeliveryCollection {
   @@index([status])
   @@index([reconciledById])
 }
+
+model MobileRefreshToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String
+  deviceId  String
+  platform  String
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model DeviceToken {
+  id             String   @id @default(cuid())
+  userId         String
+  platform       String
+  installationId String   @unique
+  token          String
+  lastSeenAt     DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([userId, installationId])
+  @@index([token])
+}
+
+model AssignmentEvent {
+  id             String    @id @default(cuid())
+  eventId        String    @unique
+  orderId        String
+  partnerId      String
+  orderNumber    String
+  assignedAt     DateTime
+  acknowledgedAt DateTime?
+  fcmSent        Boolean   @default(false)
+  fcmSentAt      DateTime?
+  createdAt      DateTime  @default(now())
+
+  @@index([partnerId, acknowledgedAt])
+  @@index([orderId])
+}

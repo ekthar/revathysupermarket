@@ -40,6 +40,18 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     metadata: { deliveryPartnerId: parsed.data.deliveryPartnerId }
   });
   if (parsed.data.deliveryPartnerId) {
+    // Create AssignmentEvent for mobile app consumption
+    const eventId = `assign-${id}-${parsed.data.deliveryPartnerId}-${Date.now()}`;
+    await prisma.assignmentEvent.create({
+      data: {
+        eventId,
+        orderId: id,
+        partnerId: parsed.data.deliveryPartnerId,
+        orderNumber: order.orderNumber,
+        assignedAt: new Date(),
+      },
+    }).catch(() => null); // Non-blocking: don't fail if event already exists
+
     // Send real-time SSE alert to the delivery partner (instant in-app alert with sound + vibration)
     sendDeliveryAlert(parsed.data.deliveryPartnerId, {
       type: "new_order",

@@ -1,0 +1,240 @@
+{
+  "pbtResults": {
+    "5.1 Re-run bug condition exploration test": {
+      "status": "passed",
+      "lastRunTimestamp": 1782282659169
+    },
+    "6.1 Re-run preservation property tests": {
+      "status": "passed",
+      "lastRunTimestamp": 1782282863115
+    }
+  },
+  "executionHistory": {
+    "1. Write bug condition exploration test": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282290981
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282297043
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282477334
+      }
+    ],
+    "2. Write preservation property tests (BEFORE implementing fix)": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282290985
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282481268
+      }
+    ],
+    "3.1 Remove duplicate overflow-x from html and add scroll-padding-top": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282290988
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282466875
+      }
+    ],
+    "3.2 Add padding-inline and scroll-padding-inline to .scroll-x and .wheel-scroll": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282290991
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282467692
+      }
+    ],
+    "3.3 Add .route-scroll-container class for iOS overscroll containment": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282290993
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282468630
+      }
+    ],
+    "3.4 Update .ios-bottom-bar bottom to include --keyboard-inset": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282290995
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282469500
+      }
+    ],
+    "3.5 Add will-change: transform and transform: translateZ(0) to sticky/fixed elements": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282290998
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282470546
+      }
+    ],
+    "3.6 Add .sheet-scroll-content class for iOS bottom sheet scrolling": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282291000
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282471426
+      }
+    ],
+    "3.7 Add .floating-cart-wrapper class and refactor .floating-cart-bar positioning": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282291002
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282472264
+      }
+    ],
+    "4.1 Add route-scroll-container class to layout.tsx": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282291005
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282487137
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282521103
+      }
+    ],
+    "4.2 Update bottom-sheet.tsx inner content with sheet-scroll-content class": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282291008
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282523764
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282558328
+      }
+    ],
+    "5.1 Re-run bug condition exploration test": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282291010
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282562362
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282679673
+      }
+    ],
+    "6.1 Re-run preservation property tests": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282291013
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282682895
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282885646
+      }
+    ],
+    "7. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282291015
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282888631
+      },
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782283148993
+      }
+    ],
+    "3. Fix for scroll issues across mobile browsers (CSS changes in globals.css)": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282472290
+      }
+    ],
+    "4. Apply component changes (layout.tsx and bottom-sheet.tsx)": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282558330
+      }
+    ],
+    "5. Verify bug condition exploration test now passes": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282679696
+      }
+    ],
+    "6. Verify preservation tests still pass": [
+      {
+        "executionId": "0d391590-258f-40b9-a1e7-b9b2e59fb3af",
+        "chatSessionId": "ba352d0d-69fd-4e8c-ba5c-9d71a7fbc100",
+        "timestamp": 1782282885668
+      }
+    ]
+  }
+}

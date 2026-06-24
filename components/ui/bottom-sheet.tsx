@@ -65,7 +65,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
             )}
 
             {/* Content */}
-            <div className="max-h-[calc(85dvh-80px)] overflow-y-auto px-5 py-4">
+            <div className="sheet-scroll-content ios-native-scroll overflow-y-auto px-5 py-4">
               {children}
             </div>
           </motion.div>

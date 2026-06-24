@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "fix",
   "description": "Post-review fixes: hybrid auth utility for Bearer token support, JWT payload improvements, orders route hybrid auth, and manifest.json metadata fix.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create lib/flutter-auth-session.ts with getSessionOrBearer(request) utility that tries NextAuth auth() first, then falls back to verifying Bearer token from Authorization header using jsonwebtoken, checking user isActive/passwordVersion/authVersion from DB",
     "Update app/api/flutter-auth/route.ts to include passwordVersion and authVersion in the JWT payload",
@@ -22,5 +22,5 @@
     "Verify manifest.json has correct values"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "TypeScript compiles cleanly with npx tsc --noEmit --skipLibCheck (zero errors). Flutter analyze passes. Flutter build web succeeds. The hybrid auth utility follows the same DB lookup pattern as the NextAuth session callback in auth.ts."
 }

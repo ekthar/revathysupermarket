@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Implement routing (go_router), API layer (Dio + repositories), state management (Riverpod), and model classes for the Flutter app. This covers Phases 2-4 of the migration.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create lib/router/app_router.dart with go_router configuration containing all routes: / (HomeScreen), /products (ProductListScreen with query params category/search), /products/:id (ProductDetailScreen), /cart (CartScreen), /checkout (CheckoutScreen), /login (LoginScreen), /orders (OrderHistoryScreen), /orders/:id (OrderDetailScreen), /track/:id (LiveTrackingScreen), /account (AccountScreen), /offers (OffersScreen). Add redirect guard: unauthenticated users hitting /checkout or /orders redirect to /login?returnTo=<original_path>",
     "Create lib/api/api_client.dart using Dio with BaseOptions(baseUrl: const String.fromEnvironment('SITE_URL')). Add interceptor that reads JWT from FlutterSecureStorage, injects Authorization: Bearer <token>, on 401 clears token and redirects to /login, logs in debug mode only",
@@ -29,5 +29,5 @@
     "Run: cd /projects/sandbox/revathysupermarket/msm_app && flutter test"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "1. riverpod_generator, riverpod_annotation, and riverpod_lint were removed from dev_dependencies due to analyzer_plugin incompatibility with Dart SDK 3.12/analyzer 7.6. Manual Riverpod providers (StateNotifierProvider, Provider, FutureProvider.family) are used instead of code-gen annotations. 2. freezed_annotation and json_annotation moved from dev_dependencies to dependencies (required at runtime). 3. The ?if null-aware element syntax suggested by newer lints is not supported in this SDK version - standard if() collection-if is used. 4. analysis_options.yaml updated to disable prefer_initializing_formals and use_null_aware_elements lints. 5. flutter_secure_storage_web emits wasm dry-run warnings (uses dart:html) but JS compilation works fine."
 }

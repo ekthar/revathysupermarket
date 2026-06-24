@@ -138,15 +138,26 @@ async function sendToDevice(
   }
 }
 
+// Module-level cache for the Google OAuth access token (valid for ~1 hour).
+// Reused across warm invocations to avoid redundant JWT-bearer exchanges.
+let cachedAccessToken: { token: string; expiresAt: number } | null = null;
+
 /**
  * Gets a short-lived OAuth2 access token from Google using the service account.
  * Uses the JWT Bearer flow for server-to-server auth.
+ * Caches the token in-memory and reuses it until 60 seconds before expiry.
  */
 async function getFirebaseAccessToken(
   serviceAccount: { client_email: string; private_key: string }
 ): Promise<string | null> {
   try {
     const now = Math.floor(Date.now() / 1000);
+
+    // Return cached token if still valid (with 60s safety margin)
+    if (cachedAccessToken && now < cachedAccessToken.expiresAt - 60) {
+      return cachedAccessToken.token;
+    }
+
     const header = Buffer.from(JSON.stringify({ alg: "RS256", typ: "JWT" })).toString("base64url");
     const payload = Buffer.from(JSON.stringify({
       iss: serviceAccount.client_email,
@@ -174,8 +185,15 @@ async function getFirebaseAccessToken(
       return null;
     }
 
-    const data = await response.json() as { access_token?: string };
-    return data.access_token || null;
+    const data = await response.json() as { access_token?: string; expires_in?: number };
+    const accessToken = data.access_token || null;
+
+    if (accessToken) {
+      const expiresIn = data.expires_in ?? 3600;
+      cachedAccessToken = { token: accessToken, expiresAt: now + expiresIn };
+    }
+
+    return accessToken;
   } catch (e) {
     console.error("[FCM] Failed to get access token:", e);
     return null;

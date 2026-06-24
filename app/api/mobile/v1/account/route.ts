@@ -5,8 +5,6 @@ import { authenticateMobileRequest } from "@/lib/mobile-auth";
 
 const updateProfileSchema = z.object({
   name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().min(8).optional(),
 }).strict();
 
 export async function GET(request: Request) {

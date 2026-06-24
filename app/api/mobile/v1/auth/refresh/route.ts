@@ -77,16 +77,18 @@ export async function POST(request: Request) {
     },
   });
 
-  // Clean up old revoked/expired tokens for this device to prevent accumulation
-  prisma.mobileRefreshToken.deleteMany({
+  // Clean up old revoked/expired tokens for this device to prevent accumulation.
+  // Awaited to ensure cleanup executes before the serverless runtime tears down.
+  await prisma.mobileRefreshToken.deleteMany({
     where: {
       deviceId,
+      id: { not: matchedToken.id },
       OR: [
         { revokedAt: { not: null } },
         { expiresAt: { lt: new Date() } },
       ],
     },
-  }).catch(() => null); // Non-blocking cleanup
+  }).catch(() => null);
 
   return NextResponse.json({
     accessToken: newAccessToken,

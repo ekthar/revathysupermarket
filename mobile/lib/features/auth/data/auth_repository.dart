@@ -30,7 +30,17 @@ class AuthRepository {
     Dio? dio,
   })  : _tokenStorage = tokenStorage,
         _config = config,
-        _dio = dio ?? Dio();
+        _dio = dio ??
+            Dio(BaseOptions(
+              baseUrl: config.baseUrl,
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              sendTimeout: const Duration(seconds: 30),
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+            ));
 
   final TokenStorage _tokenStorage;
   final EnvironmentConfig _config;

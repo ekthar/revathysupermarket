@@ -54,13 +54,26 @@ html {
   background: hsl(var(--background));
   overflow-x: clip;
   scroll-padding-top: var(--scroll-offset);
+  /* Prevent pinch-to-zoom on mobile PWA */
+  touch-action: pan-x pan-y;
+  -ms-touch-action: pan-x pan-y;
 }
 
 img, video, svg {
   max-width: 100%;
 }
 
-/* Remove 300ms tap delay globally */
+/* Prevent pull-to-refresh and overscroll bounce */
+body {
+  overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Remove 300ms tap delay + prevent double-tap zoom globally */
+*, *::before, *::after {
+  touch-action: manipulation;
+}
+
 a, button, input, select, textarea, [role="button"] {
   touch-action: manipulation;
 }

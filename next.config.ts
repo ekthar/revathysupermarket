@@ -20,6 +20,13 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true
   },
+  async rewrites() {
+    return {
+      fallback: [
+        { source: "/app/:path*", destination: "/app/index.html" }
+      ]
+    };
+  },
   async headers() {
     return [
       {

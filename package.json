@@ -17,7 +17,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "cap:sync": "npx cap sync",
-    "cap:build:android": "cd android && ./gradlew assembleDebug"
+    "cap:build:flutter:android": "cd msm_app && flutter build apk --release --dart-define=SITE_URL=https://msmsupermarket.in",
+    "build:flutter": "cd msm_app && flutter build web --release --dart-define=SITE_URL=$NEXT_PUBLIC_SITE_URL --base-href /app/ --output ../public/app"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

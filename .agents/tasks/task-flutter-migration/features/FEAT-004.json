@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Build integration: add Flutter build scripts to package.json, update next.config.ts with /app/* rewrite rule, and create the app/api/flutter-auth/route.ts authentication bridge endpoint. Covers Phases 7-8.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Add to package.json scripts: 'build:flutter': 'cd msm_app && flutter build web --release --dart-define=SITE_URL=$NEXT_PUBLIC_SITE_URL --base-href /app/ --output ../public/app'",
     "Replace cap:build:android in package.json with 'cap:build:flutter:android': 'cd msm_app && flutter build apk --release --dart-define=SITE_URL=https://msmsupermarket.in'",

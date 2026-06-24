@@ -4,7 +4,6 @@
  */
 
 declare global {
-  // eslint-disable-next-line no-var
   var __deliveryAlertControllers: Map<string, Set<ReadableStreamDefaultController>> | undefined;
 }
 

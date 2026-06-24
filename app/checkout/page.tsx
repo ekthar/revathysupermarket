@@ -44,7 +44,6 @@ export default async function CheckoutPage() {
       </section>
       <CheckoutForm
         deliveryRadiusKm={settings.deliveryRadiusKm}
-        allowedPincodes={settings.serviceablePincodes}
         deliveryEstimateMin={settings.deliveryEstimateMin}
         deliveryEstimateMax={settings.deliveryEstimateMax}
         minimumOrderValue={settings.minimumOrderValue}

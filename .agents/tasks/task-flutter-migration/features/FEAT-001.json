@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "chore",
   "description": "Install Flutter SDK and create the msm_app Flutter project with all required dependencies. Configure web/index.html for /app/ base href and PWA manifest.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Clone Flutter stable SDK to /opt/flutter (depth 1) and add to PATH",
     "Run flutter doctor to verify installation",
@@ -25,5 +25,5 @@
     "Run: cd /projects/sandbox/revathysupermarket/msm_app && flutter build web --release --base-href /app/"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Flutter 3.44.3 installed at /opt/flutter. The base href in web/index.html must stay as $FLUTTER_BASE_HREF placeholder - the --base-href /app/ build flag replaces it at build time. Web build produces wasm dry-run warnings about flutter_secure_storage_web using dart:html (non-breaking, JS compilation still works). All flutter commands require: export PATH=/opt/flutter/bin:$PATH"
 }

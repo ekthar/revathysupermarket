@@ -36,7 +36,8 @@ export default async function DailyReturnsReportPage() {
   }).catch(() => []);
 
   // Group by date
-  const byDate = new Map<string, { date: string; returns: typeof returns; total: number; count: number }>();
+  type ReturnEntry = (typeof returns)[number];
+  const byDate = new Map<string, { date: string; returns: ReturnEntry[]; total: number; count: number }>();
   for (const ret of returns) {
     const dateKey = ret.createdAt.toISOString().split("T")[0];
     if (!byDate.has(dateKey)) {

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import { Bike, Phone, Shield, ArrowRight, RefreshCw } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -125,7 +126,7 @@ export function DeliveryLoginClient({ logoUrl }: { logoUrl?: string | null }) {
         {/* Logo & Header */}
         <div className="mb-8 text-center">
           {logoUrl ? (
-            <img src={logoUrl} alt="Store logo" className="mx-auto mb-4 h-14 w-14 rounded-2xl object-cover" />
+            <Image src={logoUrl} alt="Store logo" width={56} height={56} className="mx-auto mb-4 h-14 w-14 rounded-2xl object-cover" />
           ) : (
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-emerald-100 dark:bg-emerald-900/50">
               <Bike className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />

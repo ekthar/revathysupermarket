@@ -6,10 +6,18 @@ import { Bell, Package, X, MapPin, ArrowRight } from "lucide-react";
 
 type AlertOrder = { id: string; orderNumber: string; customerName: string; address: string; total: number };
 
+/**
+ * Delivery partner alert system.
+ * Uses polling every 5 seconds to check for new assigned orders.
+ * Plays continuous beeping + vibration until dismissed.
+ * Works on Vercel (no long-lived SSE needed).
+ */
 export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
   const [alert, setAlert] = useState<AlertOrder | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
+  const knownOrdersRef = useRef<Set<string>>(new Set());
+  const firstPollRef = useRef(true);
 
   const startBeeping = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -18,19 +26,28 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
         if (!ctxRef.current || ctxRef.current.state === "closed") ctxRef.current = new AudioContext();
         const ctx = ctxRef.current;
         if (ctx.state === "suspended") ctx.resume();
+        // Tone 1
         const o = ctx.createOscillator(); const g = ctx.createGain();
         o.connect(g); g.connect(ctx.destination);
         o.frequency.setValueAtTime(880, ctx.currentTime); o.type = "square";
-        g.gain.setValueAtTime(0.2, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.3);
+        g.gain.setValueAtTime(0.25, ctx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.25);
+        // Tone 2
         const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
         o2.connect(g2); g2.connect(ctx.destination);
-        o2.frequency.setValueAtTime(1100, ctx.currentTime + 0.35); o2.type = "square";
-        g2.gain.setValueAtTime(0.2, ctx.currentTime + 0.35);
-        g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.65);
-        o2.start(ctx.currentTime + 0.35); o2.stop(ctx.currentTime + 0.65);
-      } catch { /* no audio */ }
+        o2.frequency.setValueAtTime(1100, ctx.currentTime + 0.3); o2.type = "square";
+        g2.gain.setValueAtTime(0.25, ctx.currentTime + 0.3);
+        g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.55);
+        o2.start(ctx.currentTime + 0.3); o2.stop(ctx.currentTime + 0.55);
+        // Tone 3
+        const o3 = ctx.createOscillator(); const g3 = ctx.createGain();
+        o3.connect(g3); g3.connect(ctx.destination);
+        o3.frequency.setValueAtTime(1320, ctx.currentTime + 0.6); o3.type = "square";
+        g3.gain.setValueAtTime(0.25, ctx.currentTime + 0.6);
+        g3.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.9);
+        o3.start(ctx.currentTime + 0.6); o3.stop(ctx.currentTime + 0.9);
+      } catch { /* audio unavailable */ }
       if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
     };
     beep();
@@ -42,17 +59,40 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
     if (navigator.vibrate) navigator.vibrate(0);
   }, []);
 
+  // Poll for new orders every 5 seconds
   useEffect(() => {
     if (!partnerId) return;
-    let es: EventSource | null = null;
-    let reconnect: ReturnType<typeof setTimeout>;
-    function connect() {
-      es = new EventSource(`/api/delivery/alerts?partnerId=${encodeURIComponent(partnerId)}`);
-      es.onmessage = (ev) => { try { const d = JSON.parse(ev.data); if (d.type === "new_order") { setAlert(d.order); startBeeping(); } } catch {} };
-      es.onerror = () => { es?.close(); reconnect = setTimeout(connect, 5000); };
+    let active = true;
+
+    async function poll() {
+      try {
+        const res = await fetch("/api/delivery/poll", { cache: "no-store" });
+        if (!res.ok || !active) return;
+        const data = await res.json();
+        const orders: Array<{ id: string; orderNumber: string; customerName: string; address: string; total: number }> = data.orders ?? [];
+
+        // On first poll, just record known orders (don't alert for existing ones)
+        if (firstPollRef.current) {
+          firstPollRef.current = false;
+          for (const o of orders) knownOrdersRef.current.add(o.id);
+          return;
+        }
+
+        // Check for new orders not seen before
+        for (const order of orders) {
+          if (!knownOrdersRef.current.has(order.id)) {
+            knownOrdersRef.current.add(order.id);
+            setAlert(order);
+            startBeeping();
+            break; // Show one at a time
+          }
+        }
+      } catch { /* network error, retry next cycle */ }
     }
-    connect();
-    return () => { es?.close(); clearTimeout(reconnect); stopBeeping(); };
+
+    poll();
+    const timer = setInterval(poll, 5000);
+    return () => { active = false; clearInterval(timer); stopBeeping(); };
   }, [partnerId, startBeeping, stopBeeping]);
 
   const dismiss = useCallback(() => { setAlert(null); stopBeeping(); }, [stopBeeping]);

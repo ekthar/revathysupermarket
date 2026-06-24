@@ -1,26 +1,26 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { isDeliveryRole } from "@/lib/authz";
 import { deliveryLocationSchema } from "@/lib/validations";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { authenticateDeliveryRequest } from "@/lib/hybrid-auth";
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id || !isDeliveryRole(session.user.role)) {
+  const authResult = await authenticateDeliveryRequest(request);
+  if (!authResult) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
-  const limit = await enforceRateLimit(`delivery:location:${session.user.id}`, 120, 60);
+
+  const limit = await enforceRateLimit(`delivery:location:${authResult.userId}`, 120, 60);
   if (limit.limited) return rateLimitResponse(limit.reset);
   const body = await request.json();
   const parsed = deliveryLocationSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid location." }, { status: 400 });
 
-  const activeOrder = await prisma.order.findFirst({ where: { deliveryPartnerId: session.user.id, status: { in: ["OUT_FOR_DELIVERY", "ARRIVING"] } }, select: { id: true, status: true, latitude: true, longitude: true } });
+  const activeOrder = await prisma.order.findFirst({ where: { deliveryPartnerId: authResult.userId, status: { in: ["OUT_FOR_DELIVERY", "ARRIVING"] } }, select: { id: true, status: true, latitude: true, longitude: true } });
   const distanceMetres = activeOrder ? distanceInMetres(parsed.data.latitude, parsed.data.longitude, Number(activeOrder.latitude), Number(activeOrder.longitude)) : null;
   await prisma.$transaction(async (tx) => {
-    await tx.user.update({ where: { id: session.user.id }, data: { currentLatitude: parsed.data.latitude, currentLongitude: parsed.data.longitude, locationUpdatedAt: new Date() } });
-    if (activeOrder) await tx.deliveryLocationEvent.create({ data: { orderId: activeOrder.id, deliveryPartnerId: session.user.id, latitude: parsed.data.latitude, longitude: parsed.data.longitude } });
+    await tx.user.update({ where: { id: authResult.userId }, data: { currentLatitude: parsed.data.latitude, currentLongitude: parsed.data.longitude, locationUpdatedAt: new Date() } });
+    if (activeOrder) await tx.deliveryLocationEvent.create({ data: { orderId: activeOrder.id, deliveryPartnerId: authResult.userId, latitude: parsed.data.latitude, longitude: parsed.data.longitude } });
     await tx.deliveryLocationEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } });
   });
   return NextResponse.json({ ok: true, status: activeOrder?.status, distanceMetres });

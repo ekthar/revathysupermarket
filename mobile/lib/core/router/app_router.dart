@@ -30,6 +30,11 @@ abstract class AppRoutes {
   static const deliveryLogin = '/delivery/login';
   static const deliveryDashboard = '/delivery/dashboard';
   static const deliveryOrderDetail = '/delivery/orders/:id';
+  static const deliveryAlertSetup = '/delivery/alert-setup';
+  static const deliveryPickup = '/delivery/orders/:id/pickup';
+  static const deliveryDamage = '/delivery/orders/:id/damage';
+  static const deliveryCollection = '/delivery/orders/:id/collection';
+  static const deliveryCompletion = '/delivery/orders/:id/complete';
 }
 
 /// Creates the application router with role-based guards.
@@ -140,6 +145,39 @@ GoRouter createAppRouter({
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return _PlaceholderPage(title: 'Delivery Order $id');
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.deliveryAlertSetup,
+        builder: (context, state) =>
+            const _PlaceholderPage(title: 'Alert Setup'),
+      ),
+      GoRoute(
+        path: AppRoutes.deliveryPickup,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return _PlaceholderPage(title: 'Pickup $id');
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.deliveryDamage,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return _PlaceholderPage(title: 'Damage Report $id');
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.deliveryCollection,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return _PlaceholderPage(title: 'Collection $id');
+        },
+      ),
+      GoRoute(
+        path: AppRoutes.deliveryCompletion,
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return _PlaceholderPage(title: 'Complete $id');
         },
       ),
     ],

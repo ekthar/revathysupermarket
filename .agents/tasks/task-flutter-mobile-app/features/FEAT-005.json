@@ -1,0 +1,46 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Implement delivery partner workflow in Flutter: FCM push with end-to-end assignment alerts, fallback polling/reconciliation, foreground alarm, acknowledgment, GPS tracking, deep links, and the complete delivery lifecycle (pickup, damage, collection, OTP completion). Include comprehensive tests.",
+  "status": "in_progress",
+  "steps": [
+    "Add Flutter FCM dependencies to pubspec.yaml: firebase_core, firebase_messaging, flutter_local_notifications, audioplayers (for alarm audio), geolocator, permission_handler.",
+    "Create FCM setup: lib/core/firebase/firebase_options_dev.dart and firebase_options_prod.dart as placeholder config files (DefaultFirebaseOptions with dummy values, clearly commented as needing replacement). lib/core/firebase/fcm_service.dart that initializes Firebase, requests notification permission, gets FCM token, registers token via /api/mobile/v1/devices POST, handles token refresh (re-registers automatically).",
+    "Create assignment alert system: lib/features/delivery/data/assignment_repository.dart - fetches pending assignments from /api/mobile/v1/assignments GET, acknowledges via POST. Reconciliation logic: on app startup, resume (AppLifecycleState.resumed), login, network recovery, and periodic (every 30s while foregrounded) - fetches pending assignments and triggers alarm for any unacknowledged ones. Uses a local Set of active eventIds to prevent duplicate alarms.",
+    "Create foreground alarm: lib/features/delivery/presentation/assignment_alarm_screen.dart - full-screen overlay showing order details (orderNumber, customerName, address, total). Plays looping alarm audio every 3 seconds using audioplayers. Shows until user taps 'Dismiss' or 'View Order'. Manages audio focus correctly (pause/resume with lifecycle). Only one alarm screen active at a time (queue additional assignments). lib/features/delivery/services/alarm_audio_service.dart for audio management.",
+    "Create Android notification channel: In the Android manifest and via flutter_local_notifications, create a high-importance channel 'delivery_alerts' with: vibration pattern, sound, full-screen intent support, heads-up notification. In AndroidManifest.xml add: USE_FULL_SCREEN_INTENT permission, SCHEDULE_EXACT_ALARM (API 31+), REQUEST_IGNORE_BATTERY_OPTIMIZATIONS. Add the full-screen activity declaration. Document Play Store policy: full-screen intents limited to calling/alarm apps since Android 14 (API 34), degrade to heads-up if denied.",
+    "Create iOS notification setup: Request time-sensitive notification authorization (UNAuthorizationOptions.timeSensitive). Document in code comments that iOS does not allow continuous background audio/full-screen takeover like Android - the strongest policy-compliant behavior is: critical/time-sensitive notification + sound + banner. FCM APNs setup instructions in placeholder config.",
+    "Create background message handler: In lib/core/firebase/fcm_service.dart, implement onBackgroundMessage handler that: parses the FCM data message (eventId, orderId, orderNumber, assignedAt, deepLink), shows a high-priority local notification on the delivery_alerts channel with full-screen intent (Android) or time-sensitive (iOS). On notification tap, deep-link to the assignment detail.",
+    "Create delivery alert setup screen: lib/features/delivery/presentation/alert_setup_screen.dart - first-run screen for delivery partners that: (1) checks and requests notification permission, (2) checks exact alarm / full-screen intent capability (Android), (3) checks battery optimization status and prompts to disable, (4) plays a test alarm sound. After setup, shows an actionable health/status card on the delivery dashboard showing green/yellow/red status for each capability.",
+    "Create delivery dashboard: lib/features/delivery/presentation/delivery_dashboard_screen.dart - shows partner name, today's stats (deliveries, cash collected, UPI collected, total lifetime), active orders list, alert health card. Pull-to-refresh updates all data.",
+    "Create delivery order flow screens: (a) delivery_order_detail_screen.dart - order info, items, customer address with map link, call button. (b) pickup_confirmation - marks order as picked up via PATCH /api/delivery/orders/[id] with action:'picked_up' (uses mobile auth variant or add mobile auth support to existing endpoint). (c) damage_report_screen.dart - item selector, quantity, reason, reduction amount, evidence photo upload. (d) collection_screen.dart - cash/UPI input, UPI reference, validates against expected amount. (e) completion_screen.dart - OTP input (6 digits) + slide-to-deliver control, calls /api/delivery/complete.",
+    "Create GPS tracking service: lib/features/delivery/services/location_service.dart - uses geolocator to watch position only during active delivery (status OUT_FOR_DELIVERY or ARRIVING). Throttles updates to max once per 5 seconds. Posts to /api/delivery/location. Stops immediately when delivery completes or no active orders. Handles background location permission correctly (request only when needed, explain to user why). Never logs precise coordinates.",
+    "Implement deep links: Configure GoRouter to handle deep links like msmsupermarket://delivery/order/{id} and msmsupermarket://order/{id}. FCM notification tap should navigate to the correct screen.",
+    "Modify existing backend endpoints to support mobile auth: Add authenticateMobileRequest as alternative auth check in /api/delivery/poll, /api/delivery/orders/[id], /api/delivery/complete, /api/delivery/collect, /api/delivery/damage, /api/delivery/location. If Authorization header with Bearer token is present, use mobile auth; otherwise fall back to session auth (preserving web compatibility).",
+    "Add comprehensive tests: (a) test/features/delivery/assignment_repository_test.dart - test reconciliation logic, duplicate prevention, idempotent acknowledgment. (b) test/features/delivery/alarm_service_test.dart - test that alarm starts/stops correctly, only one alarm active. (c) test/features/delivery/location_service_test.dart - test throttling, stops when no active delivery. (d) Backend tests: tests/assignment-flow.test.ts - test assignment creates event, reassignment creates new event, unauthorized acknowledgment fails, duplicate acknowledgment succeeds, cold start reconciliation returns pending. (e) test/features/delivery/fcm_service_test.dart - test token registration, refresh handling.",
+    "Run all tests and verify.",
+    "Commit with message 'feat: implement delivery workflow with FCM alerts, alarm, GPS tracking, and deep links'."
+  ],
+  "acceptance_criteria": [
+    "FCM service initializes, registers device token, handles token refresh",
+    "Assignment events are created on order assignment and available via /api/mobile/v1/assignments",
+    "Foreground alarm plays looping audio every 3s and shows full-screen overlay",
+    "Only one alarm screen active at a time (no duplicates from repeated polls/pushes)",
+    "Acknowledgment is idempotent and ownership-checked",
+    "Background handler shows high-priority notification with full-screen intent (Android)",
+    "iOS uses time-sensitive notifications with documented limitations",
+    "GPS tracking starts only during active delivery and stops immediately after",
+    "Alert setup screen verifies all required permissions",
+    "Existing web delivery partner UI continues to work (backend changes are additive)",
+    "All Flutter tests pass",
+    "All backend tests pass"
+  ],
+  "verification": [
+    "Run 'cd mobile && flutter analyze' - no errors",
+    "Run 'cd mobile && flutter test' - all tests pass",
+    "Run 'npm test' - all backend tests pass including new assignment flow tests",
+    "Run 'npm run build' - backend builds successfully"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

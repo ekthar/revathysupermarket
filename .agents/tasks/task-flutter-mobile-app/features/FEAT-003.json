@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Scaffold the mobile/ Flutter project with environments/flavors, networking layer, auth, routing, theming, model generation, error handling, and CI configuration.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Install Flutter SDK: download latest stable from https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.29.3-stable.tar.xz (or latest available), extract to /opt/flutter, add to PATH. Run 'flutter doctor' to verify.",
     "Create Flutter project: 'flutter create --org com.msmsupermarket --project-name msm_mobile --platforms android,ios mobile' from the repository root.",
@@ -36,5 +36,5 @@
     "Run 'npm run build' in root to confirm backend still builds"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Flutter SDK 3.32.2 installed at /opt/flutter. Project created with flutter create. All dependencies resolved via flutter pub get. build_runner generated Freezed/JSON code (4 outputs). flutter analyze passes with no issues. flutter test passes. npm run build (backend) still succeeds. Root .gitignore had 'android/' and 'ios/' patterns from Capacitor that blocked mobile/android/ and mobile/ios/ - fixed by prefixing with / to make them root-relative. xz package needed to be installed (yum install -y xz) for Flutter tarball extraction. Java 25 available for Android builds."
 }

@@ -1,0 +1,7 @@
+{
+  "task_id": "task-flutter-mobile-app",
+  "task_description": "Convert MSM Supermarket customer and delivery-partner mobile experience to a production-grade Flutter app while retaining the existing Next.js 15 backend and web admin portal. Includes versioned mobile API, bearer token auth, FCM push for delivery alerts, and comprehensive documentation.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005", "FEAT-006"],
+  "blocked_reason": null
+}

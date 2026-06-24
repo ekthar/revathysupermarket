@@ -1,0 +1,40 @@
+{
+  "id": "FEAT-006",
+  "type": "docs",
+  "description": "Add Firebase setup documentation with placeholder configuration files, produce docs/flutter-release-checklist.md, run final validation (Prisma, backend build/tests, Flutter analyze/test, Android debug build), and fix any introduced failures.",
+  "status": "in_progress",
+  "steps": [
+    "Create docs/firebase-setup.md documenting: (1) How to create a Firebase project. (2) How to add Android app with package name com.msmsupermarket.msm_mobile. (3) How to add iOS app. (4) Where to place google-services.json (mobile/android/app/) and GoogleService-Info.plist (mobile/ios/Runner/). (5) How to enable Cloud Messaging. (6) How to generate and set FIREBASE_SERVER_KEY or use Firebase Admin SDK service account. (7) Add FIREBASE_PROJECT_ID and FIREBASE_SERVICE_ACCOUNT_KEY to .env.example as placeholders. (8) Explain that the placeholder files (*.example) must be replaced but never commit real credentials.",
+    "Ensure .gitignore entries exist for: mobile/android/app/google-services.json, mobile/ios/Runner/GoogleService-Info.plist, mobile/ios/Runner/firebase_app_id_file.json, and any *.jks or *.keystore files.",
+    "Create docs/flutter-release-checklist.md with sections: (1) Environment Variables - list all new env vars needed (FIREBASE_PROJECT_ID, FIREBASE_SERVICE_ACCOUNT_KEY, etc.) plus existing ones from .env.example. (2) Database Migration Order - run prisma migrate deploy before deploying new code. (3) Firebase/APNs Setup - reference docs/firebase-setup.md, APNs key upload steps. (4) App Signing - Android keystore generation, upload key to Play Console, reference build.gradle signing config. iOS provisioning profiles and certificates. (5) Permissions and Privacy Disclosures - list all Android permissions (INTERNET, ACCESS_FINE_LOCATION, ACCESS_BACKGROUND_LOCATION, POST_NOTIFICATIONS, USE_FULL_SCREEN_INTENT, SCHEDULE_EXACT_ALARM, REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, VIBRATE, WAKE_LOCK, RECEIVE_BOOT_COMPLETED) with justification text for Play Store. iOS NSLocationWhenInUseUsageDescription, NSLocationAlwaysUsageDescription strings. (6) Staged Rollout - internal testing track first, 5% -> 25% -> 100%. (7) Monitoring - crash reporting (Firebase Crashlytics), analytics, alert delivery success rate monitoring. (8) Rollback Plan - versioned API allows independent rollback of mobile vs backend.",
+    "Run 'npx prisma validate' and fix any schema issues.",
+    "Run 'npm run build' and fix any TypeScript/build errors.",
+    "Run 'npm test' and fix any test failures.",
+    "Run 'cd mobile && flutter analyze' and fix any analysis errors.",
+    "Run 'cd mobile && flutter test' and fix any test failures.",
+    "Run 'cd mobile && flutter build apk --debug' to verify Android debug build (this validates the project compiles for Android).",
+    "Commit with message 'docs: add Firebase setup guide and release checklist; fix final validation issues'.",
+    "Ensure all commits are on the flutter-mobile-app branch."
+  ],
+  "acceptance_criteria": [
+    "docs/firebase-setup.md exists with comprehensive Firebase setup instructions",
+    "docs/flutter-release-checklist.md exists covering all 8 sections listed",
+    ".gitignore includes Firebase credential files",
+    "npx prisma validate passes",
+    "npm run build succeeds",
+    "npm test passes all tests",
+    "flutter analyze reports no errors",
+    "flutter test passes all tests",
+    "flutter build apk --debug succeeds (Android compilable)"
+  ],
+  "verification": [
+    "Run 'npx prisma validate' - success",
+    "Run 'npm run build' - success",
+    "Run 'npm test' - all pass",
+    "Run 'cd mobile && flutter analyze' - no errors",
+    "Run 'cd mobile && flutter test' - all pass",
+    "Run 'cd mobile && flutter build apk --debug' - build succeeds"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

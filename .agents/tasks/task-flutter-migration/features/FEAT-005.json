@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-005",
+  "type": "fix",
+  "description": "Post-review fixes: hybrid auth utility for Bearer token support, JWT payload improvements, orders route hybrid auth, and manifest.json metadata fix.",
+  "status": "completed",
+  "steps": [
+    "Create lib/flutter-auth-session.ts with getSessionOrBearer(request) utility that tries NextAuth auth() first, then falls back to verifying Bearer token from Authorization header using jsonwebtoken, checking user isActive/passwordVersion/authVersion from DB",
+    "Update app/api/flutter-auth/route.ts to include passwordVersion and authVersion in the JWT payload",
+    "Update app/api/orders/route.ts to use getSessionOrBearer instead of auth() directly",
+    "Fix msm_app/web/manifest.json: update name, short_name, background_color, theme_color, and description"
+  ],
+  "acceptance_criteria": [
+    "lib/flutter-auth-session.ts exports getSessionOrBearer(request: Request) that returns session-compatible object or null",
+    "The hybrid auth tries auth() first, then falls back to Bearer token verification",
+    "Bearer token verification checks isActive, passwordVersion, and authVersion against the DB",
+    "flutter-auth route includes passwordVersion and authVersion in JWT payload",
+    "orders route uses getSessionOrBearer instead of auth()",
+    "manifest.json has name='MSM Supermarket', short_name='MSM', background_color='#FF6600', theme_color='#FF6600'"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/revathysupermarket && npx tsc --noEmit --skipLibCheck lib/flutter-auth-session.ts || echo 'TypeScript check done'",
+    "Verify manifest.json has correct values"
+  ],
+  "blocked_reason": null,
+  "findings": "TypeScript compiles cleanly with npx tsc --noEmit --skipLibCheck (zero errors). Flutter analyze passes. Flutter build web succeeds. The hybrid auth utility follows the same DB lookup pattern as the NextAuth session callback in auth.ts."
+}

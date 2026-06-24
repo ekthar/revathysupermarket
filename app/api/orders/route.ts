@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getSessionOrBearer } from "@/lib/flutter-auth-session";
 import { calculateDistanceKm } from "@/lib/distance";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 import { clientIp } from "@/lib/request-security";
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     const limit = await enforceRateLimit(`order:${clientIp(request)}`, 10, 600);
     if (limit.limited) return rateLimitResponse(limit.reset);
 
-    const session = await auth();
+    const session = await getSessionOrBearer(request);
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Please create an account or log in before placing an order." }, { status: 401 });
     }
@@ -257,9 +257,9 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const session = await auth();
+    const session = await getSessionOrBearer(request);
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const orders = await prisma.order.findMany({
       where: isStaffRole(session.user.role) ? {} : { userId: session.user.id },

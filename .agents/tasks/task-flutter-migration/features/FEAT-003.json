@@ -1,0 +1,36 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Build the Swiggy-style design system (theme + reusable widgets) and implement scroll/animation patterns. Covers Phases 5-6 of the migration.",
+  "status": "completed",
+  "steps": [
+    "Create lib/theme/app_theme.dart with: primary Color(0xFFFF6600), secondary Color(0xFF22C55E), background Color(0xFFF7F7F7), surface Colors.white. Typography using GoogleFonts.manropeTextTheme() for display and GoogleFonts.interTextTheme() for body. Create both light ThemeData.",
+    "Create lib/widgets/product_card.dart: image at top (CachedNetworkImage), name with 2-line clamp, price row showing discountPrice strikethrough + current price, ADD/stepper button at bottom. Use flutter_animate for fade-in on appear.",
+    "Create lib/widgets/category_chip.dart: horizontal scroll pill chip with emoji + label, selected state with primary color fill",
+    "Create lib/widgets/banner_carousel.dart: PageView.builder with auto-scroll Timer (5s interval), SmoothPageIndicator dots below, CachedNetworkImage for banner images",
+    "Create lib/widgets/floating_cart_bar.dart: Positioned at bottom of Scaffold, shows item count + total price + 'View Cart' button. AnimatedSwitcher for show/hide based on cart state",
+    "Create lib/widgets/quantity_stepper.dart: Row with minus/count/plus buttons, animated with flutter_animate scale effect on tap",
+    "Create lib/widgets/section_header.dart: Bold title on left + 'See all' TextButton on right, accepts title and onSeeAll callback",
+    "Create lib/widgets/shimmer_card.dart: Shimmer loading skeleton matching ProductCard dimensions using shimmer package",
+    "Create lib/widgets/bottom_nav_bar.dart: 5-tab NavigationBar (M3 style) with tabs: Home, Categories, Cart (with badge), Orders, Account. Orange active indicator using primary color.",
+    "Implement scroll patterns in relevant screens: SingleChildScrollView with scrollDirection: Axis.horizontal and BouncingScrollPhysics for category chips. CustomScrollView with SliverGrid and pinned SliverAppBar for product grid. RefreshIndicator wrapping main content with brand-colored spinner.",
+    "Implement animation utilities in lib/utils/animations.dart: extension methods or helper functions for fadeInUp (fadeIn + slideY(begin:0.1)), stagger delay pattern (N*50ms), press3d effect (GestureDetector with Transform.scale on tap)",
+    "Update main.dart to use AppTheme and include BottomNavBar in the shell route",
+    "Run flutter analyze to verify no errors"
+  ],
+  "acceptance_criteria": [
+    "AppTheme produces a ThemeData with correct primary (#FF6600), secondary (#22C55E), background (#F7F7F7) colors and Manrope/Inter fonts",
+    "All 8 widget files exist in lib/widgets/ and compile without errors",
+    "ProductCard displays image, clamped name, price, and add button",
+    "BannerCarousel auto-scrolls with timer and shows page indicator dots",
+    "BottomNavBar has 5 tabs with orange active indicator",
+    "FloatingCartBar shows/hides based on cart item count",
+    "flutter analyze reports no errors"
+  ],
+  "verification": [
+    "Run: export PATH=/opt/flutter/bin:$PATH && cd /projects/sandbox/revathysupermarket/msm_app && flutter analyze",
+    "Run: cd /projects/sandbox/revathysupermarket/msm_app && flutter build web --release --dart-define=SITE_URL=https://msmsupermarket.in --base-href /app/"
+  ],
+  "blocked_reason": null,
+  "findings": "1. Used .withValues(alpha: x) instead of deprecated .withOpacity(x) for Flutter 3.x SDK compatibility. 2. NavigationBarThemeData uses WidgetStateProperty (not MaterialStateProperty) matching current SDK. 3. Web build emits wasm dry-run warnings for flutter_secure_storage_web (dart:html) but JS build succeeds. 4. ShellRoute wraps Home, Products, Cart, Orders, Account tabs; other routes (product detail, checkout, login, order detail, live tracking, offers) are outside the shell for full-screen navigation."
+}

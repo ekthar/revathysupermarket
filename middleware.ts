@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
-import authConfig from "@/auth.config";
-import { isSameOriginRequest } from "@/lib/request-security";
+import authConfig from "./auth.config";
+import { isSameOriginRequest } from "./lib/request-security";
 
 const { auth } = NextAuth(authConfig);
 const staffRoles = new Set(["ADMIN", "STAFF", "OWNER", "MANAGER", "PACKING_STAFF"]);

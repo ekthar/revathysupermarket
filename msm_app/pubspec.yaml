@@ -43,6 +43,8 @@ dependencies:
   smooth_page_indicator: ^1.1.0
   flutter_animate: ^4.5.0
   badges: ^3.1.2
+  json_annotation: ^4.8.1
+  freezed_annotation: ^2.4.1
   geolocator: ^13.0.1
   flutter_map: ^7.0.0
   latlong2: ^0.9.0
@@ -54,12 +56,12 @@ dev_dependencies:
   flutter_lints: ^6.0.0
   build_runner: ^2.4.8
   freezed: ^2.5.2
-  freezed_annotation: ^2.4.1
   json_serializable: ^6.7.1
-  json_annotation: ^4.8.1
-  riverpod_generator: ^2.4.0
-  riverpod_annotation: ^2.3.5
-  riverpod_lint: ^2.3.10
+  # riverpod_generator and riverpod_lint disabled due to analyzer_plugin
+  # incompatibility with current Dart SDK. Using manual providers instead.
+  # riverpod_generator: ^2.4.0
+  # riverpod_annotation: ^2.3.5
+  # riverpod_lint: ^2.3.10
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

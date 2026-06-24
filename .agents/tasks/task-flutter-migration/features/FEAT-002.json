@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Implement routing (go_router), API layer (Dio + repositories), state management (Riverpod), and model classes for the Flutter app. This covers Phases 2-4 of the migration.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create lib/router/app_router.dart with go_router configuration containing all routes: / (HomeScreen), /products (ProductListScreen with query params category/search), /products/:id (ProductDetailScreen), /cart (CartScreen), /checkout (CheckoutScreen), /login (LoginScreen), /orders (OrderHistoryScreen), /orders/:id (OrderDetailScreen), /track/:id (LiveTrackingScreen), /account (AccountScreen), /offers (OffersScreen). Add redirect guard: unauthenticated users hitting /checkout or /orders redirect to /login?returnTo=<original_path>",
     "Create lib/api/api_client.dart using Dio with BaseOptions(baseUrl: const String.fromEnvironment('SITE_URL')). Add interceptor that reads JWT from FlutterSecureStorage, injects Authorization: Bearer <token>, on 401 clears token and redirects to /login, logs in debug mode only",

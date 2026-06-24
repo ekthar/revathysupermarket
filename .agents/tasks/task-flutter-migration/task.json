@@ -1,0 +1,7 @@
+{
+  "task_id": "task-flutter-migration",
+  "task_description": "Migrate MSM Supermarket customer-facing web app from Next.js to Flutter Web. Create a new Flutter project at msm_app/ with routing, API layer, state management, UI widget system, build integration, and auth bridge API route. The existing Next.js admin/API backend remains unchanged.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004"],
+  "blocked_reason": null
+}

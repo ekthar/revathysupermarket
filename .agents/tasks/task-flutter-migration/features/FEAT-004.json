@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Build integration: add Flutter build scripts to package.json, update next.config.ts with /app/* rewrite rule, and create the app/api/flutter-auth/route.ts authentication bridge endpoint. Covers Phases 7-8.",
+  "status": "pending",
+  "steps": [
+    "Add to package.json scripts: 'build:flutter': 'cd msm_app && flutter build web --release --dart-define=SITE_URL=$NEXT_PUBLIC_SITE_URL --base-href /app/ --output ../public/app'",
+    "Replace cap:build:android in package.json with 'cap:build:flutter:android': 'cd msm_app && flutter build apk --release --dart-define=SITE_URL=https://msmsupermarket.in'",
+    "Update next.config.ts: add a rewrites() function that returns { source: '/app/:path*', destination: '/app/index.html' } as a fallback rewrite so Flutter's client-side routing works for all /app/* paths",
+    "Create app/api/flutter-auth/route.ts: POST endpoint that accepts { phone, otp, name? } in the body, calls verifyLatestOtp(phone, otp) from lib/otp.ts, on success upserts the user (same logic as phone-otp credentials provider in auth.ts), signs a JWT using jsonwebtoken with the NEXTAUTH_SECRET containing { id, role, name, email, phone }, returns { token, user } on success or { error } on failure",
+    "Run flutter analyze in msm_app/ to confirm Flutter app still compiles cleanly"
+  ],
+  "acceptance_criteria": [
+    "package.json has build:flutter and cap:build:flutter:android scripts",
+    "next.config.ts has rewrites() returning fallback for /app/:path*",
+    "app/api/flutter-auth/route.ts exists and handles POST with phone+otp verification, returns JWT",
+    "The auth bridge uses the same OTP verification logic as the existing phone-otp provider",
+    "flutter analyze passes in msm_app/"
+  ],
+  "verification": [
+    "Run: export PATH=/opt/flutter/bin:$PATH && cd /projects/sandbox/revathysupermarket/msm_app && flutter analyze",
+    "Run: cd /projects/sandbox/revathysupermarket && npx tsc --noEmit --skipLibCheck app/api/flutter-auth/route.ts || echo 'TypeScript check done'"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

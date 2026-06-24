@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Implement routing (go_router), API layer (Dio + repositories), state management (Riverpod), and model classes for the Flutter app. This covers Phases 2-4 of the migration.",
+  "status": "pending",
+  "steps": [
+    "Create lib/router/app_router.dart with go_router configuration containing all routes: / (HomeScreen), /products (ProductListScreen with query params category/search), /products/:id (ProductDetailScreen), /cart (CartScreen), /checkout (CheckoutScreen), /login (LoginScreen), /orders (OrderHistoryScreen), /orders/:id (OrderDetailScreen), /track/:id (LiveTrackingScreen), /account (AccountScreen), /offers (OffersScreen). Add redirect guard: unauthenticated users hitting /checkout or /orders redirect to /login?returnTo=<original_path>",
+    "Create lib/api/api_client.dart using Dio with BaseOptions(baseUrl: const String.fromEnvironment('SITE_URL')). Add interceptor that reads JWT from FlutterSecureStorage, injects Authorization: Bearer <token>, on 401 clears token and redirects to /login, logs in debug mode only",
+    "Create lib/models/ directory with freezed model classes: product.dart (Product with id, slug, name, category, price, discountPrice, image, description, stock, popularity, unit), cart_item.dart (CartItem with product, quantity), order.dart (Order with all fields from GET /api/orders response), user.dart (User with id, name, email, phone, role)",
+    "Create lib/api/auth_repository.dart with methods: sendOtp(phone) calling POST /api/auth/otp/send, verifyOtp(phone, otp, name) calling POST /api/flutter-auth (the bridge endpoint)",
+    "Create lib/api/products_repository.dart with methods: getProducts(category?, search?, page?) and getProductById(id). Note: current backend serves products from static file, so this may call a future API endpoint or load from embedded data",
+    "Create lib/api/orders_repository.dart with methods: getOrders(), getOrderById(id), checkout(checkoutData)",
+    "Create lib/providers/ directory with Riverpod providers: auth_provider.dart (AuthNotifier holding User? state, reads/writes JWT to FlutterSecureStorage), cart_provider.dart (CartNotifier with List<CartItem>, persisted to SharedPreferences), products_provider.dart (AsyncNotifier for paginated product list with category/search), orders_provider.dart (AsyncNotifier for paginated order history)",
+    "Create placeholder screen files in lib/screens/ for each route: home_screen.dart, product_list_screen.dart, product_detail_screen.dart, cart_screen.dart, checkout_screen.dart, login_screen.dart, order_history_screen.dart, order_detail_screen.dart, live_tracking_screen.dart, account_screen.dart, offers_screen.dart - each as a minimal Scaffold with the screen name displayed",
+    "Update lib/main.dart to use ProviderScope and MaterialApp.router with the go_router configuration",
+    "Run dart run build_runner build --delete-conflicting-outputs to generate .g.dart and .freezed.dart files",
+    "Run flutter analyze to verify no errors"
+  ],
+  "acceptance_criteria": [
+    "All route paths are defined and navigate to the correct placeholder screens",
+    "Auth redirect guard works: /checkout and /orders redirect to /login when no auth token present",
+    "Dio client is configured with base URL from dart-define and JWT interceptor",
+    "All model classes compile and have generated serialization code",
+    "Riverpod providers compile and have correct state types",
+    "flutter analyze reports no errors"
+  ],
+  "verification": [
+    "Run: export PATH=/opt/flutter/bin:$PATH && cd /projects/sandbox/revathysupermarket/msm_app && flutter analyze",
+    "Run: cd /projects/sandbox/revathysupermarket/msm_app && flutter test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

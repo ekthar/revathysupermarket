@@ -585,7 +585,6 @@ export function CheckoutForm({
                 >
                   {locationOk ? `✓ Within delivery range (${distance?.toFixed(1)} KM)` : "Tap Detect above to verify delivery eligibility"}
                 </motion.p>
-                </motion.p>
               )}
             </AnimatePresence>
 

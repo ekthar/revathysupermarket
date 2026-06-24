@@ -1,47 +1,60 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { DeliveryOrdersClient } from "@/components/delivery/delivery-orders-client";
+import { DeliveryAppShell } from "@/components/delivery/delivery-app-shell";
 import { DeliveryAlertListener } from "@/components/delivery/delivery-alert-listener";
-import { InstallAppButton } from "@/components/install-app-button";
 
 export const dynamic = "force-dynamic";
 
 export default async function DeliveryPage() {
   const session = await auth();
-  const orders = session?.user?.id
-    ? await prisma.order.findMany({
-        where: { deliveryPartnerId: session.user.id, status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING"] } },
-        include: { items: true, deliveryCollection: true },
-        orderBy: { createdAt: "desc" }
-      })
-    : [];
+  const userId = session?.user?.id;
+  if (!userId) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [orders, todayDelivered, todayEarnings, totalDelivered] = await Promise.all([
+    prisma.order.findMany({
+      where: { deliveryPartnerId: userId, status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING"] } },
+      include: { items: true, deliveryCollection: true },
+      orderBy: { createdAt: "desc" }
+    }),
+    prisma.order.count({ where: { deliveryPartnerId: userId, status: "DELIVERED", updatedAt: { gte: today } } }),
+    prisma.deliveryCollection.aggregate({
+      where: { partnerId: userId, createdAt: { gte: today } },
+      _sum: { cashCollected: true, upiCollected: true }
+    }),
+    prisma.order.count({ where: { deliveryPartnerId: userId, status: "DELIVERED" } })
+  ]);
 
   return (
-    <main className="mx-auto max-w-3xl px-4 py-8">
-      {/* Real-time alert listener - shows fullscreen alert on new assignment */}
-      {session?.user?.id && <DeliveryAlertListener partnerId={session.user.id} />}
-
-      <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5">
-        <p className="text-xs font-black uppercase text-primary">Delivery partner</p>
-        <h1 className="mt-2 font-display text-4xl font-black">Assigned orders</h1>
-        <div className="mt-4 max-w-xs"><InstallAppButton /></div>
-      </section>
-      <DeliveryOrdersClient
-        orders={orders.map((order) => ({
-          id: order.id,
-          orderNumber: order.orderNumber,
-          customerName: order.customerName,
-          phone: order.phone,
-          address: `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`,
-          status: order.status,
-          total: Number(order.total),
-          items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price) })),
-          collection: order.deliveryCollection ? {
-            expectedAmount: Number(order.deliveryCollection.expectedAmount),
-            cashCollected: Number(order.deliveryCollection.cashCollected),
-            upiCollected: Number(order.deliveryCollection.upiCollected),
-            upiReference: order.deliveryCollection.upiReference,
-            status: order.deliveryCollection.status
+    <main className="mx-auto max-w-lg min-h-dvh bg-slate-50 dark:bg-slate-950 pb-8">
+      <DeliveryAlertListener partnerId={userId} />
+      <DeliveryAppShell
+        partnerName={session.user.name ?? "Partner"}
+        stats={{
+          todayDelivered,
+          todayCash: Number(todayEarnings._sum?.cashCollected ?? 0),
+          todayUpi: Number(todayEarnings._sum?.upiCollected ?? 0),
+          totalDelivered,
+          activeOrders: orders.length
+        }}
+        orders={orders.map((o) => ({
+          id: o.id,
+          orderNumber: o.orderNumber,
+          customerName: o.customerName,
+          phone: o.phone,
+          address: `${o.houseName}, ${o.street}, ${o.landmark}, ${o.pincode}`,
+          status: o.status,
+          total: Number(o.total),
+          paymentMethod: o.paymentMethod,
+          items: o.items.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity, price: Number(i.price) })),
+          collection: o.deliveryCollection ? {
+            expectedAmount: Number(o.deliveryCollection.expectedAmount),
+            cashCollected: Number(o.deliveryCollection.cashCollected),
+            upiCollected: Number(o.deliveryCollection.upiCollected),
+            upiReference: o.deliveryCollection.upiReference,
+            status: o.deliveryCollection.status
           } : null
         }))}
       />

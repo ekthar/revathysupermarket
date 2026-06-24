@@ -30,9 +30,10 @@ export default async function StaffCollectionVerificationPage() {
   }).catch(() => []);
 
   // Group by delivery partner
+  type CollectionEntry = (typeof collections)[number];
   const byPartner = new Map<string, {
     partner: { id: string; name: string | null; phone: string | null };
-    collections: typeof collections;
+    collections: CollectionEntry[];
     totalExpected: number;
     totalCash: number;
     totalUpi: number;

@@ -61,12 +61,12 @@ function parseRadius(value?: string) {
 }
 
 function parsePincodes(value?: string) {
-  if (!value) return defaultStoreSettings.serviceablePincodes;
+  if (!value) return [];
   const pincodes = value
     .split(",")
     .map((pincode) => pincode.trim())
     .filter((pincode) => /^\d{6}$/.test(pincode));
-  return pincodes.length > 0 ? pincodes : defaultStoreSettings.serviceablePincodes;
+  return pincodes;
 }
 
 function parseGstRate(value?: string) {

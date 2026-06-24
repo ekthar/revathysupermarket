@@ -55,7 +55,7 @@ export default async function AdminSettingsPage() {
         <MapPin className="h-6 w-6 text-lime-fresh" />
         <h3 className="mt-3 font-display text-2xl font-black">Delivery radius</h3>
         <p className="mt-2 text-sm leading-6 text-white/80">
-          Checkout uses store coordinates, GPS distance, and pincode validation. {deliverySummary(settings.deliveryRadiusKm, settings.serviceablePincodes)}
+          Delivery eligibility is based on GPS distance only. {deliverySummary(settings.deliveryRadiusKm)}
         </p>
       </div>
     </div>

@@ -17,7 +17,8 @@ const settingsSchema = z.object({
   storeLongitude: z.coerce.number().min(-180).max(180),
   serviceablePincodes: z
     .array(z.string().regex(/^\d{6}$/))
-    .min(1),
+    .optional()
+    .default([]),
   googleMapsUrl: z.string().trim().optional().default(""),
   instagramUrl: z.string().trim().optional().default(""),
   facebookUrl: z.string().trim().optional().default(""),

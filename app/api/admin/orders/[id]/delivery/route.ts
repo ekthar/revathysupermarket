@@ -7,6 +7,7 @@ import { sendPushToUser } from "@/lib/push";
 import { deliveryAssignmentSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { createDeliveryOtp, deliveryOtpExpiryDate } from "@/lib/delivery";
+import { sendDeliveryAlert } from "@/lib/delivery-alerts";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -26,7 +27,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       deliveryOtpAttempts: 0,
       deliveryOtpExpiresAt: parsed.data.deliveryPartnerId ? deliveryOtpExpiryDate() : null
     },
-    select: { id: true, deliveryOtp: true, deliveryOtpExpiresAt: true, userId: true, orderNumber: true, phone: true }
+    select: { id: true, deliveryOtp: true, deliveryOtpExpiresAt: true, userId: true, orderNumber: true, phone: true, customerName: true, houseName: true, street: true, landmark: true, pincode: true, total: true }
   });
   await writeAuditLog({
     actorId: session?.user?.id,
@@ -37,6 +38,26 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     metadata: { deliveryPartnerId: parsed.data.deliveryPartnerId }
   });
   if (parsed.data.deliveryPartnerId) {
+    // Send real-time SSE alert to the delivery partner (instant in-app alert with sound + vibration)
+    sendDeliveryAlert(parsed.data.deliveryPartnerId, {
+      type: "new_order",
+      order: {
+        id: order.id,
+        orderNumber: order.orderNumber,
+        customerName: order.customerName,
+        address: `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`,
+        total: Number(order.total)
+      }
+    });
+
+    // Send push notification as fallback (for when app is in background)
+    await sendPushToUser(parsed.data.deliveryPartnerId, {
+      title: "🚀 New Order Assigned!",
+      body: `Order #${order.orderNumber} for ${order.customerName}. Open app to view details.`,
+      url: "/delivery",
+      orderId: id
+    });
+
     await sendWhatsAppTemplate({
       to: order.phone,
       template: "delivery_assigned",

@@ -79,12 +79,20 @@ export default async function AdminReportsPage() {
           </div>
         </section>
       </div>
-      <a href="/api/admin/export/orders" className="inline-flex h-11 w-fit items-center rounded-2xl bg-primary px-5 text-sm font-black text-white">
-        Download orders CSV
-      </a>
-      <a href="/admin/reports/cancelled" className="inline-flex h-11 w-fit items-center rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 px-5 text-sm font-black text-red-700 dark:text-red-300 ml-3">
-        Cancelled Orders Report
-      </a>
+      <div className="flex flex-wrap gap-3">
+        <a href="/api/admin/export/orders" className="inline-flex h-11 items-center rounded-2xl bg-primary px-5 text-sm font-black text-white">
+          Download orders CSV
+        </a>
+        <a href="/admin/reports/cancelled" className="inline-flex h-11 items-center rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 px-5 text-sm font-black text-red-700 dark:text-red-300">
+          Cancelled Orders Report
+        </a>
+        <a href="/admin/reports/returns" className="inline-flex h-11 items-center rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 px-5 text-sm font-black text-amber-700 dark:text-amber-300">
+          Daily Returns Report
+        </a>
+        <a href="/admin/reports/collections" className="inline-flex h-11 items-center rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 px-5 text-sm font-black text-blue-700 dark:text-blue-300">
+          Staff Collection Verification
+        </a>
+      </div>
     </main>
   );
 }

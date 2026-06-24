@@ -10,7 +10,6 @@ import { SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
-import { isServiceablePincode, serviceablePincodes } from "@/lib/delivery";
 import type { StoreSettings } from "@/lib/store-settings";
 import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
@@ -25,7 +24,7 @@ type CheckoutState = {
   landmark: string;
   pincode: string;
   notes: string;
-  paymentMethod: "COD" | "UPI_ON_DELIVERY" | "WALLET";
+  paymentMethod: "COD" | "UPI_ON_DELIVERY" | "WALLET" | "CARD";
   latitude: string;
   longitude: string;
 };
@@ -83,7 +82,6 @@ function saveCustomerInfo(form: CheckoutState) {
 
 export function CheckoutForm({
   deliveryRadiusKm = SITE.deliveryRadiusKm,
-  allowedPincodes = serviceablePincodes(),
   deliveryEstimateMin = 25,
   deliveryEstimateMax = 45,
   minimumOrderValue = 99,
@@ -96,7 +94,6 @@ export function CheckoutForm({
   savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
-  allowedPincodes?: StoreSettings["serviceablePincodes"];
   deliveryEstimateMin?: number;
   deliveryEstimateMax?: number;
   minimumOrderValue?: number;
@@ -179,10 +176,10 @@ export function CheckoutForm({
   }, [form.latitude, form.longitude, storeLatitude, storeLongitude]);
 
   const pincodeReady = /^\d{6}$/.test(form.pincode);
-  const pincodeOk = pincodeReady && isServiceablePincode(form.pincode, allowedPincodes);
+  const pincodeOk = true; // GPS radius is the only delivery check now — any pincode is fine
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
-  const canSubmit = items.length > 0 && pincodeOk && locationOk && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
+  const canSubmit = items.length > 0 && locationOk && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
 
   useEffect(() => {
     const latitude = Number(form.latitude);
@@ -237,11 +234,33 @@ export function CheckoutForm({
     setLocationState("loading");
     setMessage("");
     navigator.geolocation.getCurrentPosition(
-      (position) => {
-        update("latitude", position.coords.latitude.toString());
-        update("longitude", position.coords.longitude.toString());
+      async (position) => {
+        const lat = position.coords.latitude.toString();
+        const lng = position.coords.longitude.toString();
+        update("latitude", lat);
+        update("longitude", lng);
         setLocationState("success");
-        showToast("Location detected", "success");
+        showToast("Location detected — fetching address...", "success");
+
+        // Auto-fill address via reverse geocoding
+        try {
+          const res = await fetch(`/api/geocode/reverse?latitude=${lat}&longitude=${lng}`);
+          if (res.ok) {
+            const geo = await res.json();
+            setForm((current) => ({
+              ...current,
+              latitude: lat,
+              longitude: lng,
+              ...(geo.street && !current.street ? { street: geo.street } : {}),
+              ...(geo.landmark && !current.landmark ? { landmark: geo.landmark } : {}),
+              ...(geo.pincode && !current.pincode ? { pincode: geo.pincode } : {}),
+              ...(geo.houseName && !current.houseName ? { houseName: geo.houseName } : {})
+            }));
+            showToast("Address auto-filled from GPS", "success");
+          }
+        } catch {
+          // Geocoding failed silently — user can still enter manually
+        }
       },
       () => {
         setLocationState("denied");
@@ -259,12 +278,8 @@ export function CheckoutForm({
       showToast("Your cart is empty", "error");
       return;
     }
-    if (!pincodeOk) {
-      showToast("Pincode is outside delivery area", "error");
-      return;
-    }
     if (!locationOk) {
-      showToast("Location verification required", "error");
+      showToast("Location verification required — tap Detect to use GPS", "error");
       return;
     }
 
@@ -457,6 +472,15 @@ export function CheckoutForm({
                 description="Pay via UPI/GPay to delivery partner"
                 onClick={() => update("paymentMethod", "UPI_ON_DELIVERY")}
               />
+              {/* Card Payment */}
+              <PaymentMethodCard
+                active={form.paymentMethod === "CARD"}
+                icon={<Wallet className="h-5 w-5" />}
+                iconBg="bg-purple-100 text-purple-700"
+                label="Card Payment"
+                description="Pay via Debit/Credit card on delivery"
+                onClick={() => update("paymentMethod", "CARD")}
+              />
               {/* Wallet Payment - only show if balance > 0 */}
               {!walletLoading && walletBalance > 0 && (
                 <PaymentMethodCard
@@ -551,15 +575,15 @@ export function CheckoutForm({
             </div>
 
             <AnimatePresence mode="wait">
-              {pincodeReady && (
+              {form.pincode && /^\d{6}$/.test(form.pincode) && (
                 <motion.p
-                  key={pincodeOk ? "ok" : "bad"}
+                  key="pincode-info"
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className={`mt-3 rounded-xl px-3 py-2 text-[12px] font-semibold ${pincodeOk ? "bg-green-50 text-green-700" : "bg-red-50 text-red-600"}`}
+                  className="mt-3 rounded-xl px-3 py-2 text-[12px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
                 >
-                  {pincodeOk ? "Pincode is serviceable" : `Not serviceable. Available: ${allowedPincodes.join(", ")}`}
+                  {locationOk ? `✓ Within delivery range (${distance?.toFixed(1)} KM)` : "Tap Detect above to verify delivery eligibility"}
                 </motion.p>
               )}
             </AnimatePresence>

@@ -16,6 +16,7 @@ export default auth((request) => {
   const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
   const isCheckoutRoute = request.nextUrl.pathname.startsWith("/checkout");
   const isDeliveryRoute = request.nextUrl.pathname.startsWith("/delivery");
+  const isDeliveryLoginRoute = request.nextUrl.pathname === "/delivery/login";
   const user = request.auth?.user;
   const role = String(user?.role ?? "");
 
@@ -44,9 +45,8 @@ export default auth((request) => {
     return Response.redirect(new URL("/delivery", request.nextUrl));
   }
 
-  if (isDeliveryRoute && role !== "DELIVERY_PARTNER") {
-    const loginUrl = new URL("/login", request.nextUrl);
-    loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);
+  if (isDeliveryRoute && !isDeliveryLoginRoute && role !== "DELIVERY_PARTNER") {
+    const loginUrl = new URL("/delivery/login", request.nextUrl);
     if (user) loginUrl.searchParams.set("reason", "delivery_required");
     return Response.redirect(loginUrl);
   }

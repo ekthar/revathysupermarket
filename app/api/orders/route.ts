@@ -6,11 +6,12 @@ import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limi
 import { clientIp } from "@/lib/request-security";
 import { isStaffRole } from "@/lib/authz";
 import { checkoutSchema } from "@/lib/validations";
-import { isServiceablePincode } from "@/lib/delivery";
 import { getStoreSettingsForApi, isStoreCurrentlyOpen } from "@/lib/store-settings";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
 import { checkoutErrorResponse, createAuthoritativeOrder } from "@/lib/order-checkout";
+import { broadcastToAllDeliveryPartners } from "@/lib/delivery-alerts";
+import { sendPushToUser } from "@/lib/push";
 
 function orderNumber() {
   const date = new Date();
@@ -60,20 +61,15 @@ export async function POST(request: Request) {
     }
 
     */
-    if (!isServiceablePincode(data.pincode, settings.serviceablePincodes)) {
-      return NextResponse.json(
-        { error: "Sorry, this pincode is not currently serviceable." },
-        { status: 400 }
-      );
-    }
-
+    // GPS distance is the only delivery eligibility check.
+    // Pincode validation removed — address auto-filled from reverse geocoding.
     const distanceKm = calculateDistanceKm(
       { lat: data.latitude, lng: data.longitude },
       { lat: settings.storeLatitude, lng: settings.storeLongitude }
     );
     if (distanceKm > settings.deliveryRadiusKm) {
       return NextResponse.json(
-        { error: `Sorry, delivery is currently available only within ${settings.deliveryRadiusKm} KM of our store.` },
+        { error: `Sorry, delivery is available only within ${settings.deliveryRadiusKm} KM of our store. You are ${distanceKm.toFixed(1)} KM away.` },
         { status: 400 }
       );
     }
@@ -97,6 +93,33 @@ export async function POST(request: Request) {
       }
       await sendWhatsAppTemplate({ to: order.phone, template: "order_confirmed", params: [order.orderNumber, String(order.items.length), Number(order.total).toFixed(2), order.paymentMethod], orderId: order.id }).catch(() => null);
       await notifyOrderStatus(session.user.id, order.orderNumber, "ORDER_RECEIVED", order.id).catch(() => null);
+
+      // Broadcast new order alert to all connected delivery partners + staff
+      broadcastToAllDeliveryPartners({
+        type: "new_order",
+        order: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          customerName: data.customerName,
+          address: `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`,
+          total: Number(order.total)
+        }
+      });
+
+      // Send push notification to all delivery partners
+      const deliveryPartners = await prisma.user.findMany({
+        where: { role: "DELIVERY_PARTNER", isActive: true },
+        select: { id: true }
+      }).catch(() => []);
+      for (const partner of deliveryPartners) {
+        sendPushToUser(partner.id, {
+          title: "🆕 New Order!",
+          body: `Order #${order.orderNumber} from ${data.customerName} - ₹${Number(order.total).toFixed(0)}`,
+          url: "/delivery",
+          orderId: order.id
+        }).catch(() => null);
+      }
+
       return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber, total: Number(order.total) });
     }
 

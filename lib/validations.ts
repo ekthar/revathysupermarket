@@ -16,7 +16,7 @@ export const checkoutSchema = z.object({
   landmark: z.string().min(2),
   pincode: z.string().regex(/^\d{6}$/),
   notes: z.string().optional(),
-  paymentMethod: z.enum(["COD", "UPI_ON_DELIVERY", "WALLET"]),
+  paymentMethod: z.enum(["COD", "UPI_ON_DELIVERY", "WALLET", "CARD"]),
   deliveryMode: z.enum(["ASAP", "SCHEDULED"]).default("ASAP"),
   deliverySlotId: z.string().optional(),
   promoCode: z.string().trim().max(40).optional(),

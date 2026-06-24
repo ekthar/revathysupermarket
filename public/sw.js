@@ -1,7 +1,9 @@
-const CACHE = "msm-supermarket-v5";
+const CACHE = "msm-supermarket-v6";
 const STATIC_ASSETS = ["/offline", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/icon-maskable-512.png"];
 
 self.addEventListener("install", (event) => {
+  // Skip waiting immediately to ensure new SW takes over on Samsung/Android
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC_ASSETS)));
 });
 
@@ -67,7 +69,8 @@ self.addEventListener("push", (event) => {
   let payload = {
     title: "New order!",
     body: "A new order is waiting in the admin panel.",
-    url: "/admin/orders"
+    url: "/admin/orders",
+    requireInteraction: false
   };
 
   if (event.data) {
@@ -78,14 +81,22 @@ self.addEventListener("push", (event) => {
     }
   }
 
+  const options = {
+    body: payload.body,
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: payload.orderId ? `order-${payload.orderId}` : "new-order",
+    data: { url: payload.url },
+    requireInteraction: payload.requireInteraction || false,
+    vibrate: [300, 100, 300, 100, 300],
+    actions: [
+      { action: "view", title: "View Order" },
+      { action: "dismiss", title: "Dismiss" }
+    ]
+  };
+
   event.waitUntil(
-    self.registration.showNotification(payload.title, {
-      body: payload.body,
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-192.png",
-      tag: payload.orderId ? `order-${payload.orderId}` : "new-order",
-      data: { url: payload.url }
-    })
+    self.registration.showNotification(payload.title, options)
   );
 });
 

@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { DeliveryOrdersClient } from "@/components/delivery/delivery-orders-client";
+import { DeliveryAlertListener } from "@/components/delivery/delivery-alert-listener";
 import { InstallAppButton } from "@/components/install-app-button";
 
 export const dynamic = "force-dynamic";
@@ -17,6 +18,9 @@ export default async function DeliveryPage() {
 
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
+      {/* Real-time alert listener - shows fullscreen alert on new assignment */}
+      {session?.user?.id && <DeliveryAlertListener partnerId={session.user.id} />}
+
       <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5">
         <p className="text-xs font-black uppercase text-primary">Delivery partner</p>
         <h1 className="mt-2 font-display text-4xl font-black">Assigned orders</h1>

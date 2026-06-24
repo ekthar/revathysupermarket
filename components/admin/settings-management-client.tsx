@@ -171,7 +171,7 @@ export function SettingsManagementClient({
         <Input value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="Phone number" className="h-12 rounded-2xl" />
         <Input value={form.whatsapp} onChange={(event) => update("whatsapp", event.target.value)} placeholder="WhatsApp number" className="h-12 rounded-2xl" />
         <Input value={form.deliveryRadiusKm} onChange={(event) => update("deliveryRadiusKm", Number(event.target.value))} type="number" min="1" max="50" placeholder="Delivery radius KM" className="h-12 rounded-2xl" />
-        <Input value={form.serviceablePincodes} onChange={(event) => update("serviceablePincodes", event.target.value)} placeholder="Serviceable pincodes" className="h-12 rounded-2xl md:col-span-2" />
+        <Input value={form.serviceablePincodes} onChange={(event) => update("serviceablePincodes", event.target.value)} placeholder="Pincodes (optional, for reference only)" className="h-12 rounded-2xl md:col-span-2" />
         <Input value={form.address} onChange={(event) => update("address", event.target.value)} placeholder="Address" className="h-12 rounded-2xl md:col-span-2" />
         <Input value={form.googleMapsUrl} onChange={(event) => update("googleMapsUrl", event.target.value)} placeholder="Google Maps place link" className="h-12 rounded-2xl md:col-span-2" />
         <Input value={form.instagramUrl} onChange={(event) => update("instagramUrl", event.target.value)} placeholder="Instagram URL" className="h-12 rounded-2xl" />

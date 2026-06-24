@@ -38,13 +38,33 @@ jobs:
       - name: Add Android platform & sync
         run: npx cap add android && npx cap sync android
 
+      # Fix targetSdkVersion to latest (34+) to avoid Play Protect "old version" warning
+      - name: Patch targetSdkVersion and compileSdkVersion
+        run: |
+          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle
+          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle
+          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
+
       - name: Build Debug APK
         if: inputs.build_type == 'debug' || inputs.build_type == ''
         run: cd android && chmod +x gradlew && ./gradlew assembleDebug
 
-      - name: Build Release APK
+      # For release: sign the APK with a keystore to avoid Play Protect blocking
+      - name: Create Keystore for Release Signing
         if: inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v')
-        run: cd android && chmod +x gradlew && ./gradlew assembleRelease
+        run: |
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release-key.jks
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+
+      - name: Build Signed Release APK
+        if: inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v')
+        run: |
+          cd android && chmod +x gradlew && ./gradlew assembleRelease \
+            -Pandroid.injected.signing.store.file=$PWD/app/release-key.jks \
+            -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
+            -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} \
+            -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
 
       - name: Upload Debug APK
         if: inputs.build_type == 'debug' || inputs.build_type == ''
@@ -58,7 +78,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: android/app/build/outputs/apk/release/app-release-unsigned.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
 
       - name: Attach to Release
         if: startsWith(github.ref, 'refs/tags/v')

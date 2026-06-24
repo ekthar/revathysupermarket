@@ -21,6 +21,7 @@ enum PaymentMethod {
   COD
   UPI_ON_DELIVERY
   WALLET
+  CARD
 }
 
 enum PaymentStatus {

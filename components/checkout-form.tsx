@@ -25,7 +25,7 @@ type CheckoutState = {
   landmark: string;
   pincode: string;
   notes: string;
-  paymentMethod: "COD" | "UPI_ON_DELIVERY" | "WALLET";
+  paymentMethod: "COD" | "UPI_ON_DELIVERY" | "WALLET" | "CARD";
   latitude: string;
   longitude: string;
 };
@@ -456,6 +456,15 @@ export function CheckoutForm({
                 label="UPI on Delivery"
                 description="Pay via UPI/GPay to delivery partner"
                 onClick={() => update("paymentMethod", "UPI_ON_DELIVERY")}
+              />
+              {/* Card Payment */}
+              <PaymentMethodCard
+                active={form.paymentMethod === "CARD"}
+                icon={<Wallet className="h-5 w-5" />}
+                iconBg="bg-purple-100 text-purple-700"
+                label="Card Payment"
+                description="Pay via Debit/Credit card on delivery"
+                onClick={() => update("paymentMethod", "CARD")}
               />
               {/* Wallet Payment - only show if balance > 0 */}
               {!walletLoading && walletBalance > 0 && (

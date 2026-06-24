@@ -1,30 +1,71 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { countRecentOtps, createOtpToken, normalizeIndianPhone, otpRateLimitPer10Min } from "@/lib/otp";
-import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
-import { clientIp } from "@/lib/request-security";
-import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
-
-const schema = z.object({
-  phone: z.string().min(10)
-});
+import { prisma } from "@/lib/prisma";
+import { normalizeIndianPhone, createOtpToken, countRecentOtps, otpRateLimitPer10Min } from "@/lib/otp";
+import { sendOtpViaWhatsApp } from "@/lib/whatsapp";
 
 export async function POST(request: Request) {
-  const limit = await enforceRateLimit(`otp-send:${clientIp(request)}`, 12, 600);
-  if (limit.limited) return rateLimitResponse(limit.reset);
+  try {
+    const body = await request.json();
+    const phone = String(body.phone ?? "").replace(/\D/g, "");
+    const role = body.role as string | undefined;
 
-  const parsed = schema.safeParse(await request.json().catch(() => null));
-  if (!parsed.success) return NextResponse.json({ error: "Enter a valid WhatsApp phone number." }, { status: 400 });
+    if (phone.length !== 10) {
+      return NextResponse.json({ error: "Enter a valid 10-digit phone number" }, { status: 400 });
+    }
 
-  const phone = normalizeIndianPhone(parsed.data.phone);
-  if (!/^91\d{10}$/.test(phone)) return NextResponse.json({ error: "Enter a valid 10-digit Indian phone number." }, { status: 400 });
+    const normalizedPhone = normalizeIndianPhone(phone);
 
-  const recentCount = await countRecentOtps(phone);
-  if (recentCount >= otpRateLimitPer10Min()) {
-    return NextResponse.json({ error: "You have requested too many codes. Please wait a few minutes." }, { status: 429 });
+    // If role filter is provided (e.g., DELIVERY_PARTNER), verify the user exists with that role
+    if (role === "DELIVERY_PARTNER") {
+      const user = await prisma.user.findUnique({
+        where: { phone: normalizedPhone },
+        select: { role: true, isActive: true }
+      });
+
+      if (!user || user.role !== "DELIVERY_PARTNER") {
+        return NextResponse.json(
+          { error: "This number is not registered as a delivery partner. Contact admin." },
+          { status: 403 }
+        );
+      }
+
+      if (!user.isActive) {
+        return NextResponse.json({ error: "Account is deactivated. Contact admin." }, { status: 403 });
+      }
+    }
+
+    // Rate limiting
+    const recentCount = await countRecentOtps(normalizedPhone);
+    if (recentCount >= otpRateLimitPer10Min()) {
+      return NextResponse.json(
+        { error: "Too many OTP requests. Please wait 10 minutes." },
+        { status: 429 }
+      );
+    }
+
+    // Generate and store OTP
+    const { otp, expiresAt } = await createOtpToken(normalizedPhone);
+
+    // Send OTP via WhatsApp (best effort)
+    try {
+      await sendOtpViaWhatsApp(normalizedPhone, otp);
+    } catch (error) {
+      console.error("WhatsApp OTP send failed:", error);
+      // In development, log OTP to console
+      if (process.env.NODE_ENV !== "production") {
+        console.log(`[DEV OTP] Phone: ${normalizedPhone}, OTP: ${otp}`);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: "OTP sent to your WhatsApp",
+      expiresAt: expiresAt.toISOString(),
+      // Only include OTP in development for testing
+      ...(process.env.NODE_ENV !== "production" ? { devOtp: otp } : {})
+    });
+  } catch (error) {
+    console.error("OTP send error:", error);
+    return NextResponse.json({ error: "Something went wrong. Please try again." }, { status: 500 });
   }
-
-  const { otp } = await createOtpToken(phone);
-  await sendWhatsAppTemplate({ to: phone, template: "login_otp", params: [otp] });
-  return NextResponse.json({ success: true, expiresIn: 300 });
 }

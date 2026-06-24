@@ -16,10 +16,18 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     dir: "ltr",
     lang: "en",
     prefer_related_applications: false,
+    related_applications: [
+      {
+        platform: "play",
+        url: "https://play.google.com/store/apps/details?id=in.msmsupermarket.app",
+        id: "in.msmsupermarket.app"
+      }
+    ],
     shortcuts: [
       { name: "Search products", short_name: "Search", url: "/products", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "My orders", short_name: "Orders", url: "/dashboard", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "Open cart", short_name: "Cart", url: "/cart", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
+      { name: "Open cart", short_name: "Cart", url: "/cart", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "Delivery login", short_name: "Deliver", url: "/delivery/login", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
     ],
     background_color: "#F7F7FA",
     theme_color: "#050505",

@@ -11,6 +11,8 @@ import { getStoreSettingsForApi, isStoreCurrentlyOpen } from "@/lib/store-settin
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
 import { checkoutErrorResponse, createAuthoritativeOrder } from "@/lib/order-checkout";
+import { broadcastToAllDeliveryPartners } from "@/lib/delivery-alerts";
+import { sendPushToUser } from "@/lib/push";
 
 function orderNumber() {
   const date = new Date();
@@ -97,6 +99,33 @@ export async function POST(request: Request) {
       }
       await sendWhatsAppTemplate({ to: order.phone, template: "order_confirmed", params: [order.orderNumber, String(order.items.length), Number(order.total).toFixed(2), order.paymentMethod], orderId: order.id }).catch(() => null);
       await notifyOrderStatus(session.user.id, order.orderNumber, "ORDER_RECEIVED", order.id).catch(() => null);
+
+      // Broadcast new order alert to all connected delivery partners + staff
+      broadcastToAllDeliveryPartners({
+        type: "new_order",
+        order: {
+          id: order.id,
+          orderNumber: order.orderNumber,
+          customerName: data.customerName,
+          address: `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`,
+          total: Number(order.total)
+        }
+      });
+
+      // Send push notification to all delivery partners
+      const deliveryPartners = await prisma.user.findMany({
+        where: { role: "DELIVERY_PARTNER", isActive: true },
+        select: { id: true }
+      }).catch(() => []);
+      for (const partner of deliveryPartners) {
+        sendPushToUser(partner.id, {
+          title: "🆕 New Order!",
+          body: `Order #${order.orderNumber} from ${data.customerName} - ₹${Number(order.total).toFixed(0)}`,
+          url: "/delivery",
+          orderId: order.id
+        }).catch(() => null);
+      }
+
       return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber, total: Number(order.total) });
     }
 

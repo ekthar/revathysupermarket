@@ -84,7 +84,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <IosEdgeSwipeBack />
           <OnboardingTour />
           <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
-          <div className="pb-safe">{children}</div>
+          <div className="pb-safe route-scroll-container">{children}</div>
           <ScrollToTop />
           <MobileBottomNav user={user} />
         </Providers>

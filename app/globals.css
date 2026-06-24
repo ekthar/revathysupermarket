@@ -30,6 +30,7 @@
   --z-navigation: 70;
   --z-toast: 80;
   --z-dialog: 90;
+  --scroll-offset: calc(var(--mobile-header-height) + 60px);
 }
 
 .dark {
@@ -53,8 +54,8 @@ html {
   touch-action: manipulation;
   overscroll-behavior: none;
   background: hsl(var(--background));
-  overflow-x: hidden;
   overflow-x: clip;
+  scroll-padding-top: var(--scroll-offset);
 }
 
 img, video, svg {
@@ -98,7 +99,6 @@ button, a, input, select, textarea, summary {
 body {
   min-height: 100dvh;
   overflow-x: hidden;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-y: none;
   background:
     radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 28rem),
@@ -112,6 +112,13 @@ body {
   background:
     radial-gradient(circle at top left, rgba(34, 197, 94, 0.04), transparent 28rem),
     hsl(var(--background));
+}
+
+.route-scroll-container {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  min-height: 100dvh;
 }
 
 h1, h2, h3, h4, h5, h6, .font-display {
@@ -137,14 +144,18 @@ h1, h2, h3, h4, h5, h6, .font-display {
   z-index: var(--z-sticky);
   min-height: var(--mobile-header-height);
   padding: max(0.75rem, var(--safe-top)) max(1rem, var(--safe-right)) 0.75rem max(1rem, var(--safe-left));
+  will-change: transform;
+  transform: translateZ(0);
 }
 .ios-bottom-bar {
   position: fixed;
   left: max(0.75rem, var(--safe-left));
   right: max(0.75rem, var(--safe-right));
-  bottom: max(0.75rem, var(--safe-bottom));
+  bottom: max(0.75rem, calc(var(--safe-bottom) + var(--keyboard-inset)));
   z-index: var(--z-navigation);
   transition: opacity var(--motion-fast) ease, transform var(--motion-fast) ease;
+  will-change: transform;
+  transform: translateZ(0);
 }
 .ios-floating-action {
   position: fixed;
@@ -195,9 +206,16 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .stable-dialog {
-  max-height: min(92dvh, var(--visual-viewport-height));
+  max-height: min(90dvh, calc(var(--visual-viewport-height) - var(--safe-bottom)));
   padding-bottom: max(1rem, var(--safe-bottom));
   overscroll-behavior: contain;
+}
+
+.sheet-scroll-content {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  max-height: calc(90dvh - var(--safe-bottom));
 }
 
 html[data-keyboard-open] .ios-bottom-bar,
@@ -328,12 +346,18 @@ html[data-keyboard-open] .pb-safe {
 }
 
 /* Floating cart bar */
-.floating-cart-bar {
+.floating-cart-wrapper {
   position: fixed;
+  pointer-events: none;
   bottom: calc(5rem + var(--safe-bottom));
   left: 50%;
   transform: translateX(-50%);
   z-index: 50;
+  width: calc(100% - 2rem);
+  max-width: 400px;
+}
+.floating-cart-bar {
+  pointer-events: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -342,8 +366,7 @@ html[data-keyboard-open] .pb-safe {
   background: #050505;
   color: white;
   box-shadow: 0 20px 50px -20px rgba(0,0,0,0.5);
-  width: calc(100% - 2rem);
-  max-width: 400px;
+  width: 100%;
 }
 .dark .floating-cart-bar {
   background: #0f172a;
@@ -364,6 +387,8 @@ html[data-keyboard-open] .pb-safe {
   scroll-snap-type: x mandatory;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  padding-inline: 1rem;
+  scroll-padding-inline: 1rem;
 }
 .scroll-x > * { scroll-snap-align: start; }
 
@@ -641,6 +666,8 @@ html[data-keyboard-open] .pb-safe {
   scrollbar-width: none;
   -ms-overflow-style: none;
   padding-bottom: 0.5rem;
+  padding-inline: 1rem;
+  scroll-padding-inline: 1rem;
   /* Perspective for slight 3D wheel effect */
   perspective: 1200px;
 }

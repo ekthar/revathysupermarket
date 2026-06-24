@@ -6,7 +6,6 @@ import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limi
 import { clientIp } from "@/lib/request-security";
 import { isStaffRole } from "@/lib/authz";
 import { checkoutSchema } from "@/lib/validations";
-import { isServiceablePincode } from "@/lib/delivery";
 import { getStoreSettingsForApi, isStoreCurrentlyOpen } from "@/lib/store-settings";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
@@ -62,20 +61,15 @@ export async function POST(request: Request) {
     }
 
     */
-    if (!isServiceablePincode(data.pincode, settings.serviceablePincodes)) {
-      return NextResponse.json(
-        { error: "Sorry, this pincode is not currently serviceable." },
-        { status: 400 }
-      );
-    }
-
+    // GPS distance is the only delivery eligibility check.
+    // Pincode validation removed — address auto-filled from reverse geocoding.
     const distanceKm = calculateDistanceKm(
       { lat: data.latitude, lng: data.longitude },
       { lat: settings.storeLatitude, lng: settings.storeLongitude }
     );
     if (distanceKm > settings.deliveryRadiusKm) {
       return NextResponse.json(
-        { error: `Sorry, delivery is currently available only within ${settings.deliveryRadiusKm} KM of our store.` },
+        { error: `Sorry, delivery is available only within ${settings.deliveryRadiusKm} KM of our store. You are ${distanceKm.toFixed(1)} KM away.` },
         { status: 400 }
       );
     }

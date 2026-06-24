@@ -1,7 +1,9 @@
-const CACHE = "msm-supermarket-v5";
+const CACHE = "msm-supermarket-v6";
 const STATIC_ASSETS = ["/offline", "/manifest.webmanifest", "/icons/icon-192.png", "/icons/icon-512.png", "/icons/apple-touch-icon.png", "/icons/icon-maskable-512.png"];
 
 self.addEventListener("install", (event) => {
+  // Skip waiting immediately to ensure new SW takes over on Samsung/Android
+  self.skipWaiting();
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC_ASSETS)));
 });
 

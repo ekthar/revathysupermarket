@@ -59,7 +59,11 @@ export async function generateMetadata(): Promise<Metadata> {
       "apple-mobile-web-app-capable": "yes",
       "apple-mobile-web-app-status-bar-style": "black-translucent",
       "apple-mobile-web-app-title": settings.storeName,
-      "msapplication-TileColor": "#050505"
+      "msapplication-TileColor": "#050505",
+      // Samsung Internet PWA hints
+      "application-name": settings.storeName,
+      "msapplication-starturl": "/",
+      "msapplication-navbutton-color": "#050505"
     }
   };
 }

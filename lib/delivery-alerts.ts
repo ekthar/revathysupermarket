@@ -3,6 +3,11 @@
  * Works alongside the push notification system for comprehensive alerting.
  */
 
+declare global {
+  // eslint-disable-next-line no-var
+  var __deliveryAlertControllers: Map<string, Set<ReadableStreamDefaultController>> | undefined;
+}
+
 type AlertPayload = {
   type: "new_order";
   order: {
@@ -19,7 +24,7 @@ type AlertPayload = {
  * Also triggers push notification as a fallback for when the app is in background.
  */
 export function sendDeliveryAlert(partnerId: string, payload: AlertPayload) {
-  const controllers = (globalThis as Record<string, unknown>).__deliveryAlertControllers as Map<string, Set<ReadableStreamDefaultController>> | undefined;
+  const controllers = global.__deliveryAlertControllers;
 
   if (!controllers?.has(partnerId)) return false;
 
@@ -47,7 +52,7 @@ export function sendDeliveryAlert(partnerId: string, payload: AlertPayload) {
  * Used when an order becomes ready and no specific partner is assigned yet.
  */
 export function broadcastToAllDeliveryPartners(payload: AlertPayload) {
-  const controllers = (globalThis as Record<string, unknown>).__deliveryAlertControllers as Map<string, Set<ReadableStreamDefaultController>> | undefined;
+  const controllers = global.__deliveryAlertControllers;
 
   if (!controllers) return;
 

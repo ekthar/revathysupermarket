@@ -1,6 +1,12 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
 
+// Extend globalThis for SSE controller registry
+declare global {
+  // eslint-disable-next-line no-var
+  var __deliveryAlertControllers: Map<string, Set<ReadableStreamDefaultController>> | undefined;
+}
+
 /**
  * SSE endpoint for delivery partner real-time order alerts.
  * Delivery partners connect here to receive instant alerts when orders are assigned.
@@ -35,10 +41,10 @@ export async function GET(request: NextRequest) {
 
       // Store the controller in a global registry for push notifications
       // In production, use Redis pub/sub for multi-instance support
-      if (!globalThis.__deliveryAlertControllers) {
-        globalThis.__deliveryAlertControllers = new Map();
+      if (!global.__deliveryAlertControllers) {
+        global.__deliveryAlertControllers = new Map();
       }
-      const controllers = globalThis.__deliveryAlertControllers as Map<string, Set<ReadableStreamDefaultController>>;
+      const controllers = global.__deliveryAlertControllers!;
       if (!controllers.has(partnerId)) {
         controllers.set(partnerId, new Set());
       }

@@ -92,11 +92,12 @@ class AuthRepository {
     try {
       final accessToken = await _tokenStorage.getAccessToken();
       final refreshToken = await _tokenStorage.getRefreshToken();
+      final deviceId = await _tokenStorage.getDeviceId();
 
-      if (accessToken != null && refreshToken != null) {
+      if (accessToken != null && refreshToken != null && deviceId != null) {
         await _dio.post<void>(
           '${_config.baseUrl}/auth/logout',
-          data: {'refreshToken': refreshToken},
+          data: {'refreshToken': refreshToken, 'deviceId': deviceId},
           options: Options(
             headers: {'Authorization': 'Bearer $accessToken'},
           ),

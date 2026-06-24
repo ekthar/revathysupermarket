@@ -165,6 +165,8 @@ void main() {
             .thenAnswer((_) async => 'access-token');
         when(() => mockTokenStorage.getRefreshToken())
             .thenAnswer((_) async => 'refresh-token');
+        when(() => mockTokenStorage.getDeviceId())
+            .thenAnswer((_) async => 'device-123');
         when(() => mockTokenStorage.clearAll()).thenAnswer((_) async {});
 
         when(() => mockDio.post<void>(
@@ -186,6 +188,8 @@ void main() {
             .thenAnswer((_) async => 'access-token');
         when(() => mockTokenStorage.getRefreshToken())
             .thenAnswer((_) async => 'refresh-token');
+        when(() => mockTokenStorage.getDeviceId())
+            .thenAnswer((_) async => 'device-123');
         when(() => mockTokenStorage.clearAll()).thenAnswer((_) async {});
 
         when(() => mockDio.post<void>(

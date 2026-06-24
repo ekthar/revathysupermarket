@@ -95,13 +95,18 @@ class FcmService {
   FcmService({
     required ApiClient apiClient,
     required EnvironmentConfig config,
+    required String installationId,
     this.onAssignmentReceived,
     this.onNotificationTapped,
   })  : _apiClient = apiClient,
-        _config = config;
+        _config = config,
+        _installationId = installationId;
 
   final ApiClient _apiClient;
   final EnvironmentConfig _config;
+
+  /// Unique installation identifier sent to the backend for device registration.
+  final String _installationId;
 
   /// Callback invoked when an assignment push is received in the foreground.
   final void Function(Map<String, dynamic> data)? onAssignmentReceived;
@@ -202,6 +207,7 @@ class FcmService {
       await _apiClient.post(
         '/devices',
         data: {
+          'installationId': _installationId,
           'token': token,
           'platform': Platform.isIOS ? 'ios' : 'android',
         },

@@ -21,13 +21,15 @@ export async function POST(request: Request) {
   const limit = await enforceRateLimit(`mobile-refresh:${deviceId}`, 20, 600);
   if (limit.limited) return rateLimitResponse(limit.reset);
 
-  // Find all non-revoked, non-expired tokens for this device
+  // Find all non-revoked, non-expired tokens for this device (limited to prevent bcrypt scan degradation)
   const candidates = await prisma.mobileRefreshToken.findMany({
     where: {
       deviceId,
       revokedAt: null,
       expiresAt: { gt: new Date() },
     },
+    orderBy: { createdAt: "desc" },
+    take: 5,
   });
 
   // Check each candidate against the provided token
@@ -74,6 +76,17 @@ export async function POST(request: Request) {
       expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
     },
   });
+
+  // Clean up old revoked/expired tokens for this device to prevent accumulation
+  prisma.mobileRefreshToken.deleteMany({
+    where: {
+      deviceId,
+      OR: [
+        { revokedAt: { not: null } },
+        { expiresAt: { lt: new Date() } },
+      ],
+    },
+  }).catch(() => null); // Non-blocking cleanup
 
   return NextResponse.json({
     accessToken: newAccessToken,

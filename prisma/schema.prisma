@@ -827,7 +827,7 @@ model MobileRefreshToken {
   createdAt DateTime  @default(now())
 
   @@index([userId])
-  @@index([tokenHash])
+  @@index([deviceId, revokedAt, expiresAt])
 }
 
 model DeviceToken {

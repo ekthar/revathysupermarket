@@ -24,6 +24,7 @@ void main() {
       fcmService = FcmService(
         apiClient: apiClient,
         config: EnvironmentConfig.dev,
+        installationId: 'test-installation-id',
         onAssignmentReceived: (data) => receivedAssignments.add(data),
         onNotificationTapped: (link) => tappedLinks.add(link),
       );

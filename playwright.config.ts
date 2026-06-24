@@ -8,6 +8,7 @@ export default defineConfig({
   reporter: process.env.CI ? "github" : "list",
   use: {
     baseURL: "http://127.0.0.1:3000",
+    serviceWorkers: "block",
     trace: "retain-on-failure",
     screenshot: "only-on-failure"
   },
@@ -15,7 +16,8 @@ export default defineConfig({
     { name: "android-small", use: { browserName: "chromium", viewport: { width: 360, height: 640 }, isMobile: true, hasTouch: true } },
     { name: "android-medium", use: { browserName: "chromium", viewport: { width: 412, height: 915 }, isMobile: true, hasTouch: true } },
     { name: "iphone-webkit", use: { ...devices["iPhone 13"], browserName: "webkit" } },
-    { name: "desktop", use: { browserName: "chromium", viewport: { width: 1440, height: 900 } } }
+    { name: "desktop-chromium", use: { browserName: "chromium", viewport: { width: 1440, height: 900 } } },
+    { name: "desktop-firefox", use: { browserName: "firefox", viewport: { width: 1440, height: 900 } } }
   ],
   webServer: {
     command: "npm run dev",

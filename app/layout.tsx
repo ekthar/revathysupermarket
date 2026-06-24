@@ -7,13 +7,26 @@ import { Providers } from "@/components/providers";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
-import { IosEdgeSwipeBack } from "@/components/ui/ios-edge-swipe-back";
-import { getPublicStoreSettings } from "@/lib/store-settings";
+import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
 import { ViewportStability } from "@/components/ui/viewport-stability";
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
+
+async function withFallback<T>(promise: Promise<T>, fallback: T, timeoutMs = 2_000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise.catch(() => fallback),
+      new Promise<T>((resolve) => {
+        timer = setTimeout(() => resolve(fallback), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export async function generateMetadata(): Promise<Metadata> {
   const settings = await getPublicStoreSettings();
@@ -58,12 +71,15 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
   viewportFit: "cover"
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [session, settings] = await Promise.all([auth(), getPublicStoreSettings()]);
+  const [session, shell] = await Promise.all([
+    withFallback(auth(), null),
+    getPublicShellSettings(),
+  ]);
+  const { settings, logoUrl } = shell;
   const user = session?.user?.id ? {
     id: session.user.id,
     name: session.user.name,
@@ -71,17 +87,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     role: session.user.role
   } : null;
 
-  // Fetch logo URL from settings
-  const logoSetting = await import("@/lib/prisma").then(m => m.prisma.setting.findUnique({ where: { key: "logoUrl" } })).catch(() => null);
-  const logoUrl = logoSetting?.value || null;
-
   return (
     <html lang="en" suppressHydrationWarning className={`${interTight.variable} ${manrope.variable}`}>
       <body className="pt-safe">
         <Providers>
           <ViewportStability />
           <ScrollProgress />
-          <IosEdgeSwipeBack />
           <OnboardingTour />
           <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
           <div className="pb-safe route-scroll-container">{children}</div>

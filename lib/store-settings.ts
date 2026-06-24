@@ -79,8 +79,25 @@ function parseCoord(value?: string, fallback = 0) {
   return Number.isFinite(coord) ? coord : fallback;
 }
 
-async function readStoreSettings(): Promise<StoreSettings> {
-  const settings = await prisma.setting.findMany().catch(() => []);
+type SettingRow = { key: string; value: string };
+
+async function readSettingRows(): Promise<SettingRow[]> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      prisma.setting.findMany({ select: { key: true, value: true } }),
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("Store settings query timed out")), 2_000);
+      }),
+    ]);
+  } catch {
+    return [];
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+function settingsFromRows(settings: SettingRow[]): StoreSettings {
   const byKey = new Map(settings.map((setting) => [setting.key, setting.value]));
 
   // For coordinates and address: env vars OVERRIDE DB values when set.
@@ -117,16 +134,32 @@ async function readStoreSettings(): Promise<StoreSettings> {
   };
 }
 
+async function readStoreSettings(): Promise<StoreSettings> {
+  return settingsFromRows(await readSettingRows());
+}
+
 export async function getStoreSettings(): Promise<StoreSettings> {
   noStore();
   return readStoreSettings();
 }
 
-export const getPublicStoreSettings = unstable_cache(
-  readStoreSettings,
-  ["public-store-settings"],
+const getCachedPublicShellSettings = unstable_cache(
+  async () => {
+    const rows = await readSettingRows();
+    const byKey = new Map(rows.map((setting) => [setting.key, setting.value]));
+    return { settings: settingsFromRows(rows), logoUrl: byKey.get("logoUrl") ?? null };
+  },
+  ["public-shell-settings"],
   { revalidate: 60, tags: ["homepage", "store-settings"] }
 );
+
+export async function getPublicShellSettings() {
+  return getCachedPublicShellSettings();
+}
+
+export async function getPublicStoreSettings() {
+  return (await getCachedPublicShellSettings()).settings;
+}
 
 export async function getStoreSettingsForApi(): Promise<StoreSettings> {
   return readStoreSettings();

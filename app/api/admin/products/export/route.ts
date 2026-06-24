@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import * as XLSX from "xlsx";
+import ExcelJS from "exceljs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { requireReportStaff } from "@/lib/authz";
@@ -59,11 +59,14 @@ export async function GET(request: Request) {
     });
   }
 
-  const sheet = XLSX.utils.json_to_sheet(rows, { header: [...productSheetColumns] });
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, sheet, "Products");
-  const buffer = XLSX.write(workbook, { type: "buffer", bookType: "xlsx" });
-  return new Response(buffer, {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Products");
+  sheet.columns = productSheetColumns.map((column) => ({ header: column, key: column, width: 18 }));
+  sheet.addRows(rows);
+  sheet.views = [{ state: "frozen", ySplit: 1 }];
+  sheet.getRow(1).font = { bold: true };
+  const buffer = await workbook.xlsx.writeBuffer();
+  return new Response(Buffer.from(buffer), {
     headers: {
       "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       "Content-Disposition": "attachment; filename=msm-products.xlsx"

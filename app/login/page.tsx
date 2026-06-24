@@ -3,8 +3,8 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { SITE } from "@/lib/constants";
-import { prisma } from "@/lib/prisma";
 import { safeCallbackUrl } from "@/lib/safe-redirect";
+import { getPublicShellSettings } from "@/lib/store-settings";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -27,7 +27,7 @@ export default async function LoginPage({
     redirect(safeCallback);
   }
 
-  const logoSetting = await prisma.setting.findUnique({ where: { key: "logoUrl" } }).catch(() => null);
+  const { logoUrl } = await getPublicShellSettings();
 
-  return <OnboardingFlow callbackUrl={safeCallback} logoUrl={logoSetting?.value || null} />;
+  return <OnboardingFlow callbackUrl={safeCallback} logoUrl={logoUrl} />;
 }

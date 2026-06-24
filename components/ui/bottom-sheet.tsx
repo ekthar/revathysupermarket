@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion, useDragControls } from "framer-motion";
 import { X } from "lucide-react";
+import { usePathname } from "next/navigation";
+import { lockDocumentScroll } from "@/lib/document-scroll-lock";
 
 interface BottomSheetProps {
   open: boolean;
@@ -12,13 +14,12 @@ interface BottomSheetProps {
 }
 
 export function BottomSheet({ open, onClose, title, children }: BottomSheetProps) {
-  // Prevent body scroll when sheet is open
+  const pathname = usePathname();
+
   useEffect(() => {
-    if (open) {
-      document.body.style.overflow = "hidden";
-      return () => { document.body.style.overflow = ""; };
-    }
-  }, [open]);
+    if (!open) return;
+    return lockDocumentScroll();
+  }, [open, pathname]);
 
   return (
     <AnimatePresence>
@@ -58,7 +59,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
             {title && (
               <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100 dark:border-slate-800">
                 <h3 className="text-[15px] font-bold text-slate-900 dark:text-white">{title}</h3>
-                <button onClick={onClose} className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                <button type="button" aria-label="Close" onClick={onClose} className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                   <X className="h-4 w-4 text-slate-500" />
                 </button>
               </div>

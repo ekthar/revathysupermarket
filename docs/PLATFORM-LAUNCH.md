@@ -31,4 +31,4 @@
 - Watch authentication failures, rate-limit responses, checkout conflicts, notification failures, stale driver locations and slow database queries.
 - Retain the pre-migration database snapshot until all acceptance checks pass.
 - Disable scheduled-delivery promotion and install prompts if operational issues arise; do not roll back the database while new-model records are being written.
-- The current `xlsx` package has upstream high-severity advisories with no published fix. Imports are restricted to authenticated catalogue staff, 2MB, 2,000 rows and rate limited. Replace the library or remove XLSX support in a separately approved dependency/API change.
+- Spreadsheet imports use ExcelJS and remain restricted to authenticated catalogue staff, 2MB, 2,000 rows and rate limited. Keep XLSX/CSV parser advisories in the release audit gate.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Search, ShoppingBag, Sparkles, X } from "lucide-react";
+import { lockDocumentScroll } from "@/lib/document-scroll-lock";
 
 const STORAGE_KEY = "msm-onboarding-done";
 
@@ -59,6 +60,11 @@ export function OnboardingTour() {
     }
   }, []);
 
+  useEffect(() => {
+    if (!show) return;
+    return lockDocumentScroll();
+  }, [show]);
+
   function next() {
     if (step < tourSteps.length - 1) {
       setStep(step + 1);
@@ -95,6 +101,8 @@ export function OnboardingTour() {
           >
             {/* Close button */}
             <button
+              type="button"
+              aria-label="Close onboarding tour"
               onClick={dismiss}
               className="absolute top-4 right-4 h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
             >

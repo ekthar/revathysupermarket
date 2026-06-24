@@ -14,7 +14,7 @@ function configureWebPush() {
   return true;
 }
 
-export async function sendPushToUser(userId: string | null | undefined, payload: { title: string; body: string; url: string; orderId?: string }) {
+export async function sendPushToUser(userId: string | null | undefined, payload: { title: string; body: string; url: string; orderId?: string; requireInteraction?: boolean }) {
   if (!userId || !configureWebPush()) return;
 
   const subscriptions = await prisma.pushSubscription.findMany({ where: { userId } });

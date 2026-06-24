@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Package, X, MapPin, ArrowRight } from "lucide-react";
+import { Bell, Package, X, MapPin, ArrowRight, Volume2 } from "lucide-react";
 
 type AlertOrder = { id: string; orderNumber: string; customerName: string; address: string; total: number };
 
@@ -16,8 +16,28 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
   const [alert, setAlert] = useState<AlertOrder | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
-  const knownOrdersRef = useRef<Set<string>>(new Set());
-  const firstPollRef = useRef(true);
+  const shownOrdersRef = useRef<Set<string>>(new Set());
+  const alertOpenRef = useRef(false);
+  const [soundEnabled, setSoundEnabled] = useState(false);
+
+  useEffect(() => {
+    setSoundEnabled(localStorage.getItem("delivery-alert-sound-enabled") === "true");
+  }, []);
+
+  const enableSound = useCallback(async () => {
+    try {
+      if (!ctxRef.current || ctxRef.current.state === "closed") ctxRef.current = new AudioContext();
+      await ctxRef.current.resume();
+      const oscillator = ctxRef.current.createOscillator();
+      const gain = ctxRef.current.createGain();
+      oscillator.connect(gain); gain.connect(ctxRef.current.destination);
+      gain.gain.setValueAtTime(0.08, ctxRef.current.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, ctxRef.current.currentTime + 0.12);
+      oscillator.start(); oscillator.stop(ctxRef.current.currentTime + 0.12);
+      localStorage.setItem("delivery-alert-sound-enabled", "true");
+      setSoundEnabled(true);
+    } catch { /* device has no usable Web Audio implementation */ }
+  }, []);
 
   const startBeeping = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
@@ -66,24 +86,20 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
 
     async function poll() {
       try {
+        if (alertOpenRef.current) return;
         const res = await fetch("/api/delivery/poll", { cache: "no-store" });
         if (!res.ok || !active) return;
         const data = await res.json();
         const orders: Array<{ id: string; orderNumber: string; customerName: string; address: string; total: number }> = data.orders ?? [];
 
-        // On first poll, just record known orders (don't alert for existing ones)
-        if (firstPollRef.current) {
-          firstPollRef.current = false;
-          for (const o of orders) knownOrdersRef.current.add(o.id);
-          return;
-        }
-
-        // Check for new orders not seen before
+        // The server only returns unacknowledged assignments. Do not baseline the
+        // first response: that was the race that caused real assignments to vanish.
         for (const order of orders) {
-          if (!knownOrdersRef.current.has(order.id)) {
-            knownOrdersRef.current.add(order.id);
+          if (!shownOrdersRef.current.has(order.id)) {
+            shownOrdersRef.current.add(order.id);
+            alertOpenRef.current = true;
             setAlert(order);
-            startBeeping();
+            if (localStorage.getItem("delivery-alert-sound-enabled") === "true") startBeeping();
             break; // Show one at a time
           }
         }
@@ -95,10 +111,32 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
     return () => { active = false; clearInterval(timer); stopBeeping(); };
   }, [partnerId, startBeeping, stopBeeping]);
 
-  const dismiss = useCallback(() => { setAlert(null); stopBeeping(); }, [stopBeeping]);
+  const acknowledge = useCallback(async (reload: boolean) => {
+    const orderId = alert?.id;
+    setAlert(null);
+    alertOpenRef.current = false;
+    stopBeeping();
+    if (!orderId) return;
+    const response = await fetch("/api/delivery/poll", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId })
+    }).catch(() => null);
+    if (!response?.ok) {
+      shownOrdersRef.current.delete(orderId);
+      return;
+    }
+    if (reload) window.location.reload();
+  }, [alert?.id, stopBeeping]);
 
   return (
-    <AnimatePresence>
+    <>
+      {!soundEnabled && !alert && (
+        <button type="button" onClick={enableSound} className="fixed bottom-24 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-xl dark:bg-white dark:text-slate-950">
+          <Volume2 className="h-4 w-4" /> Enable assignment alarm
+        </button>
+      )}
+      <AnimatePresence>
       {alert && (
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/95 p-4">
           <motion.div initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.8 }} transition={{ type: "spring", damping: 20 }} className="w-full max-w-sm rounded-3xl bg-white shadow-2xl dark:bg-slate-800 overflow-hidden">
@@ -121,13 +159,14 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
                 </div>
               </div>
               <div className="mt-5 grid grid-cols-2 gap-3">
-                <button onClick={dismiss} className="flex h-14 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 font-bold text-slate-600 active:bg-slate-50 dark:border-slate-600 dark:text-slate-300"><X className="h-4 w-4" /> Dismiss</button>
-                <a href="/delivery" onClick={stopBeeping} className="flex h-14 items-center justify-center gap-2 rounded-xl bg-emerald-600 font-black text-white active:bg-emerald-700">View <ArrowRight className="h-4 w-4" /></a>
+                <button onClick={() => void acknowledge(false)} className="flex h-14 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 font-bold text-slate-600 active:bg-slate-50 dark:border-slate-600 dark:text-slate-300"><X className="h-4 w-4" /> Dismiss</button>
+                <button type="button" onClick={() => void acknowledge(true)} className="flex h-14 items-center justify-center gap-2 rounded-xl bg-emerald-600 font-black text-white active:bg-emerald-700">View <ArrowRight className="h-4 w-4" /></button>
               </div>
             </div>
           </motion.div>
         </motion.div>
       )}
-    </AnimatePresence>
+      </AnimatePresence>
+    </>
   );
 }

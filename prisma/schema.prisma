@@ -329,6 +329,8 @@ model Order {
   editApprovalStatus      String?
   editApprovalRequestedAt DateTime?
   deliveryPartnerId       String?
+  deliveryAssignedAt      DateTime?
+  deliveryAlertAckAt      DateTime?
   deliveryOtp             String?
   deliveryOtpAttempts     Int                     @default(0)
   deliveryOtpExpiresAt    DateTime?
@@ -362,6 +364,7 @@ model Order {
   @@index([acknowledgedAt])
   @@index([acknowledgedById])
   @@index([deliveryPartnerId])
+  @@index([deliveryPartnerId, deliveryAlertAckAt])
   @@index([createdAt])
   @@index([userId])
   @@index([userId, createdAt])

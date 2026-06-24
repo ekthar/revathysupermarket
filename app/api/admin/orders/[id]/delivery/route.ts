@@ -23,6 +23,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     where: { id },
     data: {
       deliveryPartnerId: parsed.data.deliveryPartnerId,
+      deliveryAssignedAt: parsed.data.deliveryPartnerId ? new Date() : null,
+      deliveryAlertAckAt: null,
       deliveryOtp: parsed.data.deliveryPartnerId ? createDeliveryOtp() : null,
       deliveryOtpAttempts: 0,
       deliveryOtpExpiresAt: parsed.data.deliveryPartnerId ? deliveryOtpExpiryDate() : null
@@ -55,7 +57,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       title: "🚀 New Order Assigned!",
       body: `Order #${order.orderNumber} for ${order.customerName}. Open app to view details.`,
       url: "/delivery",
-      orderId: id
+      orderId: id,
+      requireInteraction: true
     });
 
     await sendWhatsAppTemplate({

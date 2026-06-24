@@ -1,11 +1,11 @@
 {
-    "name": "msm_app",
-    "short_name": "msm_app",
+    "name": "MSM Supermarket",
+    "short_name": "MSM",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FF6600",
+    "theme_color": "#FF6600",
+    "description": "MSM Supermarket - Fresh groceries delivered to your doorstep",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

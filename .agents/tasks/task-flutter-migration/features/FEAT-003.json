@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Build the Swiggy-style design system (theme + reusable widgets) and implement scroll/animation patterns. Covers Phases 5-6 of the migration.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create lib/theme/app_theme.dart with: primary Color(0xFFFF6600), secondary Color(0xFF22C55E), background Color(0xFFF7F7F7), surface Colors.white. Typography using GoogleFonts.manropeTextTheme() for display and GoogleFonts.interTextTheme() for body. Create both light ThemeData.",
     "Create lib/widgets/product_card.dart: image at top (CachedNetworkImage), name with 2-line clamp, price row showing discountPrice strikethrough + current price, ADD/stepper button at bottom. Use flutter_animate for fade-in on appear.",

@@ -14,6 +14,7 @@ import '../screens/order_detail_screen.dart';
 import '../screens/order_history_screen.dart';
 import '../screens/product_detail_screen.dart';
 import '../screens/product_list_screen.dart';
+import '../widgets/bottom_nav_bar.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authNotifier = ref.watch(authProvider.notifier);
@@ -39,28 +40,45 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/',
-        builder: (context, state) => const HomeScreen(),
-      ),
-      GoRoute(
-        path: '/products',
-        builder: (context, state) {
-          final category = state.uri.queryParameters['category'];
-          final search = state.uri.queryParameters['search'];
-          return ProductListScreen(category: category, search: search);
+      // Shell route with bottom navigation bar for main tabs
+      ShellRoute(
+        builder: (context, state, child) {
+          return BottomNavBar(child: child);
         },
+        routes: [
+          GoRoute(
+            path: '/',
+            builder: (context, state) => const HomeScreen(),
+          ),
+          GoRoute(
+            path: '/products',
+            builder: (context, state) {
+              final category = state.uri.queryParameters['category'];
+              final search = state.uri.queryParameters['search'];
+              return ProductListScreen(category: category, search: search);
+            },
+          ),
+          GoRoute(
+            path: '/cart',
+            builder: (context, state) => const CartScreen(),
+          ),
+          GoRoute(
+            path: '/orders',
+            builder: (context, state) => const OrderHistoryScreen(),
+          ),
+          GoRoute(
+            path: '/account',
+            builder: (context, state) => const AccountScreen(),
+          ),
+        ],
       ),
+      // Routes outside the shell (no bottom nav)
       GoRoute(
         path: '/products/:id',
         builder: (context, state) {
           final id = state.pathParameters['id']!;
           return ProductDetailScreen(productId: id);
         },
-      ),
-      GoRoute(
-        path: '/cart',
-        builder: (context, state) => const CartScreen(),
       ),
       GoRoute(
         path: '/checkout',
@@ -72,10 +90,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           final returnTo = state.uri.queryParameters['returnTo'];
           return LoginScreen(returnTo: returnTo);
         },
-      ),
-      GoRoute(
-        path: '/orders',
-        builder: (context, state) => const OrderHistoryScreen(),
       ),
       GoRoute(
         path: '/orders/:id',
@@ -90,10 +104,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           final id = state.pathParameters['id']!;
           return LiveTrackingScreen(orderId: id);
         },
-      ),
-      GoRoute(
-        path: '/account',
-        builder: (context, state) => const AccountScreen(),
       ),
       GoRoute(
         path: '/offers',

@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Build the Swiggy-style design system (theme + reusable widgets) and implement scroll/animation patterns. Covers Phases 5-6 of the migration.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create lib/theme/app_theme.dart with: primary Color(0xFFFF6600), secondary Color(0xFF22C55E), background Color(0xFFF7F7F7), surface Colors.white. Typography using GoogleFonts.manropeTextTheme() for display and GoogleFonts.interTextTheme() for body. Create both light ThemeData.",
     "Create lib/widgets/product_card.dart: image at top (CachedNetworkImage), name with 2-line clamp, price row showing discountPrice strikethrough + current price, ADD/stepper button at bottom. Use flutter_animate for fade-in on appear.",
@@ -32,5 +32,5 @@
     "Run: cd /projects/sandbox/revathysupermarket/msm_app && flutter build web --release --dart-define=SITE_URL=https://msmsupermarket.in --base-href /app/"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "1. Used .withValues(alpha: x) instead of deprecated .withOpacity(x) for Flutter 3.x SDK compatibility. 2. NavigationBarThemeData uses WidgetStateProperty (not MaterialStateProperty) matching current SDK. 3. Web build emits wasm dry-run warnings for flutter_secure_storage_web (dart:html) but JS build succeeds. 4. ShellRoute wraps Home, Products, Cart, Orders, Account tabs; other routes (product detail, checkout, login, order detail, live tracking, offers) are outside the shell for full-screen navigation."
 }

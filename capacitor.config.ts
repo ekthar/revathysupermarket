@@ -11,8 +11,6 @@ const config: CapacitorConfig = {
   },
   android: {
     allowMixedContent: false,
-    // Target latest SDK to avoid Play Protect "built for older version" warning
-    minSdkVersion: 24,
     // Use appendUserAgent so the web app can detect it's running in the native shell
     appendUserAgent: "RevathySupermarket-Android",
     // Don't use WebView caching that triggers security warnings

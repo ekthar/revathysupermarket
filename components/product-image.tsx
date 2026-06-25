@@ -27,6 +27,7 @@ export function ProductImage({
       alt={alt}
       width={640}
       height={640}
+      style={{ aspectRatio: "1/1" }}
       className={cn("block h-full min-w-0 max-w-full object-cover", className)}
       loading="lazy"
       onError={() => setCurrentSrc(PRODUCT_IMAGE_FALLBACK)}

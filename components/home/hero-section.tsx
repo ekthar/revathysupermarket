@@ -80,6 +80,9 @@ export function HeroSection({
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 src={heroImage}
                 alt={heroTitle}
+                width={800}
+                height={600}
+                style={{ aspectRatio: "4/3" }}
                 className="h-full w-full object-cover"
                 loading="eager"
               />
@@ -142,6 +145,9 @@ export function HeroSection({
             transition={{ duration: 0.8, ease: "easeOut" }}
             src={heroImage}
             alt={heroTitle}
+            width={800}
+            height={364}
+            style={{ aspectRatio: "2.2/1" }}
             className="h-full w-full object-cover"
             loading="eager"
           />

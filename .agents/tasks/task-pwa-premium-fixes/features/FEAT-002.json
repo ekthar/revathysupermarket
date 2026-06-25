@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Responsive layout audit and fixes. Fix overflow issues, ensure proper image sizing, add min-w-0 to flex containers, and verify layouts at key breakpoints (375, 390, 414, 768, 820, 1024, 1280). Fix horizontal scroll sections causing page-level overflow. Replace any fixed px widths with relative/responsive values.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Fix components/product-image.tsx - currently uses raw <img> tag with width=640 height=640 attributes. Since this renders product images at various container sizes, ensure it has proper intrinsic sizing. The parent containers set the height, so the img fills correctly. Add aspect-ratio to the img for CLS prevention. Consider converting to next/image with fill prop for proper responsive sizing, OR keep as <img> but ensure the parent has explicit dimensions.",
     "In components/home/hero-section.tsx - the desktop hero uses motion.img (raw img tag) for heroImage. Replace with next/image using fill prop and sizes prop for proper responsive behavior, or at minimum add explicit width/height/aspect-ratio. The mobile hero also uses motion.img - same fix.",

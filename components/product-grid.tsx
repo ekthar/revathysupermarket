@@ -83,7 +83,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
             className="h-12 rounded-2xl border-0 bg-white pl-11 text-[15px] font-semibold shadow-[0_18px_42px_-30px_rgba(15,23,42,0.45)] placeholder:text-slate-400"
           />
         </label>
-        <div className="mt-3 flex items-center gap-2 overflow-x-auto pb-1 md:hidden">
+        <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:hidden">
           <button
             type="button"
             onClick={() => setFilterOpen(true)}

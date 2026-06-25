@@ -60,7 +60,7 @@ export function AnimatedProductSection({
   return (
     <section
       ref={sectionRef}
-      className={`pt-8 md:pt-12 ${desktopOnly ? "hidden md:block" : ""}`}
+      className={`pt-8 md:pt-12 overflow-hidden ${desktopOnly ? "hidden md:block" : ""}`}
     >
       {!hideHeader && (
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">

@@ -1,0 +1,40 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Scaffold the mobile/ Flutter project with environments/flavors, networking layer, auth, routing, theming, model generation, error handling, and CI configuration.",
+  "status": "completed",
+  "steps": [
+    "Install Flutter SDK: download latest stable from https://storage.googleapis.com/flutter_infra_release/releases/stable/linux/flutter_linux_3.29.3-stable.tar.xz (or latest available), extract to /opt/flutter, add to PATH. Run 'flutter doctor' to verify.",
+    "Create Flutter project: 'flutter create --org com.msmsupermarket --project-name msm_mobile --platforms android,ios mobile' from the repository root.",
+    "Set up pubspec.yaml with dependencies: flutter_riverpod/riverpod_annotation, go_router, dio, freezed/freezed_annotation/json_annotation/json_serializable, flutter_secure_storage, build_runner, riverpod_generator. Add dev_dependencies: freezed, json_serializable, build_runner, riverpod_generator, flutter_test, mocktail.",
+    "Create flavor/environment configuration: lib/core/config/environment.dart with enum AppEnvironment {dev, staging, prod} and EnvironmentConfig class holding baseUrl, appName. Create separate main entry points: lib/main_dev.dart, lib/main_prod.dart that initialize the appropriate config.",
+    "Create networking layer: lib/core/network/api_client.dart using Dio with interceptors for: (a) AuthInterceptor that adds Bearer token from flutter_secure_storage, handles 401 by refreshing token via /api/mobile/v1/auth/refresh, retries original request. (b) ErrorInterceptor that maps DioExceptions to typed AppException hierarchy. (c) LoggingInterceptor that logs method/url/status (never tokens or sensitive data).",
+    "Create auth module: lib/features/auth/data/auth_repository.dart with login(phone, otp), loginWithEmail(email, password), refreshToken(), logout(), isAuthenticated getter. lib/features/auth/data/token_storage.dart using flutter_secure_storage for accessToken, refreshToken, deviceId. lib/features/auth/domain/auth_state.dart with Freezed union: Authenticated(user), Unauthenticated, Loading.",
+    "Create router: lib/core/router/app_router.dart using GoRouter with routes for: splash, login/otp, customer home, cart, checkout, orders, order detail/tracking, account, wallet, loyalty, favorites, addresses, notifications, settings, support, delivery login, delivery dashboard, delivery order detail. Add redirect guards that check auth state and role (CUSTOMER vs DELIVERY_PARTNER).",
+    "Create theming: lib/core/theme/app_theme.dart with Material 3 light and dark themes matching MSM brand colors (emerald primary for delivery, slate/black for customer). Support dynamic color where available. Define text theme with scalable sizes.",
+    "Create base model infrastructure: lib/core/models/api_response.dart (generic wrapper), lib/core/models/pagination.dart. Create example Freezed model lib/features/auth/domain/user_model.dart with @freezed and @JsonSerializable annotations showing the pattern.",
+    "Create error handling: lib/core/errors/app_exception.dart with sealed class AppException (NetworkException, AuthException, ServerException, ValidationException). lib/core/errors/error_handler.dart that converts exceptions to user-facing messages.",
+    "Create app shell: lib/app.dart with MaterialApp.router setup, ProviderScope, theme switching. lib/core/widgets/offline_banner.dart, lib/core/widgets/loading_widget.dart, lib/core/widgets/error_widget.dart, lib/core/widgets/empty_state_widget.dart as reusable base widgets.",
+    "Add placeholder Firebase configuration files: mobile/android/app/google-services.json.example and mobile/ios/Runner/GoogleService-Info.plist.example with dummy values and comments explaining they must be replaced with real project files. Add them to .gitignore (the real ones).",
+    "Run 'flutter pub get' and 'dart run build_runner build --delete-conflicting-outputs' to generate Freezed/JSON code.",
+    "Run 'flutter analyze' and fix all issues.",
+    "Commit with message 'feat: scaffold Flutter mobile app with architecture, auth, routing, and theming'."
+  ],
+  "acceptance_criteria": [
+    "mobile/ directory exists with valid Flutter project structure",
+    "flutter pub get succeeds",
+    "flutter analyze reports no errors",
+    "dart run build_runner build completes successfully",
+    "Flavor entry points (main_dev.dart, main_prod.dart) exist",
+    "Auth repository with token refresh logic exists",
+    "GoRouter with role-based guards exists",
+    "Material 3 light/dark themes defined"
+  ],
+  "verification": [
+    "Run 'cd mobile && flutter analyze' and confirm no errors",
+    "Run 'cd mobile && flutter test' and confirm it passes (even if no tests yet, no failures)",
+    "Run 'npm run build' in root to confirm backend still builds"
+  ],
+  "blocked_reason": null,
+  "findings": "Flutter SDK 3.32.2 installed at /opt/flutter. Project created with flutter create. All dependencies resolved via flutter pub get. build_runner generated Freezed/JSON code (4 outputs). flutter analyze passes with no issues. flutter test passes. npm run build (backend) still succeeds. Root .gitignore had 'android/' and 'ios/' patterns from Capacitor that blocked mobile/android/ and mobile/ios/ - fixed by prefixing with / to make them root-relative. xz package needed to be installed (yum install -y xz) for Flutter tarball extraction. Java 25 available for Android builds."
+}

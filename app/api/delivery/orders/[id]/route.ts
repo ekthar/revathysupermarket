@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/audit";
-import { isDeliveryRole } from "@/lib/authz";
 import { sendPushToUser } from "@/lib/push";
 import { deliveryActionSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
+import { authenticateDeliveryRequest } from "@/lib/hybrid-auth";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const session = await auth();
-  if (!session?.user?.id || !isDeliveryRole(session.user.role)) {
+  const authResult = await authenticateDeliveryRequest(request);
+  if (!authResult) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -31,7 +30,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       phone: true
     }
   });
-  if (!order || order.deliveryPartnerId !== session.user.id) return NextResponse.json({ error: "Order not found." }, { status: 404 });
+  if (!order || order.deliveryPartnerId !== authResult.userId) return NextResponse.json({ error: "Order not found." }, { status: 404 });
 
   if (parsed.data.action === "request_cancel") {
     // Save a staff note with the cancellation reason from the delivery partner
@@ -46,8 +45,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
     });
     await writeAuditLog({
-      actorId: session.user.id,
-      actorRole: session.user.role,
+      actorId: authResult.userId,
+      actorRole: authResult.role,
       action: "delivery_cancel_requested",
       targetType: "Order",
       targetId: id,
@@ -58,21 +57,6 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
 
   if (parsed.data.action === "delivered") {
     return NextResponse.json({ error: "Use the collection and slide-to-deliver workflow.", code: "DELIVERY_COMPLETION_REQUIRED" }, { status: 409 });
-    /* Legacy completion is intentionally disabled.
-    if (order.deliveryOtpExpiresAt && order.deliveryOtpExpiresAt < new Date()) {
-      return NextResponse.json({ error: "Delivery OTP has expired. Ask admin to regenerate it." }, { status: 400 });
-    }
-    if (order.deliveryOtpAttempts >= 3) {
-      return NextResponse.json({ error: "Too many wrong OTP attempts. Ask admin to regenerate it." }, { status: 400 });
-    }
-    if (parsed.data.otp !== order.deliveryOtp) {
-      await prisma.order.update({
-        where: { id },
-        data: { deliveryOtpAttempts: { increment: 1 } }
-      });
-      return NextResponse.json({ error: "Delivery OTP is incorrect." }, { status: 400 });
-    }
-    */
   }
 
   const nextStatus = "OUT_FOR_DELIVERY";
@@ -90,8 +74,8 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     orderId: order.id
   });
   await writeAuditLog({
-    actorId: session.user.id,
-    actorRole: session.user.role,
+    actorId: authResult.userId,
+    actorRole: authResult.role,
     action: "delivery_picked_up",
     targetType: "Order",
     targetId: id

@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { awardDeliveredOrderBenefits } from "@/lib/loyalty";
 import { sendPushToUser } from "@/lib/push";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { authenticateDeliveryPartnerRequest } from "@/lib/hybrid-auth";
 
 const schema = z.object({ orderId: z.string().min(1), otp: z.string().regex(/^\d{6}$/) });
 const cents = (value: Prisma.Decimal | number) => Math.round(Number(value) * 100);
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "DELIVERY_PARTNER") return NextResponse.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 });
-  const limit = await enforceRateLimit(`delivery:complete:${session.user.id}`, 12, 300);
+  const authResult = await authenticateDeliveryPartnerRequest(request);
+  if (!authResult) return NextResponse.json({ error: "Unauthorized", code: "UNAUTHORIZED" }, { status: 401 });
+
+  const limit = await enforceRateLimit(`delivery:complete:${authResult.userId}`, 12, 300);
   if (limit.limited) return rateLimitResponse(limit.reset);
   const parsed = schema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) return NextResponse.json({ error: "Order and six-digit OTP are required.", code: "INVALID_COMPLETION" }, { status: 400 });
 
-  const order = await prisma.order.findFirst({ where: { id: parsed.data.orderId, deliveryPartnerId: session.user.id }, select: { id: true, status: true, deliveryOtp: true, deliveryOtpAttempts: true, deliveryOtpExpiresAt: true, userId: true, orderNumber: true, deliveryCollection: true } });
+  const order = await prisma.order.findFirst({ where: { id: parsed.data.orderId, deliveryPartnerId: authResult.userId }, select: { id: true, status: true, deliveryOtp: true, deliveryOtpAttempts: true, deliveryOtpExpiresAt: true, userId: true, orderNumber: true, deliveryCollection: true } });
   if (!order) return NextResponse.json({ error: "Assigned order not found.", code: "ORDER_NOT_FOUND" }, { status: 404 });
   if (order.status === "DELIVERED" && order.deliveryCollection?.completionReference) return NextResponse.json({ success: true, status: "DELIVERED", idempotent: true, completionReference: order.deliveryCollection.completionReference });
   if (!["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status)) return NextResponse.json({ error: "Order must be out for delivery before completion.", code: "DELIVERY_NOT_STARTED" }, { status: 409 });
@@ -37,7 +38,7 @@ export async function POST(request: Request) {
       if (claimed.count !== 1) throw new Error("ALREADY_COMPLETED");
       await tx.orderEvent.create({ data: { orderId: order.id, status: "DELIVERED", note: "OTP verified and collection balanced." } });
       await tx.deliveryCollection.update({ where: { orderId: order.id }, data: { completionReference, completedAt: now, status: Number(order.deliveryCollection!.cashCollected) === 0 && Number(order.deliveryCollection!.upiCollected) === 0 ? "SETTLED" : order.deliveryCollection!.status } });
-      await tx.auditLog.create({ data: { actorId: session.user.id, actorRole: "DELIVERY_PARTNER", action: "delivery.completed", targetType: "Order", targetId: order.id, metadata: { completionReference } } });
+      await tx.auditLog.create({ data: { actorId: authResult.userId, actorRole: "DELIVERY_PARTNER", action: "delivery.completed", targetType: "Order", targetId: order.id, metadata: { completionReference } } });
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
   } catch (error) {
     if (error instanceof Error && error.message === "ALREADY_COMPLETED") {

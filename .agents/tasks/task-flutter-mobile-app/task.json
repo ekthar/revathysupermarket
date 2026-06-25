@@ -1,0 +1,18 @@
+{
+  "task_id": "task-flutter-mobile-app",
+  "task_description": "Convert MSM Supermarket customer and delivery-partner mobile experience to a production-grade Flutter app while retaining the existing Next.js 15 backend and web admin portal. Includes versioned mobile API, bearer token auth, FCM push for delivery alerts, and comprehensive documentation.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005", "FEAT-006"],
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "flutter_analyze": "pass",
+    "flutter_test": "pass",
+    "flutter_build_apk": "pass",
+    "prisma_validate": "pass",
+    "summary": "All validation passes after review fixes. Backend: npm build succeeds, 37/38 tests pass (1 pre-existing scroll-preservation failure unrelated to this work). Flutter: analyze reports no issues, 80/80 tests pass. Prisma schema validates. Review issues addressed: FCM registration payload, auth interceptor retry+queue, server-side FCM dispatch, refresh token cleanup+limit, logout single-device scope, index fix, alarm audio documented."
+  }
+}

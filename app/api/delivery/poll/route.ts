@@ -1,22 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { authenticateDeliveryPartnerRequest } from "@/lib/hybrid-auth";
 
 /**
  * Polling endpoint for delivery partner alerts.
  * Returns assignments that this partner has not acknowledged yet. The pending
  * state lives in the database so a reload, a cold start, or a missed poll cannot
  * swallow an alert.
+ *
+ * Supports both mobile Bearer token auth and web session auth.
  */
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "DELIVERY_PARTNER") {
+export async function GET(request: NextRequest) {
+  const authResult = await authenticateDeliveryPartnerRequest(request);
+  if (!authResult) {
     return NextResponse.json({ orders: [] });
   }
 
   const orders = await prisma.order.findMany({
     where: {
-      deliveryPartnerId: session.user.id,
+      deliveryPartnerId: authResult.userId,
       deliveryAssignedAt: { not: null },
       deliveryAlertAckAt: null,
       status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING"] }
@@ -47,8 +49,8 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "DELIVERY_PARTNER") {
+  const authResult = await authenticateDeliveryPartnerRequest(request);
+  if (!authResult) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -60,7 +62,7 @@ export async function POST(request: NextRequest) {
   const result = await prisma.order.updateMany({
     where: {
       id: body.orderId,
-      deliveryPartnerId: session.user.id,
+      deliveryPartnerId: authResult.userId,
       deliveryAlertAckAt: null
     },
     data: { deliveryAlertAckAt: new Date() }

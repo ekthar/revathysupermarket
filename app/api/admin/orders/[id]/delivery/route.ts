@@ -8,6 +8,7 @@ import { deliveryAssignmentSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { createDeliveryOtp, deliveryOtpExpiryDate } from "@/lib/delivery";
 import { sendDeliveryAlert } from "@/lib/delivery-alerts";
+import { sendFcmToUser } from "@/lib/fcm-admin";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -40,6 +41,33 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     metadata: { deliveryPartnerId: parsed.data.deliveryPartnerId }
   });
   if (parsed.data.deliveryPartnerId) {
+    // Create AssignmentEvent for mobile app consumption
+    const eventId = `assign-${id}-${parsed.data.deliveryPartnerId}-${Date.now()}`;
+    await prisma.assignmentEvent.create({
+      data: {
+        eventId,
+        orderId: id,
+        partnerId: parsed.data.deliveryPartnerId,
+        orderNumber: order.orderNumber,
+        assignedAt: new Date(),
+      },
+    }).catch(() => null); // Non-blocking: don't fail if event already exists
+
+    // Send FCM push notification to delivery partner's mobile devices
+    sendFcmToUser(parsed.data.deliveryPartnerId, {
+      type: "delivery_assignment",
+      eventId,
+      orderId: id,
+      orderNumber: order.orderNumber,
+    }).then(async (sent) => {
+      if (sent) {
+        await prisma.assignmentEvent.update({
+          where: { eventId },
+          data: { fcmSent: true, fcmSentAt: new Date() },
+        }).catch(() => null);
+      }
+    }).catch(() => null); // Non-blocking
+
     // Send real-time SSE alert to the delivery partner (instant in-app alert with sound + vibration)
     sendDeliveryAlert(parsed.data.deliveryPartnerId, {
       type: "new_order",

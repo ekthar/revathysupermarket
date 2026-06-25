@@ -15,7 +15,7 @@ export default async function DeliveryPage() {
 
   const [orders, todayDelivered, todayEarnings, totalDelivered] = await Promise.all([
     prisma.order.findMany({
-      where: { deliveryPartnerId: userId, status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING"] } },
+      where: { deliveryPartnerId: userId, status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING", "CUSTOMER_UNAVAILABLE"] } },
       include: { items: true, deliveryCollection: true },
       orderBy: { createdAt: "desc" }
     }),

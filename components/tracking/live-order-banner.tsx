@@ -61,12 +61,13 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
     <AnimatePresence>
       {activeOrder && (
         <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="mx-4 mb-4 min-h-[78px]"
+          className="mx-4 overflow-hidden"
         >
+          <div className="pb-4">
           <Link
             href={`/track/${activeOrder.id}`}
             className="block overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-400 p-3.5 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30 press"
@@ -104,6 +105,7 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
             {/* Decorative */}
             <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/10 pointer-events-none" />
           </Link>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Layout shift (CLS) fixes. Fonts are already using next/font (good). Focus on: (1) ensuring all images/product cards/banners have explicit aspect-ratio, (2) adding skeleton placeholders for async-loaded content (delivery time banner, offers strip, product grid), (3) converting conditional mount/unmount patterns to opacity/transform-based show-hide. Also add loading.tsx skeleton files for routes reachable from the bottom nav.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Fonts: Already using next/font/google (Inter_Tight + Manrope) with display: 'swap' in app/layout.tsx. No @font-face or <link> based fonts found. This is already optimal - no changes needed.",
     "In components/product-card.tsx - the image container already has aspect-[4/3.2] (grid layout) and aspect-square (compact layout). The horizontal layout uses fixed h-16 w-16. These are good for CLS. No changes needed.",

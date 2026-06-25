@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         if (!redis) return;
 
         try {
-          // Check partner-specific alerts
+          // Check partner-specific alerts (broadcasts now fan-out to individual keys)
           const partnerKey = `delivery:alerts:${partnerId}`;
           const partnerAlerts = await redis.lrange(partnerKey, 0, -1);
           if (partnerAlerts.length > 0) {
@@ -72,17 +72,6 @@ export async function GET(request: NextRequest) {
             await redis.del(partnerKey);
             // Send each alert to the client (reverse to send oldest first)
             for (const alert of partnerAlerts.reverse()) {
-              const message = typeof alert === "string" ? alert : JSON.stringify(alert);
-              controller.enqueue(encoder.encode(`data: ${message}\n\n`));
-            }
-          }
-
-          // Check broadcast alerts (for all delivery partners)
-          const broadcastAlerts = await redis.lrange("delivery:alerts:broadcast", 0, -1);
-          if (broadcastAlerts.length > 0) {
-            // Remove broadcast messages after reading
-            await redis.del("delivery:alerts:broadcast");
-            for (const alert of broadcastAlerts.reverse()) {
               const message = typeof alert === "string" ? alert : JSON.stringify(alert);
               controller.enqueue(encoder.encode(`data: ${message}\n\n`));
             }

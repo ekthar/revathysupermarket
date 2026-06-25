@@ -5,6 +5,7 @@
  */
 
 import { Redis } from "@upstash/redis";
+import { prisma } from "@/lib/prisma";
 
 type AlertPayload = {
   type: "new_order";
@@ -17,8 +18,8 @@ type AlertPayload = {
   };
 };
 
-/** TTL for alert keys in seconds. Stale alerts auto-expire after this period. */
-const ALERT_KEY_TTL_SECONDS = 120;
+/** TTL for alert keys in seconds. Alerts auto-expire after 5 minutes to handle brief reconnections. */
+const ALERT_KEY_TTL_SECONDS = 300;
 
 let redis: Redis | null = null;
 let fallbackWarningLogged = false;
@@ -46,9 +47,6 @@ function partnerAlertKey(partnerId: string): string {
   return `delivery:alerts:${partnerId}`;
 }
 
-/** Redis key for broadcast alerts (all delivery partners). */
-const BROADCAST_KEY = "delivery:alerts:broadcast";
-
 /**
  * Send a real-time alert to a specific delivery partner by pushing to their Redis list.
  * The SSE endpoint polls this list and forwards messages to the connected client.
@@ -72,18 +70,28 @@ export async function sendDeliveryAlert(partnerId: string, payload: AlertPayload
 }
 
 /**
- * Notify all delivery partners about a new unassigned order (for pickup).
- * Pushes to the broadcast list which every connected partner polls.
+ * Notify all active delivery partners about a new unassigned order (for pickup).
+ * Uses per-partner fan-out: queries DB for all active delivery partners and
+ * pushes the alert to each partner's individual Redis key. This avoids the
+ * broadcast race condition where multiple SSE connections would compete for
+ * the same shared broadcast key (LRANGE + DEL is non-atomic).
  */
 export async function broadcastToAllDeliveryPartners(payload: AlertPayload): Promise<void> {
   const client = getRedis();
   if (!client) return;
 
   try {
-    const message = JSON.stringify(payload);
-    await client.lpush(BROADCAST_KEY, message);
-    await client.expire(BROADCAST_KEY, ALERT_KEY_TTL_SECONDS);
+    // Get all active delivery partners from the database
+    const partners = await prisma.user.findMany({
+      where: { role: "DELIVERY_PARTNER", isActive: true },
+      select: { id: true },
+    });
+
+    // Fan-out: push alert to each partner's individual key
+    await Promise.all(
+      partners.map((partner) => sendDeliveryAlert(partner.id, payload))
+    );
   } catch (error) {
-    console.error("[delivery-alerts] Failed to broadcast alert to Redis:", error);
+    console.error("[delivery-alerts] Failed to broadcast alert:", error);
   }
 }

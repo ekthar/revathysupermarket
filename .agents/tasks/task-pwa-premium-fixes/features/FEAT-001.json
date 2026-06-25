@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Status bar configuration, safe-area padding improvements, dynamic theme-color meta tag, and manifest updates. The layout.tsx already has most settings correctly configured (viewport with viewportFit: cover, maximumScale: 1, userScalable: false, themeColor, appleWebApp with black-translucent). The manifest.ts already has display: standalone. This feature focuses on: (1) ensuring manifest theme_color matches the actual header color #050505, (2) adding a dynamic theme-color updater component that changes the meta tag on route change for pages with different header colors (light pages vs dark pages), (3) verifying and improving safe-area-inset usage in the root layout/header/footer so content under black-translucent status bar is never clipped.",
+  "status": "in_progress",
+  "steps": [
+    "Review app/layout.tsx - the viewport export and generateMetadata are already well-configured. Verify themeColor values match the app header color (#050505 for light mode is the primary/header bg). Currently light theme uses #F7F7FA (background) but header uses ios-glass (white-ish). Update the light-mode themeColor to #FFFFFF or keep as-is since the glass header blends. The dark mode value #020617 is correct.",
+    "In app/manifest.ts - theme_color is already '#050505' and background_color is '#F7F7FA'. These are good. No change needed unless we want to match the light header glass color. Keep as-is.",
+    "Create a new component components/theme-color-sync.tsx that listens to route changes (usePathname) and updates document.querySelector('meta[name=theme-color]') content dynamically. For routes like /admin, /delivery, use appropriate colors. For dark mode pages, use dark color. Integrate it in components/providers.tsx.",
+    "Audit safe-area padding in app/globals.css - the .pt-safe, .pb-safe, .ios-sticky-tracking-header, .ios-bottom-bar classes already handle safe areas. Ensure the body has pt-safe applied (it does in layout.tsx). Ensure the mobile header (.ios-sticky-tracking-header) accounts for the safe-area-inset-top (it already uses max(0.75rem, var(--safe-top))). Add safe-area-inset-top to the desktop header sticky positioning as well for iPads in landscape.",
+    "Ensure the route-scroll-container div has proper padding-bottom that accounts for safe-area + bottom nav height (pb-safe class is already applied). Verify no content is clipped under the notch area by checking that the html element has the proper viewport-fit=cover meta (already set via viewport export)."
+  ],
+  "acceptance_criteria": [
+    "The meta theme-color tag dynamically updates when navigating between routes with different themes",
+    "Safe-area padding prevents content from being clipped under the iOS notch/status bar",
+    "The manifest.ts theme_color and background_color remain consistent with the app branding",
+    "No TypeScript or lint errors introduced"
+  ],
+  "verification": [
+    "Run npx next lint to confirm no lint errors",
+    "Run npx tsc --noEmit to confirm no type errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

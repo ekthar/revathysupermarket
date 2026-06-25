@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Layout shift (CLS) fixes. Fonts are already using next/font (good). Focus on: (1) ensuring all images/product cards/banners have explicit aspect-ratio, (2) adding skeleton placeholders for async-loaded content (delivery time banner, offers strip, product grid), (3) converting conditional mount/unmount patterns to opacity/transform-based show-hide. Also add loading.tsx skeleton files for routes reachable from the bottom nav.",
+  "status": "pending",
+  "steps": [
+    "Fonts: Already using next/font/google (Inter_Tight + Manrope) with display: 'swap' in app/layout.tsx. No @font-face or <link> based fonts found. This is already optimal - no changes needed.",
+    "In components/product-card.tsx - the image container already has aspect-[4/3.2] (grid layout) and aspect-square (compact layout). The horizontal layout uses fixed h-16 w-16. These are good for CLS. No changes needed.",
+    "In components/home/hero-section.tsx - desktop hero image container has aspect-[4/3]. Mobile hero has aspect-[2.2/1]. Good for CLS.",
+    "In components/home/promo-banners.tsx - banner images use relative w-24 h-24 with fill. Good. The promo-card class has min-height: 200px. Good for CLS.",
+    "In components/tracking/live-order-banner.tsx - this uses AnimatePresence with mount/unmount. When the banner appears, it shifts content down. Fix: reserve space with a min-height wrapper that uses opacity/transform instead of conditional rendering, OR use a fixed-height placeholder that collapses smoothly. The component already has min-h-[78px] on the wrapper - but it only renders when activeOrder exists. Convert to always render the wrapper with min-h-0, and use motion animate height from 0 to auto pattern.",
+    "Create app/loading.tsx (home route skeleton), app/products/loading.tsx, app/cart/loading.tsx, app/account/loading.tsx - these should show skeletons matching the final layout dimensions. Use the existing ProductSkeletonGrid and similar patterns.",
+    "In components/home/animated-product-section.tsx - the section uses useInView to trigger animations. Before the animation triggers, content is at opacity:0 y:20 which means no layout shift (the space is reserved). Good. However, the initial hidden state of containerVariants doesn't explicitly set height. Since the items are rendered in the DOM (just invisible), their height IS reserved. This is fine.",
+    "The LiveOrderBanner shifts layout when it appears/disappears. Instead of conditionally rendering nothing vs the banner, always render a container that animates height from 0 to its natural height using framer-motion layout animations, preventing sudden content jumps."
+  ],
+  "acceptance_criteria": [
+    "Loading skeletons exist for all main bottom-nav routes (/, /products, /cart, /account)",
+    "The LiveOrderBanner does not cause visible layout shift when appearing/disappearing",
+    "All product card images maintain their aspect-ratio during load",
+    "No TypeScript or lint errors introduced"
+  ],
+  "verification": [
+    "Run npx next lint to confirm no lint errors",
+    "Run npx tsc --noEmit to confirm no type errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

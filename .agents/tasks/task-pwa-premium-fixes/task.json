@@ -1,0 +1,7 @@
+{
+  "task_id": "task-pwa-premium-fixes",
+  "task_description": "Fix PWA status bar, responsive layout, layout shift (CLS), animations/premium feel, and bottom nav tab switch lag across the Next.js grocery PWA",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}

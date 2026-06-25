@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-005",
+  "type": "fix",
+  "description": "Fix bottom nav tab switch lag (~1s delay). Diagnosis: The Home page (/) and Products page (/products) are Server Components that do DB fetches. Although they use unstable_cache with revalidate:60 (and revalidate:30 for products), the first navigation after cache expires will be slow. Also, there are no loading.tsx files for these routes, so navigation shows a blank screen instead of an instant skeleton. The fix: (1) Add loading.tsx with proper skeletons for all bottom-nav routes, (2) Ensure Link prefetch is not disabled (it's enabled by default in Next.js), (3) Add router.prefetch() on touchstart for the nav tabs to warm the route before tap.",
+  "status": "pending",
+  "steps": [
+    "The loading.tsx files created in FEAT-003 will serve as instant skeleton feedback during route transitions. This is the primary fix for perceived lag - users see a skeleton immediately instead of waiting for the server component to render.",
+    "In components/mobile-bottom-nav.tsx - the Link components use default prefetch behavior (prefetch={true} is the default in Next.js App Router). Verify this is not explicitly set to false. Currently no prefetch prop is passed, meaning it uses the default (true for static, lazy for dynamic). This is fine.",
+    "Add aggressive prefetching: In components/mobile-bottom-nav.tsx, add an onTouchStart handler to each NavTab Link that calls router.prefetch(href). This warms the route's JS bundle and RSC payload on touch start (before the tap completes), making navigation feel ~100-200ms faster. Use useRouter() for this.",
+    "In app/page.tsx - the page uses revalidate = 60 and unstable_cache. This is optimal. The data is cached for 60 seconds so most navigations will be instant. No change needed.",
+    "In app/products/page.tsx - uses unstable_cache with revalidate: 30. Good. The ProductGrid is a client component that receives props from the server component - this is the standard pattern.",
+    "In app/account/page.tsx - uses force-dynamic. This means every navigation will hit the server. To improve perceived performance, the loading.tsx skeleton is critical here. The data fetches are lightweight (prisma counts) so actual latency should be low.",
+    "Consider: For the Home and Browse tabs, since these are the most frequently accessed, add a layout.tsx at the app level or group level that can pre-render shared elements. However, the current architecture already uses a root layout with shared header/nav. The individual page data is what takes time - and the loading.tsx skeletons handle this."
+  ],
+  "acceptance_criteria": [
+    "All bottom-nav target routes (/, /products, /cart, /account) have loading.tsx files that show immediately during navigation",
+    "NavTab links in mobile-bottom-nav.tsx prefetch on touchstart for faster perceived navigation",
+    "Tab switches feel instant (skeleton shows within 100ms of tap)",
+    "No TypeScript or lint errors introduced"
+  ],
+  "verification": [
+    "Run npx next lint to confirm no lint errors",
+    "Run npx tsc --noEmit to confirm no type errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

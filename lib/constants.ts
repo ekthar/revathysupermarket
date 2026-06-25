@@ -20,6 +20,8 @@ export const orderStatuses = [
   "READY_FOR_DELIVERY",
   "OUT_FOR_DELIVERY",
   "ARRIVING",
+  "CUSTOMER_UNAVAILABLE",
+  "RETURNED_TO_STORE",
   "DELIVERED",
   "CANCELLED"
 ] as const;
@@ -32,6 +34,8 @@ export const statusLabels: Record<(typeof orderStatuses)[number], string> = {
   READY_FOR_DELIVERY: "Ready For Delivery",
   OUT_FOR_DELIVERY: "Out For Delivery",
   ARRIVING: "Arriving",
+  CUSTOMER_UNAVAILABLE: "Customer Unavailable",
+  RETURNED_TO_STORE: "Returned To Store",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled"
 };

@@ -20,6 +20,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const parsed = deliveryAssignmentSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid delivery assignment." }, { status: 400 });
 
+  // Ensure bill number is generated before allowing delivery assignment
+  if (parsed.data.deliveryPartnerId) {
+    const existing = await prisma.order.findUnique({ where: { id }, select: { billNumber: true } });
+    if (!existing?.billNumber) {
+      return NextResponse.json({ error: "Generate bill number first" }, { status: 400 });
+    }
+  }
+
   const order = await prisma.order.update({
     where: { id },
     data: {

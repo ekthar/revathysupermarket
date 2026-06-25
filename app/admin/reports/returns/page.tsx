@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { formatCurrency } from "@/lib/utils";
+import { ReturnsReportClient } from "@/components/admin/returns-report-client";
 
 export const dynamic = "force-dynamic";
 
@@ -30,6 +31,8 @@ export default async function DailyReturnsReportPage() {
       refundAmount: true,
       refundMethod: true,
       createdAt: true,
+      reason: true,
+      items: true,
       order: { select: { orderNumber: true, customerName: true, total: true } }
     },
     orderBy: { createdAt: "desc" }
@@ -130,6 +133,22 @@ export default async function DailyReturnsReportPage() {
           </table>
         </div>
       </section>
+
+      {/* Per-day expandable item breakdown */}
+      <ReturnsReportClient
+        dailyData={dailyData.map((day) => ({
+          ...day,
+          returns: day.returns.map((ret) => ({
+            ...ret,
+            refundAmount: Number(ret.refundAmount ?? 0),
+            createdAt: ret.createdAt.toISOString(),
+            order: {
+              ...ret.order,
+              total: Number(ret.order.total),
+            },
+          })),
+        }))}
+      />
 
       {/* Recent returns detail */}
       <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">

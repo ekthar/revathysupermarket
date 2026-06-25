@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Returns report: Add per-day expandable item breakdown and printable page matching the premium OrderBillCard SVG-based bill design",
+  "status": "completed",
+  "steps": [
+    "Convert app/admin/reports/returns/page.tsx from a pure server component to a hybrid: keep the data fetching as a server component but extract the interactive parts (expandable sections, print buttons) into a new client component at components/admin/returns-report-client.tsx.",
+    "In the Prisma query, expand the select to include the 'items' JSON field from ReturnRequest (it contains [{orderItemId, name, quantity, price, amount}]) and also include 'reason' from the return request.",
+    "Create the client component that receives dailyData (with items included) and renders: (a) expandable per-day sections showing ALL individual returned items with columns: item name, quantity, amount, customer name, order number, return reason; (b) a 'Print Daily Report' button for each day; (c) a 'Print All (30 days)' button at the top.",
+    "The print output must match the premium bill design from components/order-bill-card.tsx: use SVG-based layout OR HTML that matches the same visual language - rounded card with #fffaf0 background, #0F8A5F green accent for the store logo circle and total bar, Manrope/Inter_Tight-style bold typography, store name header, date, all returns for that day with items/quantities/amounts/customer names, and total refund amount at bottom.",
+    "For 'Print All (30 days)' generate a multi-page printable document with each day as a section, using the same premium bill styling.",
+    "Ensure the existing day-by-day summary table and net sales cards remain unchanged - the expandable sections are additions."
+  ],
+  "acceptance_criteria": [
+    "Each day row in the returns report can be expanded to show individual returned items (name, qty, amount, customer, order#, reason)",
+    "A 'Print Daily Report' button exists per day that opens a printable popup matching the OrderBillCard design language",
+    "A 'Print All (30 days)' button generates a printable view of all days",
+    "Print output uses #fffaf0 background, #0F8A5F accent, bold typography matching order-bill-card.tsx",
+    "Existing summary cards and table remain functional",
+    "npx tsc --noEmit --skipLibCheck passes"
+  ],
+  "verification": [
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": "Implementation successful. Added items and reason to the Prisma select query. Created a new client component (returns-report-client.tsx) with AnimatePresence expand/collapse per day, item breakdown tables, and print popup functionality. Had to explicitly convert order.total from Prisma Decimal to number for type compatibility. Both tsc and lint pass cleanly."
+}

@@ -2,7 +2,7 @@
   "id": "FEAT-006",
   "type": "feat",
   "description": "Redesign Delivery Partner screens with premium dashboard, order flow, and real-time data",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Completely redesign mobile/lib/features/delivery/presentation/delivery_dashboard_screen.dart: greeting header with time-of-day (Good morning/afternoon), stats cards in a 2x2 grid with gradient backgrounds and icons (deliveries, cash, UPI, lifetime), active orders section with premium cards showing customer name/address/status badge/distance, alert health indicator card with green/red status icons, pull-to-refresh with animated indicator, shimmer loading for all sections, floating action button for quick actions",
     "Completely redesign mobile/lib/features/delivery/presentation/delivery_order_detail_screen.dart: status badge at top with colored background, customer info card (name, phone with call button, address with map icon), order items list with quantities, payment info (method + amount), action buttons at bottom (dynamic based on order status: Pickup/Report Damage/Collect Payment/Complete), navigation card with directions button, notes section if present",

@@ -87,7 +87,7 @@ self.addEventListener("push", (event) => {
     badge: "/icons/icon-192.png",
     tag: payload.orderId ? `order-${payload.orderId}` : "new-order",
     data: { url: payload.url },
-    requireInteraction: true,
+    requireInteraction: payload.requireInteraction !== false,
     renotify: true,
     vibrate: [300, 100, 300, 100, 300],
     actions: [

@@ -19,14 +19,26 @@ export async function POST(request: Request) {
 
   const { orderId } = parsed.data;
 
+  // Check if order is already in CUSTOMER_UNAVAILABLE state (idempotency)
+  const existingUnavailable = await prisma.order.findFirst({ where: { id: orderId, deliveryPartnerId: authResult.userId, status: "CUSTOMER_UNAVAILABLE" } });
+  if (existingUnavailable) {
+    const waitUntil = existingUnavailable.customerUnavailableAt
+      ? new Date(existingUnavailable.customerUnavailableAt.getTime() + (existingUnavailable.customerUnavailableTimeout ?? 300) * 1000).toISOString()
+      : new Date(Date.now() + 300000).toISOString();
+    return NextResponse.json({ ok: true, waitUntil });
+  }
+
   const order = await prisma.order.findFirst({ where: { id: orderId, deliveryPartnerId: authResult.userId, status: { in: ["ARRIVING"] } } });
   if (!order) return NextResponse.json({ error: "Active assigned order not found.", code: "ORDER_NOT_FOUND" }, { status: 404 });
 
   const now = new Date();
-  await prisma.order.update({ where: { id: order.id }, data: { status: "CUSTOMER_UNAVAILABLE", customerUnavailableAt: now } });
-  await prisma.orderEvent.create({ data: { orderId: order.id, status: "CUSTOMER_UNAVAILABLE" as never } });
+  const timeoutSeconds = 300;
+  await prisma.order.update({ where: { id: order.id }, data: { status: "CUSTOMER_UNAVAILABLE", customerUnavailableAt: now, customerUnavailableTimeout: timeoutSeconds } });
+  await prisma.orderEvent.create({ data: { orderId: order.id, status: "CUSTOMER_UNAVAILABLE" } });
 
-  await sendPushToUser(order.userId!, { title: "Delivery partner waiting", body: "Your delivery partner is waiting. Please respond within 5 minutes or the order will be returned to store.", url: "/dashboard", orderId: order.id }).catch(() => null);
+  if (order.userId) {
+    await sendPushToUser(order.userId, { title: "Delivery partner waiting", body: "Your delivery partner is waiting. Please respond within 5 minutes or the order will be returned to store.", url: "/dashboard", orderId: order.id }).catch(() => null);
+  }
 
-  return NextResponse.json({ ok: true, waitUntil: new Date(now.getTime() + 300000).toISOString() });
+  return NextResponse.json({ ok: true, waitUntil: new Date(now.getTime() + timeoutSeconds * 1000).toISOString() });
 }

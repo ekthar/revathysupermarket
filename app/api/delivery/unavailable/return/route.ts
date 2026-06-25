@@ -30,9 +30,11 @@ export async function POST(request: Request) {
   }
 
   await prisma.order.update({ where: { id: order.id }, data: { status: "RETURNED_TO_STORE" } });
-  await prisma.orderEvent.create({ data: { orderId: order.id, status: "RETURNED_TO_STORE" as never, note: "Customer unavailable. Order returned to store." } });
+  await prisma.orderEvent.create({ data: { orderId: order.id, status: "RETURNED_TO_STORE", note: "Customer unavailable. Order returned to store." } });
 
-  await sendPushToUser(order.userId!, { title: "Order returned to store", body: "Your order has been returned to the store because you were unavailable. Please contact support for re-delivery.", url: "/dashboard", orderId: order.id }).catch(() => null);
+  if (order.userId) {
+    await sendPushToUser(order.userId, { title: "Order returned to store", body: "Your order has been returned to the store because you were unavailable. Please contact support for re-delivery.", url: "/dashboard", orderId: order.id }).catch(() => null);
+  }
 
   return NextResponse.json({ ok: true, status: "RETURNED_TO_STORE" });
 }

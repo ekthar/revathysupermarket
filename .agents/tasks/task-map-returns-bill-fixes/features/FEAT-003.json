@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Replace the plain HTML return receipt print with a premium SVG-based bill design matching OrderBillCard",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Rewrite components/admin/return-receipt-print.tsx to generate a printable popup that uses the same premium bill design as components/order-bill-card.tsx.",
     "The new design must use: rounded card background (#fffaf0), green (#0F8A5F) accent for the store logo circle and total refund bar, Manrope-style bold typography (use system font-weight:900 since Google Fonts won't load in print popup reliably).",
@@ -25,5 +25,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Successfully redesigned print popup with premium bill styling. Uses inline CSS (no external stylesheets) for print reliability. The design matches OrderBillCard patterns: #fffaf0 background, #dbe7d2 bordered card, #0F8A5F green accents for logo circle and total bar. Used system fonts with font-weight:900 instead of Google Fonts since they may not load in print popups. TypeScript and lint checks both pass cleanly."
 }

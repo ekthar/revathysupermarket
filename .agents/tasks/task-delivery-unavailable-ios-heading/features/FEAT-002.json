@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "iOS push notification fix for delivery partner alerts and heading in location tracking",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Update public/sw.js push event handler: Ensure the notification options object includes requireInteraction: true (always, not conditional on payload), renotify: true, and a unique tag per order (already has tag: payload.orderId ? `order-${payload.orderId}` : 'new-order' - this is good but add renotify: true). Set requireInteraction to true unconditionally in the options object (currently it checks payload.requireInteraction || false - change to always true for delivery alerts, or better: always pass it through from payload but default to true).",
     "2. Update the push notification payload sent to delivery partners in app/api/admin/orders/[id]/delivery/route.ts: The sendPushToUser call already passes requireInteraction: true. Confirm this is correct. The payload object should also include orderId so the service worker can use it for the tag. Verify the sendPushToUser in lib/push.ts passes through the orderId field in the JSON payload.",
@@ -21,5 +21,5 @@
     "Run npx tsx --test tests/*.test.ts to confirm existing tests still pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Pre-existing test failure in scroll-preservation.test.ts (test 'root elements allow native scrolling') unrelated to this change. User model does not have currentHeading field, so heading is fetched from the latest DeliveryLocationEvent for the order in both stream and tracking routes."
 }

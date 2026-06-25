@@ -40,6 +40,7 @@ type TrackingData = {
   deliveryPartnerLocation: {
     latitude: number;
     longitude: number;
+    heading?: number;
     updatedAt?: string;
   } | null;
   statusEvents: Array<{
@@ -163,6 +164,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
             deliveryPartnerLocation?: {
               latitude: number;
               longitude: number;
+              heading?: number;
               updatedAt?: string;
             } | null;
           };

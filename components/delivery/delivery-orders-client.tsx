@@ -37,7 +37,7 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
       void fetch("/api/delivery/location", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude }),
+        body: JSON.stringify({ latitude: position.coords.latitude, longitude: position.coords.longitude, heading: position.coords.heading }),
         signal: request.signal
       }).catch(() => null);
     }, () => undefined, { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 });

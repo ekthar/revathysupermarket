@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Customer Unavailable flow: Add button, API endpoint, waiting period, return-to-store capability with push notifications",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Update prisma/schema.prisma: Add new OrderStatus enum values CUSTOMER_UNAVAILABLE and RETURNED_TO_STORE. Add fields to Order model: customerUnavailableAt DateTime? and customerUnavailableTimeout Int? (in seconds, default 300).",
     "2. Update lib/constants.ts: Add CUSTOMER_UNAVAILABLE and RETURNED_TO_STORE to the orderStatuses array and statusLabels record.",
@@ -25,5 +25,5 @@
     "Run npx tsx --test tests/*.test.ts to confirm existing tests still pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Pre-existing test failure in tests/scroll-preservation.test.ts test 29 (root elements allow native scrolling) - unrelated to this feature. Build and prisma generate both pass cleanly. npm install was required as node_modules was empty."
 }

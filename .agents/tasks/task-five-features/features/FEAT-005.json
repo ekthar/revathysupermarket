@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "feat",
   "description": "Delivery live tracking map using MapLibre GL JS with OpenFreeMap vector tiles, custom brand-colored map style, custom SVG markers, smooth marker animation, and live polling integration.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Install maplibre-gl package: npm install maplibre-gl. This provides the MapLibre GL JS library for vector tile rendering.",
     "Add a 'heading' field to the DeliveryLocationEvent model in prisma/schema.prisma (Float? optional). Update the deliveryLocationSchema in lib/validations.ts to accept an optional heading field. Update app/api/delivery/location/route.ts to store the heading when provided. Run npx prisma generate.",
@@ -31,5 +31,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "maplibre-gl installed successfully. Schema change adds heading Float? to DeliveryLocationEvent. Map component uses dynamic import with ssr:false to avoid window errors. OpenFreeMap tiles render without API keys. Custom style uses OpenMapTiles layer names. The live-order-tracking shows the map when status is OUT_FOR_DELIVERY/ARRIVING/READY_FOR_DELIVERY or deliveryPartnerLocation is available, falls back to the animated truck icon otherwise. STORE_COORDINATES imported from lib/constants.ts for store marker position."
 }

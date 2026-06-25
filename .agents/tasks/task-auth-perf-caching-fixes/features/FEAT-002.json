@@ -1,0 +1,38 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Install TanStack Query and integrate it for client-side caching with optimistic updates on favorites, notifications, admin orders polling, and address CRUD",
+  "status": "in_progress",
+  "steps": [
+    "Run `npm install @tanstack/react-query` to add the dependency.",
+    "Create lib/query-client.ts: Export a function `makeQueryClient()` that creates a QueryClient with default options (staleTime: 60_000 for queries, gcTime: 5 * 60_000). Create a `getQueryClient()` singleton for server-side usage.",
+    "Create components/query-provider.tsx: A 'use client' component that wraps children in QueryClientProvider. Use useState to create the QueryClient once per component lifecycle to avoid SSR issues. Import and use makeQueryClient from lib/query-client.ts.",
+    "In components/providers.tsx: Import and wrap children with QueryProvider (inside SessionProvider, outside ThemeProvider or at appropriate level).",
+    "Create lib/queries/favorites.ts: Export useFavorites() hook using useQuery to GET /api/favorites. Export useToggleFavorite() hook using useMutation that POSTs or DELETEs /api/favorites/{id} with optimistic update logic (immediately toggle in cache, rollback on error). Use queryClient.setQueryData for optimistic updates.",
+    "Refactor components/favorite-button.tsx: Replace direct fetch() calls with the useToggleFavorite mutation hook. Keep the existing optimistic UI (already optimistic via useState) but back it with React Query's cache invalidation.",
+    "Refactor components/account/favorites-client.tsx: Replace the direct fetch for removing favorites with the useToggleFavorite mutation. Use useFavorites if it makes the data flow cleaner, or keep the server-passed data as initialData for the query.",
+    "Create lib/queries/notifications.ts: Export useNotifications() hook using useQuery to GET /api/notifications. Export useMarkAllRead() using useMutation to PATCH /api/notifications with optimistic update.",
+    "Create lib/queries/addresses.ts: Export useAddresses() hook. Export useDeleteAddress() and useMakeDefaultAddress() mutations with optimistic updates (remove from list immediately on delete, reorder on make-default).",
+    "Refactor components/account/account-client.tsx: Replace direct fetch calls for deleteAddress and makeDefault with the mutation hooks from lib/queries/addresses.ts.",
+    "Refactor components/account/saved-addresses-client.tsx: Same treatment - use the address mutation hooks instead of raw fetch.",
+    "Create lib/queries/admin-orders.ts: Export useAdminOrders() hook with useQuery that fetches /api/orders with refetchInterval for polling (keep the existing 30s or similar interval pattern from admin-orders-client.tsx). Add enabled option tied to document visibility.",
+    "Refactor components/admin/admin-orders-client.tsx: Replace the manual setInterval/refreshOrders pattern with useAdminOrders(). Replace individual mutation calls (acknowledge, edit, assign, regenerateOtp) with useMutation hooks that invalidate the orders query on success."
+  ],
+  "acceptance_criteria": [
+    "@tanstack/react-query is in package.json dependencies",
+    "QueryClientProvider wraps the app in providers.tsx",
+    "FavoriteButton uses React Query mutation instead of direct fetch",
+    "favorites-client.tsx uses React Query for removal",
+    "account-client.tsx and saved-addresses-client.tsx use React Query mutations for address CRUD",
+    "admin-orders-client.tsx uses useQuery with refetchInterval instead of manual polling",
+    "All mutations include optimistic updates that rollback on failure",
+    "npx tsc --noEmit --skipLibCheck passes",
+    "npx next lint passes"
+  ],
+  "verification": [
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

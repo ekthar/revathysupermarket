@@ -1,0 +1,7 @@
+{
+  "task_id": "task-auth-perf-caching-fixes",
+  "task_description": "Fix auth performance (session pass-through + DB lookup throttling), add TanStack Query client caching layer, confirm encoding bug is false alarm, add error boundaries, fix cache revalidation gaps, and add missing force-dynamic export",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

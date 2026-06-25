@@ -8,6 +8,7 @@ import { useCart } from "@/components/cart/cart-provider";
 import { useToast } from "@/components/toast-provider";
 import { formatCurrency } from "@/lib/utils";
 import { ProductImage } from "@/components/product-image";
+import { useToggleFavorite } from "@/lib/queries/favorites";
 
 type FavoriteProduct = {
   id: string;
@@ -26,19 +27,19 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
   const [products, setProducts] = useState(initialProducts);
   const { addItem, items, updateQuantity } = useCart();
   const { showToast } = useToast();
+  const toggleFavoriteMutation = useToggleFavorite();
 
   async function removeFavorite(productId: string) {
     setProducts((prev) => prev.filter((p) => p.id !== productId));
     try {
-      const res = await fetch(`/api/favorites/${productId}`, { method: "DELETE" });
-      if (!res.ok) {
-        setProducts(initialProducts);
-        showToast("Failed to remove", "error");
-      } else {
-        showToast("Removed from favorites", "success");
-      }
+      await toggleFavoriteMutation.mutateAsync({
+        productId,
+        isFavorited: false,
+      });
+      showToast("Removed from favorites", "success");
     } catch {
       setProducts(initialProducts);
+      showToast("Failed to remove", "error");
     }
   }
 

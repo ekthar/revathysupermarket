@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { CheckCircle2, Home, MapPin, Trash2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
+import { useDeleteAddress, useMakeDefaultAddress } from "@/lib/queries/addresses";
 
 type Address = {
   id: string;
@@ -19,32 +19,35 @@ type Address = {
 export function SavedAddressesClient({ addresses: initialAddresses }: { addresses: Address[] }) {
   const [addresses, setAddresses] = useState(initialAddresses);
   const { showToast } = useToast();
+  const deleteAddressMutation = useDeleteAddress();
+  const makeDefaultMutation = useMakeDefaultAddress();
 
-  async function makeDefault(id: string) {
-    const response = await fetch(`/api/account/addresses/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isDefault: true })
+  function makeDefault(id: string) {
+    makeDefaultMutation.mutate(id, {
+      onSuccess: () => {
+        setAddresses((current) => current.map((addr) => ({ ...addr, isDefault: addr.id === id })));
+        showToast("Default address updated", "success");
+      },
+      onError: (error) => {
+        showToast(error.message ?? "Failed to update address.", "error");
+      },
     });
-    const data = await readApiResponse<{ error?: string }>(response);
-    if (!response.ok) {
-      showToast(data.error ?? "Failed to update address.", "error");
-      return;
-    }
-    setAddresses((current) => current.map((addr) => ({ ...addr, isDefault: addr.id === id })));
-    showToast("Default address updated", "success");
   }
 
-  async function deleteAddress(id: string) {
+  function deleteAddress(id: string) {
     const confirmed = window.confirm("Delete this address?");
     if (!confirmed) return;
-    const response = await fetch(`/api/account/addresses/${id}`, { method: "DELETE" });
-    if (response.ok) {
-      setAddresses((current) => current.filter((addr) => addr.id !== id));
-      showToast("Address deleted", "success");
-    } else {
-      showToast("Failed to delete address", "error");
-    }
+    const previous = addresses;
+    setAddresses((current) => current.filter((addr) => addr.id !== id));
+    deleteAddressMutation.mutate(id, {
+      onSuccess: () => {
+        showToast("Address deleted", "success");
+      },
+      onError: () => {
+        setAddresses(previous);
+        showToast("Failed to delete address", "error");
+      },
+    });
   }
 
   return (

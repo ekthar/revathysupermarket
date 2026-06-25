@@ -4,6 +4,8 @@ import { useState } from "react";
 import { signIn, signOut } from "next-auth/react";
 import { CheckCircle2, Chrome, Download, Home, Phone, Save, Trash2 } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
+import { useDeleteAddress, useMakeDefaultAddress } from "@/lib/queries/addresses";
+import { useToast } from "@/components/toast-provider";
 
 type Address = { id: string; label: string; houseName: string; street: string; landmark: string; pincode: string; isDefault: boolean };
 
@@ -14,6 +16,9 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
   const [phoneDraft, setPhoneDraft] = useState(user.phone);
   const [phoneOtp, setPhoneOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const { showToast } = useToast();
+  const deleteAddressMutation = useDeleteAddress();
+  const makeDefaultMutation = useMakeDefaultAddress();
 
   async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,23 +30,26 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
     setMessage(response.ok ? "Profile saved." : "Profile update failed.");
   }
 
-  async function makeDefault(id: string) {
-    const response = await fetch(`/api/account/addresses/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isDefault: true })
+  function makeDefault(id: string) {
+    makeDefaultMutation.mutate(id, {
+      onSuccess: () => {
+        setLocalAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
+      },
+      onError: (error) => {
+        setMessage(error.message ?? "Address update failed.");
+      },
     });
-    const data = await readApiResponse<{ error?: string }>(response);
-    if (!response.ok) {
-      setMessage(data.error ?? "Address update failed.");
-      return;
-    }
-    setLocalAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
   }
 
-  async function deleteAddress(id: string) {
-    const response = await fetch(`/api/account/addresses/${id}`, { method: "DELETE" });
-    if (response.ok) setLocalAddresses((current) => current.filter((address) => address.id !== id));
+  function deleteAddress(id: string) {
+    deleteAddressMutation.mutate(id, {
+      onSuccess: () => {
+        setLocalAddresses((current) => current.filter((address) => address.id !== id));
+      },
+      onError: () => {
+        showToast("Failed to delete address", "error");
+      },
+    });
   }
 
   async function sendPhoneOtp() {

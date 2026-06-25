@@ -10,25 +10,28 @@ import { ToastProvider } from "@/components/toast-provider";
 import { ProfileSync } from "@/components/profile-sync";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { ThemeColorSync } from "@/components/theme-color-sync";
+import { QueryProvider } from "@/components/query-provider";
 import { MotionConfig } from "framer-motion";
 
 export function Providers({ children, session }: { children: React.ReactNode; session?: Session | null }) {
   return (
     <SessionProvider session={session}>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-        <ThemeColorSync />
-        <MotionConfig reducedMotion="user">
-          <ToastProvider>
-            <CartProvider>
-              {children}
-              <ProfileSync />
-              <ServiceWorkerRegister />
-              <PushNotificationManager />
-              <InstallAppPrompt />
-            </CartProvider>
-          </ToastProvider>
-        </MotionConfig>
-      </ThemeProvider>
+      <QueryProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <ThemeColorSync />
+          <MotionConfig reducedMotion="user">
+            <ToastProvider>
+              <CartProvider>
+                {children}
+                <ProfileSync />
+                <ServiceWorkerRegister />
+                <PushNotificationManager />
+                <InstallAppPrompt />
+              </CartProvider>
+            </ToastProvider>
+          </MotionConfig>
+        </ThemeProvider>
+      </QueryProvider>
     </SessionProvider>
   );
 }

@@ -8,6 +8,8 @@ import { SITE } from "@/lib/constants";
 import { cn, formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
+import { useAdminOrders, useAcknowledgeOrder, useAssignDelivery, useRegenerateOtp, ADMIN_ORDERS_QUERY_KEY } from "@/lib/queries/admin-orders";
+import { useQueryClient } from "@tanstack/react-query";
 
 type AdminOrder = {
   id: string;
@@ -49,7 +51,11 @@ export function AdminOrdersClient({
   deliveryPartners: DeliveryPartner[];
 }) {
   const { showToast } = useToast();
-  const [localOrders, setLocalOrders] = useState(orders);
+  const queryClient = useQueryClient();
+  const { data: localOrders } = useAdminOrders(orders);
+  const acknowledgeMutation = useAcknowledgeOrder();
+  const assignDeliveryMutation = useAssignDelivery();
+  const regenerateOtpMutation = useRegenerateOtp();
   const [query, setQuery] = useState("");
   const [tab, setTab] = useState<"all" | "new" | "pending" | "packing" | "delivered">("all");
   const [view, setView] = useState<"board" | "list">("board");
@@ -115,45 +121,6 @@ export function AdminOrdersClient({
   }, []);
 
   useEffect(() => {
-    let active = true;
-    async function refreshOrders() {
-      if (document.hidden) return;
-      const response = await fetch("/api/orders", { cache: "no-store" });
-      const data = await readApiResponse<{ orders?: Array<AdminOrder & {
-        houseName?: string;
-        street?: string;
-        landmark?: string;
-        pincode?: string;
-        items: AdminOrder["items"];
-      }> }>(response);
-      if (!active || !response.ok || !data.orders) return;
-      setLocalOrders(data.orders.map((order) => ({
-        id: order.id,
-        orderNumber: order.orderNumber,
-        customerName: order.customerName,
-        phone: order.phone,
-        address: order.address ?? `${order.houseName ?? ""}, ${order.street ?? ""}, ${order.landmark ?? ""}, ${order.pincode ?? ""}`,
-        total: Number(order.total),
-        status: order.status,
-        deliveryPartnerId: order.deliveryPartnerId ?? null,
-        deliveryOtp: order.deliveryOtp,
-        deliveryOtpAttempts: order.deliveryOtpAttempts ?? 0,
-        deliveryOtpExpiresAt: order.deliveryOtpExpiresAt ?? null,
-        staffNote: order.staffNote,
-        acknowledgedAt: order.acknowledgedAt ?? null,
-        createdAt: order.createdAt,
-        items: order.items.map((item) => ({ id: item.id, name: item.name, quantity: item.quantity, price: Number(item.price), gstRate: item.gstRate ?? null })),
-        whatsappLogs: order.whatsappLogs ?? []
-      })));
-    }
-    const interval = window.setInterval(refreshOrders, 6000);
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-    };
-  }, []);
-
-  useEffect(() => {
     if (unacknowledgedNewOrders.length === 0) return;
 
     const originalTitle = document.title;
@@ -210,17 +177,16 @@ export function AdminOrdersClient({
   }, [localOrders, query, tab]);
 
   function updateOrderStatus(orderId: string, status: keyof typeof statusLabels) {
-    setLocalOrders((current) => current.map((order) => (order.id === orderId ? { ...order, status } : order)));
+    queryClient.setQueryData<AdminOrder[]>(ADMIN_ORDERS_QUERY_KEY, (current) =>
+      current?.map((order) => (order.id === orderId ? { ...order, status } : order)) ?? []
+    );
   }
 
   async function acknowledgeOrder(orderId: string) {
     setAckLoading(orderId);
-    const response = await fetch(`/api/admin/orders/${orderId}/acknowledge`, { method: "POST" });
-    setAckLoading(null);
-    if (!response.ok) return;
-    setLocalOrders((current) => current.map((order) => (
-      order.id === orderId ? { ...order, acknowledgedAt: new Date().toISOString() } : order
-    )));
+    acknowledgeMutation.mutate(orderId, {
+      onSettled: () => setAckLoading(null),
+    });
   }
 
   function dismissAlert(orderId: string) {
@@ -265,36 +231,31 @@ export function AdminOrdersClient({
 
   async function assignDelivery(orderId: string, deliveryPartnerId: string) {
     setAssignLoading(orderId);
-    const response = await fetch(`/api/admin/orders/${orderId}/delivery`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ deliveryPartnerId: deliveryPartnerId || null })
-    });
-    setAssignLoading(null);
-    if (!response.ok) {
-      showToast("Delivery assignment failed", "error");
-      return;
-    }
-    setLocalOrders((current) => current.map((order) => order.id === orderId ? { ...order, deliveryPartnerId: deliveryPartnerId || null } : order));
-    showToast("Delivery partner assigned", "success");
+    assignDeliveryMutation.mutate(
+      { orderId, deliveryPartnerId },
+      {
+        onSuccess: () => {
+          showToast("Delivery partner assigned", "success");
+        },
+        onError: () => {
+          showToast("Delivery assignment failed", "error");
+        },
+        onSettled: () => setAssignLoading(null),
+      }
+    );
   }
 
   async function regenerateOtp(orderId: string) {
     setOtpLoading(orderId);
-    const response = await fetch(`/api/admin/orders/${orderId}/delivery-otp`, { method: "POST" });
-    const data = await readApiResponse<{ error?: string; order?: { deliveryOtp?: string | null; deliveryOtpExpiresAt?: string | null } }>(response);
-    setOtpLoading(null);
-    if (!response.ok || !data.order) {
-      showToast(data.error ?? "OTP regenerate failed", "error");
-      return;
-    }
-    setLocalOrders((current) => current.map((order) => order.id === orderId ? {
-      ...order,
-      deliveryOtp: data.order?.deliveryOtp,
-      deliveryOtpExpiresAt: data.order?.deliveryOtpExpiresAt ?? null,
-      deliveryOtpAttempts: 0
-    } : order));
-    showToast("Delivery OTP regenerated", "success");
+    regenerateOtpMutation.mutate(orderId, {
+      onSuccess: () => {
+        showToast("Delivery OTP regenerated", "success");
+      },
+      onError: (error) => {
+        showToast(error.message ?? "OTP regenerate failed", "error");
+      },
+      onSettled: () => setOtpLoading(null),
+    });
   }
 
   async function saveStaffNote(order: AdminOrder) {
@@ -308,7 +269,9 @@ export function AdminOrdersClient({
       showToast(data.error ?? "Staff note failed", "error");
       return;
     }
-    setLocalOrders((current) => current.map((entry) => entry.id === order.id ? { ...entry, staffNote: staffNotes[order.id] ?? "" } : entry));
+    queryClient.setQueryData<AdminOrder[]>(ADMIN_ORDERS_QUERY_KEY, (current) =>
+      current?.map((entry) => entry.id === order.id ? { ...entry, staffNote: staffNotes[order.id] ?? "" } : entry) ?? []
+    );
     showToast("Staff note saved", "success");
   }
 

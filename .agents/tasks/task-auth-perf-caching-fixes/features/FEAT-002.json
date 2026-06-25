@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Install TanStack Query and integrate it for client-side caching with optimistic updates on favorites, notifications, admin orders polling, and address CRUD",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Run `npm install @tanstack/react-query` to add the dependency.",
     "Create lib/query-client.ts: Export a function `makeQueryClient()` that creates a QueryClient with default options (staleTime: 60_000 for queries, gcTime: 5 * 60_000). Create a `getQueryClient()` singleton for server-side usage.",
@@ -34,5 +34,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "TanStack Query installed and integrated. QueryProvider placed inside SessionProvider but outside ThemeProvider in providers.tsx. The admin-orders-client refetch uses refetchInterval: 6000 with refetchIntervalInBackground: false (matching the original pattern). The local AdminOrder type in admin-orders.ts uses keyof typeof statusLabels imported from lib/constants to match the component type. All hooks are in lib/queries/ directory. readApiResponse is still used in editItem and saveStaffNote in admin-orders-client (not converted to mutations since they trigger page reload or are less frequently called)."
 }

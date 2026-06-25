@@ -53,12 +53,14 @@ async function fetchProducts(params: {
 export function ProductGrid({
   initialItems = [],
   initialTotal = 0,
+  initialNextCursor = null,
   initialCategory = "All",
   initialQuery = "",
   initialSort = "popularity",
 }: {
   initialItems?: Product[];
   initialTotal?: number;
+  initialNextCursor?: string | null;
   initialCategory?: string;
   initialQuery?: string;
   initialSort?: SortMode;
@@ -104,7 +106,7 @@ export function ProductGrid({
             pages: [
               {
                 items: initialItems,
-                nextCursor: initialItems.length >= 24 ? initialItems[initialItems.length - 1].id : null,
+                nextCursor: initialNextCursor,
                 total: initialTotal,
               },
             ],

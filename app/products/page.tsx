@@ -15,15 +15,16 @@ type ProductFilters = {
   category?: string;
   q?: string;
   sort?: string;
+  maxPrice?: number;
   limit?: number;
 };
 
 function getProducts(filters: ProductFilters = {}) {
-  const { category, q, sort, limit = 24 } = filters;
-  const cacheKey = `products:${category || "All"}:${q || ""}:${sort || "popularity"}:${limit}`;
+  const { category, q, sort, maxPrice, limit = 24 } = filters;
+  const cacheKey = `products:${category || "All"}:${q || ""}:${sort || "popularity"}:${maxPrice || "none"}:${limit}`;
 
   return unstable_cache(
-    async (): Promise<{ items: Product[]; total: number }> => {
+    async (): Promise<{ items: Product[]; nextCursor: string | null; total: number }> => {
       // Build Prisma where clause
       const where: Record<string, unknown> = { isActive: true };
       if (category && category !== "All") {
@@ -31,6 +32,12 @@ function getProducts(filters: ProductFilters = {}) {
       }
       if (q) {
         where.name = { contains: q, mode: "insensitive" };
+      }
+      if (maxPrice) {
+        where.OR = [
+          { discountPrice: { not: null, lte: maxPrice } },
+          { discountPrice: null, price: { lte: maxPrice } },
+        ];
       }
 
       // Build orderBy
@@ -58,13 +65,15 @@ function getProducts(filters: ProductFilters = {}) {
             category: { select: { name: true } },
           },
           orderBy,
-          take: limit,
+          take: limit + 1,
         }),
         prisma.product.count({ where }),
       ]).catch(() => [[], 0] as [never[], number]);
 
       if (Array.isArray(dbProducts) && dbProducts.length > 0) {
-        const items = dbProducts.map((product) => ({
+        const hasMore = dbProducts.length > limit;
+        const sliced = hasMore ? dbProducts.slice(0, limit) : dbProducts;
+        const items = sliced.map((product) => ({
           id: product.id,
           slug: product.slug,
           name: product.name,
@@ -79,7 +88,8 @@ function getProducts(filters: ProductFilters = {}) {
           isFeatured: product.isFeatured,
           createdAt: product.createdAt.toISOString(),
         }));
-        return { items, total: dbTotal };
+        const nextCursor = hasMore ? items[items.length - 1].id : null;
+        return { items, nextCursor, total: dbTotal };
       }
 
       // Fallback to static products
@@ -91,6 +101,9 @@ function getProducts(filters: ProductFilters = {}) {
         const lower = q.toLowerCase();
         filtered = filtered.filter((p) => p.name.toLowerCase().includes(lower));
       }
+      if (maxPrice) {
+        filtered = filtered.filter((p) => (p.discountPrice ?? p.price) <= maxPrice);
+      }
 
       // Sort fallback
       if (sort === "low") filtered = [...filtered].sort((a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price));
@@ -99,8 +112,9 @@ function getProducts(filters: ProductFilters = {}) {
       else filtered = [...filtered].sort((a, b) => b.popularity - a.popularity);
 
       const fallbackTotal = filtered.length;
-      const items = filtered.slice(0, limit);
-      return { items, total: fallbackTotal };
+      const page = filtered.slice(0, limit);
+      const nextCursor = page.length < filtered.length ? page[page.length - 1]?.id ?? null : null;
+      return { items: page, nextCursor, total: fallbackTotal };
     },
     [cacheKey],
     { revalidate: 30, tags: ["products"] }
@@ -113,7 +127,7 @@ export default async function ProductsPage({
   searchParams: Promise<{ category?: string; q?: string; sort?: string }>;
 }) {
   const { category, q, sort } = await searchParams;
-  const { items, total } = await getProducts({ category, q, sort, limit: 24 });
+  const { items, nextCursor, total } = await getProducts({ category, q, sort, limit: 24 });
   const initialCategory = category || "All";
   return (
     <main className="min-h-screen bg-background pb-24">
@@ -126,6 +140,7 @@ export default async function ProductsPage({
       <ProductGrid
         initialItems={items}
         initialTotal={total}
+        initialNextCursor={nextCursor}
         initialCategory={initialCategory}
         initialQuery={q || ""}
         initialSort={(sort as "popularity" | "low" | "high" | "newest") || "popularity"}

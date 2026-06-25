@@ -59,6 +59,7 @@ function statusColor(status: string): string {
     case "READY_FOR_DELIVERY": return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
     case "OUT_FOR_DELIVERY": return "bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300";
     case "ARRIVING": return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
+    case "CUSTOMER_UNAVAILABLE": return "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300";
     case "DELIVERED": return "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300";
     case "CANCELLED": return "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
     default: return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300";
@@ -84,6 +85,8 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
   const [damageOrder, setDamageOrder] = useState<DeliveryOrder | null>(null);
   const [collectOrder, setCollectOrder] = useState<DeliveryOrder | null>(null);
   const [completeOrder, setCompleteOrder] = useState<DeliveryOrder | null>(null);
+  const [unavailableOrders, setUnavailableOrders] = useState<Map<string, number>>(new Map());
+  const [tick, setTick] = useState(0);
 
   // GPS Publishing
   useEffect(() => {
@@ -115,6 +118,54 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
       navigator.geolocation.clearWatch(watch);
     };
   }, []);
+
+  // Countdown tick for customer unavailable timers
+  useEffect(() => {
+    if (unavailableOrders.size === 0) return;
+    const interval = setInterval(() => setTick((t) => t + 1), 1000);
+    return () => clearInterval(interval);
+  }, [unavailableOrders.size]);
+
+  // tick is used implicitly to re-render countdown displays
+  void tick;
+
+
+  async function markUnavailable(order: DeliveryOrder) {
+    setLoading(order.id);
+    const response = await fetch("/api/delivery/unavailable", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: order.id }),
+    });
+    const data = await readApiResponse<{ error?: string; waitUntil?: string }>(response);
+    setLoading(null);
+    if (!response.ok) return showToast(data.error ?? "Could not mark unavailable", "error");
+    if (data.waitUntil) {
+      setUnavailableOrders((prev) => new Map(prev).set(order.id, new Date(data.waitUntil!).getTime()));
+    }
+    setEntries((current) =>
+      current.map((entry) => (entry.id === order.id ? { ...entry, status: "CUSTOMER_UNAVAILABLE" } : entry))
+    );
+  }
+
+  async function returnToStore(order: DeliveryOrder) {
+    setLoading(order.id);
+    const response = await fetch("/api/delivery/unavailable/return", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: order.id }),
+    });
+    const data = await readApiResponse<{ error?: string }>(response);
+    setLoading(null);
+    if (!response.ok) return showToast(data.error ?? "Return failed", "error");
+    setUnavailableOrders((prev) => {
+      const next = new Map(prev);
+      next.delete(order.id);
+      return next;
+    });
+    setEntries((current) => current.filter((entry) => entry.id !== order.id));
+    showToast("Order returned to store", "success");
+  }
 
 
   async function handlePickup(order: DeliveryOrder) {
@@ -304,6 +355,38 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
                           </button>
                         </div>
                       )}
+
+                      {/* Customer Unavailable - ARRIVING */}
+                      {order.status === "ARRIVING" && (
+                        <button
+                          disabled={loading === order.id}
+                          onClick={() => markUnavailable(order)}
+                          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-amber-500 font-bold text-amber-700 disabled:opacity-40 dark:border-amber-600 dark:text-amber-400"
+                        >
+                          Customer Unavailable
+                        </button>
+                      )}
+
+                      {/* Customer Unavailable countdown + Return to Store */}
+                      {order.status === "CUSTOMER_UNAVAILABLE" && (() => {
+                        const waitUntil = unavailableOrders.get(order.id) ?? 0;
+                        const remaining = Math.max(0, Math.ceil((waitUntil - Date.now()) / 1000));
+                        const canReturn = remaining === 0;
+                        return (
+                          <div className="grid grid-cols-2 gap-2">
+                            <span className="flex h-12 items-center justify-center rounded-xl bg-amber-100 text-sm font-black text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
+                              {canReturn ? "Timer expired" : `Wait ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`}
+                            </span>
+                            <button
+                              disabled={!canReturn || loading === order.id}
+                              onClick={() => returnToStore(order)}
+                              className="flex h-12 items-center justify-center rounded-xl bg-red-600 text-sm font-black text-white disabled:opacity-40"
+                            >
+                              Return to Store
+                            </button>
+                          </div>
+                        );
+                      })()}
 
                       {/* Complete Delivery - ARRIVING + collection done */}
                       {order.status === "ARRIVING" &&

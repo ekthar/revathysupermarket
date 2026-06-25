@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Chrome, LocateFixed, MapPin, Phone, ShoppingBasket, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Chrome, LocateFixed, MapPin, Phone, ShoppingBasket, Sparkles, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OtpInput } from "@/components/onboarding/otp-input";
@@ -456,6 +456,19 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
           )}
         </AnimatePresence>
       </div>
+
+      {/* Staff login link - visible on all steps */}
+      {step !== "done" && (
+        <div className="pb-6 text-center">
+          <a
+            href="/staff-login"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 transition hover:text-neutral-600 dark:hover:text-neutral-300"
+          >
+            <UserCog className="h-3.5 w-3.5" />
+            Staff? Login here
+          </a>
+        </div>
+      )}
     </main>
   );
 }

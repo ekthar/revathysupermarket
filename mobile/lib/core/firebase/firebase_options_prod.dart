@@ -11,7 +11,7 @@ import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 class ProdFirebaseOptions {
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'prod-placeholder-api-key',
-    appId: '1:000000000000:android:0000000000000000000000',
+    appId: '1:000000000000:android:1111111111111111111111',
     messagingSenderId: '000000000000',
     projectId: 'msm-supermarket-prod',
     storageBucket: 'msm-supermarket-prod.appspot.com',
@@ -19,10 +19,19 @@ class ProdFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'prod-placeholder-api-key',
-    appId: '1:000000000000:ios:0000000000000000000000',
+    appId: '1:000000000000:ios:1111111111111111111111',
     messagingSenderId: '000000000000',
     projectId: 'msm-supermarket-prod',
     storageBucket: 'msm-supermarket-prod.appspot.com',
-    iosBundleId: 'com.msm.supermarket',
+    iosBundleId: 'com.msmsupermarket.msm_mobile',
+  );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'prod-placeholder-api-key',
+    appId: '1:000000000000:web:1111111111111111111111',
+    messagingSenderId: '000000000000',
+    projectId: 'msm-supermarket-prod',
+    storageBucket: 'msm-supermarket-prod.appspot.com',
+    authDomain: 'msm-supermarket-prod.firebaseapp.com',
   );
 }

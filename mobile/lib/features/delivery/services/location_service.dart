@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/utils/platform_utils.dart';
 
 /// GPS tracking service for active deliveries.
 ///
@@ -35,8 +36,15 @@ class LocationService {
   ///
   /// Requests location permission if not already granted.
   /// Only starts if [orderId] is provided, indicating an active delivery.
+  /// On web, location tracking uses the browser's Geolocation API via geolocator_web.
   Future<bool> startTracking(String orderId) async {
     if (_isTracking && _activeOrderId == orderId) return true;
+
+    // On web, continuous GPS tracking is less reliable; still attempt it
+    // but log a warning for operators.
+    if (PlatformUtils.isWeb) {
+      debugPrint('LocationService: Running on web - GPS tracking may be limited');
+    }
 
     // Stop any existing tracking first
     await stopTracking();

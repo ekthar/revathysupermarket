@@ -25,4 +25,13 @@ class DevFirebaseOptions {
     storageBucket: 'msm-supermarket-dev.appspot.com',
     iosBundleId: 'com.msm.supermarket.dev',
   );
+
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'dev-placeholder-api-key',
+    appId: '1:000000000000:web:0000000000000000000000',
+    messagingSenderId: '000000000000',
+    projectId: 'msm-supermarket-dev',
+    storageBucket: 'msm-supermarket-dev.appspot.com',
+    authDomain: 'msm-supermarket-dev.firebaseapp.com',
+  );
 }

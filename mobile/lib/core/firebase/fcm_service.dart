@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -8,6 +7,7 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 
 import '../config/environment.dart';
 import '../network/api_client.dart';
+import '../utils/platform_utils.dart';
 import 'firebase_options_dev.dart';
 import 'firebase_options_prod.dart';
 
@@ -16,8 +16,13 @@ import 'firebase_options_prod.dart';
 /// Parses the FCM data message and shows a high-priority local notification
 /// on the 'delivery_alerts' channel with full-screen intent on Android
 /// and time-sensitive notification on iOS.
+/// On web, local notifications are not supported; the browser handles
+/// push notification display via the service worker.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  // On web, background messages are handled by the service worker.
+  if (kIsWeb) return;
+
   // Initialize Firebase in the background isolate
   try {
     await Firebase.initializeApp();
@@ -39,12 +44,16 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 }
 
 /// Shows a high-priority notification for delivery alerts.
+/// No-op on web where flutter_local_notifications is not supported.
 Future<void> _showAlertNotification({
   required String title,
   required String body,
   required String payload,
   required String eventId,
 }) async {
+  // flutter_local_notifications does not support web platform
+  if (kIsWeb) return;
+
   final flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
 
   const androidDetails = AndroidNotificationDetails(
@@ -128,17 +137,7 @@ class FcmService {
     if (_initialized) return true;
 
     try {
-      final options = _config.isDev
-          ? DevFirebaseOptions.android
-          : ProdFirebaseOptions.android;
-
-      // Use platform-specific options
-      final firebaseOptions = Platform.isIOS
-          ? (_config.isDev
-              ? DevFirebaseOptions.ios
-              : ProdFirebaseOptions.ios)
-          : options;
-
+      final firebaseOptions = _getFirebaseOptions();
       await Firebase.initializeApp(options: firebaseOptions);
     } catch (e) {
       debugPrint('FCM: Firebase initialization failed (expected if no '
@@ -163,13 +162,22 @@ class FcmService {
         return false;
       }
 
-      // Set up background message handler
-      FirebaseMessaging.onBackgroundMessage(
-        firebaseMessagingBackgroundHandler,
-      );
+      // Set up background message handler (not needed on web - service worker handles it)
+      if (!PlatformUtils.isWeb) {
+        FirebaseMessaging.onBackgroundMessage(
+          firebaseMessagingBackgroundHandler,
+        );
+      }
 
       // Get the initial FCM token
-      _currentToken = await messaging.getToken();
+      // On web, getToken requires a vapidKey for web push
+      if (PlatformUtils.isWeb) {
+        _currentToken = await messaging.getToken(
+          vapidKey: 'placeholder-vapid-key-replace-with-real-key',
+        );
+      } else {
+        _currentToken = await messaging.getToken();
+      }
       if (_currentToken != null) {
         await _registerTokenWithBackend(_currentToken!);
       }
@@ -201,6 +209,31 @@ class FcmService {
     }
   }
 
+  /// Get the appropriate Firebase options based on platform and environment.
+  FirebaseOptions _getFirebaseOptions() {
+    if (PlatformUtils.isWeb) {
+      return _config.isDev
+          ? DevFirebaseOptions.web
+          : ProdFirebaseOptions.web;
+    }
+    // On mobile, use defaultTargetPlatform to determine iOS vs Android
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      return _config.isDev
+          ? DevFirebaseOptions.ios
+          : ProdFirebaseOptions.ios;
+    }
+    return _config.isDev
+        ? DevFirebaseOptions.android
+        : ProdFirebaseOptions.android;
+  }
+
+  /// Get the platform string for device registration.
+  String _getPlatformString() {
+    if (PlatformUtils.isWeb) return 'web';
+    if (defaultTargetPlatform == TargetPlatform.iOS) return 'ios';
+    return 'android';
+  }
+
   /// Register the FCM token with the backend.
   Future<void> _registerTokenWithBackend(String token) async {
     try {
@@ -209,7 +242,7 @@ class FcmService {
         data: {
           'installationId': _installationId,
           'token': token,
-          'platform': Platform.isIOS ? 'ios' : 'android',
+          'platform': _getPlatformString(),
         },
       );
       debugPrint('FCM: Token registered with backend');

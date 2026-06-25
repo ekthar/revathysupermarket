@@ -1,4 +1,4 @@
-name: Build Mobile Apps (APK & IPA)
+name: Build Flutter App (Android & Web)
 
 on:
   workflow_dispatch:
@@ -19,119 +19,83 @@ jobs:
   build-android:
     name: Build Android APK
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-      - run: npm ci
+
       - uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: "17"
-      - uses: android-actions/setup-android@v3
 
-      - name: Create web directory
-        run: mkdir -p out && echo "<html><body>Loading...</body></html>" > out/index.html
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.2"
+          channel: "stable"
+          cache: true
 
-      - name: Add Android platform & sync
-        run: npx cap add android && npx cap sync android
-
-      # Fix targetSdkVersion to latest (34+) to avoid Play Protect "old version" warning
-      - name: Patch targetSdkVersion and compileSdkVersion
-        run: |
-          sed -i 's/compileSdkVersion.*/compileSdkVersion 34/' android/app/build.gradle
-          sed -i 's/targetSdkVersion.*/targetSdkVersion 34/' android/app/build.gradle
-          sed -i 's/minSdkVersion.*/minSdkVersion 24/' android/app/build.gradle
+      - name: Get Flutter dependencies
+        run: flutter pub get
 
       - name: Build Debug APK
         if: inputs.build_type == 'debug' || inputs.build_type == ''
-        run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+        run: flutter build apk --debug
 
-      # For release: sign the APK with a keystore to avoid Play Protect blocking
-      - name: Create Keystore for Release Signing
+      - name: Build Release APK
         if: inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v')
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > android/app/release-key.jks
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-
-      - name: Build Signed Release APK
-        if: inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v')
-        run: |
-          cd android && chmod +x gradlew && ./gradlew assembleRelease \
-            -Pandroid.injected.signing.store.file=$PWD/app/release-key.jks \
-            -Pandroid.injected.signing.store.password=${{ secrets.ANDROID_KEYSTORE_PASSWORD }} \
-            -Pandroid.injected.signing.key.alias=${{ secrets.ANDROID_KEY_ALIAS }} \
-            -Pandroid.injected.signing.key.password=${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: flutter build apk --release
 
       - name: Upload Debug APK
         if: inputs.build_type == 'debug' || inputs.build_type == ''
         uses: actions/upload-artifact@v4
         with:
           name: app-debug-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
 
       - name: Upload Release APK
         if: inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: app-release-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: mobile/build/app/outputs/flutter-apk/app-release.apk
 
-      - name: Attach to Release
+      - name: Attach APK to Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: android/app/build/outputs/apk/**/*.apk
+          files: mobile/build/app/outputs/flutter-apk/app-release.apk
 
-  build-ios:
-    name: Build iOS IPA
-    runs-on: macos-latest
+  build-web:
+    name: Build Flutter Web
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - uses: subosito/flutter-action@v2
         with:
-          node-version: "20"
-          cache: "npm"
-      - run: npm ci
-      - uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
+          flutter-version: "3.32.2"
+          channel: "stable"
+          cache: true
 
-      - name: Create web directory
-        run: mkdir -p out && echo "<html><body>Loading...</body></html>" > out/index.html
+      - name: Get Flutter dependencies
+        run: flutter pub get
 
-      - name: Add iOS platform & sync
-        run: npx cap add ios && npx cap sync ios
+      - name: Build Web Release
+        run: flutter build web --release
 
-      - name: Install CocoaPods
-        run: cd ios/App && pod install
-
-      - name: Build unsigned IPA
-        run: |
-          cd ios/App
-          xcodebuild -workspace App.xcworkspace -scheme App \
-            -configuration Release -sdk iphoneos \
-            -destination generic/platform=iOS \
-            -archivePath build/App.xcarchive archive \
-            CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
-
-      - name: Package IPA
-        run: |
-          cd ios/App/build/App.xcarchive/Products/Applications
-          mkdir Payload && cp -r App.app Payload/
-          zip -r ../../../../App-unsigned.ipa Payload
-
-      - name: Upload IPA
+      - name: Upload Web Build
         uses: actions/upload-artifact@v4
         with:
-          name: app-ios-ipa
-          path: ios/App/build/App-unsigned.ipa
+          name: web-build
+          path: mobile/build/web
 
-      - name: Attach to Release
+      - name: Attach Web Build to Release
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: ios/App/build/App-unsigned.ipa
+          files: mobile/build/web

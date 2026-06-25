@@ -61,6 +61,7 @@ class AlarmAudioService with WidgetsBindingObserver {
       await _player?.stop();
       // Use a bundled audio asset. In production, provide delivery_alarm.mp3
       // in assets/audio/. Falls back gracefully if file is missing.
+      // On web, audioplayers uses the HTML5 Audio API.
       await _player?.play(
         AssetSource('audio/delivery_alarm.mp3'),
         volume: 1.0,

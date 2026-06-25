@@ -51,6 +51,11 @@ dependencies:
   # Permissions
   permission_handler: ^11.3.1
 
+  # UI Enhancements
+  google_fonts: ^6.2.1
+  shimmer: ^3.0.0
+  animations: ^2.0.11
+
 dev_dependencies:
   flutter_test:
     sdk: flutter

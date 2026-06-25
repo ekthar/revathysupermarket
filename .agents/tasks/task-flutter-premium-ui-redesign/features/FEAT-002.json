@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Redesign Splash, Login, OTP screens with Google Auth, animations, and premium branding",
+  "status": "pending",
+  "steps": [
+    "Rewrite the _SplashScreen in mobile/lib/core/router/app_router.dart - animated logo with scale + fade-in animation (AnimationController + CurvedAnimation), emerald gradient background, app name with Manrope font, pulsing loading indicator",
+    "Completely redesign mobile/lib/features/auth/presentation/login_screen.dart with: gradient background (emerald to dark), app logo/branding at top with animation, 'Sign in with Google' button (white button with Google icon, elevated card style), divider with 'or' text, phone number OTP section (existing flow preserved), smooth transitions between elements, terms of service text at bottom",
+    "Add Google sign-in functionality: create mobile/lib/features/auth/data/google_auth_service.dart that calls the backend API endpoint for Google OAuth (POST /auth/google with idToken). For now, use a simulated flow since google_sign_in package requires native setup. The button should call the auth repository which hits the API.",
+    "Add loginWithGoogle method to mobile/lib/features/auth/data/auth_repository.dart that sends the Google ID token to the backend",
+    "Redesign mobile/lib/features/auth/presentation/otp_screen.dart with: animated pin input fields (individual boxes that scale on focus), countdown timer with circular progress indicator, resend button with cooldown, animated verification success state, gradient accents"
+  ],
+  "acceptance_criteria": [
+    "Splash screen has animated logo with scale and fade-in effects",
+    "Login screen has Google sign-in button prominently displayed",
+    "Login screen has gradient background and premium branding",
+    "OTP screen has individual animated pin boxes",
+    "Auth repository has loginWithGoogle method",
+    "Google auth service exists and calls backend endpoint",
+    "Both screens respect dark mode"
+  ],
+  "verification": [
+    "Verify login_screen.dart contains Google sign-in button widget",
+    "Verify auth_repository.dart has loginWithGoogle method",
+    "Verify google_auth_service.dart exists in auth/data/",
+    "Verify splash screen in app_router.dart has AnimationController",
+    "Verify otp_screen.dart has animated pin input"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

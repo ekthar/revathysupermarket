@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-006",
+  "type": "feat",
+  "description": "Redesign Delivery Partner screens with premium dashboard, order flow, and real-time data",
+  "status": "pending",
+  "steps": [
+    "Completely redesign mobile/lib/features/delivery/presentation/delivery_dashboard_screen.dart: greeting header with time-of-day (Good morning/afternoon), stats cards in a 2x2 grid with gradient backgrounds and icons (deliveries, cash, UPI, lifetime), active orders section with premium cards showing customer name/address/status badge/distance, alert health indicator card with green/red status icons, pull-to-refresh with animated indicator, shimmer loading for all sections, floating action button for quick actions",
+    "Completely redesign mobile/lib/features/delivery/presentation/delivery_order_detail_screen.dart: status badge at top with colored background, customer info card (name, phone with call button, address with map icon), order items list with quantities, payment info (method + amount), action buttons at bottom (dynamic based on order status: Pickup/Report Damage/Collect Payment/Complete), navigation card with directions button, notes section if present",
+    "Completely redesign mobile/lib/features/delivery/presentation/pickup_confirmation_screen.dart: order summary card, checklist of items to verify (checkboxes), photo upload placeholder area, confirm pickup button with loading state, back button",
+    "Completely redesign mobile/lib/features/delivery/presentation/damage_report_screen.dart: item selection list with checkboxes, damage description text field, photo upload placeholder, severity selector (Minor/Major/Critical radio buttons with colored indicators), submit report button with loading state",
+    "Completely redesign mobile/lib/features/delivery/presentation/collection_screen.dart: expected amount card (large number with gradient), payment method selector (Cash/UPI), actual collected amount input, discrepancy warning if amounts differ, confirm collection button",
+    "Completely redesign mobile/lib/features/delivery/presentation/completion_screen.dart: success animation/check mark (animated scaling green checkmark), delivery summary card, customer rating prompt (star rating), thank you message, back to dashboard button, confetti or celebration subtle animation"
+  ],
+  "acceptance_criteria": [
+    "Delivery dashboard has gradient stat cards in 2x2 grid",
+    "Dashboard has pull-to-refresh and shimmer loading",
+    "Order detail shows dynamic action buttons based on status",
+    "Pickup screen has item checklist with checkboxes",
+    "Damage report has severity selector with colored indicators",
+    "Collection screen shows expected amount prominently",
+    "Completion screen has animated success checkmark",
+    "All delivery screens handle API errors gracefully"
+  ],
+  "verification": [
+    "Verify delivery_dashboard_screen.dart has gradient stat cards",
+    "Verify delivery_order_detail_screen.dart has dynamic action buttons",
+    "Verify pickup_confirmation_screen.dart has checklist",
+    "Verify damage_report_screen.dart has severity selector",
+    "Verify collection_screen.dart has amount input",
+    "Verify completion_screen.dart has animated check/success state"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Theme overhaul with Google Fonts (Inter Tight + Manrope), enhanced color palette, and shared UI components (shimmer, animated widgets, bottom nav shell)",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add google_fonts, shimmer, and animations packages to mobile/pubspec.yaml dependencies",
     "Completely rewrite mobile/lib/core/theme/app_theme.dart to use Inter Tight for body/UI text (textTheme) and Manrope for display/headline text (displayLarge, displayMedium, displaySmall, headlineLarge, headlineMedium, headlineSmall). Apply via GoogleFonts.interTightTextTheme() and GoogleFonts.manropeTextTheme() merged. Enhance the color scheme with richer gradients, proper dark mode slate palette matching the web app.",
@@ -29,5 +29,5 @@
     "Verify all new widget files compile syntactically (no obvious Dart errors)"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All steps implemented. Used StatefulShellRoute.indexedStack for bottom nav (GoRouter 14.x pattern). AnimatedBuilder used in animated_fade_in.dart (requires Dart 3.x). App.dart unchanged since it already references AppTheme.light/dark. The bottom_nav_shell cart badge count is hardcoded to 0 and will need to be wired to a cart provider in a later feature."
 }

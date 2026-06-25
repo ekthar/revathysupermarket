@@ -25,8 +25,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   });
   if (!order) return NextResponse.json({ error: "Order not found.", code: "ORDER_NOT_FOUND" }, { status: 404 });
 
-  // Validate bill number against existing orders
-  const billOrder = await prisma.order.findFirst({ where: { orderNumber: parsed.data.billNumber } });
+  // Validate bill number against current user's orders only (prevents order enumeration)
+  const billOrder = await prisma.order.findFirst({ where: { orderNumber: parsed.data.billNumber, userId: session.user.id } });
   if (!billOrder) return NextResponse.json({ error: "Invalid bill number - no matching order found.", code: "INVALID_BILL_NUMBER" }, { status: 400 });
 
   if (order.status !== "DELIVERED") return NextResponse.json({ error: "Returns are available after delivery.", code: "ORDER_NOT_DELIVERED" }, { status: 400 });

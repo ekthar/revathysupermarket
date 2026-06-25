@@ -28,7 +28,7 @@ export function ReturnReceiptPrintButton({ entry }: { entry: ReturnEntry }) {
     const html = `<!DOCTYPE html>
 <html>
 <head>
-<title>Return Receipt - ${entry.returnNumber ?? ""}</title>
+<title>Return Receipt - ${escapeHtml(entry.returnNumber ?? "")}</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 380px; margin: 0 auto; color: #1a1a1a; }
@@ -57,22 +57,22 @@ export function ReturnReceiptPrintButton({ entry }: { entry: ReturnEntry }) {
   </div>
   <div class="section">
     <div class="section-title">Return Details</div>
-    <div class="detail-row"><span class="label">Return No.</span><span class="value">${entry.returnNumber ?? "-"}</span></div>
-    <div class="detail-row"><span class="label">Bill No.</span><span class="value">${entry.billNumber || entry.orderNumber}</span></div>
-    <div class="detail-row"><span class="label">Order No.</span><span class="value">#${entry.orderNumber}</span></div>
-    <div class="detail-row"><span class="label">Customer</span><span class="value">${entry.customerName}</span></div>
+    <div class="detail-row"><span class="label">Return No.</span><span class="value">${escapeHtml(entry.returnNumber ?? "-")}</span></div>
+    <div class="detail-row"><span class="label">Bill No.</span><span class="value">${escapeHtml(entry.billNumber || entry.orderNumber)}</span></div>
+    <div class="detail-row"><span class="label">Order No.</span><span class="value">#${escapeHtml(entry.orderNumber)}</span></div>
+    <div class="detail-row"><span class="label">Customer</span><span class="value">${escapeHtml(entry.customerName)}</span></div>
     <div class="detail-row"><span class="label">Date</span><span class="value">${new Date(entry.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}</span></div>
-    <div class="detail-row"><span class="label">Reason</span><span class="value">${entry.reason.replaceAll("_", " ")}</span></div>
+    <div class="detail-row"><span class="label">Reason</span><span class="value">${escapeHtml(entry.reason.replaceAll("_", " "))}</span></div>
   </div>
   <div class="section">
     <div class="section-title">Items Returned</div>
     <table class="items-table">
       <thead><tr><th>Item</th><th>Qty</th><th>Amount</th></tr></thead>
-      <tbody>${items.map((item) => `<tr><td>${item.name ?? "Item"}</td><td>${item.quantity ?? 0} x ${formatCurrencyPlain(Number(item.price ?? 0))}</td><td>${formatCurrencyPlain(Number(item.amount ?? Number(item.price ?? 0) * Number(item.quantity ?? 0)))}</td></tr>`).join("")}</tbody>
+      <tbody>${items.map((item) => `<tr><td>${escapeHtml(item.name ?? "Item")}</td><td>${item.quantity ?? 0} x ${formatCurrencyPlain(Number(item.price ?? 0))}</td><td>${formatCurrencyPlain(Number(item.amount ?? Number(item.price ?? 0) * Number(item.quantity ?? 0)))}</td></tr>`).join("")}</tbody>
     </table>
   </div>
   <div class="total-row"><span>Total Refund</span><span>${formatCurrencyPlain(entry.refundAmount)}</span></div>
-  <div class="detail-row" style="margin-top: 8px;"><span class="label">Refund Method</span><span class="value">${entry.paymentMethod || "WALLET"}</span></div>
+  <div class="detail-row" style="margin-top: 8px;"><span class="label">Refund Method</span><span class="value">${escapeHtml(entry.paymentMethod || "WALLET")}</span></div>
   <div class="footer">
     <p>Thank you for shopping with us.</p>
     <p style="margin-top: 4px;">This is a computer-generated receipt.</p>
@@ -98,4 +98,13 @@ export function ReturnReceiptPrintButton({ entry }: { entry: ReturnEntry }) {
 
 function formatCurrencyPlain(amount: number): string {
   return new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", minimumFractionDigits: 2 }).format(amount);
+}
+
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }

@@ -23,10 +23,17 @@ function createRiderMarkerEl(): HTMLDivElement {
   el.style.width = "40px";
   el.style.height = "40px";
   el.style.cursor = "pointer";
-  el.innerHTML = `<svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
+  // Use a wrapper div for heading rotation so it doesn't conflict with MapLibre's own transforms
+  const rotationWrapper = document.createElement("div");
+  rotationWrapper.className = "rider-rotation-wrapper";
+  rotationWrapper.style.width = "100%";
+  rotationWrapper.style.height = "100%";
+  rotationWrapper.style.transition = "transform 0.3s ease";
+  rotationWrapper.innerHTML = `<svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
     <circle cx="20" cy="20" r="18" fill="#4caf50" stroke="#ffffff" stroke-width="3"/>
     <path d="M20 10 L26 26 L20 22 L14 26 Z" fill="#ffffff" stroke="none"/>
   </svg>`;
+  el.appendChild(rotationWrapper);
   return el;
 }
 
@@ -160,10 +167,13 @@ export function DeliveryMap({
         }
       }
 
-      // Rotate the marker element based on heading
+      // Rotate the inner wrapper element based on heading (avoids conflicting with MapLibre's transforms on the marker element)
       if (riderMarkerRef.current && heading !== undefined) {
         const el = riderMarkerRef.current.getElement();
-        el.style.transform = `${el.style.transform.replace(/rotate\([^)]*\)/, "")} rotate(${heading}deg)`;
+        const rotationWrapper = el.querySelector(".rider-rotation-wrapper") as HTMLElement | null;
+        if (rotationWrapper) {
+          rotationWrapper.style.transform = `rotate(${heading}deg)`;
+        }
       }
 
       animFrameRef.current = requestAnimationFrame(step);

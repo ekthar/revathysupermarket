@@ -20,52 +20,84 @@ function lerp(a: number, b: number, t: number): number {
 function createRiderMarkerEl(): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "delivery-rider-marker";
-  el.style.width = "40px";
-  el.style.height = "40px";
+  el.style.width = "48px";
+  el.style.height = "48px";
   el.style.cursor = "pointer";
-  // Use a wrapper div for heading rotation so it doesn't conflict with MapLibre's own transforms
+  el.style.position = "relative";
+
+  // Pulsing green ring (Uber-style moving indicator)
+  const pulse = document.createElement("div");
+  pulse.style.cssText =
+    "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;border:3px solid #00c853;animation:rider-pulse 2s ease-out infinite;pointer-events:none;z-index:0;";
+  el.appendChild(pulse);
+
+  // Rotation wrapper for heading
   const rotationWrapper = document.createElement("div");
   rotationWrapper.className = "rider-rotation-wrapper";
   rotationWrapper.style.width = "100%";
   rotationWrapper.style.height = "100%";
   rotationWrapper.style.transition = "transform 0.3s ease";
-  rotationWrapper.innerHTML = `<svg viewBox="0 0 40 40" width="40" height="40" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="20" cy="20" r="18" fill="#4caf50" stroke="#ffffff" stroke-width="3"/>
-    <path d="M20 10 L26 26 L20 22 L14 26 Z" fill="#ffffff" stroke="none"/>
+  rotationWrapper.style.position = "relative";
+  rotationWrapper.style.zIndex = "1";
+  rotationWrapper.innerHTML = `<svg viewBox="0 0 48 48" width="48" height="48" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="rider-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+      </filter>
+    </defs>
+    <circle cx="24" cy="24" r="22" fill="#111111" filter="url(#rider-shadow)"/>
+    <circle cx="24" cy="24" r="20" fill="#1a1a1a"/>
+    <path d="M24 12 L30 30 L24 26 L18 30 Z" fill="#ffffff" stroke="none"/>
   </svg>`;
   el.appendChild(rotationWrapper);
   return el;
 }
 
-function createCustomerMarkerEl(): HTMLDivElement {
+function createCustomerMarkerEl(lat: number, lng: number): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "delivery-customer-marker";
-  el.style.width = "32px";
-  el.style.height = "40px";
+  el.style.width = "44px";
+  el.style.height = "44px";
   el.style.cursor = "pointer";
-  el.innerHTML = `<svg viewBox="0 0 32 40" width="32" height="40" xmlns="http://www.w3.org/2000/svg">
-    <path d="M16 0C8 0 2 6 2 13.5C2 24 16 40 16 40S30 24 30 13.5C30 6 24 0 16 0Z" fill="#1976d2"/>
-    <circle cx="16" cy="13.5" r="6" fill="#ffffff"/>
+  el.style.position = "relative";
+
+  // Bold black circle with white dot (Uber destination style)
+  el.innerHTML = `<svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="dest-shadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
+      </filter>
+    </defs>
+    <rect x="4" y="4" width="36" height="36" rx="8" fill="#111111" filter="url(#dest-shadow)"/>
+    <circle cx="22" cy="22" r="6" fill="#ffffff"/>
   </svg>`;
-  // Add pulse animation
+
+  // Pulse ring
   const pulse = document.createElement("div");
   pulse.style.cssText =
-    "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;border-radius:50%;background:rgba(25,118,210,0.2);animation:map-pulse 2s ease-out infinite;pointer-events:none;z-index:-1;";
-  el.style.position = "relative";
+    "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(17,17,17,0.15);animation:map-pulse 2s ease-out infinite;pointer-events:none;z-index:-1;";
   el.appendChild(pulse);
+
+  // Click handler opens Google Maps navigation
+  el.addEventListener("click", () => {
+    window.open(
+      `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}&travelmode=driving`,
+      "_blank"
+    );
+  });
+
   return el;
 }
 
 function createStoreMarkerEl(): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "delivery-store-marker";
-  el.style.width = "32px";
-  el.style.height = "32px";
+  el.style.width = "24px";
+  el.style.height = "24px";
   el.style.cursor = "pointer";
-  el.innerHTML = `<svg viewBox="0 0 32 32" width="32" height="32" xmlns="http://www.w3.org/2000/svg">
-    <rect x="4" y="14" width="24" height="16" rx="2" fill="#ff9800" stroke="#ffffff" stroke-width="2"/>
-    <polygon points="2,14 16,4 30,14" fill="#ff9800" stroke="#ffffff" stroke-width="2"/>
-    <rect x="13" y="20" width="6" height="10" fill="#ffffff" rx="1"/>
+  el.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="11" fill="#4a4a4a"/>
+    <circle cx="12" cy="12" r="4" fill="#ffffff"/>
   </svg>`;
   return el;
 }
@@ -98,8 +130,11 @@ export function DeliveryMap({
 
     mapRef.current = map;
 
-    // Add customer marker
-    const customerEl = createCustomerMarkerEl();
+    // Add customer marker with navigation click handler
+    const customerEl = createCustomerMarkerEl(
+      customerLocation.latitude,
+      customerLocation.longitude
+    );
     customerMarkerRef.current = new maplibregl.Marker({ element: customerEl })
       .setLngLat([customerLocation.longitude, customerLocation.latitude])
       .addTo(map);
@@ -116,12 +151,16 @@ export function DeliveryMap({
     bounds.extend([storeLocation.longitude, storeLocation.latitude]);
     map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
 
-    // Add pulse keyframe animation style
+    // Add keyframe animations
     const style = document.createElement("style");
     style.textContent = `
       @keyframes map-pulse {
         0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
         100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+      }
+      @keyframes rider-pulse {
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; border-color: #00c853; }
+        100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; border-color: #00c853; }
       }
     `;
     document.head.appendChild(style);
@@ -167,7 +206,7 @@ export function DeliveryMap({
         }
       }
 
-      // Rotate the inner wrapper element based on heading (avoids conflicting with MapLibre's transforms on the marker element)
+      // Rotate the inner wrapper element based on heading
       if (riderMarkerRef.current && heading !== undefined) {
         const el = riderMarkerRef.current.getElement();
         const rotationWrapper = el.querySelector(".rider-rotation-wrapper") as HTMLElement | null;
@@ -219,8 +258,12 @@ export function DeliveryMap({
       const from = prevRiderPosRef.current || newPos;
       animateRider(from, newPos, deliveryPartnerLocation.heading);
 
-      // Pan to keep rider in view
-      mapRef.current.panTo([newPos.lng, newPos.lat], { duration: 1000 });
+      // Use flyTo for smoother camera transitions
+      mapRef.current.flyTo({
+        center: [newPos.lng, newPos.lat],
+        duration: 1000,
+        essential: true,
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [deliveryPartnerLocation]);
@@ -235,13 +278,15 @@ export function DeliveryMap({
 
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className ?? ""}`}>
-      <div ref={containerRef} className="h-[280px] w-full" />
+      <div ref={containerRef} className="h-[320px] w-full" />
+      {/* Subtle gradient overlay at bottom for depth */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/10 to-transparent rounded-b-2xl" />
       {/* Custom zoom controls */}
-      <div className="absolute right-3 bottom-3 flex flex-col gap-1.5">
+      <div className="absolute right-3 bottom-6 flex flex-col gap-1.5">
         <button
           type="button"
           onClick={handleZoomIn}
-          className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-md text-neutral-700 text-lg font-bold hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg text-neutral-800 text-lg font-bold hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
           aria-label="Zoom in"
         >
           +
@@ -249,7 +294,7 @@ export function DeliveryMap({
         <button
           type="button"
           onClick={handleZoomOut}
-          className="flex h-9 w-9 items-center justify-center rounded-lg bg-white shadow-md text-neutral-700 text-lg font-bold hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
+          className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg text-neutral-800 text-lg font-bold hover:bg-neutral-50 active:bg-neutral-100 transition-colors"
           aria-label="Zoom out"
         >
           -

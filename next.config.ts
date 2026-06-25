@@ -15,7 +15,7 @@ const contentSecurityPolicy = [
   "img-src 'self' data: blob: https://images.unsplash.com https://*.amazonaws.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://maps.gstatic.com https://maps.googleapis.com https://tiles.openfreemap.org https://*.openfreemap.org",
   "connect-src 'self' https://*.upstash.io https://maps.googleapis.com https://nominatim.openstreetmap.org https://tiles.openfreemap.org https://*.openfreemap.org https://vercel.live wss://ws-us3.pusher.com",
   "frame-src 'self' https://www.google.com https://maps.google.com https://vercel.live",
-  "worker-src 'self'",
+  "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

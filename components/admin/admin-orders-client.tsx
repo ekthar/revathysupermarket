@@ -24,6 +24,7 @@ type AdminOrder = {
   deliveryOtpAttempts: number;
   deliveryOtpExpiresAt: string | null;
   staffNote?: string | null;
+  billNumber?: string | null;
   acknowledgedAt: string | null;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
@@ -66,6 +67,8 @@ export function AdminOrdersClient({
   const [otpLoading, setOtpLoading] = useState<string | null>(null);
   const [editDrafts, setEditDrafts] = useState<Record<string, { quantity: string; productId: string; reason: string }>>({});
   const [staffNotes, setStaffNotes] = useState<Record<string, string>>(() => Object.fromEntries(orders.map((order) => [order.id, order.staffNote ?? ""])));
+  const [billNumberDrafts, setBillNumberDrafts] = useState<Record<string, string>>(() => Object.fromEntries(orders.map((order) => [order.id, order.billNumber ?? ""])));
+  const [billNumberSaving, setBillNumberSaving] = useState<string | null>(null);
   const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
   const [soundUnlocked, setSoundUnlocked] = useState(false);
   const [expandedOrderIds, setExpandedOrderIds] = useState<Set<string>>(() => {
@@ -237,8 +240,8 @@ export function AdminOrdersClient({
         onSuccess: () => {
           showToast("Delivery partner assigned", "success");
         },
-        onError: () => {
-          showToast("Delivery assignment failed", "error");
+        onError: (error) => {
+          showToast(error.message ?? "Delivery assignment failed", "error");
         },
         onSettled: () => setAssignLoading(null),
       }
@@ -273,6 +276,30 @@ export function AdminOrdersClient({
       current?.map((entry) => entry.id === order.id ? { ...entry, staffNote: staffNotes[order.id] ?? "" } : entry) ?? []
     );
     showToast("Staff note saved", "success");
+  }
+
+  async function saveBillNumber(orderId: string) {
+    const billNumber = (billNumberDrafts[orderId] ?? "").trim();
+    if (!billNumber) {
+      showToast("Enter a bill number", "error");
+      return;
+    }
+    setBillNumberSaving(orderId);
+    const response = await fetch(`/api/admin/orders/${orderId}/bill-number`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ billNumber }),
+    });
+    const data = await readApiResponse<{ error?: string; order?: { id: string; billNumber: string } }>(response);
+    setBillNumberSaving(null);
+    if (!response.ok) {
+      showToast(data.error ?? "Failed to save bill number", "error");
+      return;
+    }
+    queryClient.setQueryData<AdminOrder[]>(ADMIN_ORDERS_QUERY_KEY, (current) =>
+      current?.map((entry) => entry.id === orderId ? { ...entry, billNumber } : entry) ?? []
+    );
+    showToast("Bill number saved", "success");
   }
 
   function manualWhatsAppLink(order: AdminOrder) {
@@ -557,15 +584,43 @@ export function AdminOrdersClient({
             ) : null}
             <div className="mt-4">
               <label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
+                Bill number
+                {billNumberSaving === order.id ? <span className="text-primary">Saving</span> : null}
+              </label>
+              {order.billNumber ? (
+                <p className="mt-1 text-sm font-bold text-foreground">{order.billNumber}</p>
+              ) : (
+                <div className="mt-2 flex gap-2">
+                  <input
+                    type="text"
+                    value={billNumberDrafts[order.id] ?? ""}
+                    onChange={(event) => setBillNumberDrafts((prev) => ({ ...prev, [order.id]: event.target.value }))}
+                    placeholder="Enter bill number"
+                    className="h-11 flex-1 rounded-2xl border border-border bg-background/70 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => saveBillNumber(order.id)}
+                    disabled={billNumberSaving === order.id}
+                    className="h-11 rounded-2xl bg-primary px-4 text-sm font-black text-white disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="mt-4">
+              <label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
                 Delivery partner
                 {assignLoading === order.id ? <span className="text-primary">Saving</span> : null}
               </label>
               <select
                 value={order.deliveryPartnerId ?? ""}
                 onChange={(event) => assignDelivery(order.id, event.target.value)}
-                className="mt-2 h-11 w-full rounded-2xl border border-border bg-background/70 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary"
+                disabled={!order.billNumber}
+                className="mt-2 h-11 w-full rounded-2xl border border-border bg-background/70 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <option value="">Unassigned</option>
+                <option value="">{order.billNumber ? "Unassigned" : "Enter bill number first"}</option>
                 {deliveryPartners.map((partner) => <option key={partner.id} value={partner.id}>{partner.name}</option>)}
               </select>
             </div>

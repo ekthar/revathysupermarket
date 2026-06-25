@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Add mandatory bill number entry before delivery assignment: schema migration, API route, and UI integration",
+  "status": "in_progress",
+  "steps": [
+    "Add 'billNumber String?' field to the Order model in prisma/schema.prisma (after the 'total' field or near the delivery fields). Create a new migration file at prisma/migrations/20260625040000_order_bill_number/migration.sql with: ALTER TABLE \"Order\" ADD COLUMN \"billNumber\" TEXT;",
+    "Create a new API route at app/api/admin/orders/[id]/bill-number/route.ts: POST handler that accepts { billNumber: string } in the body, validates it (non-empty string), checks auth (requireOrderStaff), and updates the order's billNumber field. Return the updated order.",
+    "Modify app/api/admin/orders/[id]/delivery/route.ts: Before the prisma.order.update that assigns delivery, first fetch the order and check if order.billNumber is null or empty. If so, return NextResponse.json({ error: 'Generate bill number first' }, { status: 400 }).",
+    "In components/admin/admin-orders-client.tsx: Add a bill number input field near the delivery partner select. Show it as a text input with placeholder 'Enter bill number'. When the user enters a bill number and saves it (via the new API route), store it in local state. Disable the delivery partner select dropdown until billNumber is set.",
+    "Add a billNumber field to the AdminOrder type (in lib/queries/admin-orders.ts or wherever the type is defined) so the client component knows whether a bill number already exists.",
+    "Update the useAssignDelivery mutation's error handling to show the 'Generate bill number first' error message from the API in the toast."
+  ],
+  "acceptance_criteria": [
+    "Order model in schema.prisma has 'billNumber String?' field",
+    "Migration SQL file exists at prisma/migrations/20260625040000_order_bill_number/migration.sql",
+    "POST /api/admin/orders/[id]/bill-number saves the bill number to the order",
+    "PATCH /api/admin/orders/[id]/delivery returns 400 with error 'Generate bill number first' if billNumber is null/empty",
+    "The admin orders UI shows a bill number input that must be filled before delivery assignment is possible",
+    "npx tsc --noEmit --skipLibCheck passes"
+  ],
+  "verification": [
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

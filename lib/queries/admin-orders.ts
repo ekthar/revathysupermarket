@@ -17,6 +17,7 @@ type AdminOrder = {
   deliveryOtpAttempts: number;
   deliveryOtpExpiresAt: string | null;
   staffNote?: string | null;
+  billNumber?: string | null;
   acknowledgedAt: string | null;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
@@ -28,6 +29,7 @@ type RawApiOrder = AdminOrder & {
   street?: string;
   landmark?: string;
   pincode?: string;
+  billNumber?: string | null;
 };
 
 function normalizeOrder(order: RawApiOrder): AdminOrder {
@@ -44,6 +46,7 @@ function normalizeOrder(order: RawApiOrder): AdminOrder {
     deliveryOtpAttempts: order.deliveryOtpAttempts ?? 0,
     deliveryOtpExpiresAt: order.deliveryOtpExpiresAt ?? null,
     staffNote: order.staffNote,
+    billNumber: order.billNumber ?? null,
     acknowledgedAt: order.acknowledgedAt ?? null,
     createdAt: order.createdAt,
     items: order.items.map((item) => ({
@@ -113,7 +116,10 @@ export function useAssignDelivery() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ deliveryPartnerId: deliveryPartnerId || null }),
       });
-      if (!res.ok) throw new Error("Delivery assignment failed");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Delivery assignment failed");
+      }
       return { orderId, deliveryPartnerId };
     },
     onMutate: async ({ orderId, deliveryPartnerId }) => {

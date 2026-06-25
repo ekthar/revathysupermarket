@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Address 6 issues from semantic review: timeout persistence, tracking status gate, idempotency guard, requireInteraction conditional, remove as-never casts, userId null guard",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Fix issue 1: Add customerUnavailableTimeout: 300 to the Prisma update in app/api/delivery/unavailable/route.ts",
     "2. Fix issue 2: Update status check in app/api/orders/[id]/tracking/route.ts to include ARRIVING and CUSTOMER_UNAVAILABLE statuses",
@@ -26,5 +26,5 @@
     "Run npx next build to confirm no TypeScript/build errors"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 6 review issues resolved. prisma generate and next build pass cleanly. 37/38 tests pass (same pre-existing scroll-preservation.test.ts failure as before, unrelated to changes)."
 }

@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Layout shift (CLS) fixes. Fonts are already using next/font (good). Focus on: (1) ensuring all images/product cards/banners have explicit aspect-ratio, (2) adding skeleton placeholders for async-loaded content (delivery time banner, offers strip, product grid), (3) converting conditional mount/unmount patterns to opacity/transform-based show-hide. Also add loading.tsx skeleton files for routes reachable from the bottom nav.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Fonts: Already using next/font/google (Inter_Tight + Manrope) with display: 'swap' in app/layout.tsx. No @font-face or <link> based fonts found. This is already optimal - no changes needed.",
     "In components/product-card.tsx - the image container already has aspect-[4/3.2] (grid layout) and aspect-square (compact layout). The horizontal layout uses fixed h-16 w-16. These are good for CLS. No changes needed.",
@@ -24,5 +24,5 @@
     "Run npx tsc --noEmit to confirm no type errors"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All loading.tsx files created as server components (no 'use client'). ProductSkeletonGrid imported in home and products loading files - it uses 'use client' internally which is fine since Next.js handles the boundary. LiveOrderBanner now uses height: 0 -> auto animation with overflow-hidden for smooth CLS-free appearance. The shimmer animation is CSS-based via globals.css @keyframes shimmer. Lint and tsc both pass cleanly."
 }

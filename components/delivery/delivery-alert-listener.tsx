@@ -11,12 +11,15 @@ type AlertOrder = { id: string; orderNumber: string; customerName: string; addre
  * Uses polling every 5 seconds to check for new assigned orders.
  * Plays continuous beeping + vibration until dismissed.
  * Works on Vercel (no long-lived SSE needed).
+ *
+ * The server only returns unacknowledged orders (deliveryAlertAckAt = null),
+ * so ANY order returned should always trigger the fullscreen alert.
+ * No client-side deduplication is needed.
  */
 export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
   const [alert, setAlert] = useState<AlertOrder | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
-  const shownOrdersRef = useRef<Set<string>>(new Set());
   const alertOpenRef = useRef(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
 
@@ -37,6 +40,22 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
       localStorage.setItem("delivery-alert-sound-enabled", "true");
       setSoundEnabled(true);
     } catch { /* device has no usable Web Audio implementation */ }
+  }, []);
+
+  /** Attempt to create/resume AudioContext programmatically (may succeed if page had prior user interaction). */
+  const tryAutoEnableSound = useCallback(() => {
+    try {
+      if (!ctxRef.current || ctxRef.current.state === "closed") ctxRef.current = new AudioContext();
+      if (ctxRef.current.state === "suspended") {
+        ctxRef.current.resume().then(() => {
+          localStorage.setItem("delivery-alert-sound-enabled", "true");
+          setSoundEnabled(true);
+        }).catch(() => { /* browser blocked auto-resume, visual alert still shows */ });
+      } else if (ctxRef.current.state === "running") {
+        localStorage.setItem("delivery-alert-sound-enabled", "true");
+        setSoundEnabled(true);
+      }
+    } catch { /* audio unavailable */ }
   }, []);
 
   const startBeeping = useCallback(() => {
@@ -71,7 +90,7 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
       if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
     };
     beep();
-    intervalRef.current = setInterval(beep, 3000);
+    intervalRef.current = setInterval(beep, 2000);
   }, []);
 
   const stopBeeping = useCallback(() => {
@@ -92,15 +111,23 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
         const data = await res.json();
         const orders: Array<{ id: string; orderNumber: string; customerName: string; address: string; total: number }> = data.orders ?? [];
 
-        // The server only returns unacknowledged assignments. Do not baseline the
-        // first response: that was the race that caused real assignments to vanish.
-        for (const order of orders) {
-          if (!shownOrdersRef.current.has(order.id)) {
-            shownOrdersRef.current.add(order.id);
-            alertOpenRef.current = true;
-            setAlert(order);
-            if (localStorage.getItem("delivery-alert-sound-enabled") === "true") startBeeping();
-            break; // Show one at a time
+        // The server only returns unacknowledged assignments.
+        // If any orders are returned and no alert is open, show immediately.
+        if (orders.length > 0 && !alertOpenRef.current) {
+          alertOpenRef.current = true;
+          setAlert(orders[0]);
+          // Attempt sound: if enabled start beeping, otherwise try auto-enable
+          if (localStorage.getItem("delivery-alert-sound-enabled") === "true") {
+            startBeeping();
+          } else {
+            // Try to auto-resume AudioContext (may work if page had prior interaction)
+            tryAutoEnableSound();
+            // If sound was successfully enabled, start beeping
+            setTimeout(() => {
+              if (localStorage.getItem("delivery-alert-sound-enabled") === "true") {
+                startBeeping();
+              }
+            }, 100);
           }
         }
       } catch { /* network error, retry next cycle */ }
@@ -109,7 +136,45 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
     poll();
     const timer = setInterval(poll, 5000);
     return () => { active = false; clearInterval(timer); stopBeeping(); };
-  }, [partnerId, startBeeping, stopBeeping]);
+  }, [partnerId, startBeeping, stopBeeping, tryAutoEnableSound]);
+
+  // Visibility change: trigger immediate poll when page becomes visible
+  useEffect(() => {
+    if (!partnerId) return;
+
+    function handleVisibilityChange() {
+      if (document.visibilityState === "visible" && !alertOpenRef.current) {
+        // Immediate poll when page is foregrounded
+        fetch("/api/delivery/poll", { cache: "no-store" })
+          .then((res) => {
+            if (!res.ok) return;
+            return res.json();
+          })
+          .then((data) => {
+            if (!data) return;
+            const orders: Array<{ id: string; orderNumber: string; customerName: string; address: string; total: number }> = data.orders ?? [];
+            if (orders.length > 0 && !alertOpenRef.current) {
+              alertOpenRef.current = true;
+              setAlert(orders[0]);
+              if (localStorage.getItem("delivery-alert-sound-enabled") === "true") {
+                startBeeping();
+              } else {
+                tryAutoEnableSound();
+                setTimeout(() => {
+                  if (localStorage.getItem("delivery-alert-sound-enabled") === "true") {
+                    startBeeping();
+                  }
+                }, 100);
+              }
+            }
+          })
+          .catch(() => { /* ignore, regular poll will retry */ });
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [partnerId, startBeeping, tryAutoEnableSound]);
 
   const acknowledge = useCallback(async (reload: boolean) => {
     const orderId = alert?.id;
@@ -117,21 +182,17 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
     alertOpenRef.current = false;
     stopBeeping();
     if (!orderId) return;
-    const response = await fetch("/api/delivery/poll", {
+    await fetch("/api/delivery/poll", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ orderId })
     }).catch(() => null);
-    if (!response?.ok) {
-      shownOrdersRef.current.delete(orderId);
-      return;
-    }
     if (reload) window.location.reload();
   }, [alert?.id, stopBeeping]);
 
   return (
     <>
-      {!soundEnabled && !alert && (
+      {!soundEnabled && (
         <button type="button" onClick={enableSound} className="fixed bottom-24 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-xl dark:bg-white dark:text-slate-950">
           <Volume2 className="h-4 w-4" /> Enable assignment alarm
         </button>

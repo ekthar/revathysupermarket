@@ -8,6 +8,8 @@ import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/products/presentation/home_screen.dart';
 import '../../features/products/presentation/category_screen.dart';
+import '../../features/products/presentation/product_detail_screen.dart';
+import '../../features/products/domain/product_model.dart' show Product;
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/orders/presentation/orders_screen.dart';
@@ -131,7 +133,10 @@ GoRouter createAppRouter({
                       context.push(AppRoutes.categories);
                     },
                     onProductTap: (product) {
-                      // Navigate to product detail
+                      context.push(
+                        '${AppRoutes.customerHome}/product',
+                        extra: product,
+                      );
                     },
                     onCartTap: () => context.push(AppRoutes.cart),
                     onSearchTap: () {
@@ -153,7 +158,10 @@ GoRouter createAppRouter({
                   child: CategoryScreen(
                     categoryName: 'All Categories',
                     onProductTap: (product) {
-                      // Navigate to product detail
+                      context.push(
+                        '${AppRoutes.customerHome}/product',
+                        extra: product,
+                      );
                     },
                   ),
                   transitionsBuilder: _sharedAxisTransition,
@@ -221,6 +229,18 @@ GoRouter createAppRouter({
       ),
 
       // === Customer routes outside the shell (push on top of nav) ===
+      GoRoute(
+        path: '${AppRoutes.customerHome}/product',
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
+          final product = state.extra as Product;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: ProductDetailScreen(product: product),
+            transitionsBuilder: _fadeThroughTransition,
+          );
+        },
+      ),
       GoRoute(
         path: AppRoutes.checkout,
         parentNavigatorKey: _rootNavigatorKey,

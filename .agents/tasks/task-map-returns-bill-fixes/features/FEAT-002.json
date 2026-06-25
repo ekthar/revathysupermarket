@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Returns report: Add per-day expandable item breakdown and printable page matching the premium OrderBillCard SVG-based bill design",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Convert app/admin/reports/returns/page.tsx from a pure server component to a hybrid: keep the data fetching as a server component but extract the interactive parts (expandable sections, print buttons) into a new client component at components/admin/returns-report-client.tsx.",
     "In the Prisma query, expand the select to include the 'items' JSON field from ReturnRequest (it contains [{orderItemId, name, quantity, price, amount}]) and also include 'reason' from the return request.",
@@ -24,5 +24,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Implementation successful. Added items and reason to the Prisma select query. Created a new client component (returns-report-client.tsx) with AnimatePresence expand/collapse per day, item breakdown tables, and print popup functionality. Had to explicitly convert order.total from Prisma Decimal to number for type compatibility. Both tsc and lint pass cleanly."
 }

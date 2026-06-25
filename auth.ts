@@ -12,7 +12,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   adapter: PrismaAdapter(prisma),
   callbacks: {
     async jwt({ token, user }) {
+      const SESSION_REVALIDATION_INTERVAL = 300; // 5 minutes in seconds
+
       if (user) {
+        // Initial sign-in: populate token with all session fields
         const versions = await prisma.user.findUnique({ where: { id: user.id }, select: { passwordVersion: true, authVersion: true } }).catch(() => null);
         token.id = user.id;
         token.role = (user as { role?: string }).role;
@@ -21,33 +24,63 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.phone = (user as { phone?: string | null }).phone ?? null;
         token.passwordVersion = versions?.passwordVersion ?? 0;
         token.authVersion = versions?.authVersion ?? 0;
+        token.permissions = [] as string[];
+        token.lastValidated = Math.floor(Date.now() / 1000);
+      } else if (token.id) {
+        // Subsequent requests: check if revalidation is needed
+        const now = Math.floor(Date.now() / 1000);
+        const lastValidated = token.lastValidated as number | undefined;
+        const isStale = !lastValidated || (now - lastValidated) >= SESSION_REVALIDATION_INTERVAL;
+
+        if (isStale) {
+          // Revalidate from database
+          const dbUser = await prisma.user.findUnique({
+            where: { id: token.id as string },
+            select: {
+              passwordVersion: true,
+              authVersion: true,
+              isActive: true,
+              role: true,
+              name: true,
+              email: true,
+              phone: true,
+              staffPermissions: { select: { permission: true } }
+            }
+          }).catch(() => null);
+
+          const tokenPasswordVersion = Number(token.passwordVersion ?? 0);
+          const tokenAuthVersion = Number(token.authVersion ?? 0);
+
+          if (!dbUser?.isActive || dbUser.passwordVersion !== tokenPasswordVersion || dbUser.authVersion !== tokenAuthVersion) {
+            // Security invalidation
+            token.role = "INVALID";
+            token.id = "";
+            token.passwordVersion = tokenPasswordVersion;
+          } else {
+            // Update token with fresh DB values
+            token.role = dbUser.role;
+            token.name = dbUser.name;
+            token.email = dbUser.email;
+            token.phone = dbUser.phone ?? null;
+            token.passwordVersion = dbUser.passwordVersion;
+            token.authVersion = dbUser.authVersion;
+            token.permissions = dbUser.staffPermissions.map((entry) => entry.permission);
+            token.lastValidated = now;
+          }
+        }
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        const user = token.id
-          ? await prisma.user.findUnique({
-              where: { id: token.id as string },
-              select: { passwordVersion: true, authVersion: true, isActive: true, role: true, name: true, email: true, phone: true, staffPermissions: { select: { permission: true } } }
-            }).catch(() => null)
-          : null;
-        const tokenVersion = Number(token.passwordVersion ?? 0);
-        const tokenAuthVersion = Number(token.authVersion ?? 0);
-        if (!user?.isActive || user.passwordVersion !== tokenVersion || user.authVersion !== tokenAuthVersion) {
-          session.user.id = "";
-          session.user.role = "INVALID";
-          session.user.passwordVersion = tokenVersion;
-          return session;
-        }
-        session.user.id = token.id as string;
-        session.user.role = user.role;
-        session.user.name = user.name;
-        session.user.email = user.email ?? "";
-        session.user.phone = user.phone ?? null;
-        session.user.passwordVersion = user.passwordVersion;
-        session.user.authVersion = user.authVersion;
-        session.user.permissions = user.staffPermissions.map((entry) => entry.permission);
+        session.user.id = (token.id as string) ?? "";
+        session.user.role = (token.role as string) ?? "INVALID";
+        session.user.name = (token.name as string) ?? null;
+        session.user.email = (token.email as string) ?? "";
+        session.user.phone = (token.phone as string | null) ?? null;
+        session.user.passwordVersion = Number(token.passwordVersion ?? 0);
+        session.user.authVersion = Number(token.authVersion ?? 0);
+        session.user.permissions = (token.permissions as string[]) ?? [];
       }
       return session;
     }

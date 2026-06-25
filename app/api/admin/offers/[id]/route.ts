@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageSettings } from "@/lib/authz";
@@ -53,6 +54,10 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   if (parsed.data.badge !== undefined) data.badge = parsed.data.badge;
 
   const offer = await prisma.offer.update({ where: { id }, data });
+
+  revalidatePath("/offers");
+  revalidateTag("offers");
+
   return NextResponse.json({ offer });
 }
 
@@ -68,5 +73,9 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!existing) return NextResponse.json({ error: "Offer not found." }, { status: 404 });
 
   await prisma.offer.delete({ where: { id } });
+
+  revalidatePath("/offers");
+  revalidateTag("offers");
+
   return NextResponse.json({ success: true });
 }

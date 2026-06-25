@@ -4,6 +4,8 @@ import { ArrowLeft, Clock, CreditCard, MapPin, Package, Phone, RotateCcw, Truck,
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 
+export const dynamic = "force-dynamic";
+
 export default async function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const result = await requirePermission("orders.view");

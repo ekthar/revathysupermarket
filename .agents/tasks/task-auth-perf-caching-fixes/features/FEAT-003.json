@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Confirm encoding bug is a false alarm (no mojibake in source), add error.tsx boundaries, fix cache revalidation gaps in admin offer/promo-code mutations, and add missing force-dynamic export",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "ENCODING BUG (Item 3): Search the entire codebase (excluding node_modules and .next) for the character sequence 'a\\u0302' or literal mojibake patterns. Confirm that no source files contain mojibake. All UTF-8 special characters are already correct in source. Document this as 'confirmed no fix needed' in the feature findings.",
     "ERROR BOUNDARIES (Item 4): Create error.tsx files at the following locations: app/admin/orders/[id]/error.tsx, app/track/[id]/error.tsx, app/checkout/error.tsx, app/dashboard/error.tsx, app/account/error.tsx. Each should be a 'use client' component that shows a user-friendly error message with a retry button (calling reset()). Follow a consistent pattern: show an error icon, a heading like 'Something went wrong', the error message (if available), and a 'Try again' button. Use the app's existing Tailwind design language (rounded-2xl, font-black, text-slate-900, etc.).",

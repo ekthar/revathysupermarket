@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageSettings } from "@/lib/authz";
@@ -64,6 +65,9 @@ export async function POST(request: Request) {
       badge: parsed.data.badge || null
     }
   });
+
+  revalidatePath("/offers");
+  revalidateTag("offers");
 
   return NextResponse.json({ offer }, { status: 201 });
 }

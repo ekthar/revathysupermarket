@@ -16,15 +16,25 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
       if (user) {
         // Initial sign-in: populate token with all session fields
-        const versions = await prisma.user.findUnique({ where: { id: user.id }, select: { passwordVersion: true, authVersion: true } }).catch(() => null);
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: {
+            passwordVersion: true,
+            authVersion: true,
+            isActive: true,
+            role: true,
+            staffPermissions: { select: { permission: true } }
+          }
+        }).catch(() => null);
         token.id = user.id;
-        token.role = (user as { role?: string }).role;
+        token.role = dbUser?.role ?? (user as { role?: string }).role;
         token.name = user.name;
         token.email = user.email;
         token.phone = (user as { phone?: string | null }).phone ?? null;
-        token.passwordVersion = versions?.passwordVersion ?? 0;
-        token.authVersion = versions?.authVersion ?? 0;
-        token.permissions = [] as string[];
+        token.passwordVersion = dbUser?.passwordVersion ?? 0;
+        token.authVersion = dbUser?.authVersion ?? 0;
+        token.isActive = dbUser?.isActive ?? true;
+        token.permissions = dbUser?.staffPermissions.map((e) => e.permission) ?? [];
         token.lastValidated = Math.floor(Date.now() / 1000);
       } else if (token.id) {
         // Subsequent requests: check if revalidation is needed

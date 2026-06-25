@@ -30,6 +30,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
   const toggleFavoriteMutation = useToggleFavorite();
 
   async function removeFavorite(productId: string) {
+    const previousProducts = products;
     setProducts((prev) => prev.filter((p) => p.id !== productId));
     try {
       await toggleFavoriteMutation.mutateAsync({
@@ -38,7 +39,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
       });
       showToast("Removed from favorites", "success");
     } catch {
-      setProducts(initialProducts);
+      setProducts(previousProducts);
       showToast("Failed to remove", "error");
     }
   }

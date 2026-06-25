@@ -66,7 +66,7 @@ export function useAdminOrders(initialOrders: AdminOrder[]) {
       return data.orders.map(normalizeOrder);
     },
     initialData: initialOrders,
-    refetchInterval: 6000,
+    refetchInterval: 15000,
     refetchIntervalInBackground: false,
   });
 }

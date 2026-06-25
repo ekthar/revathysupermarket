@@ -1,0 +1,35 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Delivery live tracking map using MapLibre GL JS with OpenFreeMap vector tiles, custom brand-colored map style, custom SVG markers, smooth marker animation, and live polling integration.",
+  "status": "in_progress",
+  "steps": [
+    "Install maplibre-gl package: npm install maplibre-gl. This provides the MapLibre GL JS library for vector tile rendering.",
+    "Add a 'heading' field to the DeliveryLocationEvent model in prisma/schema.prisma (Float? optional). Update the deliveryLocationSchema in lib/validations.ts to accept an optional heading field. Update app/api/delivery/location/route.ts to store the heading when provided. Run npx prisma generate.",
+    "Create a custom MapLibre style JSON file at public/map-style.json. This should be based on OpenFreeMap's OpenMapTiles schema but with custom colors matching the app's brand: neutral-50/100 for land background, primary/secondary colors for primary roads, muted blues for water, light neutral for buildings. Use the tile source URL: https://tiles.openfreemap.org/planet/{z}/{x}/{y}.pbf (vector tiles). Set glyphs to https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf and sprite to a local sprite or omit (use simple symbol layers). Keep it minimal/clean - hide POI labels except major ones, simplify building outlines, use the app's neutral color palette.",
+    "Create the map component at components/tracking/delivery-map.tsx as a client component loaded with dynamic import (ssr: false). It should: initialize MapLibre GL with the custom style, accept props for deliveryPartnerLocation (lat/lng/heading), customerLocation (lat/lng), storeLocation (lat/lng). Render three custom markers using SVG: (1) delivery partner - a directional arrow/scooter that rotates based on heading, (2) customer address - a styled pin marker, (3) store location - a store icon marker. All SVGs should use the app's brand colors (primary green, secondary colors).",
+    "Implement smooth marker animation: when the delivery partner's position updates, use requestAnimationFrame to ease the marker from old position to new position over ~1 second. Store the previous position in a ref and interpolate using linear interpolation (lerp). This prevents the marker from jumping abruptly between poll updates.",
+    "Add a GET endpoint at app/api/orders/[id]/tracking/route.ts (or reuse the existing stream endpoint) that returns the latest delivery partner location, customer destination coordinates, and store coordinates. This can query the DeliveryLocationEvent table for the most recent event for the order, and return storeLatitude/storeLongitude from settings.",
+    "Replace the ios-map-placeholder div in components/tracking/live-order-tracking.tsx with the new DeliveryMap component. Use dynamic import: const DeliveryMap = dynamic(() => import('./delivery-map'), { ssr: false }). Pass the current data.deliveryPartnerLocation, data.destination (customer location), and store coordinates. The existing SSE/polling already updates deliveryPartnerLocation, so the map will automatically re-render.",
+    "Style the map container: full-width, rounded corners (rounded-2xl), height of 250-300px. Add minimal custom zoom controls (+ / - buttons) styled with the app's design system (rounded, white bg, shadow) positioned inside the map. Hide default MapLibre navigation controls.",
+    "Import maplibre-gl CSS in the map component or in the global styles to ensure the map renders correctly. Add 'import maplibre-gl/dist/maplibre-gl.css' in the map component file.",
+    "Ensure zero external API keys are introduced. The tile source (tiles.openfreemap.org) is free and keyless. No geocoding API is called in the live tracking loop - coordinates are already stored in the DB from checkout time."
+  ],
+  "acceptance_criteria": [
+    "MapLibre GL JS renders a vector tile map with custom branded colors",
+    "Three custom SVG markers show: delivery partner (rotates with heading), customer pin, store pin",
+    "Marker position updates smoothly with animation (no jumping)",
+    "Map is loaded via dynamic import with ssr: false (no SSR errors)",
+    "No API keys or billing-related services are introduced",
+    "Existing live tracking functionality continues to work (status updates, ETA, OTP display)",
+    "Type check passes: npx tsc --noEmit --skipLibCheck",
+    "The tile source is OpenFreeMap (tiles.openfreemap.org)"
+  ],
+  "verification": [
+    "npx prisma generate",
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

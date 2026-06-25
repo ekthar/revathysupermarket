@@ -710,6 +710,7 @@ model DeliveryLocationEvent {
   deliveryPartnerId String
   latitude          Decimal  @db.Decimal(9, 6)
   longitude         Decimal  @db.Decimal(9, 6)
+  heading           Float?
   order             Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   deliveryPartner   User     @relation(fields: [deliveryPartnerId], references: [id], onDelete: Cascade)
   createdAt         DateTime @default(now())

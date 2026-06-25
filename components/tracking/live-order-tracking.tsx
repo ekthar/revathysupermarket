@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
 import {
   ArrowLeft,
   Phone,
@@ -13,7 +14,19 @@ import {
   ShoppingBag,
   CircleDot,
 } from "lucide-react";
-import { SITE } from "@/lib/constants";
+import { SITE, STORE_COORDINATES } from "@/lib/constants";
+
+const DeliveryMap = dynamic(
+  () => import("./delivery-map").then((m) => ({ default: m.DeliveryMap })),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[280px] w-full items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+        <span className="text-sm text-neutral-400">Loading map...</span>
+      </div>
+    ),
+  }
+);
 
 type TrackingData = {
   id: string;
@@ -291,35 +304,46 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.3, type: "spring", stiffness: 240, damping: 22 }}
-          className="relative ios-map-placeholder flex items-center justify-center"
         >
-          {/* Delivery icon overlay */}
-          <motion.div
-            animate={{ y: [0, -8, 0] }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            className="flex flex-col items-center gap-2"
-          >
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary-500 shadow-lg shadow-secondary-500/40">
-              <Truck className="h-8 w-8 text-white" />
-            </div>
-            {data.deliveryPartnerLocation && (
+          {(data.deliveryPartnerLocation ||
+            ["OUT_FOR_DELIVERY", "ARRIVING", "READY_FOR_DELIVERY"].includes(data.status)) ? (
+            <DeliveryMap
+              deliveryPartnerLocation={data.deliveryPartnerLocation}
+              customerLocation={data.destination}
+              storeLocation={{ latitude: STORE_COORDINATES.lat, longitude: STORE_COORDINATES.lng }}
+              className="shadow-md"
+            />
+          ) : (
+            <div className="relative ios-map-placeholder flex items-center justify-center">
+              {/* Delivery icon overlay */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                className="rounded-full bg-neutral-900/80 px-3 py-1 text-micro font-bold text-white dark:bg-white/90 dark:text-neutral-900"
+                animate={{ y: [0, -8, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                className="flex flex-col items-center gap-2"
               >
-                {distanceKm(
-                  data.deliveryPartnerLocation,
-                  data.destination
-                ).toFixed(1)}{" "}
-                km away
+                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary-500 shadow-lg shadow-secondary-500/40">
+                  <Truck className="h-8 w-8 text-white" />
+                </div>
+                {data.deliveryPartnerLocation && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="rounded-full bg-neutral-900/80 px-3 py-1 text-micro font-bold text-white dark:bg-white/90 dark:text-neutral-900"
+                  >
+                    {distanceKm(
+                      data.deliveryPartnerLocation,
+                      data.destination
+                    ).toFixed(1)}{" "}
+                    km away
+                  </motion.div>
+                )}
               </motion.div>
-            )}
-          </motion.div>
-          {/* Pulse rings around the delivery icon */}
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <div className="h-24 w-24 rounded-full border-2 border-secondary-400/30 animate-ping" style={{ animationDuration: "2s" }} />
-          </div>
+              {/* Pulse rings around the delivery icon */}
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <div className="h-24 w-24 rounded-full border-2 border-secondary-400/30 animate-ping" style={{ animationDuration: "2s" }} />
+              </div>
+            </div>
+          )}
         </motion.div>
 
         {/* ETA countdown section */}

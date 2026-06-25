@@ -140,7 +140,8 @@ export const deliveryAssignmentSchema = z.object({
 
 export const deliveryLocationSchema = z.object({
   latitude: z.coerce.number(),
-  longitude: z.coerce.number()
+  longitude: z.coerce.number(),
+  heading: z.coerce.number().optional()
 });
 
 export const deliveryActionSchema = z.object({

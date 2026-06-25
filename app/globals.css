@@ -31,6 +31,12 @@
   --z-toast: 80;
   --z-dialog: 90;
   --scroll-offset: calc(var(--mobile-header-height) + 60px);
+
+  /* Brand color tokens (RGB channels for composability) */
+  --color-primary: 5 5 5;
+  --color-secondary: 34 197 94;
+  --color-success: 22 163 74;
+  --shadow-color: 5 5 5;
 }
 
 .dark {
@@ -107,7 +113,7 @@ body {
   min-height: 100dvh;
   overflow-x: clip;
   background:
-    radial-gradient(circle at top left, rgba(34, 197, 94, 0.08), transparent 28rem),
+    radial-gradient(circle at top left, rgba(var(--color-secondary), 0.08), transparent 28rem),
     hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: var(--font-sans), -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
@@ -116,7 +122,7 @@ body {
 
 .dark body {
   background:
-    radial-gradient(circle at top left, rgba(34, 197, 94, 0.04), transparent 28rem),
+    radial-gradient(circle at top left, rgba(var(--color-secondary), 0.04), transparent 28rem),
     hsl(var(--background));
 }
 
@@ -234,7 +240,7 @@ html[data-keyboard-open] .pb-safe {
 
 /* Premium card shadow */
 .card-shadow {
-  box-shadow: 0 12px 35px -24px rgba(15, 23, 42, 0.35);
+  box-shadow: 0 12px 35px -24px rgba(var(--shadow-color), 0.35);
 }
 .dark .card-shadow {
   box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
@@ -242,7 +248,7 @@ html[data-keyboard-open] .pb-safe {
 }
 
 .card-shadow-lg {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.04), 0 8px 24px rgba(0,0,0,0.06);
+  box-shadow: 0 2px 8px rgba(var(--shadow-color), 0.04), 0 8px 24px rgba(var(--shadow-color), 0.06);
 }
 .dark .card-shadow-lg {
   box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
@@ -251,8 +257,8 @@ html[data-keyboard-open] .pb-safe {
 
 /* Elevated card - used for product cards and modals */
 .card-elevated {
-  box-shadow: 0 18px 40px -30px rgba(15, 23, 42, 0.45);
-  border: 1px solid rgba(15,23,42,0.04);
+  box-shadow: 0 18px 40px -30px rgba(var(--shadow-color), 0.45);
+  border: 1px solid rgba(var(--shadow-color), 0.04);
 }
 .dark .card-elevated {
   box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 15px -3px rgba(0,0,0,0.3);

@@ -1,0 +1,35 @@
+{
+  "id": "FEAT-002",
+  "type": "refactor",
+  "description": "Apply the new design tokens across ALL 189 TSX component files. Replace arbitrary text sizes with the 6-token type scale, replace arbitrary border-radius with token scale, replace arbitrary shadows with elevation tokens, replace ad-hoc colors with the proper color scale tokens, and ensure consistent spacing using Tailwind 4px grid. This is the bulk refactoring pass.",
+  "status": "pending",
+  "steps": [
+    "TYPOGRAPHY PASS: Replace all arbitrary text sizes across all components. Mapping: text-[7px]/text-[8px]/text-[9px]/text-[10px] -> text-micro, text-[11px]/text-[12px]/text-xs -> text-caption, text-[13px]/text-[14px]/text-sm -> text-body, text-[15px]/text-[16px]/text-base/text-[17px]/text-[18px]/text-lg -> text-title, text-[20px]/text-xl/text-[22px]/text-2xl -> text-heading, text-3xl/text-4xl/text-[32px] -> text-display. Adjust font-weight to match the token's default where sensible, but keep explicit weights where semantically needed (e.g. font-bold for emphasis within body text).",
+    "BORDER-RADIUS PASS: Replace all arbitrary rounded values across all components. Mapping: rounded-[1.15rem]/rounded-[1.25rem]/rounded-xl -> rounded-lg (20px), rounded-[1.35rem]/rounded-[1.5rem]/rounded-2xl/rounded-[1.6rem]/rounded-[1.75rem]/rounded-[1.85rem]/rounded-[2rem]/rounded-[2.25rem]/rounded-3xl -> rounded-xl (28px), rounded-lg(14px old) -> rounded-md (12px). Keep rounded-full as-is for pills/avatars.",
+    "SHADOW PASS: Replace all arbitrary shadow-[...] classes with elevation tokens. Mapping: shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] and similar heavy shadows -> shadow-elevation-3, shadow-[0_18px_45px_-32px_rgba(15,23,42,0.45)] and lighter variants -> shadow-elevation-2, shadow-sm/shadow-md -> shadow-elevation-1. Also replace shadows in inline styles if any. Update the button.tsx shadow variants to use the new tokens.",
+    "COLOR PASS - GREENS: Replace scattered green color usage with proper secondary scale tokens. bg-emerald-500/bg-emerald-600/bg-green-600 (decorative) -> bg-secondary-500/bg-secondary-600, text-emerald-600/text-emerald-500/text-green-600 (decorative accent) -> text-secondary-600, bg-emerald-50/bg-green-50 (backgrounds) -> bg-secondary-50. For STATUS indicators only (order confirmed, success messages), use semantic: bg-success-100/text-success-700.",
+    "COLOR PASS - NEUTRALS: Replace direct slate-* usage with the new neutral scale where applicable. text-slate-900 -> text-neutral-900, text-slate-800 -> text-neutral-800, text-slate-600 -> text-neutral-600, text-slate-500 -> text-neutral-500, text-slate-400 -> text-neutral-400, bg-slate-50 -> bg-neutral-50, bg-slate-100 -> bg-neutral-100, border-slate-100/200 -> border-neutral-200. Note: Only do this for customer-facing pages (app/page.tsx, components/product-card.tsx, components/cart/*, components/home/*, components/header.tsx, components/mobile-bottom-nav.tsx, components/account/*, components/auth/*, app/checkout/*, app/products/*, app/cart/*, app/account/*). Leave admin and delivery panels using slate directly for now to limit blast radius.",
+    "COLOR PASS - LIME: Replace lime.fresh (#A7D129) decorative usage in admin-charts.tsx and any non-promotional contexts with secondary color. Keep lime only for explicit sale/promotional accent if any such context exists.",
+    "SPACING CLEANUP: Find and replace the few arbitrary spacing values: p-[90px] -> p-24 (closest 4px multiple), p-[70px] -> p-16 or p-20, p-[56px] -> p-14, gap-[2px] -> gap-0.5. These are rare (only 4-5 instances).",
+    "LETTER-SPACING CLEANUP: Replace arbitrary tracking values with standard Tailwind tokens. tracking-[0.28em]/tracking-[0.25em]/tracking-[0.3em] -> tracking-widest, tracking-[0.18em]/tracking-[0.22em] -> tracking-wider, tracking-[-0.06em]/tracking-[-0.04em] -> tracking-tight. Remove tracking-header custom token if unused after this.",
+    "VISUAL NOISE REDUCTION: In product-card.tsx, remove the ring-1 ring-black/[0.03] (redundant with shadow). In cart-page-client.tsx cards, the shadow is sufficient - remove any border that doubles the visual separation. Audit and remove duplicate visual signals (shadow + border + bg change on same element) in home components."
+  ],
+  "acceptance_criteria": [
+    "Zero arbitrary text-[Npx] values remain in customer-facing components (can remain in admin for now if needed)",
+    "Zero arbitrary rounded-[Nrem] values remain anywhere in the codebase",
+    "Zero arbitrary shadow-[...] inline values remain anywhere in the codebase",
+    "All customer-facing components use the neutral color scale instead of direct slate-*",
+    "Secondary green color usage is consistent (decorative=secondary-*, status=success-*)",
+    "npx tsc --noEmit --skipLibCheck passes",
+    "npx next lint passes"
+  ],
+  "verification": [
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint",
+    "grep -rn 'text-\\[' --include='*.tsx' components/ app/ | grep -v node_modules | grep -v '.next' | wc -l should be significantly reduced",
+    "grep -rn 'rounded-\\[' --include='*.tsx' components/ app/ | grep -v node_modules | grep -v '.next' | wc -l should be 0",
+    "grep -rn 'shadow-\\[' --include='*.tsx' components/ app/ | grep -v node_modules | grep -v '.next' | wc -l should be 0"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

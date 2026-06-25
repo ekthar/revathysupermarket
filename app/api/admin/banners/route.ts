@@ -18,6 +18,7 @@ export async function GET() {
   const session = await auth();
   const unauthorized = requireProductStaff(session);
   if (unauthorized) return unauthorized;
+  // Banners are admin-managed, typically <20 rows - no take limit needed
   return NextResponse.json({ banners: await prisma.banner.findMany({ orderBy: { createdAt: "desc" } }) });
 }
 

@@ -28,6 +28,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: "No approval is pending for this order." }, { status: 400 });
   }
 
+  // Order-scoped query - bounded by single order's edit logs
   const pendingLogs = await prisma.orderEditLog.findMany({
     where: { orderId: id, requiresCustomerApproval: true, customerDecision: null },
     orderBy: { createdAt: "desc" }
@@ -49,6 +50,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     }
   }
 
+  // Order-scoped query - bounded by single order's items
   const refreshedItems = await prisma.orderItem.findMany({ where: { orderId: id } });
   const total = calculateOrderSubtotal(refreshedItems.map((item) => ({ price: Number(item.price), quantity: item.quantity })));
 

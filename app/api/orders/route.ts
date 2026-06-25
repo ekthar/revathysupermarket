@@ -286,6 +286,7 @@ export async function GET() {
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     const orders = await prisma.order.findMany({
       where: isStaffRole(session.user.role) ? {} : { userId: session.user.id },
+      take: 50,
       select: {
         id: true,
         orderNumber: true,

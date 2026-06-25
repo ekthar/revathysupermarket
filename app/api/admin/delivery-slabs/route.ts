@@ -12,6 +12,7 @@ export async function GET() {
   const result = await requirePermission("pricing.manage");
   if ("error" in result) return result.error;
 
+  // Delivery fee slabs are admin-managed, typically <10 rows - no take limit needed
   const slabs = await prisma.deliveryFeeSlab.findMany({
     where: { isActive: true },
     orderBy: { minKm: "asc" },

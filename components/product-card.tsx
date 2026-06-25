@@ -90,7 +90,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white transition disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <Plus className="h-3 w-3" />
                 Add to Cart
@@ -186,7 +186,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white shadow-elevation-3 transition disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 shadow-elevation-3 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <Plus className="h-4 w-4" />
               </motion.button>
@@ -223,7 +223,7 @@ function QuantityStepper({
           type="button"
           onClick={onIncrement}
           whileTap={{ scale: 1.3 }}
-          className="flex-1 w-full flex items-center justify-center text-white"
+          className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
           <Plus className="h-3 w-3" />
         </motion.button>
@@ -240,7 +240,7 @@ function QuantityStepper({
           type="button"
           onClick={onDecrement}
           whileTap={{ scale: 1.3 }}
-          className="flex-1 w-full flex items-center justify-center text-white"
+          className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
           <Minus className="h-3 w-3" />
         </motion.button>
@@ -266,7 +266,7 @@ function QuantityStepper({
         type="button"
         onClick={onDecrement}
         whileTap={{ scale: 1.4 }}
-        className="w-7 h-full flex items-center justify-center text-white"
+        className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
         <Minus className="h-3 w-3" />
       </motion.button>
@@ -283,7 +283,7 @@ function QuantityStepper({
         type="button"
         onClick={onIncrement}
         whileTap={{ scale: 1.4 }}
-        className="w-7 h-full flex items-center justify-center text-white"
+        className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
         <Plus className="h-3 w-3" />
       </motion.button>

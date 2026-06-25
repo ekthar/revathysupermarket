@@ -391,7 +391,7 @@ export function CheckoutForm({
         className="flex items-center justify-between py-3 md:hidden"
       >
         <div className="flex items-center gap-3">
-          <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 press">
+          <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
             <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
           </Link>
           <h1 className="text-lg font-black text-neutral-900 dark:text-white">Checkout</h1>
@@ -594,7 +594,7 @@ export function CheckoutForm({
                 <textarea
                   value={form.notes}
                   onChange={(event) => update("notes", event.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-3 text-body text-neutral-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 transition-all"
+                  className="mt-1.5 w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-3 text-body text-neutral-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
                   placeholder="Gate color, preferred time..."
                 />
               </label>
@@ -742,7 +742,7 @@ function CheckoutField({
         inputMode={inputMode}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full h-11 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3.5 text-body text-neutral-900 dark:text-white outline-none focus:border-primary/40 focus:bg-white dark:focus:bg-neutral-700 transition-all"
+        className="mt-1.5 w-full h-11 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3.5 text-body text-neutral-900 dark:text-white outline-none focus:border-primary/40 focus:bg-white dark:focus:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
       />
     </label>
   );

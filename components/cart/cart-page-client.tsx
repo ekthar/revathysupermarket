@@ -114,7 +114,7 @@ export function CartPageClient() {
         </div>
         <h1 className="mt-5 text-xl font-bold text-neutral-900 dark:text-white">Your cart is empty</h1>
         <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Add items from the store to get started</p>
-        <Link href="/products" className="mt-6 h-12 px-8 inline-flex items-center justify-center rounded-full bg-neutral-900 dark:bg-white dark:text-neutral-900 text-sm font-bold text-white press shadow-lg">
+        <Link href="/products" className="mt-6 h-12 px-8 inline-flex items-center justify-center rounded-full bg-neutral-900 dark:bg-white dark:text-neutral-900 text-sm font-bold text-white hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-[0.98] transition-all press shadow-lg">
           Browse Products
         </Link>
       </main>
@@ -127,7 +127,7 @@ export function CartPageClient() {
       <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/products" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 press">
+            <Link href="/products" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors press">
               <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
             </Link>
             <div>
@@ -178,7 +178,7 @@ export function CartPageClient() {
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-7 h-full flex items-center justify-center text-white press"
+                      className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
@@ -186,7 +186,7 @@ export function CartPageClient() {
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-7 h-full flex items-center justify-center text-white press"
+                      className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                     >
                       <Plus className="h-3 w-3" />
                     </button>

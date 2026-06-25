@@ -144,8 +144,8 @@ export function Header({
         <div className="flex h-14 items-center justify-between px-4">
           {/* Back button on inner pages OR store branding on home */}
           {isInnerPage ? (
-            <button onClick={() => router.push(parentPath)} className="flex items-center gap-2 min-w-0 press">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800">
+            <button onClick={() => router.push(parentPath)} className="flex items-center gap-2 min-w-0 press group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 transition-colors group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700">
                 <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
               </div>
               <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300 truncate">Back</span>
@@ -170,7 +170,7 @@ export function Header({
 
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
-            <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 press">
+            <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
               <Bell className="h-[17px] w-[17px] text-neutral-600 dark:text-neutral-300" />
             </Link>
           </div>

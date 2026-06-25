@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 function SkeletonPulse({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-slate-100 dark:bg-slate-800 ${className || ""}`}>
+    <div className={`relative overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-800 ${className || ""}`}>
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
     </div>
   );
@@ -12,7 +12,7 @@ function SkeletonPulse({ className }: { className?: string }) {
 
 export function ProductSkeletonCard() {
   return (
-    <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+    <div className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-100 dark:border-neutral-800">
       <SkeletonPulse className="aspect-[4/3.2] rounded-none" />
       <div className="p-3 space-y-2.5">
         <SkeletonPulse className="h-3 w-3/4 rounded-full" />
@@ -54,7 +54,7 @@ export function ProductScrollSkeleton({ count = 5 }: { count?: number }) {
     <div className="flex gap-3 overflow-hidden px-4">
       {Array.from({ length: count }).map((_, i) => (
         <div key={i} className="w-[155px] shrink-0 sm:w-[170px]">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl overflow-hidden border border-slate-100 dark:border-slate-800">
+          <div className="bg-white dark:bg-neutral-900 rounded-2xl overflow-hidden border border-neutral-100 dark:border-neutral-800">
             <SkeletonPulse className="aspect-square rounded-none" />
             <div className="p-2.5 space-y-2">
               <SkeletonPulse className="h-2.5 w-3/4 rounded-full" />
@@ -74,7 +74,7 @@ export function ProductScrollSkeleton({ count = 5 }: { count?: number }) {
 // Order card skeleton
 export function OrderSkeletonCard() {
   return (
-    <div className="rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-4">
+    <div className="rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4">
       <div className="flex items-center gap-3">
         <SkeletonPulse className="h-10 w-10 rounded-xl" />
         <div className="flex-1 space-y-2">

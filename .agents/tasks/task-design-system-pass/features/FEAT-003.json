@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "refactor",
   "description": "Final polish pass: ensure all interactive elements have proper hover/focus/active states, verify loading states use skeleton patterns, confirm imagery guidance (saturated color only in product images/banners, not structural UI), and add any missing state styles. Fix any remaining globals.css utility classes to use the new token system.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Audit all button/link/interactive elements in customer-facing components for missing hover/focus/active states. The button.tsx CVA already handles this well. Check: header.tsx action buttons, mobile-bottom-nav.tsx tabs, product-card.tsx add button, cart-page-client.tsx stepper buttons, checkout-form.tsx inputs/buttons. Add hover:bg-neutral-100 / focus-visible:ring-2 ring-primary / active:scale-[0.98] where missing.",
     "Verify loading states: Check app/loading.tsx, app/account/loading.tsx, app/admin/loading.tsx, components/ui/skeleton-loader.tsx, components/ui/product-skeleton-grid.tsx all use consistent skeleton patterns with neutral-100/neutral-200 pulsing. No blank flash should occur.",

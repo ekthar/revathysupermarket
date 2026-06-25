@@ -351,8 +351,10 @@ String? _globalRedirect(AuthState authState, GoRouterState state) {
       return AppRoutes.splash;
     },
     unauthenticated: () {
-      // Unauthenticated users can only access auth routes or splash
-      if (isAuthRoute || isSplash) return null;
+      // Unauthenticated users should be sent to login.
+      // Redirect away from splash so the app doesn't get stuck there.
+      if (isSplash) return AppRoutes.login;
+      if (isAuthRoute) return null;
       return AppRoutes.login;
     },
     authenticated: (user) {

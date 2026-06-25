@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Redesign Splash, Login, OTP screens with Google Auth, animations, and premium branding",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Rewrite the _SplashScreen in mobile/lib/core/router/app_router.dart - animated logo with scale + fade-in animation (AnimationController + CurvedAnimation), emerald gradient background, app name with Manrope font, pulsing loading indicator",
     "Completely redesign mobile/lib/features/auth/presentation/login_screen.dart with: gradient background (emerald to dark), app logo/branding at top with animation, 'Sign in with Google' button (white button with Google icon, elevated card style), divider with 'or' text, phone number OTP section (existing flow preserved), smooth transitions between elements, terms of service text at bottom",
@@ -27,5 +27,5 @@
     "Verify otp_screen.dart has animated pin input"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All steps implemented successfully. Splash screen uses TickerProviderStateMixin with AnimationController for logo scale+fade and pulsing loader. Login screen has Google sign-in button above OTP section, onSendOtp callback preserved for router compatibility, added optional onGoogleSignIn callback. OTP screen uses individual TextField widgets per digit with scale animation on focus (no RawKeyboardListener - handled backspace via onChanged empty value). Google auth service uses simulated token (native platform config needed for real google_sign_in). Auth repo loginWithGoogle posts to /auth/google. Updated login_screen_test.dart assertions for new branding text. All screens respect dark mode with isDark checks."
 }

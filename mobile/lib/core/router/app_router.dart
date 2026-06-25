@@ -3,6 +3,28 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/domain/user_model.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/otp_screen.dart';
+import '../../features/products/presentation/home_screen.dart';
+import '../../features/cart/presentation/cart_screen.dart';
+import '../../features/checkout/presentation/checkout_screen.dart';
+import '../../features/orders/presentation/orders_screen.dart';
+import '../../features/account/presentation/account_screen.dart';
+import '../../features/account/presentation/wallet_screen.dart';
+import '../../features/account/presentation/loyalty_screen.dart';
+import '../../features/account/presentation/favorites_screen.dart';
+import '../../features/account/presentation/addresses_screen.dart';
+import '../../features/account/presentation/notifications_screen.dart';
+import '../../features/account/presentation/settings_screen.dart';
+import '../../features/support/presentation/support_screen.dart';
+import '../../features/delivery/presentation/delivery_dashboard_screen.dart';
+import '../../features/delivery/presentation/delivery_order_detail_screen.dart';
+import '../../features/delivery/presentation/alert_setup_screen.dart';
+import '../../features/delivery/presentation/pickup_confirmation_screen.dart';
+import '../../features/delivery/presentation/damage_report_screen.dart';
+import '../../features/delivery/presentation/collection_screen.dart';
+import '../../features/delivery/presentation/completion_screen.dart';
+import '../network/api_client.dart';
 
 /// Route path constants for the application.
 abstract class AppRoutes {
@@ -38,8 +60,13 @@ abstract class AppRoutes {
 }
 
 /// Creates the application router with role-based guards.
+///
+/// [apiClient] is required for screens that interact with the backend.
+/// If null, delivery screens will show a placeholder until the client
+/// is available (during auth loading state).
 GoRouter createAppRouter({
   required AuthState authState,
+  ApiClient? apiClient,
 }) {
   return GoRouter(
     initialLocation: AppRoutes.splash,
@@ -48,136 +75,261 @@ GoRouter createAppRouter({
     routes: [
       GoRoute(
         path: AppRoutes.splash,
-        builder: (context, state) => const _PlaceholderPage(title: 'Splash'),
+        builder: (context, state) => const _SplashScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => const _PlaceholderPage(title: 'Login'),
+        builder: (context, state) => LoginScreen(
+          onSendOtp: (phone) {
+            context.push(AppRoutes.otp, extra: phone);
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.otp,
-        builder: (context, state) => const _PlaceholderPage(title: 'OTP'),
+        builder: (context, state) {
+          final phone = state.extra as String? ?? '';
+          return OtpScreen(
+            phone: phone,
+            onVerify: (otp) {
+              // After OTP verification, auth state change will
+              // trigger redirect to the appropriate home screen.
+            },
+          );
+        },
       ),
 
       // Customer routes
       GoRoute(
         path: AppRoutes.customerHome,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Customer Home'),
+        builder: (context, state) => HomeScreen(
+          onCategoryTap: (category) {
+            // Navigate to category products view
+          },
+          onProductTap: (product) {
+            // Navigate to product detail
+          },
+          onCartTap: () => context.push(AppRoutes.cart),
+          onSearchTap: () {
+            // Open search
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.cart,
-        builder: (context, state) => const _PlaceholderPage(title: 'Cart'),
+        builder: (context, state) => CartScreen(
+          onCheckout: () => context.push(AppRoutes.checkout),
+        ),
       ),
       GoRoute(
         path: AppRoutes.checkout,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Checkout'),
+        builder: (context, state) => CheckoutScreen(
+          onPlaceOrder: (data) {
+            context.go(AppRoutes.orders);
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.orders,
-        builder: (context, state) => const _PlaceholderPage(title: 'Orders'),
+        builder: (context, state) => OrdersScreen(
+          onOrderTap: (order) {
+            context.push(
+              AppRoutes.orderDetail.replaceFirst(':id', order.id),
+            );
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.orderDetail,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Order $id');
+          return _OrderDetailPage(orderId: id);
         },
       ),
       GoRoute(
         path: AppRoutes.orderTracking,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Tracking $id');
+          return _OrderTrackingPage(orderId: id);
         },
       ),
       GoRoute(
         path: AppRoutes.account,
-        builder: (context, state) => const _PlaceholderPage(title: 'Account'),
+        builder: (context, state) => AccountScreen(
+          onWalletTap: () => context.push(AppRoutes.wallet),
+          onLoyaltyTap: () => context.push(AppRoutes.loyalty),
+          onFavoritesTap: () => context.push(AppRoutes.favorites),
+          onAddressesTap: () => context.push(AppRoutes.addresses),
+          onNotificationsTap: () => context.push(AppRoutes.notifications),
+          onSettingsTap: () => context.push(AppRoutes.settings),
+          onSupportTap: () => context.push(AppRoutes.support),
+        ),
       ),
       GoRoute(
         path: AppRoutes.wallet,
-        builder: (context, state) => const _PlaceholderPage(title: 'Wallet'),
+        builder: (context, state) => const WalletScreen(),
       ),
       GoRoute(
         path: AppRoutes.loyalty,
-        builder: (context, state) => const _PlaceholderPage(title: 'Loyalty'),
+        builder: (context, state) => const LoyaltyScreen(),
       ),
       GoRoute(
         path: AppRoutes.favorites,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Favorites'),
+        builder: (context, state) => const FavoritesScreen(),
       ),
       GoRoute(
         path: AppRoutes.addresses,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Addresses'),
+        builder: (context, state) => const AddressesScreen(),
       ),
       GoRoute(
         path: AppRoutes.notifications,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Notifications'),
+        builder: (context, state) => const NotificationsScreen(),
       ),
       GoRoute(
         path: AppRoutes.settings,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Settings'),
+        builder: (context, state) => const SettingsScreen(),
       ),
       GoRoute(
         path: AppRoutes.support,
-        builder: (context, state) => const _PlaceholderPage(title: 'Support'),
+        builder: (context, state) => SupportScreen(
+          onNewTicket: () {
+            // Navigate to new ticket screen
+          },
+        ),
       ),
 
       // Delivery partner routes
       GoRoute(
         path: AppRoutes.deliveryLogin,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Delivery Login'),
+        builder: (context, state) => LoginScreen(
+          onSendOtp: (phone) {
+            context.push(AppRoutes.otp, extra: phone);
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.deliveryDashboard,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Delivery Dashboard'),
+        builder: (context, state) {
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return DeliveryDashboardScreen(
+            apiClient: apiClient,
+            onOrderTap: (orderId) {
+              context.push(
+                AppRoutes.deliveryOrderDetail.replaceFirst(':id', orderId),
+              );
+            },
+            onAlertSetupTap: () {
+              context.push(AppRoutes.deliveryAlertSetup);
+            },
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.deliveryOrderDetail,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Delivery Order $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return DeliveryOrderDetailScreen(
+            orderId: id,
+            apiClient: apiClient,
+            onPickup: () {
+              context.push(
+                AppRoutes.deliveryPickup.replaceFirst(':id', id),
+              );
+            },
+            onDamageReport: () {
+              context.push(
+                AppRoutes.deliveryDamage.replaceFirst(':id', id),
+              );
+            },
+            onCollection: () {
+              context.push(
+                AppRoutes.deliveryCollection.replaceFirst(':id', id),
+              );
+            },
+            onComplete: () {
+              context.push(
+                AppRoutes.deliveryCompletion.replaceFirst(':id', id),
+              );
+            },
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryAlertSetup,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Alert Setup'),
+        builder: (context, state) => AlertSetupScreen(
+          onSetupComplete: () {
+            context.go(AppRoutes.deliveryDashboard);
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.deliveryPickup,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Pickup $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return PickupConfirmationScreen(
+            orderId: id,
+            orderNumber: state.extra as String? ?? id,
+            apiClient: apiClient,
+            onConfirmed: () => context.pop(),
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryDamage,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Damage Report $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          final items =
+              state.extra as List<Map<String, dynamic>>? ?? const [];
+          return DamageReportScreen(
+            orderId: id,
+            items: items,
+            apiClient: apiClient,
+            onReported: () => context.pop(),
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryCollection,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Collection $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          final expectedAmount = state.extra as double?;
+          return CollectionScreen(
+            orderId: id,
+            apiClient: apiClient,
+            onCollected: () => context.pop(),
+            expectedAmount: expectedAmount,
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryCompletion,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Complete $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return CompletionScreen(
+            orderId: id,
+            orderNumber: state.extra as String? ?? id,
+            apiClient: apiClient,
+            onCompleted: (ref) {
+              context.go(AppRoutes.deliveryDashboard);
+            },
+          );
         },
       ),
     ],
@@ -242,20 +394,126 @@ bool _isCustomerRoute(String location) {
   return location.startsWith('/customer');
 }
 
-/// Placeholder page used during development while real pages are being built.
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title});
-
-  final String title;
+/// Splash screen that shows a loading indicator while auth state is determined.
+///
+/// The router redirect handles navigation once auth state resolves,
+/// so this screen simply shows a branded loading state.
+class _SplashScreen extends StatelessWidget {
+  const _SplashScreen();
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
       body: Center(
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headlineMedium,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.storefront,
+              size: 80,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'MSM Supermarket',
+              style: theme.textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 32),
+            const CircularProgressIndicator(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Simple loading page shown when required dependencies are not yet available.
+class _LoadingPage extends StatelessWidget {
+  const _LoadingPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
+      body: Center(
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+/// Wrapper page for order detail that handles loading the order by ID.
+///
+/// In a full implementation this would fetch the order from the repository.
+/// Currently displays order ID with a placeholder for data loading.
+class _OrderDetailPage extends StatelessWidget {
+  const _OrderDetailPage({required this.orderId});
+
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Order #$orderId'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 16),
+            Text(
+              'Loading order details...',
+              style: theme.textTheme.bodyLarge,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Wrapper page for order tracking that handles real-time location display.
+///
+/// In a full implementation this would poll for delivery partner location
+/// and display it on a map.
+class _OrderTrackingPage extends StatelessWidget {
+  const _OrderTrackingPage({required this.orderId});
+
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Tracking #$orderId'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.local_shipping,
+              size: 64,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Live tracking',
+              style: theme.textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Order #$orderId',
+              style: theme.textTheme.bodyLarge,
+            ),
+          ],
         ),
       ),
     );

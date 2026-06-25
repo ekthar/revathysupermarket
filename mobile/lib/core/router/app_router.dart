@@ -1,3 +1,4 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -6,6 +7,7 @@ import '../../features/auth/domain/user_model.dart';
 import '../../features/auth/presentation/login_screen.dart';
 import '../../features/auth/presentation/otp_screen.dart';
 import '../../features/products/presentation/home_screen.dart';
+import '../../features/products/presentation/category_screen.dart';
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/orders/presentation/orders_screen.dart';
@@ -25,6 +27,7 @@ import '../../features/delivery/presentation/damage_report_screen.dart';
 import '../../features/delivery/presentation/collection_screen.dart';
 import '../../features/delivery/presentation/completion_screen.dart';
 import '../network/api_client.dart';
+import '../widgets/bottom_nav_shell.dart';
 
 /// Route path constants for the application.
 abstract class AppRoutes {
@@ -34,6 +37,7 @@ abstract class AppRoutes {
 
   // Customer routes
   static const customerHome = '/customer/home';
+  static const categories = '/customer/categories';
   static const cart = '/customer/cart';
   static const checkout = '/customer/checkout';
   static const orders = '/customer/orders';
@@ -59,7 +63,11 @@ abstract class AppRoutes {
   static const deliveryCompletion = '/delivery/orders/:id/complete';
 }
 
-/// Creates the application router with role-based guards.
+/// Navigator keys for nested navigation in ShellRoute.
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+final _shellNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Creates the application router with role-based guards and bottom nav shell.
 ///
 /// [apiClient] is required for screens that interact with the backend.
 /// If null, delivery screens will show a placeholder until the client
@@ -69,6 +77,7 @@ GoRouter createAppRouter({
   ApiClient? apiClient,
 }) {
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
     redirect: (context, state) => _globalRedirect(authState, state),
@@ -79,126 +88,245 @@ GoRouter createAppRouter({
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => LoginScreen(
-          onSendOtp: (phone) {
-            context.push(AppRoutes.otp, extra: phone);
-          },
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: LoginScreen(
+            onSendOtp: (phone) {
+              context.push(AppRoutes.otp, extra: phone);
+            },
+          ),
+          transitionsBuilder: _fadeThroughTransition,
         ),
       ),
       GoRoute(
         path: AppRoutes.otp,
-        builder: (context, state) {
-          final phone = state.extra as String? ?? '';
-          return OtpScreen(
-            phone: phone,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: OtpScreen(
+            phone: state.extra as String? ?? '',
             onVerify: (otp) {
               // After OTP verification, auth state change will
               // trigger redirect to the appropriate home screen.
             },
-          );
-        },
+          ),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
 
-      // Customer routes
-      GoRoute(
-        path: AppRoutes.customerHome,
-        builder: (context, state) => HomeScreen(
-          onCategoryTap: (category) {
-            // Navigate to category products view
-          },
-          onProductTap: (product) {
-            // Navigate to product detail
-          },
-          onCartTap: () => context.push(AppRoutes.cart),
-          onSearchTap: () {
-            // Open search
-          },
-        ),
+      // === Customer routes wrapped in StatefulShellRoute ===
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return BottomNavShell(navigationShell: navigationShell);
+        },
+        branches: [
+          // Tab 0: Home
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.customerHome,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: HomeScreen(
+                    onCategoryTap: (category) {
+                      context.push(AppRoutes.categories);
+                    },
+                    onProductTap: (product) {
+                      // Navigate to product detail
+                    },
+                    onCartTap: () => context.push(AppRoutes.cart),
+                    onSearchTap: () {
+                      // Open search
+                    },
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 1: Categories
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.categories,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: CategoryScreen(
+                    categoryName: 'All Categories',
+                    onProductTap: (product) {
+                      // Navigate to product detail
+                    },
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 2: Cart
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.cart,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: CartScreen(
+                    onCheckout: () => context.push(AppRoutes.checkout),
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 3: Orders
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.orders,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: OrdersScreen(
+                    onOrderTap: (order) {
+                      context.push(
+                        AppRoutes.orderDetail.replaceFirst(':id', order.id),
+                      );
+                    },
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 4: Account
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.account,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: AccountScreen(
+                    onWalletTap: () => context.push(AppRoutes.wallet),
+                    onLoyaltyTap: () => context.push(AppRoutes.loyalty),
+                    onFavoritesTap: () => context.push(AppRoutes.favorites),
+                    onAddressesTap: () => context.push(AppRoutes.addresses),
+                    onNotificationsTap: () =>
+                        context.push(AppRoutes.notifications),
+                    onSettingsTap: () => context.push(AppRoutes.settings),
+                    onSupportTap: () => context.push(AppRoutes.support),
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
-      GoRoute(
-        path: AppRoutes.cart,
-        builder: (context, state) => CartScreen(
-          onCheckout: () => context.push(AppRoutes.checkout),
-        ),
-      ),
+
+      // === Customer routes outside the shell (push on top of nav) ===
       GoRoute(
         path: AppRoutes.checkout,
-        builder: (context, state) => CheckoutScreen(
-          onPlaceOrder: (data) {
-            context.go(AppRoutes.orders);
-          },
-        ),
-      ),
-      GoRoute(
-        path: AppRoutes.orders,
-        builder: (context, state) => OrdersScreen(
-          onOrderTap: (order) {
-            context.push(
-              AppRoutes.orderDetail.replaceFirst(':id', order.id),
-            );
-          },
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: CheckoutScreen(
+            onPlaceOrder: (data) {
+              context.go(AppRoutes.orders);
+            },
+          ),
+          transitionsBuilder: _fadeThroughTransition,
         ),
       ),
       GoRoute(
         path: AppRoutes.orderDetail,
-        builder: (context, state) {
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _OrderDetailPage(orderId: id);
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: _OrderDetailPage(orderId: id),
+            transitionsBuilder: _sharedAxisTransition,
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.orderTracking,
-        builder: (context, state) {
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _OrderTrackingPage(orderId: id);
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: _OrderTrackingPage(orderId: id),
+            transitionsBuilder: _fadeThroughTransition,
+          );
         },
       ),
       GoRoute(
-        path: AppRoutes.account,
-        builder: (context, state) => AccountScreen(
-          onWalletTap: () => context.push(AppRoutes.wallet),
-          onLoyaltyTap: () => context.push(AppRoutes.loyalty),
-          onFavoritesTap: () => context.push(AppRoutes.favorites),
-          onAddressesTap: () => context.push(AppRoutes.addresses),
-          onNotificationsTap: () => context.push(AppRoutes.notifications),
-          onSettingsTap: () => context.push(AppRoutes.settings),
-          onSupportTap: () => context.push(AppRoutes.support),
-        ),
-      ),
-      GoRoute(
         path: AppRoutes.wallet,
-        builder: (context, state) => const WalletScreen(),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const WalletScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.loyalty,
-        builder: (context, state) => const LoyaltyScreen(),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const LoyaltyScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.favorites,
-        builder: (context, state) => const FavoritesScreen(),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const FavoritesScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.addresses,
-        builder: (context, state) => const AddressesScreen(),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AddressesScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.notifications,
-        builder: (context, state) => const NotificationsScreen(),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const NotificationsScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.settings,
-        builder: (context, state) => const SettingsScreen(),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const SettingsScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.support,
-        builder: (context, state) => SupportScreen(
-          onNewTicket: () {
-            // Navigate to new ticket screen
-          },
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: SupportScreen(
+            onNewTicket: () {
+              // Navigate to new ticket screen
+            },
+          ),
+          transitionsBuilder: _sharedAxisTransition,
         ),
       ),
 
-      // Delivery partner routes
+      // === Delivery partner routes (no bottom nav) ===
       GoRoute(
         path: AppRoutes.deliveryLogin,
         builder: (context, state) => LoginScreen(
@@ -336,6 +464,43 @@ GoRouter createAppRouter({
   );
 }
 
+// ===========================
+// Page Transitions
+// ===========================
+
+/// Shared axis horizontal transition for tab-to-tab navigation.
+Widget _sharedAxisTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  return SharedAxisTransition(
+    animation: animation,
+    secondaryAnimation: secondaryAnimation,
+    transitionType: SharedAxisTransitionType.horizontal,
+    child: child,
+  );
+}
+
+/// Fade through transition for modal/overlay navigation.
+Widget _fadeThroughTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  return FadeThroughTransition(
+    animation: animation,
+    secondaryAnimation: secondaryAnimation,
+    child: child,
+  );
+}
+
+// ===========================
+// Redirect Logic
+// ===========================
+
 /// Global redirect logic implementing role-based access control.
 String? _globalRedirect(AuthState authState, GoRouterState state) {
   final location = state.matchedLocation;
@@ -395,6 +560,10 @@ bool _isDeliveryRoute(String location) {
 bool _isCustomerRoute(String location) {
   return location.startsWith('/customer');
 }
+
+// ===========================
+// Inline Page Widgets
+// ===========================
 
 /// Splash screen that shows a loading indicator while auth state is determined.
 ///

@@ -1,9 +1,8 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Eye, EyeOff, Percent, Plus, Save, Tag, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -164,7 +163,7 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
             <Input value={form.startsAt} onChange={(e) => setForm((f) => ({ ...f, startsAt: e.target.value }))} placeholder="Starts at" type="datetime-local" className="h-12 rounded-2xl" />
             <Input value={form.expiresAt} onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))} placeholder="Expires at" type="datetime-local" className="h-12 rounded-2xl" />
           </div>
-          {form.image && <img src={form.image} alt="Preview" className="mt-3 h-16 rounded-xl object-cover border border-border" />}
+          {form.image && <Image src={form.image} alt="Preview" width={64} height={64} className="mt-3 h-16 rounded-xl object-cover border border-border" unoptimized />}
           <Button type="submit" className="mt-4" disabled={isPending}>
             <Save className="h-4 w-4" /> Create Offer
           </Button>
@@ -180,9 +179,9 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
             {localOffers.map((offer) => (
               <div key={offer.id} className="p-4 sm:p-5">
                 <div className="flex items-center gap-4">
-                  <div className={`h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${offer.isActive ? "bg-primary/10" : "bg-muted"}`}>
+                  <div className={`relative h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${offer.isActive ? "bg-primary/10" : "bg-muted"}`}>
                     {offer.image ? (
-                      <img src={offer.image} alt="" className="h-full w-full rounded-xl object-cover" />
+                      <Image src={offer.image} alt="" fill className="rounded-xl object-cover" unoptimized />
                     ) : (
                       <Tag className={`h-5 w-5 ${offer.isActive ? "text-primary" : "text-muted-foreground"}`} />
                     )}

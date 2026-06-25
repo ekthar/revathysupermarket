@@ -1,9 +1,8 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { ArrowDown, ArrowUp, Edit3, FolderPlus, ImagePlus, Package, Save, Trash2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -152,7 +151,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
             />
           </div>
           {createForm.image && (
-            <img src={createForm.image} alt="Preview" className="mt-3 h-16 w-16 rounded-xl object-cover border border-border" />
+            <Image src={createForm.image} alt="Preview" width={64} height={64} className="mt-3 h-16 w-16 rounded-xl object-cover border border-border" unoptimized />
           )}
           <Button type="submit" className="mt-4" disabled={isPending}>
             <Save className="h-4 w-4" /> Create
@@ -201,7 +200,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                       />
                     </div>
                     {editForm.image && (
-                      <img src={editForm.image} alt="Preview" className="h-14 w-14 rounded-xl object-cover border border-border" />
+                      <Image src={editForm.image} alt="Preview" width={56} height={56} className="h-14 w-14 rounded-xl object-cover border border-border" unoptimized />
                     )}
                     <div className="flex gap-2">
                       <Button type="submit" size="sm" disabled={isPending}>
@@ -215,9 +214,9 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                 ) : (
                   <div className="flex items-center gap-4">
                     {/* Image / Icon */}
-                    <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
+                    <div className="relative h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
                       {cat.image ? (
-                        <img src={cat.image} alt={cat.name} className="h-full w-full object-cover" />
+                        <Image src={cat.image} alt={cat.name} fill className="object-cover" unoptimized />
                       ) : (
                         <Package className="h-5 w-5 text-primary" />
                       )}

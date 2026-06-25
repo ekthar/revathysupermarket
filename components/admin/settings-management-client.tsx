@@ -1,9 +1,8 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { Camera, Eye, EyeOff, ImagePlus, Megaphone, MessageCircle, Save, Settings, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -268,7 +267,7 @@ export function SettingsManagementClient({
               <BannerUploadButton onUploaded={(url) => setBannerForm((current) => ({ ...current, image: url }))} />
             </div>
             {bannerForm.image && (
-              <img src={bannerForm.image} alt="Preview" className="mt-2 h-16 w-full rounded-xl object-cover border border-border" onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }} />
+              <Image src={bannerForm.image} alt="Preview" width={800} height={64} className="mt-2 h-16 w-full rounded-xl object-cover border border-border" unoptimized onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }} />
             )}
           </div>
           <Input value={bannerForm.href} onChange={(event) => setBannerForm((current) => ({ ...current, href: event.target.value }))} placeholder="Promotion link" className="h-12 rounded-2xl" />
@@ -287,7 +286,7 @@ export function SettingsManagementClient({
             <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm font-bold text-muted-foreground">No banners yet.</p>
           ) : localBanners.map((banner) => (
             <article key={banner.id} className="grid gap-3 rounded-lg border border-border bg-background/70 p-3 sm:grid-cols-[110px_1fr]">
-              <img src={banner.image} alt={banner.title} className="aspect-video w-full rounded-2xl object-cover sm:aspect-square" />
+              <Image src={banner.image} alt={banner.title} width={110} height={110} className="aspect-video w-full rounded-2xl object-cover sm:aspect-square" unoptimized />
               <div className="min-w-0">
                 <p className={banner.isActive ? "text-xs font-black uppercase text-primary" : "text-xs font-black uppercase text-muted-foreground"}>{banner.isActive ? "Active" : "Disabled"}</p>
                 <h4 className="truncate font-black">{banner.title}</h4>
@@ -413,9 +412,9 @@ function LogoUploadSection() {
         </div>
       </div>
       <div className="mt-4 flex items-center gap-4">
-        <div className="h-20 w-20 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden shrink-0">
+        <div className="relative h-20 w-20 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 flex items-center justify-center overflow-hidden shrink-0">
           {logoUrl ? (
-            <img src={logoUrl} alt="Store logo" className="h-full w-full object-contain" />
+            <Image src={logoUrl} alt="Store logo" fill className="object-contain" unoptimized />
           ) : (
             <Camera className="h-6 w-6 text-primary/40" />
           )}

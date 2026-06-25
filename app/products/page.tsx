@@ -11,63 +11,125 @@ export const metadata: Metadata = {
   description: `Search and order fresh groceries from ${SITE.name}.`
 };
 
-const getProducts = unstable_cache(async (): Promise<Product[]> => {
-  const dbProducts = await prisma.product.findMany({
-    where: { isActive: true },
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      description: true,
-      image: true,
-      price: true,
-      discountPrice: true,
-      stock: true,
-      popularity: true,
-      unit: true,
-      isFeatured: true,
-      createdAt: true,
-      category: { select: { name: true } }
+type ProductFilters = {
+  category?: string;
+  q?: string;
+  sort?: string;
+  limit?: number;
+};
+
+function getProducts(filters: ProductFilters = {}) {
+  const { category, q, sort, limit = 24 } = filters;
+  const cacheKey = `products:${category || "All"}:${q || ""}:${sort || "popularity"}:${limit}`;
+
+  return unstable_cache(
+    async (): Promise<{ items: Product[]; total: number }> => {
+      // Build Prisma where clause
+      const where: Record<string, unknown> = { isActive: true };
+      if (category && category !== "All") {
+        where.category = { name: category };
+      }
+      if (q) {
+        where.name = { contains: q, mode: "insensitive" };
+      }
+
+      // Build orderBy
+      let orderBy: Record<string, string>[] = [{ popularity: "desc" }, { createdAt: "desc" }];
+      if (sort === "low") orderBy = [{ price: "asc" }];
+      else if (sort === "high") orderBy = [{ price: "desc" }];
+      else if (sort === "newest") orderBy = [{ createdAt: "desc" }];
+
+      const [dbProducts, dbTotal] = await Promise.all([
+        prisma.product.findMany({
+          where,
+          select: {
+            id: true,
+            slug: true,
+            name: true,
+            description: true,
+            image: true,
+            price: true,
+            discountPrice: true,
+            stock: true,
+            popularity: true,
+            unit: true,
+            isFeatured: true,
+            createdAt: true,
+            category: { select: { name: true } },
+          },
+          orderBy,
+          take: limit,
+        }),
+        prisma.product.count({ where }),
+      ]).catch(() => [[], 0] as [never[], number]);
+
+      if (Array.isArray(dbProducts) && dbProducts.length > 0) {
+        const items = dbProducts.map((product) => ({
+          id: product.id,
+          slug: product.slug,
+          name: product.name,
+          category: product.category.name as Product["category"],
+          price: Number(product.price),
+          discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
+          image: product.image,
+          description: product.description,
+          stock: product.stock,
+          popularity: product.popularity,
+          unit: product.unit,
+          isFeatured: product.isFeatured,
+          createdAt: product.createdAt.toISOString(),
+        }));
+        return { items, total: dbTotal };
+      }
+
+      // Fallback to static products
+      let filtered = fallbackProducts;
+      if (category && category !== "All") {
+        filtered = filtered.filter((p) => p.category === category);
+      }
+      if (q) {
+        const lower = q.toLowerCase();
+        filtered = filtered.filter((p) => p.name.toLowerCase().includes(lower));
+      }
+
+      // Sort fallback
+      if (sort === "low") filtered = [...filtered].sort((a, b) => (a.discountPrice ?? a.price) - (b.discountPrice ?? b.price));
+      else if (sort === "high") filtered = [...filtered].sort((a, b) => (b.discountPrice ?? b.price) - (a.discountPrice ?? a.price));
+      else if (sort === "newest") filtered = [...filtered].sort((a, b) => new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime());
+      else filtered = [...filtered].sort((a, b) => b.popularity - a.popularity);
+
+      const fallbackTotal = filtered.length;
+      const items = filtered.slice(0, limit);
+      return { items, total: fallbackTotal };
     },
-    orderBy: [{ popularity: "desc" }, { createdAt: "desc" }]
-  }).catch(() => []);
-
-  if (dbProducts.length === 0) return fallbackProducts;
-
-  return dbProducts.map((product) => ({
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    category: product.category.name as Product["category"],
-    price: Number(product.price),
-    discountPrice: product.discountPrice ? Number(product.discountPrice) : undefined,
-    image: product.image,
-    description: product.description,
-    stock: product.stock,
-    popularity: product.popularity,
-    unit: product.unit,
-    isFeatured: product.isFeatured,
-    createdAt: product.createdAt.toISOString()
-  }));
-}, ["public-products"], { revalidate: 30, tags: ["products"] });
+    [cacheKey],
+    { revalidate: 30, tags: ["products"] }
+  )();
+}
 
 export default async function ProductsPage({
   searchParams
 }: {
-  searchParams: Promise<{ category?: string; q?: string }>;
+  searchParams: Promise<{ category?: string; q?: string; sort?: string }>;
 }) {
-  const { category, q } = await searchParams;
-  const products = await getProducts();
-  const initialCategory = category && ["All", ...new Set(products.map((product) => product.category))].includes(category) ? category : "All";
+  const { category, q, sort } = await searchParams;
+  const { items, total } = await getProducts({ category, q, sort, limit: 24 });
+  const initialCategory = category || "All";
   return (
     <main className="min-h-screen bg-background pb-24">
       <section className="overflow-hidden px-4 pb-1 pt-8 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="font-display text-display font-black leading-none tracking-tighter sm:text-5xl">Browse</h1>
-          <p className="mt-2 text-sm font-semibold text-neutral-400">{products.length} products available</p>
+          <p className="mt-2 text-sm font-semibold text-neutral-400">{total} products available</p>
         </div>
       </section>
-      <ProductGrid items={products} initialCategory={initialCategory} initialQuery={q || ""} />
+      <ProductGrid
+        initialItems={items}
+        initialTotal={total}
+        initialCategory={initialCategory}
+        initialQuery={q || ""}
+        initialSort={(sort as "popularity" | "low" | "high" | "newest") || "popularity"}
+      />
     </main>
   );
 }

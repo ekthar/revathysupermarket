@@ -23,7 +23,10 @@ export function ReturnReceiptPrintButton({ entry }: { entry: ReturnEntry }) {
   function handlePrint() {
     const items = Array.isArray(entry.items) ? (entry.items as ReturnItem[]) : [];
     const printWindow = window.open("", "_blank", "width=440,height=700");
-    if (!printWindow) return;
+    if (!printWindow) {
+      window.alert("Please allow popups to print");
+      return;
+    }
 
     const dateStr = new Date(entry.createdAt).toLocaleDateString("en-IN", {
       day: "2-digit",
@@ -88,7 +91,7 @@ export function ReturnReceiptPrintButton({ entry }: { entry: ReturnEntry }) {
     <div class="items-section">
       <table class="items-table">
         <thead><tr><th>Item</th><th>Qty</th><th>Amount</th></tr></thead>
-        <tbody>${items.map((item) => `<tr><td>${escapeHtml(item.name ?? "Item")}</td><td class="qty">${item.quantity ?? 0} x ${formatCurrencyPlain(Number(item.price ?? 0))}</td><td>${formatCurrencyPlain(Number(item.amount ?? Number(item.price ?? 0) * Number(item.quantity ?? 0)))}</td></tr>`).join("")}</tbody>
+        <tbody>${items.map((item) => `<tr><td>${escapeHtml(String(item.name ?? "Item"))}</td><td class="qty">${Number(item.quantity ?? 0)} x ${formatCurrencyPlain(Number(item.price ?? 0))}</td><td>${formatCurrencyPlain(Number(item.amount ?? Number(item.price ?? 0) * Number(item.quantity ?? 0)))}</td></tr>`).join("")}</tbody>
       </table>
     </div>
     <div class="total-bar">

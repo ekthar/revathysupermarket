@@ -73,7 +73,7 @@ function buildPrintHtml(days: DayGroup[], title: string): string {
         .flatMap((ret) => {
           const items = getReturnItems(ret.items);
           return items.map((item) => ({
-            name: item.name ?? "Item",
+            name: String(item.name ?? "Item"),
             quantity: item.quantity ?? 0,
             amount: Number(item.amount ?? Number(item.price ?? 0) * Number(item.quantity ?? 0)),
             customer: ret.order.customerName,
@@ -84,12 +84,12 @@ function buildPrintHtml(days: DayGroup[], title: string): string {
         .map(
           (row) =>
             `<tr>
-              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;color:#1e293b;">${escapeHtml(row.name)}</td>
+              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;color:#1e293b;">${escapeHtml(String(row.name))}</td>
               <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;text-align:center;color:#1e293b;">${row.quantity}</td>
               <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;text-align:right;font-weight:700;color:#1e293b;">${escapeHtml(formatCurrencyPlain(row.amount))}</td>
-              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;color:#1e293b;">${escapeHtml(row.customer)}</td>
-              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;color:#1e293b;">#${escapeHtml(row.orderNumber)}</td>
-              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:12px;color:#64748b;">${escapeHtml(row.reason)}</td>
+              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;color:#1e293b;">${escapeHtml(String(row.customer))}</td>
+              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:13px;color:#1e293b;">#${escapeHtml(String(row.orderNumber))}</td>
+              <td style="padding:10px 8px;border-bottom:1px solid #f0ebe0;font-size:12px;color:#64748b;">${escapeHtml(String(row.reason))}</td>
             </tr>`
         )
         .join("");
@@ -179,7 +179,10 @@ export function ReturnsReportClient({ dailyData }: { dailyData: DayGroup[] }) {
 
   function printDay(day: DayGroup) {
     const printWindow = window.open("", "_blank", "width=900,height=700");
-    if (!printWindow) return;
+    if (!printWindow) {
+      window.alert("Please allow popups to print");
+      return;
+    }
     const html = buildPrintHtml([day], `Returns Report - ${formatDateDisplay(day.date)}`);
     printWindow.document.write(html);
     printWindow.document.close();
@@ -187,7 +190,10 @@ export function ReturnsReportClient({ dailyData }: { dailyData: DayGroup[] }) {
 
   function printAll() {
     const printWindow = window.open("", "_blank", "width=900,height=700");
-    if (!printWindow) return;
+    if (!printWindow) {
+      window.alert("Please allow popups to print");
+      return;
+    }
     const html = buildPrintHtml(dailyData, "Returns Report - Last 30 Days");
     printWindow.document.write(html);
     printWindow.document.close();

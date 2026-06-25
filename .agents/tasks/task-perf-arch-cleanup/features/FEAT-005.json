@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "refactor",
   "description": "Priority 5 - Reduce client-component surface area by splitting the 3 largest 'use client' files into server component shells wrapping smaller client islands. Focus on checkout-form.tsx as the highest-traffic page.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Split components/checkout-form.tsx (749 lines): Create a server component wrapper (e.g., components/checkout/checkout-container.tsx) that handles static layout. Extract interactive parts into smaller client components: (a) components/checkout/address-selector.tsx (address selection with geolocation), (b) components/checkout/payment-method-selector.tsx (payment method picker), (c) components/checkout/order-summary.tsx (cart summary with live totals). Only parts with useState/useEffect/event handlers keep 'use client'.",
     "2. Split components/delivery/delivery-app-shell.tsx (804 lines): Extract into server shell + client islands for: (a) map/GPS tracking section, (b) order action buttons, (c) real-time alerts subscription. Static layout (headers, navigation structure) becomes server-rendered.",
@@ -23,5 +23,5 @@
     "npm run build"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Successfully split all 3 files. checkout-form.tsx reduced by ~433 lines (4 extracted components), delivery-app-shell.tsx reduced by ~133 lines (2 extracted components), admin-orders-client.tsx reduced by ~107 lines (3 extracted components). Both npm run lint and npm run build pass cleanly. The DeliveryAlertListener already existed as a separate file so was not re-extracted."
 }

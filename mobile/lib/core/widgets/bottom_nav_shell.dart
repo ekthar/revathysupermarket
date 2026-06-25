@@ -3,6 +3,8 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../features/cart/providers/cart_provider.dart';
+
 /// A persistent bottom navigation bar shell for customer routes.
 ///
 /// Uses GoRouter's ShellRoute pattern to maintain navigation state
@@ -119,7 +121,7 @@ class _BottomNavShellState extends ConsumerState<BottomNavShell>
                   isActive: currentIndex == 2,
                   onTap: () => _onTabSelected(2),
                   animation: _indicatorAnimation,
-                  badgeCount: 0, // Will be connected to cart provider
+                  badgeCount: ref.watch(cartItemCountProvider),
                 ),
                 _NavItem(
                   icon: Icons.receipt_long_outlined,

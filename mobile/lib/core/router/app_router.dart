@@ -66,9 +66,8 @@ abstract class AppRoutes {
   static const deliveryCompletion = '/delivery/orders/:id/complete';
 }
 
-/// Navigator keys for nested navigation in ShellRoute.
+/// Navigator key for the root navigator.
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
-final _shellNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Creates the application router with role-based guards and bottom nav shell.
 ///
@@ -233,6 +232,13 @@ GoRouter createAppRouter({
       GoRoute(
         path: '${AppRoutes.customerHome}/product',
         parentNavigatorKey: _rootNavigatorKey,
+        redirect: (context, state) {
+          // Guard against null extra (e.g., from deep links)
+          if (state.extra == null || state.extra is! Product) {
+            return AppRoutes.customerHome;
+          }
+          return null;
+        },
         pageBuilder: (context, state) {
           final product = state.extra as Product;
           return CustomTransitionPage(

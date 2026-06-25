@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "fix",
   "description": "Fix bottom nav tab switch lag (~1s delay). Diagnosis: The Home page (/) and Products page (/products) are Server Components that do DB fetches. Although they use unstable_cache with revalidate:60 (and revalidate:30 for products), the first navigation after cache expires will be slow. Also, there are no loading.tsx files for these routes, so navigation shows a blank screen instead of an instant skeleton. The fix: (1) Add loading.tsx with proper skeletons for all bottom-nav routes, (2) Ensure Link prefetch is not disabled (it's enabled by default in Next.js), (3) Add router.prefetch() on touchstart for the nav tabs to warm the route before tap.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "The loading.tsx files created in FEAT-003 will serve as instant skeleton feedback during route transitions. This is the primary fix for perceived lag - users see a skeleton immediately instead of waiting for the server component to render.",
     "In components/mobile-bottom-nav.tsx - the Link components use default prefetch behavior (prefetch={true} is the default in Next.js App Router). Verify this is not explicitly set to false. Currently no prefetch prop is passed, meaning it uses the default (true for static, lazy for dynamic). This is fine.",
@@ -23,5 +23,5 @@
     "Run npx tsc --noEmit to confirm no type errors"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Added useRouter import and router.prefetch() calls on touchstart and mouseenter for all NavTab components. The Link prefetch default behavior (true) was already intact - no prefetch={false} found. The onPrefetch pattern cleanly separates prefetch logic from the NavTab presentational component. Lint and tsc pass cleanly."
 }

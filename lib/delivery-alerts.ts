@@ -1,11 +1,10 @@
 /**
- * Utility to push real-time alerts to connected delivery partners.
+ * Utility to push real-time alerts to delivery partners via Redis.
+ * Alerts are stored in Redis lists and polled by the SSE endpoint.
  * Works alongside the push notification system for comprehensive alerting.
  */
 
-declare global {
-  var __deliveryAlertControllers: Map<string, Set<ReadableStreamDefaultController>> | undefined;
-}
+import { Redis } from "@upstash/redis";
 
 type AlertPayload = {
   type: "new_order";
@@ -18,53 +17,73 @@ type AlertPayload = {
   };
 };
 
-/**
- * Send a real-time SSE alert to a delivery partner.
- * Also triggers push notification as a fallback for when the app is in background.
- */
-export function sendDeliveryAlert(partnerId: string, payload: AlertPayload) {
-  const controllers = global.__deliveryAlertControllers;
+/** TTL for alert keys in seconds. Stale alerts auto-expire after this period. */
+const ALERT_KEY_TTL_SECONDS = 120;
 
-  if (!controllers?.has(partnerId)) return false;
+let redis: Redis | null = null;
+let fallbackWarningLogged = false;
 
-  const encoder = new TextEncoder();
-  const message = `data: ${JSON.stringify(payload)}\n\n`;
-
-  let sent = false;
-  const partnerControllers = controllers.get(partnerId);
-  if (partnerControllers) {
-    for (const controller of partnerControllers) {
-      try {
-        controller.enqueue(encoder.encode(message));
-        sent = true;
-      } catch {
-        partnerControllers.delete(controller);
-      }
+function getRedis(): Redis | null {
+  if (redis) return redis;
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    if (!fallbackWarningLogged) {
+      fallbackWarningLogged = true;
+      console.warn(
+        "[delivery-alerts] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not configured. " +
+          "Delivery alerts will be no-ops until Redis is available."
+      );
     }
+    return null;
   }
+  redis = Redis.fromEnv();
+  return redis;
+}
 
-  return sent;
+/**
+ * Build the Redis key for a specific partner's alert list.
+ */
+function partnerAlertKey(partnerId: string): string {
+  return `delivery:alerts:${partnerId}`;
+}
+
+/** Redis key for broadcast alerts (all delivery partners). */
+const BROADCAST_KEY = "delivery:alerts:broadcast";
+
+/**
+ * Send a real-time alert to a specific delivery partner by pushing to their Redis list.
+ * The SSE endpoint polls this list and forwards messages to the connected client.
+ * Returns true if the alert was successfully enqueued; false if Redis is unavailable.
+ */
+export async function sendDeliveryAlert(partnerId: string, payload: AlertPayload): Promise<boolean> {
+  const client = getRedis();
+  if (!client) return false;
+
+  try {
+    const key = partnerAlertKey(partnerId);
+    const message = JSON.stringify(payload);
+    await client.lpush(key, message);
+    // Set/refresh expiry so stale alerts auto-clean if partner never connects
+    await client.expire(key, ALERT_KEY_TTL_SECONDS);
+    return true;
+  } catch (error) {
+    console.error("[delivery-alerts] Failed to push alert to Redis:", error);
+    return false;
+  }
 }
 
 /**
  * Notify all delivery partners about a new unassigned order (for pickup).
- * Used when an order becomes ready and no specific partner is assigned yet.
+ * Pushes to the broadcast list which every connected partner polls.
  */
-export function broadcastToAllDeliveryPartners(payload: AlertPayload) {
-  const controllers = global.__deliveryAlertControllers;
+export async function broadcastToAllDeliveryPartners(payload: AlertPayload): Promise<void> {
+  const client = getRedis();
+  if (!client) return;
 
-  if (!controllers) return;
-
-  const encoder = new TextEncoder();
-  const message = `data: ${JSON.stringify(payload)}\n\n`;
-
-  for (const [, partnerControllers] of controllers) {
-    for (const controller of partnerControllers) {
-      try {
-        controller.enqueue(encoder.encode(message));
-      } catch {
-        partnerControllers.delete(controller);
-      }
-    }
+  try {
+    const message = JSON.stringify(payload);
+    await client.lpush(BROADCAST_KEY, message);
+    await client.expire(BROADCAST_KEY, ALERT_KEY_TTL_SECONDS);
+  } catch (error) {
+    console.error("[delivery-alerts] Failed to broadcast alert to Redis:", error);
   }
 }

@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Replace the plain HTML return receipt print with a premium SVG-based bill design matching OrderBillCard",
+  "status": "in_progress",
+  "steps": [
+    "Rewrite components/admin/return-receipt-print.tsx to generate a printable popup that uses the same premium bill design as components/order-bill-card.tsx.",
+    "The new design must use: rounded card background (#fffaf0), green (#0F8A5F) accent for the store logo circle and total refund bar, Manrope-style bold typography (use system font-weight:900 since Google Fonts won't load in print popup reliably).",
+    "Layout structure: store name circle logo (green circle with white initials 'RS') at top -> store name and address text -> 'Return Receipt' title -> return details (return number, bill number, order number, customer name, date, reason) -> items table (item name, qty x price, amount) -> total refund bar (green rounded rectangle with white text).",
+    "Keep the same ReturnEntry type interface and ReturnReceiptPrintButton component API so existing usages don't break.",
+    "Keep the auto-print behavior (window.onload = window.print()).",
+    "Use inline CSS in the generated HTML (no external stylesheets) to ensure print reliability."
+  ],
+  "acceptance_criteria": [
+    "The print popup uses #fffaf0 background color",
+    "A green (#0F8A5F) circle with white initials appears as the store logo",
+    "The total refund bar uses #0F8A5F green with white text, matching the OrderBillCard total bar",
+    "Items are displayed in a clean table format",
+    "The component API (ReturnReceiptPrintButton with entry prop) remains unchanged",
+    "Auto-print on load still works",
+    "npx tsc --noEmit --skipLibCheck passes"
+  ],
+  "verification": [
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

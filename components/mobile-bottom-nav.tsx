@@ -64,7 +64,7 @@ function NavTab({ href, icon: Icon, label, active, badge }: { href: string; icon
       )}
 
       <motion.div
-        whileTap={{ scale: 0.85 }}
+        whileTap={{ scale: 0.92 }}
         transition={{ type: "spring", stiffness: 500, damping: 25 }}
         className="relative z-10"
       >

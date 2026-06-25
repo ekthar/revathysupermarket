@@ -84,7 +84,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                whileTap={{ scale: 0.9 }}
+                whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 type="button"
                 disabled={outOfStock}
@@ -104,7 +104,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
   // Grid / Compact card layout
   return (
     <motion.article
-      whileTap={{ scale: 0.96, rotateX: 1 }}
+      whileTap={{ scale: 0.96 }}
       whileHover={{ y: -3 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
       className={cn(
@@ -180,7 +180,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                whileTap={{ scale: 0.85 }}
+                whileTap={{ scale: 0.96 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 type="button"
                 disabled={outOfStock}

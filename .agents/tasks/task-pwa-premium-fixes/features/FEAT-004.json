@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Animations and premium feel enhancements. Install vaul for native-feel bottom sheets. Add whileTap micro-interactions to primary buttons. Implement optimistic UI for cart actions. Standardize animation durations to 150-250ms. Integrate Vaul-based cart/product detail bottom sheet. Add staggered list animations. Optional: integrate Lenis for smooth scroll.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Install vaul package: run npm install vaul. This is needed for native drag-to-dismiss bottom sheets.",
     "Replace the custom BottomSheet in components/ui/bottom-sheet.tsx with a Vaul-based implementation. Vaul provides Drawer.Root, Drawer.Trigger, Drawer.Content, etc. Maintain the same API (open, onClose, title, children) for backward compatibility. Keep the drag-to-dismiss behavior. Use spring animation for the sheet.",

@@ -297,17 +297,19 @@ export function CartPageClient() {
 
       {/* Fixed bottom checkout button */}
       <div className="ios-floating-action md:relative md:bottom-0 md:left-auto md:right-auto md:mt-5 md:p-0">
-        <Link
-          href={belowMinimum ? "#" : "/checkout"}
-          onClick={(e) => { if (belowMinimum) e.preventDefault(); }}
-          className={`mx-auto flex h-[54px] max-w-md items-center justify-between rounded-2xl px-5 shadow-[0_20px_45px_-24px_rgba(0,0,0,0.85)] press ${belowMinimum ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed" : "bg-black text-white"}`}
-        >
-          <div>
-            <p className="text-[14px] font-bold">{belowMinimum ? "Add more items" : "Proceed to Checkout"}</p>
-            <p className="text-[10px] text-white/70">{items.length} item{items.length > 1 ? "s" : ""}</p>
-          </div>
-          <span className="text-[16px] font-bold">{formatCurrency(totalAmount)}</span>
-        </Link>
+        <motion.div whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+          <Link
+            href={belowMinimum ? "#" : "/checkout"}
+            onClick={(e) => { if (belowMinimum) e.preventDefault(); }}
+            className={`mx-auto flex h-[54px] max-w-md items-center justify-between rounded-2xl px-5 shadow-[0_20px_45px_-24px_rgba(0,0,0,0.85)] press ${belowMinimum ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed" : "bg-black text-white"}`}
+          >
+            <div>
+              <p className="text-[14px] font-bold">{belowMinimum ? "Add more items" : "Proceed to Checkout"}</p>
+              <p className="text-[10px] text-white/70">{items.length} item{items.length > 1 ? "s" : ""}</p>
+            </div>
+            <span className="text-[16px] font-bold">{formatCurrency(totalAmount)}</span>
+          </Link>
+        </motion.div>
       </div>
     </main>
   );

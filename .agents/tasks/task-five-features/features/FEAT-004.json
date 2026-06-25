@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Return product flow - add mandatory bill number field, printable return receipt, stock decrement on return completion, and bill number search in admin returns list.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add a 'billNumber' field to the ReturnRequest model in prisma/schema.prisma. Type: String, required (no ? nullable). Add an index on billNumber for search. Run npx prisma generate after schema change. Also create a migration SQL file at prisma/migrations/<timestamp>_add_bill_number_to_return/migration.sql with the ALTER TABLE statement.",
     "Update the returnRequestSchema in lib/validations.ts to add billNumber as a required z.string() field that matches an order number pattern. Add server-side validation in app/api/orders/[id]/returns/route.ts: before creating the ReturnRequest, verify that billNumber matches an existing order's orderNumber in the database. If no matching order is found, return a 400 error with code 'INVALID_BILL_NUMBER'.",
@@ -27,5 +27,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All acceptance criteria met. billNumber added to ReturnRequest model, validation enforced client and server side, stock incremented on refund, print receipt available for REFUNDED returns. prisma generate + tsc + lint all pass."
 }

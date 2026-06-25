@@ -13,6 +13,7 @@ import '../../features/products/domain/product_model.dart' show Product;
 import '../../features/cart/presentation/cart_screen.dart';
 import '../../features/checkout/presentation/checkout_screen.dart';
 import '../../features/orders/presentation/orders_screen.dart';
+import '../../features/orders/presentation/order_detail_screen.dart';
 import '../../features/account/presentation/account_screen.dart';
 import '../../features/account/presentation/wallet_screen.dart';
 import '../../features/account/presentation/loyalty_screen.dart';
@@ -261,7 +262,14 @@ GoRouter createAppRouter({
           final id = state.pathParameters['id']!;
           return CustomTransitionPage(
             key: state.pageKey,
-            child: _OrderDetailPage(orderId: id),
+            child: OrderDetailScreen(
+              orderId: id,
+              onTrackOrder: () {
+                context.push(
+                  AppRoutes.orderTracking.replaceFirst(':id', id),
+                );
+              },
+            ),
             transitionsBuilder: _sharedAxisTransition,
           );
         },
@@ -755,35 +763,7 @@ class _LoadingPage extends StatelessWidget {
 /// Wrapper page for order detail that handles loading the order by ID.
 ///
 /// In a full implementation this would fetch the order from the repository.
-/// Currently displays order ID with a placeholder for data loading.
-class _OrderDetailPage extends StatelessWidget {
-  const _OrderDetailPage({required this.orderId});
-
-  final String orderId;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Order #$orderId'),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(height: 16),
-            Text(
-              'Loading order details...',
-              style: theme.textTheme.bodyLarge,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+/// The OrderDetailScreen now handles this via Riverpod providers.
 
 /// Wrapper page for order tracking that handles real-time location display.
 ///

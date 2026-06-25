@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Redesign Cart, Checkout, Orders, and Order Detail screens with premium animations and real data",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Completely redesign mobile/lib/features/cart/presentation/cart_screen.dart: Dismissible slide-to-delete with red background and trash icon, animated quantity increment/decrement (scale animation on number change), product images from network, item subtotals, GST breakdown section, savings callout badge, empty cart illustration with 'Start Shopping' button, sticky bottom bar with total and checkout button, AnimatedList for smooth add/remove transitions",
     "Completely redesign mobile/lib/features/checkout/presentation/checkout_screen.dart: step indicator at top (address > payment > review - animated progress dots), address picker cards with map pin icon and default badge, delivery slot selector (time grid cards with selected state animation), payment method cards (COD, UPI, Card, Wallet) with radio selection and icons, promo code input with 'Apply' button and success/error state, order summary card with subtotal/GST/delivery/discount/total breakdown, place order button with loading state, loyalty points slider/input",

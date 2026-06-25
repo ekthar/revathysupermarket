@@ -291,7 +291,7 @@ export function AdminOrdersClient({
         .filter((order) => !dismissedAlertIds.has(order.id))
         .slice(0, 1)
         .map((order) => (
-          <div key={order.id} className="fixed inset-x-3 top-4 z-50 mx-auto max-w-2xl rounded-[1.5rem] border border-red-200 bg-white p-4 shadow-premium dark:border-red-500/40 dark:bg-slate-950">
+          <div key={order.id} className="fixed inset-x-3 top-4 z-50 mx-auto max-w-2xl rounded-xl border border-red-200 bg-white p-4 shadow-premium dark:border-red-500/40 dark:bg-slate-950">
             <div className="flex items-start gap-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
                 <BellRing className="h-5 w-5" />
@@ -315,7 +315,7 @@ export function AdminOrdersClient({
             </div>
           </div>
         ))}
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
+      <div className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Staff workflow</p>
         <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
           <div>
@@ -370,17 +370,17 @@ export function AdminOrdersClient({
           ["ORDER_RECEIVED", "New"], ["ACCEPTED", "Accepted"], ["PACKING", "Packing"], ["READY_FOR_DELIVERY", "Ready"], ["OUT_FOR_DELIVERY", "Out for delivery"], ["DELIVERED", "Completed"]
         ].map(([status, label]) => {
           const columnOrders = localOrders.filter((order) => order.status === status).slice(0, status === "DELIVERED" ? 10 : 30);
-          return <section key={status} className="min-w-[240px] rounded-2xl bg-slate-100/80 p-3 dark:bg-slate-900"><div className="flex items-center justify-between"><h3 className="text-sm font-black">{label}</h3><span className="rounded-full bg-white px-2 py-1 text-xs font-black dark:bg-slate-800">{columnOrders.length}</span></div><div className="mt-3 grid gap-2">{columnOrders.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-xs text-muted-foreground">No orders</p> : columnOrders.map((order) => <button key={order.id} type="button" onClick={() => { setQuery(order.orderNumber); setView("list"); }} className="rounded-xl bg-white p-3 text-left shadow-sm dark:bg-slate-800"><div className="flex justify-between gap-2"><span className="text-xs font-black">#{order.orderNumber.slice(-6)}</span><span className="text-xs font-black text-primary">{formatCurrency(order.total)}</span></div><p className="mt-1 truncate text-xs font-semibold">{order.customerName}</p><p className="mt-1 text-[11px] text-muted-foreground">{order.items.length} items · {timeSince(order.createdAt, now)}</p>{status === "READY_FOR_DELIVERY" && !order.deliveryPartnerId ? <p className="mt-2 rounded-lg bg-amber-100 px-2 py-1 text-[11px] font-black text-amber-700">Driver needed</p> : null}</button>)}</div></section>;
+          return <section key={status} className="min-w-[240px] rounded-2xl bg-slate-100/80 p-3 dark:bg-slate-900"><div className="flex items-center justify-between"><h3 className="text-sm font-black">{label}</h3><span className="rounded-full bg-white px-2 py-1 text-xs font-black dark:bg-slate-800">{columnOrders.length}</span></div><div className="mt-3 grid gap-2">{columnOrders.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-xs text-muted-foreground">No orders</p> : columnOrders.map((order) => <button key={order.id} type="button" onClick={() => { setQuery(order.orderNumber); setView("list"); }} className="rounded-xl bg-white p-3 text-left shadow-sm dark:bg-slate-800"><div className="flex justify-between gap-2"><span className="text-xs font-black">#{order.orderNumber.slice(-6)}</span><span className="text-xs font-black text-primary">{formatCurrency(order.total)}</span></div><p className="mt-1 truncate text-xs font-semibold">{order.customerName}</p><p className="mt-1 text-caption text-muted-foreground">{order.items.length} items · {timeSince(order.createdAt, now)}</p>{status === "READY_FOR_DELIVERY" && !order.deliveryPartnerId ? <p className="mt-2 rounded-lg bg-amber-100 px-2 py-1 text-caption font-black text-amber-700">Driver needed</p> : null}</button>)}</div></section>;
         })}
       </div>}
       <div className={cn("mt-5 grid gap-4", view === "board" && "hidden")}>
         {filtered.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">No orders found.</div>
+          <div className="rounded-xl border border-dashed border-border p-10 text-center">No orders found.</div>
         ) : filtered.map((order) => (
           <article
             key={order.id}
             className={cn(
-              "rounded-[1.75rem] border bg-card/95 overflow-hidden shadow-soft dark:border-white/10",
+              "rounded-xl border bg-card/95 overflow-hidden shadow-soft dark:border-white/10",
               order.status === "CANCELLED" ? "border-red-200 bg-red-50/90 dark:border-red-500/30 dark:bg-red-950/25" : "border-white/70"
             )}
           >
@@ -392,17 +392,17 @@ export function AdminOrdersClient({
             >
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-[15px] font-bold text-slate-900">#{order.orderNumber}</h3>
+                  <h3 className="text-title font-bold text-slate-900">#{order.orderNumber}</h3>
                   {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold text-white">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-micro font-bold text-white">
                       <BellRing className="h-3 w-3" /> New
                     </span>
                   ) : null}
-                  <span className={cn("text-[10px] font-bold px-2 py-0.5 rounded-full", order.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</span>
+                  <span className={cn("text-micro font-bold px-2 py-0.5 rounded-full", order.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</span>
                 </div>
-                <p className="text-[12px] text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
+                <p className="text-caption text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
               </div>
-              <p className="text-[14px] font-bold text-slate-900 shrink-0 mr-2">{formatCurrency(order.total)}</p>
+              <p className="text-body font-bold text-slate-900 shrink-0 mr-2">{formatCurrency(order.total)}</p>
               <ChevronDown className={cn("h-4 w-4 text-slate-400 shrink-0 transition-transform", expandedOrderIds.has(order.id) && "rotate-180")} />
             </button>
 
@@ -447,10 +447,10 @@ export function AdminOrdersClient({
                 return (
                   <li key={item.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/60">
                     <div>
-                      <span className="text-[13px] text-slate-700 dark:text-slate-300">{item.name} <span className="text-slate-400">x{item.quantity}</span></span>
-                      {gstRate > 0 && <span className="ml-2 text-[10px] text-slate-400">({gstRate}% GST: {formatCurrency(gstAmt)})</span>}
+                      <span className="text-body text-slate-700 dark:text-slate-300">{item.name} <span className="text-slate-400">x{item.quantity}</span></span>
+                      {gstRate > 0 && <span className="ml-2 text-micro text-slate-400">({gstRate}% GST: {formatCurrency(gstAmt)})</span>}
                     </div>
-                    <span className="text-[13px] font-semibold text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
+                    <span className="text-body font-semibold text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
                   </li>
                 );
               })}
@@ -461,37 +461,37 @@ export function AdminOrdersClient({
                   return sum + (rate > 0 ? itemTotal - itemTotal / (1 + rate / 100) : 0);
                 }, 0);
                 return totalGst > 0 ? (
-                  <li className="flex items-center justify-between px-3 py-1.5 text-[11px] text-slate-500">
+                  <li className="flex items-center justify-between px-3 py-1.5 text-caption text-slate-500">
                     <span>GST (inclusive)</span>
                     <span>{formatCurrency(totalGst)}</span>
                   </li>
                 ) : null;
               })()}
               <li className="flex items-center justify-between px-3 py-2 border-t border-border mt-1">
-                <span className="text-[13px] font-bold text-slate-900 dark:text-white">Total</span>
-                <span className="text-[14px] font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</span>
+                <span className="text-body font-bold text-slate-900 dark:text-white">Total</span>
+                <span className="text-body font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</span>
               </li>
             </ul>
             {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
               <details className="mt-3 rounded-xl border border-border overflow-hidden">
-                <summary className="px-3 py-2.5 text-[11px] font-bold text-primary cursor-pointer hover:bg-primary/5 transition-colors">
+                <summary className="px-3 py-2.5 text-caption font-bold text-primary cursor-pointer hover:bg-primary/5 transition-colors">
                   Edit Items (qty / substitute / remove)
                 </summary>
                 <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border">
                   {order.items.map((item) => (
                     <div key={item.id} className="rounded-xl bg-muted/40 p-2.5">
-                      <p className="text-[12px] font-semibold text-slate-800 dark:text-slate-200 mb-2">{item.name}</p>
+                      <p className="text-caption font-semibold text-slate-800 dark:text-slate-200 mb-2">{item.name}</p>
                       <div className="grid gap-2 sm:grid-cols-[80px_1fr_1fr]">
                         <input
                           value={editDrafts[item.id]?.quantity ?? item.quantity.toString()}
                           onChange={(event) => updateDraft(item.id, { quantity: event.target.value.replace(/\D/g, "") })}
-                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary"
+                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-caption font-bold outline-none focus:ring-1 focus:ring-primary"
                           placeholder="Qty"
                         />
                         <select
                           value={editDrafts[item.id]?.productId ?? ""}
                           onChange={(event) => updateDraft(item.id, { productId: event.target.value })}
-                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-[11px] font-semibold outline-none focus:ring-1 focus:ring-primary"
+                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-caption font-semibold outline-none focus:ring-1 focus:ring-primary"
                         >
                           <option value="">Substitute...</option>
                           {products.map((product) => (
@@ -501,14 +501,14 @@ export function AdminOrdersClient({
                         <input
                           value={editDrafts[item.id]?.reason ?? ""}
                           onChange={(event) => updateDraft(item.id, { reason: event.target.value })}
-                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-[11px] font-bold outline-none focus:ring-1 focus:ring-primary"
+                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-caption font-bold outline-none focus:ring-1 focus:ring-primary"
                           placeholder="Reason"
                         />
                       </div>
                       <div className="grid grid-cols-3 gap-1.5 mt-2">
-                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "quantity-change")} className="h-8 rounded-lg bg-primary text-[10px] font-bold text-white disabled:opacity-50">Qty</button>
-                        <button type="button" disabled={editLoading === item.id || !(editDrafts[item.id]?.productId)} onClick={() => editItem(order.id, item.id, "substitute")} className="h-8 rounded-lg bg-slate-200 dark:bg-slate-700 text-[10px] font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50">Swap</button>
-                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "remove")} className="h-8 rounded-lg bg-red-500 text-[10px] font-bold text-white disabled:opacity-50">Remove</button>
+                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "quantity-change")} className="h-8 rounded-lg bg-primary text-micro font-bold text-white disabled:opacity-50">Qty</button>
+                        <button type="button" disabled={editLoading === item.id || !(editDrafts[item.id]?.productId)} onClick={() => editItem(order.id, item.id, "substitute")} className="h-8 rounded-lg bg-slate-200 dark:bg-slate-700 text-micro font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50">Swap</button>
+                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "remove")} className="h-8 rounded-lg bg-red-500 text-micro font-bold text-white disabled:opacity-50">Remove</button>
                       </div>
                     </div>
                   ))}

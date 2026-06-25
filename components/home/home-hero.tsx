@@ -18,11 +18,11 @@ export function HomeHero({ title, subtitle, href, image, deliveryRadiusKm }: Hom
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="relative isolate overflow-hidden bg-slate-900">
+    <section className="relative isolate overflow-hidden bg-neutral-900">
       {/* Background image with overlay */}
       <div className="absolute inset-0">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url("${image}")` }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-900/70 via-slate-900/60 to-slate-900/90" />
+        <div className="absolute inset-0 bg-gradient-to-b from-neutral-900/70 via-neutral-900/60 to-neutral-900/90" />
       </div>
 
       {/* Content */}

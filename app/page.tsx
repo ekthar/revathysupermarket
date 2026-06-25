@@ -61,7 +61,7 @@ const categoryImages: Record<string, string> = {
 
 const categoryColors: Record<string, string> = {
   Fruits: "bg-orange-50",
-  Vegetables: "bg-green-50",
+  Vegetables: "bg-secondary-50",
   Dairy: "bg-blue-50",
   Beverages: "bg-yellow-50",
   Snacks: "bg-pink-50",
@@ -107,7 +107,7 @@ export default async function HomePage() {
   const heroHref = banner?.href || "/products";
 
   return (
-    <main className="min-h-screen bg-white dark:bg-slate-950">
+    <main className="min-h-screen bg-white dark:bg-neutral-950">
       <HomeSearch products={allProducts} />
 
       {/* Live Order Tracking Banner - shows when user has an active order */}
@@ -208,7 +208,7 @@ export default async function HomePage() {
                 <p className="mt-2 text-sm text-white/80">
                   We deliver everything you need straight to your door.
                 </p>
-                <Link href="/products?category=Fruits" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-white rounded-full text-sm font-bold text-slate-900 press">
+                <Link href="/products?category=Fruits" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-white rounded-full text-sm font-bold text-neutral-900 press">
                   Shop Fresh Produce
                   <ChevronUp className="h-3.5 w-3.5 rotate-90" />
                 </Link>
@@ -221,8 +221,8 @@ export default async function HomePage() {
       {/* Mobile: All products grid */}
       <section className="px-4 pt-6 pb-6 md:hidden">
         <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">All Products</h2>
-          <Link href="/products" className="flex items-center text-[12px] font-medium text-primary">
+          <h2 className="text-title font-bold text-neutral-900 dark:text-white">All Products</h2>
+          <Link href="/products" className="flex items-center text-caption font-medium text-primary">
             See all <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -232,40 +232,40 @@ export default async function HomePage() {
           ))}
         </div>
         {allProducts.length > 12 && (
-          <Link href="/products" className="mt-4 flex h-11 items-center justify-center rounded-xl border border-slate-200 text-[13px] font-semibold text-primary press">
+          <Link href="/products" className="mt-4 flex h-11 items-center justify-center rounded-xl border border-neutral-200 text-body font-semibold text-primary press">
             View all {allProducts.length} products
           </Link>
         )}
       </section>
 
       {/* Footer - Desktop */}
-      <footer className="hidden md:block border-t border-slate-100 dark:border-slate-800 mt-12">
+      <footer className="hidden md:block border-t border-neutral-100 dark:border-neutral-800 mt-12">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
           <div className="grid grid-cols-4 gap-8">
             <div>
-              <h3 className="font-display text-lg font-black text-slate-900 dark:text-white">{settings.storeName}</h3>
-              <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 leading-relaxed">
+              <h3 className="font-display text-lg font-black text-neutral-900 dark:text-white">{settings.storeName}</h3>
+              <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
                 Skip the long lines and heavy bags, we&apos;ll handle the delivery for you.
               </p>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Main Pages</h4>
+              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Main Pages</h4>
               <ul className="mt-3 space-y-2">
-                <li><Link href="/" className="text-sm text-slate-500 hover:text-slate-700">Home</Link></li>
-                <li><Link href="/products" className="text-sm text-slate-500 hover:text-slate-700">About Us</Link></li>
+                <li><Link href="/" className="text-sm text-neutral-500 hover:text-neutral-700">Home</Link></li>
+                <li><Link href="/products" className="text-sm text-neutral-500 hover:text-neutral-700">About Us</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Help</h4>
+              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Help</h4>
               <ul className="mt-3 space-y-2">
-                <li><Link href="/products" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Help Center</Link></li>
-                <li><Link href="/products" className="text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200">Return Policy</Link></li>
+                <li><Link href="/products" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Help Center</Link></li>
+                <li><Link href="/products" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Return Policy</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-bold text-slate-900 dark:text-white">Contact Information</h4>
+              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Contact Information</h4>
               <ul className="mt-3 space-y-2">
-                <li className="text-sm text-slate-500 dark:text-slate-400">{settings.address || "Kerala, India"}</li>
+                <li className="text-sm text-neutral-500 dark:text-neutral-400">{settings.address || "Kerala, India"}</li>
               </ul>
             </div>
           </div>

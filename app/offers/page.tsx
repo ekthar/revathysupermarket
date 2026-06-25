@@ -41,7 +41,7 @@ export default async function OffersPage() {
 
   return (
     <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-      <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(255,140,0,0.12),rgba(255,200,0,0.16))] p-5 sm:p-7">
+      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(255,140,0,0.12),rgba(255,200,0,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-orange-600">Save more</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight text-slate-900 dark:text-white">Offers & Deals</h1>
         <p className="mt-2 text-sm text-muted-foreground">Exclusive discounts on your favorite groceries. Offers auto-apply at checkout!</p>
@@ -60,30 +60,30 @@ export default async function OffersPage() {
                 <div className="p-4">
                   <div className="flex items-center gap-2">
                     {offer.badge && (
-                      <span className="text-[10px] font-black bg-orange-500 text-white px-2 py-0.5 rounded-full">
+                      <span className="text-micro font-black bg-orange-500 text-white px-2 py-0.5 rounded-full">
                         {offer.badge}
                       </span>
                     )}
                   </div>
                   <h3 className="mt-2 font-bold text-slate-900 dark:text-white">{offer.title}</h3>
                   {offer.description && (
-                    <p className="mt-1 text-[12px] text-muted-foreground">{offer.description}</p>
+                    <p className="mt-1 text-caption text-muted-foreground">{offer.description}</p>
                   )}
                   <div className="mt-3 flex items-center justify-between">
-                    <span className="text-[12px] font-semibold text-primary">
+                    <span className="text-caption font-semibold text-primary">
                       {offer.discountType === "percentage"
                         ? `${Number(offer.discountValue)}% off`
                         : `${formatCurrency(Number(offer.discountValue))} off`}
                       {offer.maxDiscount ? ` (up to ${formatCurrency(Number(offer.maxDiscount))})` : ""}
                     </span>
                     {offer.categoryId && (
-                      <span className="text-[10px] font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
+                      <span className="text-micro font-medium text-muted-foreground bg-muted px-2 py-0.5 rounded-full">
                         {catMap.get(offer.categoryId) ?? ""}
                       </span>
                     )}
                   </div>
                   {offer.expiresAt && (
-                    <p className="mt-2 text-[10px] text-red-500 font-medium">
+                    <p className="mt-2 text-micro text-red-500 font-medium">
                       Expires {new Date(offer.expiresAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                     </p>
                   )}
@@ -103,12 +103,12 @@ export default async function OffersPage() {
               <div key={promo.id} className="rounded-2xl border border-dashed border-primary/40 bg-primary/5 p-4">
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4 text-primary" />
-                  <span className="text-[14px] font-black text-primary tracking-wider">{promo.code}</span>
+                  <span className="text-body font-black text-primary tracking-wider">{promo.code}</span>
                 </div>
                 {promo.description && (
-                  <p className="mt-2 text-[12px] text-muted-foreground">{promo.description}</p>
+                  <p className="mt-2 text-caption text-muted-foreground">{promo.description}</p>
                 )}
-                <p className="mt-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300">
+                <p className="mt-2 text-caption font-semibold text-slate-700 dark:text-slate-300">
                   {promo.discountType === "percentage"
                     ? `${Number(promo.discountValue)}% off`
                     : `${formatCurrency(Number(promo.discountValue))} off`}

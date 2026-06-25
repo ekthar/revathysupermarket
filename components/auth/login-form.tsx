@@ -115,15 +115,15 @@ export function LoginForm({
       <motion.div
         initial={{ opacity: 0, y: 18 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-[2.25rem] bg-black p-5 text-white shadow-[0_24px_70px_-34px_rgba(15,23,42,0.9)] sm:p-8"
+        className="relative overflow-hidden rounded-xl bg-black p-5 text-white shadow-premium sm:p-8"
       >
-        <div className="absolute -right-10 top-10 h-44 w-44 rounded-full bg-lime-fresh/25 blur-3xl" />
+        <div className="absolute -right-10 top-10 h-44 w-44 rounded-full bg-secondary-100 blur-3xl" />
         <div className="absolute -bottom-16 left-6 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
         <div className="relative">
           <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-black">
             <ShoppingBasket className="h-7 w-7" />
           </div>
-          <p className="mt-6 text-xs font-black uppercase tracking-wide text-emerald-400">{SITE.name}</p>
+          <p className="mt-6 text-xs font-black uppercase tracking-wide text-secondary-400">{SITE.name}</p>
           <h1 className="mt-3 font-display text-4xl font-black leading-tight sm:text-6xl">
             Fresh groceries, made easy.
           </h1>
@@ -138,7 +138,7 @@ export function LoginForm({
                 animate={{ opacity: 1, x: 0 }}
                 className="flex items-center gap-3 rounded-2xl bg-white/12 p-3 text-sm font-black backdrop-blur"
               >
-                <CheckCircle2 className="h-5 w-5 text-emerald-400" />
+                <CheckCircle2 className="h-5 w-5 text-secondary-400" />
                 {item}
               </motion.div>
             ))}
@@ -146,7 +146,7 @@ export function LoginForm({
         </div>
       </motion.div>
 
-      <div className="rounded-[2rem] border border-white/70 bg-white/95 p-4 shadow-[0_24px_70px_-44px_rgba(15,23,42,0.65)] backdrop-blur dark:border-white/10 dark:bg-slate-900 sm:p-5">
+      <div className="rounded-xl border border-white/70 bg-white/95 p-4 shadow-premium backdrop-blur dark:border-white/10 dark:bg-neutral-900 sm:p-5">
         <div className="grid grid-cols-2 rounded-2xl bg-muted p-1">
           {[
             ["login", "Login"],
@@ -184,7 +184,7 @@ export function LoginForm({
                   <LockKeyhole className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-xs font-black uppercase text-emerald-500">Welcome back</p>
+                  <p className="text-xs font-black uppercase text-secondary-500">Welcome back</p>
                   <h2 className="font-display text-2xl font-black">Login to continue</h2>
                 </div>
               </div>
@@ -217,7 +217,7 @@ export function LoginForm({
                   <Sparkles className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="text-xs font-black uppercase text-emerald-500">New customer</p>
+                  <p className="text-xs font-black uppercase text-secondary-500">New customer</p>
                   <h2 className="font-display text-2xl font-black">Create your account</h2>
                 </div>
               </div>
@@ -258,7 +258,7 @@ function AuthInput({
     <label className="mt-4 block">
       <span className="text-sm font-bold">{label}</span>
       <span className="relative mt-2 block">
-        <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+        <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-neutral-400" />
         <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} required className="h-12 rounded-2xl pl-11" />
       </span>
     </label>

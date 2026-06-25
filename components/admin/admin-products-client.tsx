@@ -107,7 +107,7 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
 
   return (
     <>
-      <div className="mt-5 rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
+      <div className="mt-5 rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Inventory</p>
         <h2 className="mt-2 font-display text-4xl font-black leading-tight">Products</h2>
         <p className="mt-2 text-sm text-muted-foreground">Edit prices, update stock, and keep inactive items away from customers.</p>
@@ -137,7 +137,7 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
         </div>
       </div>
 
-      <section className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+      <section className="mt-5 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-red-50 text-red-600">
             <Package className="h-5 w-5" />
@@ -166,7 +166,7 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
 
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {filtered.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center sm:col-span-2 xl:col-span-3">
+          <div className="rounded-xl border border-dashed border-border p-10 text-center sm:col-span-2 xl:col-span-3">
             <p className="font-display text-2xl font-black">No products found</p>
             <p className="mt-2 text-sm text-muted-foreground">Try a different search or inventory tab.</p>
           </div>
@@ -175,20 +175,20 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
             key={product.id}
             layout
             className={cn(
-              "grid grid-cols-[84px_1fr] gap-3 rounded-[1.5rem] border bg-card/95 p-3 shadow-soft dark:border-white/10",
+              "grid grid-cols-[84px_1fr] gap-3 rounded-xl border bg-card/95 p-3 shadow-soft dark:border-white/10",
               product.isActive ? "border-white/70" : "border-dashed border-slate-300 opacity-75"
             )}
           >
-            <div className="relative aspect-square overflow-hidden rounded-[1.15rem] bg-muted">
+            <div className="relative aspect-square overflow-hidden rounded-lg bg-muted">
               <ProductImage src={product.image} alt={product.name} />
-              {!product.isActive && <span className="absolute inset-x-2 bottom-2 rounded-full bg-slate-950/80 py-1 text-center text-[10px] font-black text-white">Inactive</span>}
+              {!product.isActive && <span className="absolute inset-x-2 bottom-2 rounded-full bg-slate-950/80 py-1 text-center text-micro font-black text-white">Inactive</span>}
             </div>
             <div className="min-w-0">
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="truncate text-[10px] font-black uppercase text-primary">{product.category}</p>
+                  <p className="truncate text-micro font-black uppercase text-primary">{product.category}</p>
                   <h3 className="line-clamp-2 font-black leading-5">{product.name}</h3>
-                  {product.isFeatured && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-lime-fresh/25 px-2 py-1 text-[10px] font-black text-primary"><Sparkles className="h-3 w-3" /> Featured</p>}
+                  {product.isFeatured && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-lime-fresh/25 px-2 py-1 text-micro font-black text-primary"><Sparkles className="h-3 w-3" /> Featured</p>}
                   <p className="mt-1 text-sm font-bold">{formatCurrency(product.discountPrice ?? product.price)}</p>
                 </div>
                 <button
@@ -202,7 +202,7 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
               </div>
               <div className="mt-3 flex items-center justify-between gap-2">
                 <div>
-                  <p className="text-[10px] font-black uppercase text-muted-foreground">Stock</p>
+                  <p className="text-micro font-black uppercase text-muted-foreground">Stock</p>
                   <p className={product.stock <= 15 ? "text-xl font-black text-red-600" : "text-xl font-black text-primary"}>{product.stock}</p>
                 </div>
                 <div className="flex rounded-2xl border border-border bg-background/70">
@@ -344,7 +344,7 @@ function EditProductModal({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 260 }}
-        className="stable-dialog absolute inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-[2rem] bg-background p-4 shadow-2xl sm:left-auto sm:right-6 sm:top-6 sm:h-[calc(100dvh-3rem)] sm:w-[440px] sm:rounded-[2rem]"
+        className="stable-dialog absolute inset-x-0 bottom-0 max-h-[92dvh] overflow-y-auto rounded-t-[2rem] bg-background p-4 shadow-2xl sm:left-auto sm:right-6 sm:top-6 sm:h-[calc(100dvh-3rem)] sm:w-[440px] sm:rounded-xl"
       >
         <div className="sticky top-0 z-10 -mx-4 -mt-4 flex items-center justify-between border-b border-border bg-background/95 p-4 backdrop-blur">
           <div>

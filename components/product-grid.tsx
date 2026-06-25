@@ -66,9 +66,9 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
-      <div className="rounded-[1.75rem] bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+      <div className="rounded-xl bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
-          <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400" />
+          <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-neutral-400" />
           <Input
             value={query}
             onChange={(event) => {
@@ -80,7 +80,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
               }
             }}
             placeholder="Search for items"
-            className="h-12 rounded-2xl border-0 bg-white pl-11 text-[15px] font-semibold shadow-[0_18px_42px_-30px_rgba(15,23,42,0.45)] placeholder:text-slate-400"
+            className="h-12 rounded-2xl border-0 bg-white pl-11 text-title font-semibold shadow-elevation-2 placeholder:text-neutral-400"
           />
         </label>
         <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:hidden">
@@ -97,7 +97,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
               key={item}
               type="button"
               onClick={() => setCategory(item)}
-              className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-black/5 bg-white px-4 text-xs font-black text-slate-700 shadow-sm whitespace-nowrap"}
+              className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-black/5 bg-white px-4 text-xs font-black text-neutral-700 shadow-sm whitespace-nowrap"}
             >
               {item}
             </button>
@@ -168,7 +168,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
         <div className="space-y-5">
           {/* Sort */}
           <div>
-            <p className="text-[12px] font-bold text-slate-500 uppercase mb-2">Sort by</p>
+            <p className="text-caption font-bold text-neutral-500 uppercase mb-2">Sort by</p>
             <div className="grid grid-cols-2 gap-2">
               {[
                 { value: "popularity" as const, label: "Popularity" },
@@ -180,10 +180,10 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
                   key={option.value}
                   type="button"
                   onClick={() => { setSort(option.value); setFilterOpen(false); }}
-                  className={`h-10 rounded-xl text-[12px] font-semibold transition-colors ${
+                  className={`h-10 rounded-xl text-caption font-semibold transition-colors ${
                     sort === option.value
                       ? "bg-black text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                   }`}
                 >
                   {option.label}
@@ -194,7 +194,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
 
           {/* Price range */}
           <div>
-            <p className="text-[12px] font-bold text-slate-500 uppercase mb-2">Price range (up to ₹{maxPrice})</p>
+            <p className="text-caption font-bold text-neutral-500 uppercase mb-2">Price range (up to ₹{maxPrice})</p>
             <input
               type="range"
               min="20"
@@ -203,7 +203,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
               onChange={(event) => setMaxPrice(Number(event.target.value))}
               className="w-full accent-primary"
             />
-            <div className="flex justify-between text-[11px] text-slate-400 mt-1">
+            <div className="flex justify-between text-caption text-neutral-400 mt-1">
               <span>₹20</span>
               <span>₹350</span>
             </div>
@@ -211,17 +211,17 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
 
           {/* Category */}
           <div>
-            <p className="text-[12px] font-bold text-slate-500 uppercase mb-2">Category</p>
+            <p className="text-caption font-bold text-neutral-500 uppercase mb-2">Category</p>
             <div className="flex flex-wrap gap-2">
               {["All", ...categories].map((item) => (
                 <button
                   key={item}
                   type="button"
                   onClick={() => { setCategory(item); setFilterOpen(false); }}
-                  className={`h-9 px-3 rounded-full text-[11px] font-semibold transition-colors ${
+                  className={`h-9 px-3 rounded-full text-caption font-semibold transition-colors ${
                     category === item
                       ? "bg-black text-white"
-                      : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                   }`}
                 >
                   {item}
@@ -231,7 +231,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
           </div>
 
           {/* Results count */}
-          <p className="text-center text-[12px] font-semibold text-black">{filtered.length} products found</p>
+          <p className="text-center text-caption font-semibold text-black">{filtered.length} products found</p>
         </div>
       </BottomSheet>
     </section>

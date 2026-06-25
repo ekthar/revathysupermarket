@@ -117,9 +117,9 @@ export function OtpInput({
             onPaste={handlePaste}
             disabled={disabled}
             className={`h-14 w-11 rounded-xl border-2 text-center text-xl font-black outline-none transition-all
-              ${value[i] ? "border-emerald-500 bg-emerald-50 dark:border-emerald-400 dark:bg-emerald-950/30" : "border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800"}
+              ${value[i] ? "border-secondary-500 bg-secondary-50 dark:border-secondary-400 dark:bg-secondary-900/30" : "border-slate-200 bg-slate-50 dark:border-slate-600 dark:bg-slate-800"}
               ${error ? "border-red-400 bg-red-50 dark:border-red-500 dark:bg-red-950/20" : ""}
-              focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:text-white
+              focus:border-secondary-500 focus:ring-2 focus:ring-secondary-500/20 dark:text-white
               disabled:opacity-50
             `}
           />
@@ -184,7 +184,7 @@ export function OtpCountdown({
     <button
       onClick={onResend}
       disabled={resendLoading}
-      className="text-sm font-bold text-emerald-600 hover:text-emerald-700 disabled:opacity-50 dark:text-emerald-400"
+      className="text-sm font-bold text-secondary-600 hover:text-secondary-700 disabled:opacity-50 dark:text-secondary-400"
     >
       {resendLoading ? "Sending..." : "Resend OTP"}
     </button>

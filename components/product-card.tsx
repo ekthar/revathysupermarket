@@ -50,7 +50,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
         <Link href={`/products/${product.slug}`} className="shrink-0">
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="h-16 w-16 rounded-xl overflow-hidden bg-slate-50"
+            className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50"
           >
             <ProductImage src={product.image} alt={product.name} className="object-cover" />
           </motion.div>
@@ -58,14 +58,14 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
 
         <div className="flex-1 min-w-0">
           <Link href={`/products/${product.slug}`}>
-            <h3 className="text-[13px] font-bold text-slate-800 leading-snug line-clamp-1">
+            <h3 className="text-body font-bold text-neutral-800 leading-snug line-clamp-1">
               {product.name}
             </h3>
-            <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{product.unit || "Fresh pick"}</p>
+            <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pick"}</p>
           </Link>
           <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-[15px] font-black text-slate-900">{formatCurrency(price)}</span>
-            <span className="text-[10px] text-slate-400 font-medium">/ {product.unit || "per kg"}</span>
+            <span className="text-title font-black text-neutral-900">{formatCurrency(price)}</span>
+            <span className="text-micro text-neutral-400 font-medium">/ {product.unit || "per kg"}</span>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex items-center gap-1 rounded-full bg-black px-3 py-2 text-[11px] font-black text-white transition disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white transition disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <Plus className="h-3 w-3" />
                 Add to Cart
@@ -109,13 +109,13 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
       whileHover={{ y: -3 }}
       transition={springPresets.snappy}
       className={cn(
-        "relative overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.45)] ring-1 ring-black/[0.03] dark:bg-slate-900 product-card-animated",
+        "relative overflow-hidden rounded-lg bg-white shadow-elevation-2 dark:bg-neutral-900 product-card-animated",
         outOfStock && "opacity-50"
       )}
     >
       <Link href={`/products/${product.slug}`}>
         <div className={cn(
-          "relative bg-slate-50 overflow-hidden",
+          "relative bg-neutral-50 overflow-hidden",
           compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
         )}>
           <motion.div
@@ -130,7 +130,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
               initial={{ scale: 0, rotate: -10 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
-              className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-[9px] font-black text-white shadow-md"
+              className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md"
             >
               <Clock className="h-2.5 w-2.5" />
               {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
@@ -138,7 +138,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
           )}
           {outOfStock && (
             <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
-              <span className="bg-slate-900/90 text-white text-[10px] font-semibold px-2.5 py-1 rounded-full">Sold out</span>
+              <span className="bg-neutral-900/90 text-white text-micro font-semibold px-2.5 py-1 rounded-full">Sold out</span>
             </div>
           )}
           {/* Favorite button */}
@@ -151,18 +151,18 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
       <div className={cn("p-3", compact && "p-2.5")}>
         <Link href={`/products/${product.slug}`}>
           <h3 className={cn(
-            "font-semibold text-slate-800 leading-snug line-clamp-2",
-            compact ? "text-[11px]" : "text-[12px]"
+            "font-semibold text-neutral-800 leading-snug line-clamp-2",
+            compact ? "text-caption" : "text-caption"
           )}>{product.name}</h3>
-          <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{product.unit || "Fresh pack"}</p>
+          <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pack"}</p>
         </Link>
 
         <div className="flex items-end justify-between mt-2.5 gap-1">
           <div>
-            <span className={cn("font-black text-slate-900", compact ? "text-[14px]" : "text-[15px]")}>{formatCurrency(price)}</span>
-            <span className="text-[10px] text-slate-400 ml-0.5 font-medium">/ {product.unit || "per kg"}</span>
+            <span className={cn("font-black text-neutral-900", compact ? "text-body" : "text-title")}>{formatCurrency(price)}</span>
+            <span className="text-micro text-neutral-400 ml-0.5 font-medium">/ {product.unit || "per kg"}</span>
             {product.discountPrice && (
-              <span className="ml-1.5 text-[10px] text-slate-400 line-through">{formatCurrency(product.price)}</span>
+              <span className="ml-1.5 text-micro text-neutral-400 line-through">{formatCurrency(product.price)}</span>
             )}
           </div>
 
@@ -186,7 +186,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 type="button"
                 disabled={outOfStock}
                 onClick={add}
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white shadow-[0_10px_20px_-12px_rgba(0,0,0,0.75)] transition disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white shadow-elevation-3 transition disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <Plus className="h-4 w-4" />
               </motion.button>
@@ -232,7 +232,7 @@ function QuantityStepper({
           initial={{ scale: 1.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 500, damping: 15 }}
-          className="text-[11px] font-bold text-white"
+          className="text-caption font-bold text-white"
         >
           {quantity}
         </motion.span>
@@ -275,7 +275,7 @@ function QuantityStepper({
         initial={{ scale: 1.5, opacity: 0, y: -5 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 500, damping: 15 }}
-        className="w-5 text-center text-[11px] font-bold text-white"
+        className="w-5 text-center text-caption font-bold text-white"
       >
         {quantity}
       </motion.span>

@@ -9,7 +9,7 @@ export default async function AdminOffersPage() {
   const session = await auth();
   if (!canManageSettings(session?.user?.role)) {
     return (
-      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
         <h2 className="font-display text-3xl font-black">Offers</h2>
         <p className="mt-2 text-sm text-muted-foreground">Owner access is required.</p>
       </div>
@@ -23,7 +23,7 @@ export default async function AdminOffersPage() {
 
   return (
     <div>
-      <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
+      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Promotions</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">Offers & Deals</h1>
         <p className="mt-2 text-sm text-muted-foreground">Create product or category-level offers. Customers see badges on applicable products.</p>

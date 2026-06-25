@@ -104,10 +104,10 @@ export function AnimatedProductSection({
                 >
                   <Link
                     href={`/products?category=${encodeURIComponent(categories[idx] || label)}`}
-                    className={`block whitespace-nowrap px-4 py-2 rounded-full text-[12px] font-semibold transition-all ${
+                    className={`block whitespace-nowrap px-4 py-2 rounded-full text-caption font-semibold transition-all ${
                       idx === 0
                         ? "bg-primary text-white shadow-sm"
-                        : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                        : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
                     }`}
                   >
                     {label}

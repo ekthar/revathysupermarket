@@ -95,7 +95,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-50 text-xs font-bold text-slate-600">{item.quantity}x</span>
                     <div>
                       <p className="text-sm font-semibold text-slate-900">{item.name}</p>
-                      {item.gstRate && <p className="text-[10px] text-slate-400">GST: {Number(item.gstRate)}%</p>}
+                      {item.gstRate && <p className="text-micro text-slate-400">GST: {Number(item.gstRate)}%</p>}
                     </div>
                   </div>
                   <p className="text-sm font-bold text-slate-900">₹{(Number(item.price) * item.quantity).toFixed(0)}</p>
@@ -123,7 +123,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <div>
                     <p className="text-sm font-semibold text-slate-800">{ev.status.replace(/_/g, " ")}</p>
                     {ev.note && <p className="text-xs text-slate-500">{ev.note}</p>}
-                    <p className="text-[10px] text-slate-400">{new Date(ev.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p>
+                    <p className="text-micro text-slate-400">{new Date(ev.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p>
                   </div>
                 </div>
               ))}
@@ -139,7 +139,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <div key={ret.id} className="rounded-xl bg-slate-50 p-3">
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-xs font-bold text-slate-700">{ret.returnNumber}</span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${ret.status === "REFUNDED" ? "bg-green-100 text-green-700" : ret.status === "REJECTED" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{ret.status}</span>
+                      <span className={`text-micro font-bold px-2 py-0.5 rounded-full ${ret.status === "REFUNDED" ? "bg-green-100 text-green-700" : ret.status === "REJECTED" ? "bg-red-100 text-red-700" : "bg-yellow-100 text-yellow-700"}`}>{ret.status}</span>
                     </div>
                     <p className="text-xs text-slate-600">{ret.reason}</p>
                     {ret.refundAmount && <p className="text-xs font-semibold text-green-600 mt-1">Refund: ₹{Number(ret.refundAmount).toFixed(0)}</p>}

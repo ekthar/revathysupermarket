@@ -18,7 +18,7 @@ export function LoyaltyClient({ balance, lifetimeEarned, referralCode, invited, 
   }
 
   return <div className="space-y-4">
-    <section className="rounded-3xl bg-gradient-to-br from-primary to-emerald-600 p-5 text-white shadow-lg">
+    <section className="rounded-3xl bg-gradient-to-br from-primary to-secondary-600 p-5 text-white shadow-lg">
       <p className="text-sm font-bold text-white/75">Available rewards</p><p className="mt-1 font-display text-4xl font-black">{balance} points</p><p className="mt-1 text-sm text-white/75">Worth ₹{(balance * pointValueRupees).toFixed(2)} · {lifetimeEarned} lifetime points</p>
     </section>
     <section className="rounded-3xl border border-border bg-card p-4">

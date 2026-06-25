@@ -80,27 +80,27 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-slate-900 card-shadow"
+              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-neutral-900 card-shadow"
             >
               <Link href={`/products/${product.slug}`} className="shrink-0">
-                <div className="h-16 w-16 rounded-xl overflow-hidden bg-slate-50 dark:bg-slate-800">
+                <div className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-800">
                   <ProductImage src={product.image} alt={product.name} className="object-cover" />
                 </div>
               </Link>
 
               <div className="flex-1 min-w-0">
                 <Link href={`/products/${product.slug}`}>
-                  <h3 className="text-[13px] font-semibold text-slate-800 dark:text-white leading-snug line-clamp-1">
+                  <h3 className="text-body font-semibold text-neutral-800 dark:text-white leading-snug line-clamp-1">
                     {product.name}
                   </h3>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{product.category}</p>
+                  <p className="text-micro text-neutral-400 mt-0.5">{product.category}</p>
                 </Link>
                 <div className="flex items-center gap-2 mt-1.5">
-                  <span className="text-[14px] font-bold text-slate-900 dark:text-white">{formatCurrency(price)}</span>
+                  <span className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(price)}</span>
                   {product.discountPrice && (
-                    <span className="text-[10px] text-slate-400 line-through">{formatCurrency(product.price)}</span>
+                    <span className="text-micro text-neutral-400 line-through">{formatCurrency(product.price)}</span>
                   )}
-                  <span className="text-[10px] text-slate-400">/ {product.unit}</span>
+                  <span className="text-micro text-neutral-400">/ {product.unit}</span>
                 </div>
               </div>
 
@@ -116,7 +116,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
 
                 {/* Add to cart / Quantity */}
                 {outOfStock ? (
-                  <span className="text-[9px] font-semibold text-slate-400">Out of stock</span>
+                  <span className="text-micro font-semibold text-neutral-400">Out of stock</span>
                 ) : cartItem ? (
                   <div className="flex items-center h-[28px] rounded-full bg-primary overflow-hidden">
                     <button
@@ -126,7 +126,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
                     >
                       <Minus className="h-3 w-3" />
                     </button>
-                    <span className="w-5 text-center text-[11px] font-bold text-white">{cartItem.quantity}</span>
+                    <span className="w-5 text-center text-caption font-bold text-white">{cartItem.quantity}</span>
                     <button
                       type="button"
                       onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
@@ -139,7 +139,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
                   <button
                     type="button"
                     onClick={() => addToCart(product)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-primary/10 text-[10px] font-bold text-primary press"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-primary/10 text-micro font-bold text-primary press"
                   >
                     <Plus className="h-3 w-3" />
                     Add

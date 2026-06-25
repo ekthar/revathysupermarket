@@ -96,7 +96,7 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
 
   return (
     <div className="mt-5 grid gap-5">
-      <form onSubmit={saveProfile} className="grid gap-3 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+      <form onSubmit={saveProfile} className="grid gap-3 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
         <input value={profile.name} onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))} className="h-11 rounded-2xl border border-border bg-background px-4 text-sm font-bold" placeholder="Name" />
         <input value={profile.email} onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))} className="h-11 rounded-2xl border border-border bg-background px-4 text-sm font-bold" placeholder="Email" />
         <input value={profile.phone} disabled className="h-11 rounded-2xl border border-border bg-muted px-4 text-sm font-bold" placeholder="Phone" />
@@ -118,7 +118,7 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
           Link Google
         </button>
       </form>
-      <section className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+      <section className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
         <h2 className="font-display text-2xl font-black">Saved addresses</h2>
         <div className="mt-4 grid gap-3">
           {localAddresses.map((address) => (
@@ -136,7 +136,7 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
           ))}
         </div>
       </section>
-      <section className="rounded-[1.75rem] border border-red-200 bg-red-50 p-4 shadow-soft dark:border-red-500/30 dark:bg-red-950/20">
+      <section className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-soft dark:border-red-500/30 dark:bg-red-950/20">
         <h2 className="font-display text-2xl font-black text-red-700 dark:text-red-200">Delete account</h2>
         <p className="mt-2 text-sm font-bold text-red-700/80 dark:text-red-100/80">This removes your login profile and saved addresses. Store order records are retained for billing and operations.</p>
         <button type="button" onClick={deleteAccount} className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 text-sm font-black text-white">

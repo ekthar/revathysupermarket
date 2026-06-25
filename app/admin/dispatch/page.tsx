@@ -50,7 +50,7 @@ export default async function DispatchPage() {
                 <p className="text-xs text-slate-500">{p.phone}</p>
               </div>
               {p.locationUpdatedAt && (
-                <span className="ml-auto text-[10px] text-slate-400">
+                <span className="ml-auto text-micro text-slate-400">
                   {new Date(p.locationUpdatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
@@ -72,7 +72,7 @@ export default async function DispatchPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold">#{order.orderNumber}</span>
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusColors[order.status] || ""}`}>{order.status.replace(/_/g, " ")}</span>
+                  <span className={`text-micro font-bold px-2 py-0.5 rounded-full ${statusColors[order.status] || ""}`}>{order.status.replace(/_/g, " ")}</span>
                 </div>
                 <span className="text-xs text-slate-500">{Number(order.distanceKm).toFixed(1)} km</span>
               </div>

@@ -90,23 +90,23 @@ export default async function AdminLayout({ children }: { children: React.ReactN
                   <ShoppingBag className="h-4 w-4 text-white" />
                 )}
               </div>
-              <span className="text-[14px] font-bold text-slate-900 dark:text-white hidden sm:block">{settings.storeName} Admin</span>
+              <span className="text-body font-bold text-slate-900 dark:text-white hidden sm:block">{settings.storeName} Admin</span>
             </Link>
             <StoreToggleButton initialIsOpen={settings.isStoreOpen} />
             <div className="hidden md:block"><InstallAppButton compact /></div>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/" className="text-[12px] font-semibold text-primary flex items-center gap-1.5 hover:underline px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10">
+            <Link href="/" className="text-caption font-semibold text-primary flex items-center gap-1.5 hover:underline px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10">
               <Home className="h-3.5 w-3.5" /> View Store
             </Link>
             <div className="h-4 w-px bg-slate-200 dark:bg-slate-700" />
             <div className="flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                <span className="text-[11px] font-bold text-slate-600 dark:text-slate-300">{userName.charAt(0).toUpperCase()}</span>
+                <span className="text-caption font-bold text-slate-600 dark:text-slate-300">{userName.charAt(0).toUpperCase()}</span>
               </div>
               <div className="text-right hidden sm:block">
-                <p className="text-[12px] font-semibold text-slate-900 dark:text-white">{userName}</p>
-                <p className="text-[10px] text-slate-400">{roleLabel(role)}</p>
+                <p className="text-caption font-semibold text-slate-900 dark:text-white">{userName}</p>
+                <p className="text-micro text-slate-400">{roleLabel(role)}</p>
               </div>
               <form action={async () => { "use server"; await signOut({ redirectTo: "/admin/login" }); }}>
                 <button type="submit" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors press" title="Logout">

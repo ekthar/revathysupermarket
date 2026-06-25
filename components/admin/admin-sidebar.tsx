@@ -53,7 +53,7 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
               href={item.href}
               title={item.group}
               className={cn(
-                "relative flex min-h-10 items-center gap-2 rounded-xl px-3 text-[12px] font-semibold transition-colors",
+                "relative flex min-h-10 items-center gap-2 rounded-xl px-3 text-caption font-semibold transition-colors",
                 active
                   ? "bg-primary text-white shadow-sm"
                   : "text-slate-600 hover:bg-slate-100 hover:text-slate-950 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white"
@@ -61,7 +61,7 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
             >
               <Icon className="h-4 w-4 shrink-0" />
               <span>{item.label}</span>
-              {item.badge > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">{item.badge}</span>}
+              {item.badge > 0 && <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1 text-micro font-bold text-white">{item.badge}</span>}
             </Link>
           );
         })}
@@ -79,7 +79,7 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-2 px-3 py-2.5 rounded-xl text-[12px] font-semibold transition-all press min-h-[44px]",
+                  "flex items-center gap-2 px-3 py-2.5 rounded-xl text-caption font-semibold transition-all press min-h-[44px]",
                   active
                     ? "bg-primary text-white shadow-md shadow-primary/20"
                     : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
@@ -89,7 +89,7 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
                 <span className="whitespace-nowrap">{item.label}</span>
                 {item.badge > 0 && (
                   <span className={cn(
-                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[9px] font-bold",
+                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-micro font-bold",
                     active ? "bg-white/25 text-white" : "bg-red-500 text-white"
                   )}>
                     {item.badge}

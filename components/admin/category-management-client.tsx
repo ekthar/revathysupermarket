@@ -114,7 +114,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
           New Category
         </Button>
       ) : (
-        <form onSubmit={handleCreate} className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+        <form onSubmit={handleCreate} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-xl font-black">Create Category</h3>
             <button type="button" onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground">
@@ -161,7 +161,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
       )}
 
       {/* Category list */}
-      <div className="rounded-[1.75rem] border border-white/70 bg-card/95 shadow-soft dark:border-white/10 overflow-hidden">
+      <div className="rounded-xl border border-white/70 bg-card/95 shadow-soft dark:border-white/10 overflow-hidden">
         {displayCategories.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">No categories yet. Create your first category above.</p>
         ) : (
@@ -227,14 +227,14 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <h4 className="font-bold text-slate-900 dark:text-white truncate">{cat.name}</h4>
-                        <span className="text-[10px] font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-micro font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
                           {cat.productCount} product{cat.productCount !== 1 ? "s" : ""}
                         </span>
                       </div>
                       {cat.description && (
-                        <p className="text-[12px] text-muted-foreground mt-0.5 truncate">{cat.description}</p>
+                        <p className="text-caption text-muted-foreground mt-0.5 truncate">{cat.description}</p>
                       )}
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Order: {cat.sortOrder} &middot; /{cat.slug}</p>
+                      <p className="text-micro text-muted-foreground mt-0.5">Order: {cat.sortOrder} &middot; /{cat.slug}</p>
                     </div>
 
                     {/* Sort buttons */}

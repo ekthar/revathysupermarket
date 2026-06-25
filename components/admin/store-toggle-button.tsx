@@ -33,7 +33,7 @@ export function StoreToggleButton({ initialIsOpen }: { initialIsOpen: boolean })
       onClick={toggle}
       disabled={loading}
       aria-label={isOpen ? "Close store for new orders" : "Open store for new orders"}
-      className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold transition-all press ${
+      className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-micro font-bold transition-all press ${
         isOpen
           ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800"
           : "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800"

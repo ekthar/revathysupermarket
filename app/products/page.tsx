@@ -63,8 +63,8 @@ export default async function ProductsPage({
     <main className="min-h-screen bg-background pb-24">
       <section className="overflow-hidden px-4 pb-1 pt-8 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <h1 className="font-display text-[2rem] font-black leading-none tracking-[-0.06em] sm:text-5xl">Browse</h1>
-          <p className="mt-2 text-sm font-semibold text-slate-400">{products.length} products available</p>
+          <h1 className="font-display text-display font-black leading-none tracking-tighter sm:text-5xl">Browse</h1>
+          <p className="mt-2 text-sm font-semibold text-neutral-400">{products.length} products available</p>
         </div>
       </section>
       <ProductGrid items={products} initialCategory={initialCategory} initialQuery={q || ""} />

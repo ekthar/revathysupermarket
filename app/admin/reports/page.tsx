@@ -37,7 +37,7 @@ export default async function AdminReportsPage() {
 
   return (
     <main className="grid gap-5">
-      <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
+      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Local reports</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">Reports</h1>
         <p className="mt-2 text-sm text-muted-foreground">Sales, collections, delivery performance, and product popularity without external tools.</p>
@@ -49,14 +49,14 @@ export default async function AdminReportsPage() {
           ["UPI collection", formatCurrency(upi)],
           ["Paid total", formatCurrency(paid)]
         ].map(([label, value]) => (
-          <div key={label} className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+          <div key={label} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
             <p className="text-xs font-black uppercase text-muted-foreground">{label}</p>
             <p className="mt-2 text-2xl font-black">{value}</p>
           </div>
         ))}
       </div>
       <div className="grid gap-5 lg:grid-cols-2">
-        <section className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
+        <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
           <h2 className="font-display text-2xl font-black">Product popularity</h2>
           <div className="mt-4 grid gap-2">
             {popularItems.map((item) => (
@@ -67,7 +67,7 @@ export default async function AdminReportsPage() {
             ))}
           </div>
         </section>
-        <section className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
+        <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
           <h2 className="font-display text-2xl font-black">Delivery partner performance</h2>
           <div className="mt-4 grid gap-2">
             {deliveryPartners.map((partner) => (

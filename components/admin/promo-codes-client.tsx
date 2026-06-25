@@ -109,7 +109,7 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
       <button
         type="button"
         onClick={() => { setShowForm(!showForm); if (!form.code) generateCode(); }}
-        className="w-full h-12 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 dark:bg-primary/10 text-[13px] font-bold text-primary flex items-center justify-center gap-2 press"
+        className="w-full h-12 rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 dark:bg-primary/10 text-body font-bold text-primary flex items-center justify-center gap-2 press"
       >
         <Plus className="h-4 w-4" />
         Create Promo Code
@@ -120,7 +120,7 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
         <form onSubmit={createCode} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="col-span-2 sm:col-span-1">
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Code</label>
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">Code</label>
               <div className="flex gap-2">
                 <input
                   type="text"
@@ -128,36 +128,36 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
                   onChange={(e) => setForm((f) => ({ ...f, code: e.target.value.toUpperCase() }))}
                   placeholder="SAVE20"
                   required
-                  className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] font-bold tracking-wider outline-none"
+                  className="flex-1 h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body font-bold tracking-wider outline-none"
                 />
-                <button type="button" onClick={generateCode} className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-[11px] font-bold text-slate-600 dark:text-slate-300 press">
+                <button type="button" onClick={generateCode} className="h-10 px-3 rounded-xl bg-slate-100 dark:bg-slate-800 text-caption font-bold text-slate-600 dark:text-slate-300 press">
                   Random
                 </button>
               </div>
             </div>
             <div className="col-span-2 sm:col-span-1">
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Description</label>
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">Description</label>
               <input
                 type="text"
                 value={form.description}
                 onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
                 placeholder="20% off on first order"
-                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] outline-none"
+                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body outline-none"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Discount Type</label>
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">Discount Type</label>
               <select
                 value={form.discountType}
                 onChange={(e) => setForm((f) => ({ ...f, discountType: e.target.value as any }))}
-                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] font-semibold outline-none"
+                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body font-semibold outline-none"
               >
                 <option value="percentage">Percentage (%)</option>
                 <option value="fixed">Fixed Amount (₹)</option>
               </select>
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">
                 {form.discountType === "percentage" ? "Discount %" : "Discount ₹"}
               </label>
               <input
@@ -168,56 +168,56 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
                 min="1"
                 max={form.discountType === "percentage" ? "100" : "10000"}
                 required
-                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] outline-none"
+                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body outline-none"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Min Order ₹</label>
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">Min Order ₹</label>
               <input
                 type="number"
                 value={form.minimumOrder}
                 onChange={(e) => setForm((f) => ({ ...f, minimumOrder: e.target.value }))}
                 placeholder="0"
                 min="0"
-                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] outline-none"
+                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body outline-none"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Max Discount ₹</label>
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">Max Discount ₹</label>
               <input
                 type="number"
                 value={form.maxDiscount}
                 onChange={(e) => setForm((f) => ({ ...f, maxDiscount: e.target.value }))}
                 placeholder="No cap"
                 min="1"
-                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] outline-none"
+                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body outline-none"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Usage Limit</label>
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">Usage Limit</label>
               <input
                 type="number"
                 value={form.usageLimit}
                 onChange={(e) => setForm((f) => ({ ...f, usageLimit: e.target.value }))}
                 placeholder="Unlimited"
                 min="1"
-                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] outline-none"
+                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body outline-none"
               />
             </div>
             <div>
-              <label className="text-[11px] font-semibold text-slate-500 mb-1 block">Expires At</label>
+              <label className="text-caption font-semibold text-slate-500 mb-1 block">Expires At</label>
               <input
                 type="datetime-local"
                 value={form.expiresAt}
                 onChange={(e) => setForm((f) => ({ ...f, expiresAt: e.target.value }))}
-                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-[13px] outline-none"
+                className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body outline-none"
               />
             </div>
           </div>
           <button
             type="submit"
             disabled={creating}
-            className="w-full h-11 rounded-xl bg-primary text-white text-[13px] font-bold press disabled:opacity-50"
+            className="w-full h-11 rounded-xl bg-primary text-white text-body font-bold press disabled:opacity-50"
           >
             {creating ? "Creating..." : "Create Promo Code"}
           </button>
@@ -228,7 +228,7 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
       {codes.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-10 text-center">
           <Tag className="h-8 w-8 text-slate-300 mx-auto" />
-          <p className="mt-3 text-[13px] font-medium text-slate-500">No promo codes yet</p>
+          <p className="mt-3 text-body font-medium text-slate-500">No promo codes yet</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -248,12 +248,12 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
                   </div>
                   <div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-bold tracking-wider text-slate-900 dark:text-white">{code.code}</span>
+                      <span className="text-body font-bold tracking-wider text-slate-900 dark:text-white">{code.code}</span>
                       <button type="button" onClick={() => copyCode(code.code)} className="text-slate-400 press">
                         <Copy className="h-3 w-3" />
                       </button>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
+                    <p className="text-caption text-slate-500 mt-0.5">
                       {code.discountType === "percentage" ? `${code.discountValue}% off` : `₹${code.discountValue} off`}
                       {code.minimumOrder > 0 ? ` • Min ₹${code.minimumOrder}` : ""}
                       {code.maxDiscount ? ` • Max ₹${code.maxDiscount}` : ""}
@@ -261,7 +261,7 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-medium text-slate-400">
+                  <span className="text-micro font-medium text-slate-400">
                     {code.usedCount}{code.usageLimit ? `/${code.usageLimit}` : ""} used
                   </span>
                   <button type="button" onClick={() => toggleCode(code.id, code.isActive)} className="press">
@@ -277,10 +277,10 @@ export function PromoCodesClient({ codes: initialCodes }: { codes: PromoCode[] }
                 </div>
               </div>
               {code.description && (
-                <p className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">{code.description}</p>
+                <p className="mt-2 text-caption text-slate-500 dark:text-slate-400">{code.description}</p>
               )}
               {code.expiresAt && (
-                <p className="mt-1 text-[10px] text-slate-400">
+                <p className="mt-1 text-micro text-slate-400">
                   Expires: {new Date(code.expiresAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" })}
                 </p>
               )}

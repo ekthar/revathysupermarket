@@ -134,15 +134,15 @@ export function PushNotificationManager() {
               <Bell className="h-5 w-5 text-white" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-[14px] font-bold text-slate-900 dark:text-white">Get Order Updates</p>
-              <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-0.5">Never miss a delivery! Get instant status notifications.</p>
+              <p className="text-body font-bold text-slate-900 dark:text-white">Get Order Updates</p>
+              <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5">Never miss a delivery! Get instant status notifications.</p>
             </div>
           </div>
           <div className="flex gap-2 mt-4">
-            <button type="button" onClick={enableNotifications} disabled={subscribing} className="flex-1 h-10 rounded-xl bg-black text-[13px] font-bold text-white press disabled:opacity-50">
+            <button type="button" onClick={enableNotifications} disabled={subscribing} className="flex-1 h-10 rounded-xl bg-black text-body font-bold text-white press disabled:opacity-50">
               {subscribing ? "Enabling..." : "Enable Notifications"}
             </button>
-            <button type="button" onClick={dismiss} className="h-10 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-[12px] font-semibold text-slate-600 dark:text-slate-300 press">
+            <button type="button" onClick={dismiss} className="h-10 px-4 rounded-xl bg-slate-100 dark:bg-slate-800 text-caption font-semibold text-slate-600 dark:text-slate-300 press">
               Later
             </button>
           </div>

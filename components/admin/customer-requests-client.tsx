@@ -70,7 +70,7 @@ export function CustomerRequestsClient({ requests, counts }: { requests: Request
             )}
           >
             {t.label}
-            {t.count > 0 && <span className={cn("flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-[10px] font-bold", tab === t.key ? "bg-white/20" : "bg-red-500 text-white")}>{t.count}</span>}
+            {t.count > 0 && <span className={cn("flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-micro font-bold", tab === t.key ? "bg-white/20" : "bg-red-500 text-white")}>{t.count}</span>}
           </button>
         ))}
       </div>
@@ -100,15 +100,15 @@ export function CustomerRequestsClient({ requests, counts }: { requests: Request
                       {req.orderNumber && (
                         <Link href={`/admin/orders/${req.orderId}`} className="text-primary hover:underline font-semibold">#{req.orderNumber}</Link>
                       )}
-                      {req.assignee && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-semibold">{req.assignee}</span>}
+                      {req.assignee && <span className="bg-slate-100 px-1.5 py-0.5 rounded text-micro font-semibold">{req.assignee}</span>}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
                     <span className={cn("text-xs font-semibold", priorityColors[req.priority] || "text-slate-500")}>{req.priority}</span>
-                    <p className="text-[10px] text-slate-400 mt-0.5 flex items-center gap-0.5 justify-end"><Clock className="h-3 w-3" /> {timeAgo(req.createdAt)}</p>
+                    <p className="text-micro text-slate-400 mt-0.5 flex items-center gap-0.5 justify-end"><Clock className="h-3 w-3" /> {timeAgo(req.createdAt)}</p>
                   </div>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-2">{req.type === "support" && <><button onClick={() => supportStatus(req, "WAITING_FOR_CUSTOMER")} className="h-9 rounded-xl bg-amber-100 px-3 text-[11px] font-black text-amber-800">Waiting</button><button onClick={() => supportStatus(req, "RESOLVED")} className="h-9 rounded-xl bg-emerald-100 px-3 text-[11px] font-black text-emerald-700">Resolve</button><Link href="/admin/support" className="flex h-9 items-center rounded-xl border border-border px-3 text-[11px] font-black">Reply</Link></>}{req.type === "return" && <Link href="/admin/returns" className="flex h-9 items-center rounded-xl bg-primary px-3 text-[11px] font-black text-white">Open return</Link>}{req.type === "damage" && <><button onClick={() => damageDecision(req, "approve")} className="h-9 rounded-xl bg-primary px-3 text-[11px] font-black text-white">Approve</button><button onClick={() => damageDecision(req, "reject")} className="h-9 rounded-xl bg-red-100 px-3 text-[11px] font-black text-red-700">Reject</button></>}</div>
+                <div className="mt-3 flex flex-wrap gap-2">{req.type === "support" && <><button onClick={() => supportStatus(req, "WAITING_FOR_CUSTOMER")} className="h-9 rounded-xl bg-amber-100 px-3 text-caption font-black text-amber-800">Waiting</button><button onClick={() => supportStatus(req, "RESOLVED")} className="h-9 rounded-xl bg-emerald-100 px-3 text-caption font-black text-emerald-700">Resolve</button><Link href="/admin/support" className="flex h-9 items-center rounded-xl border border-border px-3 text-caption font-black">Reply</Link></>}{req.type === "return" && <Link href="/admin/returns" className="flex h-9 items-center rounded-xl bg-primary px-3 text-caption font-black text-white">Open return</Link>}{req.type === "damage" && <><button onClick={() => damageDecision(req, "approve")} className="h-9 rounded-xl bg-primary px-3 text-caption font-black text-white">Approve</button><button onClick={() => damageDecision(req, "reject")} className="h-9 rounded-xl bg-red-100 px-3 text-caption font-black text-red-700">Reject</button></>}</div>
               </div>
             );
           })}

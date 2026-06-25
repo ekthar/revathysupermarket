@@ -20,7 +20,7 @@ export function DeliveryEta({ minMinutes, maxMinutes, className = "", compact = 
 
   if (compact) {
     return (
-      <span className={`inline-flex items-center gap-1 text-[11px] font-medium text-slate-500 dark:text-slate-400 ${className}`}>
+      <span className={`inline-flex items-center gap-1 text-caption font-medium text-slate-500 dark:text-slate-400 ${className}`}>
         <Clock className="h-3 w-3" />
         {minMinutes}-{maxMinutes} min
       </span>
@@ -33,10 +33,10 @@ export function DeliveryEta({ minMinutes, maxMinutes, className = "", compact = 
         <Truck className="h-4 w-4 text-primary" />
       </div>
       <div>
-        <p className="text-[12px] font-semibold text-slate-800 dark:text-white">
+        <p className="text-caption font-semibold text-slate-800 dark:text-white">
           Delivery in {minMinutes}-{maxMinutes} min
         </p>
-        <p className="text-[10px] text-slate-400">
+        <p className="text-micro text-slate-400">
           From ₹30 by distance{config.freeDeliveryThreshold > 0 ? ` · free above ${formatCurrency(config.freeDeliveryThreshold)}` : ""}
         </p>
       </div>

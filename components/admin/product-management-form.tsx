@@ -92,7 +92,7 @@ export function ProductManagementForm() {
 
   return (
     <form
-      className="mt-5 grid gap-4 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5 md:grid-cols-3"
+      className="mt-5 grid gap-4 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5 md:grid-cols-3"
       onSubmit={submit}
     >
       <div className="md:col-span-3">
@@ -112,7 +112,7 @@ export function ProductManagementForm() {
         <span className="text-sm font-black text-primary">Feature this product on homepage</span>
         <input name="isFeatured" type="checkbox" className="h-5 w-5 accent-primary" />
       </label>
-      <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-[1.5rem] border border-dashed border-primary/40 bg-primary/5 p-4 text-center md:col-span-3">
+      <label className="flex min-h-28 cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed border-primary/40 bg-primary/5 p-4 text-center md:col-span-3">
         <ImagePlus className="h-7 w-7 text-primary" />
         <span className="mt-2 text-sm font-black">{isUploading ? "Uploading image" : "Tap to upload product image"}</span>
         <span className="mt-1 text-xs text-muted-foreground">Or paste any image URL (Unsplash, Imgur, etc.) in the field above.</span>

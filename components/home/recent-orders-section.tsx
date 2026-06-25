@@ -22,7 +22,7 @@ const statusColors: Record<string, string> = {
   PACKING: "bg-purple-100 text-purple-700",
   READY_FOR_DELIVERY: "bg-yellow-100 text-yellow-700",
   OUT_FOR_DELIVERY: "bg-primary/10 text-primary",
-  DELIVERED: "bg-green-100 text-green-700",
+  DELIVERED: "bg-success-100 text-success-700",
   CANCELLED: "bg-red-100 text-red-700"
 };
 
@@ -92,8 +92,8 @@ export function RecentOrdersSection() {
   return (
     <section className="pt-5 md:hidden">
       <div className="px-4 flex items-center justify-between mb-3">
-        <h2 className="text-[15px] font-bold text-slate-900 dark:text-white">Order&apos;s List</h2>
-        <Link href="/dashboard" className="text-[12px] font-semibold text-primary flex items-center gap-0.5">
+        <h2 className="text-title font-bold text-neutral-900 dark:text-white">Order&apos;s List</h2>
+        <Link href="/dashboard" className="text-caption font-semibold text-primary flex items-center gap-0.5">
           See all <span className="text-primary">&#9679;</span>
         </Link>
       </div>
@@ -113,14 +113,14 @@ export function RecentOrdersSection() {
           >
             <Link
               href={!["DELIVERED", "CANCELLED"].includes(order.status) ? `/track/${order.id}` : "/dashboard"}
-              className="block w-[200px] shrink-0 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 shadow-sm press"
+              className="block w-[200px] shrink-0 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-3 shadow-sm press"
             >
               {/* Order header */}
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[12px] font-bold text-slate-800 dark:text-white">
+                <span className="text-caption font-bold text-neutral-800 dark:text-white">
                   Order #{order.orderNumber.split("-").pop()}
                 </span>
-                <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full ${statusColors[order.status] || "bg-slate-100 text-slate-600"}`}>
+                <span className={`text-micro font-bold px-2 py-0.5 rounded-full ${statusColors[order.status] || "bg-neutral-100 text-neutral-600"}`}>
                   {statusLabels[order.status] || order.status}
                 </span>
               </div>
@@ -129,17 +129,17 @@ export function RecentOrdersSection() {
               <div className="flex items-center gap-1 mb-2">
                 <div className="flex -space-x-2">
                   {order.items.slice(0, 2).map((item, i) => (
-                    <div key={i} className="h-7 w-7 rounded-lg bg-slate-100 dark:bg-slate-800 border-2 border-white dark:border-slate-900 flex items-center justify-center">
-                      <Package className="h-3 w-3 text-slate-400" />
+                    <div key={i} className="h-7 w-7 rounded-lg bg-neutral-100 dark:bg-neutral-800 border-2 border-white dark:border-neutral-900 flex items-center justify-center">
+                      <Package className="h-3 w-3 text-neutral-400" />
                     </div>
                   ))}
                 </div>
-                <span className="text-[11px] text-slate-500 ml-1">{order.items.length} Items</span>
-                <span className="text-[12px] font-bold text-slate-900 dark:text-white ml-auto">{formatCurrency(order.total)}</span>
+                <span className="text-caption text-neutral-500 ml-1">{order.items.length} Items</span>
+                <span className="text-caption font-bold text-neutral-900 dark:text-white ml-auto">{formatCurrency(order.total)}</span>
               </div>
 
               {/* Time + table */}
-              <div className="flex items-center gap-3 text-[10px] text-slate-400">
+              <div className="flex items-center gap-3 text-micro text-neutral-400">
                 <span className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {timeAgo(order.createdAt)}

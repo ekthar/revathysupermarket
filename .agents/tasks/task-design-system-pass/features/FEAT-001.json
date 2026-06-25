@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Establish the complete design token system in tailwind.config.ts and app/globals.css. Define the full color scales (primary #050505 as 10-step, secondary #22C55E as 10-step, semantic colors, neutral gray), type scale (5-6 sizes only), spacing confirmation, radius tokens (3 levels), and shadow tokens (3 elevations with brand-tinted approach). This feature ONLY modifies config/CSS files - no component changes yet.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In tailwind.config.ts, extend the colors object to add: primary scale (50-900 derived from #050505 as near-black - so primary-50 is very light gray, primary-900 is #050505), secondary scale (50-900 derived from #22C55E emerald green), semantic.success (100/300/500/700 from #16A34A), semantic.error (100/300/500/700 from red), semantic.warning (100/300/500/700 from amber), semantic.info (100/300/500/700 from blue), neutral scale (50-950 as cool grays for backgrounds/borders/text). Keep existing primary DEFAULT and foreground for backward compat.",
     "In tailwind.config.ts, add a fontSize extension with exactly 6 named sizes: 'display' (32px/1.1/font-black/-0.02em), 'heading' (24px/1.2/font-bold/-0.02em), 'title' (20px/1.25/font-bold/-0.015em), 'body' (14px/1.5/font-medium/normal), 'caption' (12px/1.4/font-medium/normal), 'micro' (10px/1.3/font-medium/normal). These map to the most-used sizes in the codebase.",
@@ -26,5 +26,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All tokens implemented successfully. TypeScript check and lint pass clean. The fontSize config uses Tailwind's tuple format with fontWeight as string (e.g., '900') which is the correct format for Tailwind CSS v3.4. Shadow utilities in globals.css now use rgba(var(--shadow-color), opacity) pattern for brand-tinting. Backward compat maintained: primary DEFAULT, success DEFAULT, premium/soft shadows, 2xl border-radius all still work."
 }

@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Staff Mobile Login - Add a discoverable staff login entry point on the main login page that uses the existing staff-credentials provider and redirects based on role.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add a 'Staff Login' link at the bottom of the OnboardingFlow component (components/onboarding/onboarding-flow.tsx). The link should be visible on the splash/name/phone steps as a small, non-intrusive text link (like 'Staff? Login here') that navigates to /staff-login. Follow the pattern used by the delivery login client help text ('Not a delivery partner? Customer login').",
     "Create a new route at app/staff-login/page.tsx that: checks session and redirects staff to /admin, delivery partners to /delivery, customers to /dashboard. If not authenticated, renders a StaffLoginClient component. This page should be accessible without authentication (not behind middleware staff check).",
@@ -22,5 +22,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All verification passed (tsc, lint). Middleware already does not block /staff-login route. Used UserCog icon for the staff login link in OnboardingFlow. The link is only shown when step !== done to avoid cluttering the success screen."
 }

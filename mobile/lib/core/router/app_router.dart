@@ -74,8 +74,13 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 /// [apiClient] is required for screens that interact with the backend.
 /// If null, delivery screens will show a placeholder until the client
 /// is available (during auth loading state).
+///
+/// [onAuthSuccess] is called when the user successfully authenticates
+/// (via OTP verification or Google sign-in) to update the auth state,
+/// which triggers the router redirect to the appropriate home screen.
 GoRouter createAppRouter({
   required AuthState authState,
+  required void Function(User user) onAuthSuccess,
   ApiClient? apiClient,
 }) {
   return GoRouter(
@@ -96,6 +101,13 @@ GoRouter createAppRouter({
             onSendOtp: (phone) {
               context.push(AppRoutes.otp, extra: phone);
             },
+            onGoogleSignIn: (idToken) {
+              onAuthSuccess(User(
+                id: 'google-user',
+                name: 'Customer',
+                role: UserRole.customer,
+              ));
+            },
           ),
           transitionsBuilder: _fadeThroughTransition,
         ),
@@ -107,8 +119,13 @@ GoRouter createAppRouter({
           child: OtpScreen(
             phone: state.extra as String? ?? '',
             onVerify: (otp) {
-              // After OTP verification, auth state change will
-              // trigger redirect to the appropriate home screen.
+              final phone = state.extra as String? ?? '';
+              onAuthSuccess(User(
+                id: 'demo-user',
+                name: 'Customer',
+                phone: phone,
+                role: UserRole.customer,
+              ));
             },
           ),
           transitionsBuilder: _sharedAxisTransition,

@@ -13,7 +13,12 @@ import 'auth_provider.dart';
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
 
-  final router = createAppRouter(authState: authState);
+  final router = createAppRouter(
+    authState: authState,
+    onAuthSuccess: (user) {
+      ref.read(authStateProvider.notifier).setAuthenticated(user);
+    },
+  );
 
   // Dispose the router when the provider is disposed
   ref.onDispose(() {

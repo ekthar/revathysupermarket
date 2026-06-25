@@ -1,8 +1,36 @@
+import 'package:animations/animations.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/domain/user_model.dart';
+import '../../features/auth/presentation/login_screen.dart';
+import '../../features/auth/presentation/otp_screen.dart';
+import '../../features/products/presentation/home_screen.dart';
+import '../../features/products/presentation/category_screen.dart';
+import '../../features/products/presentation/product_detail_screen.dart';
+import '../../features/products/domain/product_model.dart' show Product;
+import '../../features/cart/presentation/cart_screen.dart';
+import '../../features/checkout/presentation/checkout_screen.dart';
+import '../../features/orders/presentation/orders_screen.dart';
+import '../../features/orders/presentation/order_detail_screen.dart';
+import '../../features/account/presentation/account_screen.dart';
+import '../../features/account/presentation/wallet_screen.dart';
+import '../../features/account/presentation/loyalty_screen.dart';
+import '../../features/account/presentation/favorites_screen.dart';
+import '../../features/account/presentation/addresses_screen.dart';
+import '../../features/account/presentation/notifications_screen.dart';
+import '../../features/account/presentation/settings_screen.dart';
+import '../../features/support/presentation/support_screen.dart';
+import '../../features/delivery/presentation/delivery_dashboard_screen.dart';
+import '../../features/delivery/presentation/delivery_order_detail_screen.dart';
+import '../../features/delivery/presentation/alert_setup_screen.dart';
+import '../../features/delivery/presentation/pickup_confirmation_screen.dart';
+import '../../features/delivery/presentation/damage_report_screen.dart';
+import '../../features/delivery/presentation/collection_screen.dart';
+import '../../features/delivery/presentation/completion_screen.dart';
+import '../network/api_client.dart';
+import '../widgets/bottom_nav_shell.dart';
 
 /// Route path constants for the application.
 abstract class AppRoutes {
@@ -12,6 +40,7 @@ abstract class AppRoutes {
 
   // Customer routes
   static const customerHome = '/customer/home';
+  static const categories = '/customer/categories';
   static const cart = '/customer/cart';
   static const checkout = '/customer/checkout';
   static const orders = '/customer/orders';
@@ -37,152 +66,474 @@ abstract class AppRoutes {
   static const deliveryCompletion = '/delivery/orders/:id/complete';
 }
 
-/// Creates the application router with role-based guards.
+/// Navigator key for the root navigator.
+final _rootNavigatorKey = GlobalKey<NavigatorState>();
+
+/// Creates the application router with role-based guards and bottom nav shell.
+///
+/// [apiClient] is required for screens that interact with the backend.
+/// If null, delivery screens will show a placeholder until the client
+/// is available (during auth loading state).
 GoRouter createAppRouter({
   required AuthState authState,
+  ApiClient? apiClient,
 }) {
   return GoRouter(
+    navigatorKey: _rootNavigatorKey,
     initialLocation: AppRoutes.splash,
     debugLogDiagnostics: true,
     redirect: (context, state) => _globalRedirect(authState, state),
     routes: [
       GoRoute(
         path: AppRoutes.splash,
-        builder: (context, state) => const _PlaceholderPage(title: 'Splash'),
+        builder: (context, state) => const _SplashScreen(),
       ),
       GoRoute(
         path: AppRoutes.login,
-        builder: (context, state) => const _PlaceholderPage(title: 'Login'),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: LoginScreen(
+            onSendOtp: (phone) {
+              context.push(AppRoutes.otp, extra: phone);
+            },
+          ),
+          transitionsBuilder: _fadeThroughTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.otp,
-        builder: (context, state) => const _PlaceholderPage(title: 'OTP'),
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: OtpScreen(
+            phone: state.extra as String? ?? '',
+            onVerify: (otp) {
+              // After OTP verification, auth state change will
+              // trigger redirect to the appropriate home screen.
+            },
+          ),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
 
-      // Customer routes
-      GoRoute(
-        path: AppRoutes.customerHome,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Customer Home'),
+      // === Customer routes wrapped in StatefulShellRoute ===
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) {
+          return BottomNavShell(navigationShell: navigationShell);
+        },
+        branches: [
+          // Tab 0: Home
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.customerHome,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: HomeScreen(
+                    onCategoryTap: (category) {
+                      context.push(AppRoutes.categories);
+                    },
+                    onProductTap: (product) {
+                      context.push(
+                        '${AppRoutes.customerHome}/product',
+                        extra: product,
+                      );
+                    },
+                    onCartTap: () => context.push(AppRoutes.cart),
+                    onSearchTap: () {
+                      // Open search
+                    },
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 1: Categories
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.categories,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: CategoryScreen(
+                    categoryName: 'All Categories',
+                    onProductTap: (product) {
+                      context.push(
+                        '${AppRoutes.customerHome}/product',
+                        extra: product,
+                      );
+                    },
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 2: Cart
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.cart,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: CartScreen(
+                    onCheckout: () => context.push(AppRoutes.checkout),
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 3: Orders
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.orders,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: OrdersScreen(
+                    onOrderTap: (order) {
+                      context.push(
+                        AppRoutes.orderDetail.replaceFirst(':id', order.id),
+                      );
+                    },
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+          // Tab 4: Account
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: AppRoutes.account,
+                pageBuilder: (context, state) => CustomTransitionPage(
+                  key: state.pageKey,
+                  child: AccountScreen(
+                    onWalletTap: () => context.push(AppRoutes.wallet),
+                    onLoyaltyTap: () => context.push(AppRoutes.loyalty),
+                    onFavoritesTap: () => context.push(AppRoutes.favorites),
+                    onAddressesTap: () => context.push(AppRoutes.addresses),
+                    onNotificationsTap: () =>
+                        context.push(AppRoutes.notifications),
+                    onSettingsTap: () => context.push(AppRoutes.settings),
+                    onSupportTap: () => context.push(AppRoutes.support),
+                  ),
+                  transitionsBuilder: _sharedAxisTransition,
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
+
+      // === Customer routes outside the shell (push on top of nav) ===
       GoRoute(
-        path: AppRoutes.cart,
-        builder: (context, state) => const _PlaceholderPage(title: 'Cart'),
+        path: '${AppRoutes.customerHome}/product',
+        parentNavigatorKey: _rootNavigatorKey,
+        redirect: (context, state) {
+          // Guard against null extra (e.g., from deep links)
+          if (state.extra == null || state.extra is! Product) {
+            return AppRoutes.customerHome;
+          }
+          return null;
+        },
+        pageBuilder: (context, state) {
+          final product = state.extra as Product;
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: ProductDetailScreen(product: product),
+            transitionsBuilder: _fadeThroughTransition,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.checkout,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Checkout'),
-      ),
-      GoRoute(
-        path: AppRoutes.orders,
-        builder: (context, state) => const _PlaceholderPage(title: 'Orders'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: CheckoutScreen(
+            onPlaceOrder: (data) {
+              context.go(AppRoutes.orders);
+            },
+          ),
+          transitionsBuilder: _fadeThroughTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.orderDetail,
-        builder: (context, state) {
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Order $id');
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: OrderDetailScreen(
+              orderId: id,
+              onTrackOrder: () {
+                context.push(
+                  AppRoutes.orderTracking.replaceFirst(':id', id),
+                );
+              },
+            ),
+            transitionsBuilder: _sharedAxisTransition,
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.orderTracking,
-        builder: (context, state) {
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Tracking $id');
+          return CustomTransitionPage(
+            key: state.pageKey,
+            child: _OrderTrackingPage(orderId: id),
+            transitionsBuilder: _fadeThroughTransition,
+          );
         },
       ),
       GoRoute(
-        path: AppRoutes.account,
-        builder: (context, state) => const _PlaceholderPage(title: 'Account'),
-      ),
-      GoRoute(
         path: AppRoutes.wallet,
-        builder: (context, state) => const _PlaceholderPage(title: 'Wallet'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const WalletScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.loyalty,
-        builder: (context, state) => const _PlaceholderPage(title: 'Loyalty'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const LoyaltyScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.favorites,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Favorites'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const FavoritesScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.addresses,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Addresses'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const AddressesScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.notifications,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Notifications'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const NotificationsScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.settings,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Settings'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const SettingsScreen(),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
       GoRoute(
         path: AppRoutes.support,
-        builder: (context, state) => const _PlaceholderPage(title: 'Support'),
+        parentNavigatorKey: _rootNavigatorKey,
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: SupportScreen(
+            onNewTicket: () {
+              // Navigate to new ticket screen
+            },
+          ),
+          transitionsBuilder: _sharedAxisTransition,
+        ),
       ),
 
-      // Delivery partner routes
+      // === Delivery partner routes (no bottom nav) ===
       GoRoute(
         path: AppRoutes.deliveryLogin,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Delivery Login'),
+        builder: (context, state) => LoginScreen(
+          onSendOtp: (phone) {
+            context.push(AppRoutes.otp, extra: phone);
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.deliveryDashboard,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Delivery Dashboard'),
+        builder: (context, state) {
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return DeliveryDashboardScreen(
+            apiClient: apiClient,
+            onOrderTap: (orderId) {
+              context.push(
+                AppRoutes.deliveryOrderDetail.replaceFirst(':id', orderId),
+              );
+            },
+            onAlertSetupTap: () {
+              context.push(AppRoutes.deliveryAlertSetup);
+            },
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.deliveryOrderDetail,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Delivery Order $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return DeliveryOrderDetailScreen(
+            orderId: id,
+            apiClient: apiClient,
+            onPickup: () {
+              context.push(
+                AppRoutes.deliveryPickup.replaceFirst(':id', id),
+              );
+            },
+            onDamageReport: () {
+              context.push(
+                AppRoutes.deliveryDamage.replaceFirst(':id', id),
+              );
+            },
+            onCollection: () {
+              context.push(
+                AppRoutes.deliveryCollection.replaceFirst(':id', id),
+              );
+            },
+            onComplete: () {
+              context.push(
+                AppRoutes.deliveryCompletion.replaceFirst(':id', id),
+              );
+            },
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryAlertSetup,
-        builder: (context, state) =>
-            const _PlaceholderPage(title: 'Alert Setup'),
+        builder: (context, state) => AlertSetupScreen(
+          onSetupComplete: () {
+            context.go(AppRoutes.deliveryDashboard);
+          },
+        ),
       ),
       GoRoute(
         path: AppRoutes.deliveryPickup,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Pickup $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return PickupConfirmationScreen(
+            orderId: id,
+            orderNumber: state.extra as String? ?? id,
+            apiClient: apiClient,
+            onConfirmed: () => context.pop(),
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryDamage,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Damage Report $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          final items =
+              state.extra as List<Map<String, dynamic>>? ?? const [];
+          return DamageReportScreen(
+            orderId: id,
+            items: items,
+            apiClient: apiClient,
+            onReported: () => context.pop(),
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryCollection,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Collection $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          final expectedAmount = state.extra as double?;
+          return CollectionScreen(
+            orderId: id,
+            apiClient: apiClient,
+            onCollected: () => context.pop(),
+            expectedAmount: expectedAmount,
+          );
         },
       ),
       GoRoute(
         path: AppRoutes.deliveryCompletion,
         builder: (context, state) {
           final id = state.pathParameters['id']!;
-          return _PlaceholderPage(title: 'Complete $id');
+          if (apiClient == null) {
+            return const _LoadingPage();
+          }
+          return CompletionScreen(
+            orderId: id,
+            orderNumber: state.extra as String? ?? id,
+            apiClient: apiClient,
+            onCompleted: (ref) {
+              context.go(AppRoutes.deliveryDashboard);
+            },
+          );
         },
       ),
     ],
   );
 }
+
+// ===========================
+// Page Transitions
+// ===========================
+
+/// Shared axis horizontal transition for tab-to-tab navigation.
+Widget _sharedAxisTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  return SharedAxisTransition(
+    animation: animation,
+    secondaryAnimation: secondaryAnimation,
+    transitionType: SharedAxisTransitionType.horizontal,
+    child: child,
+  );
+}
+
+/// Fade through transition for modal/overlay navigation.
+Widget _fadeThroughTransition(
+  BuildContext context,
+  Animation<double> animation,
+  Animation<double> secondaryAnimation,
+  Widget child,
+) {
+  return FadeThroughTransition(
+    animation: animation,
+    secondaryAnimation: secondaryAnimation,
+    child: child,
+  );
+}
+
+// ===========================
+// Redirect Logic
+// ===========================
 
 /// Global redirect logic implementing role-based access control.
 String? _globalRedirect(AuthState authState, GoRouterState state) {
@@ -199,8 +550,10 @@ String? _globalRedirect(AuthState authState, GoRouterState state) {
       return AppRoutes.splash;
     },
     unauthenticated: () {
-      // Unauthenticated users can only access auth routes or splash
-      if (isAuthRoute || isSplash) return null;
+      // Unauthenticated users should be sent to login.
+      // Redirect away from splash so the app doesn't get stuck there.
+      if (isSplash) return AppRoutes.login;
+      if (isAuthRoute) return null;
       return AppRoutes.login;
     },
     authenticated: (user) {
@@ -242,20 +595,218 @@ bool _isCustomerRoute(String location) {
   return location.startsWith('/customer');
 }
 
-/// Placeholder page used during development while real pages are being built.
-class _PlaceholderPage extends StatelessWidget {
-  const _PlaceholderPage({required this.title});
+// ===========================
+// Inline Page Widgets
+// ===========================
 
-  final String title;
+/// Splash screen with animated logo, emerald gradient background, and pulsing
+/// loading indicator. Shows a branded loading state while auth resolves.
+class _SplashScreen extends StatefulWidget {
+  const _SplashScreen();
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen>
+    with TickerProviderStateMixin {
+  late final AnimationController _logoController;
+  late final AnimationController _pulseController;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Logo scale + fade animation
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _logoController,
+      curve: Curves.elasticOut,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _logoController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+    );
+
+    // Pulsing loading indicator
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _logoController.forward();
+    _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _logoController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    const Color(0xFF064E3B), // Emerald 900
+                    const Color(0xFF0F172A), // Slate 900
+                  ]
+                : [
+                    const Color(0xFF059669), // Emerald 600
+                    const Color(0xFF047857), // Emerald 700
+                  ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animated logo
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Icon(
+                      Icons.storefront_rounded,
+                      size: 64,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
+              // App name with Manrope font (uses headlineLarge from theme)
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Text(
+                  'MSM Supermarket',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Text(
+                  'Fresh. Fast. Delivered.',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 48),
+              // Pulsing loading indicator
+              FadeTransition(
+                opacity: _pulseAnimation,
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Simple loading page shown when required dependencies are not yet available.
+class _LoadingPage extends StatelessWidget {
+  const _LoadingPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Scaffold(
       body: Center(
-        child: Text(
-          title,
-          style: Theme.of(context).textTheme.headlineMedium,
+        child: CircularProgressIndicator(),
+      ),
+    );
+  }
+}
+
+/// Wrapper page for order detail that handles loading the order by ID.
+///
+/// In a full implementation this would fetch the order from the repository.
+/// The OrderDetailScreen now handles this via Riverpod providers.
+
+/// Wrapper page for order tracking that handles real-time location display.
+///
+/// In a full implementation this would poll for delivery partner location
+/// and display it on a map.
+class _OrderTrackingPage extends StatelessWidget {
+  const _OrderTrackingPage({required this.orderId});
+
+  final String orderId;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Tracking #$orderId'),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.local_shipping,
+              size: 64,
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Live tracking',
+              style: theme.textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Order #$orderId',
+              style: theme.textTheme.bodyLarge,
+            ),
+          ],
         ),
       ),
     );

@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:msm_mobile/features/products/domain/product_model.dart'
     as models;
 import 'package:msm_mobile/features/products/domain/product_model.dart'
     show Category, Product;
 import 'package:msm_mobile/features/products/presentation/home_screen.dart';
+import 'package:msm_mobile/features/products/providers/products_provider.dart';
 
 void main() {
   group('HomeScreen', () {
@@ -29,7 +31,7 @@ void main() {
         name: 'Apple Kashmir',
         slug: 'apple-kashmir',
         description: 'Fresh Kashmir apples',
-        image: '/images/apple.jpg',
+        image: '',
         price: 180.0,
         discountPrice: 150.0,
         stock: 100,
@@ -42,7 +44,7 @@ void main() {
         name: 'Nendran Banana',
         slug: 'nendran-banana',
         description: 'Kerala nendran bananas',
-        image: '/images/banana.jpg',
+        image: '',
         price: 60.0,
         stock: 50,
         unit: '1 kg',
@@ -56,7 +58,7 @@ void main() {
         id: 'banner-1',
         title: 'Summer Sale',
         subtitle: 'Up to 30% off',
-        image: '/images/banner1.jpg',
+        image: '',
       ),
     ];
 
@@ -67,25 +69,37 @@ void main() {
       void Function(Category)? onCategoryTap,
       void Function(Product)? onProductTap,
     }) {
-      return MaterialApp(
-        home: HomeScreen(
-          banners: banners,
-          categories: categories,
-          featuredProducts: featuredProducts,
-          onCategoryTap: onCategoryTap,
-          onProductTap: onProductTap,
+      return ProviderScope(
+        overrides: [
+          bannersProvider.overrideWith(
+            (ref) => Future.value(banners),
+          ),
+          categoriesProvider.overrideWith(
+            (ref) => Future.value(categories),
+          ),
+          featuredProductsProvider.overrideWith(
+            (ref) => Future.value(featuredProducts),
+          ),
+        ],
+        child: MaterialApp(
+          home: HomeScreen(
+            onCategoryTap: onCategoryTap,
+            onProductTap: onProductTap,
+          ),
         ),
       );
     }
 
     testWidgets('renders app bar with title', (tester) async {
       await tester.pumpWidget(createWidget());
+      await tester.pumpAndSettle();
 
       expect(find.text('MSM Supermarket'), findsOneWidget);
     });
 
     testWidgets('shows search and cart buttons', (tester) async {
       await tester.pumpWidget(createWidget());
+      await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('search_button')), findsOneWidget);
       expect(find.byKey(const Key('cart_button')), findsOneWidget);
@@ -95,6 +109,7 @@ void main() {
       await tester.pumpWidget(createWidget(
         categories: testCategories,
       ));
+      await tester.pumpAndSettle();
 
       expect(find.text('Fruits'), findsOneWidget);
       expect(find.text('Vegetables'), findsOneWidget);
@@ -104,6 +119,7 @@ void main() {
       await tester.pumpWidget(createWidget(
         categories: testCategories,
       ));
+      await tester.pumpAndSettle();
 
       expect(find.text('Shop by Category'), findsOneWidget);
     });
@@ -112,6 +128,7 @@ void main() {
       await tester.pumpWidget(createWidget(
         featuredProducts: testProducts,
       ));
+      await tester.pumpAndSettle();
 
       expect(find.text('Featured Products'), findsOneWidget);
       expect(find.text('Apple Kashmir'), findsOneWidget);
@@ -122,6 +139,7 @@ void main() {
       await tester.pumpWidget(createWidget(
         featuredProducts: testProducts,
       ));
+      await tester.pumpAndSettle();
 
       // Apple has discount price 150
       expect(find.text('\u20B9150'), findsOneWidget);
@@ -135,6 +153,7 @@ void main() {
       await tester.pumpWidget(createWidget(
         banners: testBanners,
       ));
+      await tester.pumpAndSettle();
 
       expect(find.text('Summer Sale'), findsOneWidget);
     });
@@ -145,6 +164,7 @@ void main() {
         categories: testCategories,
         onCategoryTap: (cat) => tappedCategory = cat,
       ));
+      await tester.pumpAndSettle();
 
       await tester.tap(find.text('Fruits'));
       await tester.pumpAndSettle();

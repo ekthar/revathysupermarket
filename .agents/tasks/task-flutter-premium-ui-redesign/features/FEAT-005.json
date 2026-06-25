@@ -1,0 +1,41 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Redesign Account, Wallet, Loyalty, Favorites, Addresses, Notifications, Settings, and Support screens",
+  "status": "completed",
+  "steps": [
+    "Completely redesign mobile/lib/features/account/presentation/account_screen.dart: profile card at top with gradient background and avatar (user initial in circle with gradient border), wallet balance card with gradient (emerald gradient), loyalty points ring/progress indicator, menu grid (2x3 or 2x4) with colorful icons in rounded squares instead of list tiles, animated section transitions, logout at bottom with confirmation dialog",
+    "Completely redesign mobile/lib/features/account/presentation/wallet_screen.dart: large balance card with gradient background (emerald to teal), 'Add Money' button, transaction list with date group headers, filter tabs (All, Credits, Debits), transaction items with colored icons (green arrow down for credit, red arrow up for debit), pull-to-refresh, shimmer loading",
+    "Completely redesign mobile/lib/features/account/presentation/loyalty_screen.dart: points balance with animated circular progress ring showing tier progress (CustomPainter or CircularProgressIndicator), tier badges section (Bronze/Silver/Gold/Platinum with icons), earn rules info cards, redemption history list grouped by date, animated number counter for points",
+    "Completely redesign mobile/lib/features/account/presentation/favorites_screen.dart: grid layout (2 columns) matching the product card design from FEAT-003, quick add-to-cart button on each card, remove from favorites via heart icon toggle, empty state with heart illustration, shimmer loading",
+    "Completely redesign mobile/lib/features/account/presentation/addresses_screen.dart: address cards with map pin header decoration, default badge, swipe actions (edit/delete) using Dismissible, 'Add New Address' floating button, empty state, each card shows label (Home/Work/Other) with icon",
+    "Completely redesign mobile/lib/features/account/presentation/notifications_screen.dart: grouped by date (Today, Yesterday, Earlier), read/unread styling (bold title + blue dot for unread), icon per notification type (order=receipt, delivery=truck, promo=tag, system=bell), swipe to dismiss/mark read, empty state, pull-to-refresh",
+    "Completely redesign mobile/lib/features/account/presentation/settings_screen.dart: toggle switches for notifications with modern Material 3 style, theme selector section (System/Light/Dark) with radio buttons or segmented control, app version info, clear cache option, about section with links, dark mode live preview toggle",
+    "Completely redesign mobile/lib/features/support/presentation/support_screen.dart: ticket cards with colored status badges (open=blue, in-progress=orange, resolved=green, closed=grey), last message preview, timestamp, FAB for new ticket with scale animation, empty state illustration, filter by status tabs",
+    "Create mobile/lib/features/account/providers/account_provider.dart - Riverpod providers for: wallet balance/transactions, loyalty points/history, favorites list, addresses list, notifications list, settings preferences"
+  ],
+  "acceptance_criteria": [
+    "Account screen has gradient profile card and menu grid layout",
+    "Wallet screen has gradient balance card and filter tabs",
+    "Loyalty screen has circular progress ring for tier progress",
+    "Favorites screen uses grid layout with product cards",
+    "Addresses screen has swipe actions via Dismissible",
+    "Notifications screen groups by date with read/unread styling",
+    "Settings screen has theme selector and toggle switches",
+    "Support screen has colored status badges and filter tabs",
+    "Account provider file exists with necessary state management"
+  ],
+  "verification": [
+    "Verify account_screen.dart has gradient card and grid menu",
+    "Verify wallet_screen.dart has filter tabs (All, Credits, Debits)",
+    "Verify loyalty_screen.dart has progress ring widget",
+    "Verify favorites_screen.dart uses GridView",
+    "Verify addresses_screen.dart uses Dismissible",
+    "Verify notifications_screen.dart has date grouping logic",
+    "Verify settings_screen.dart has theme selector",
+    "Verify support_screen.dart has status filter tabs",
+    "Verify account_provider.dart exists"
+  ],
+  "blocked_reason": null,
+  "findings": "All 9 screens redesigned successfully. account_provider.dart created with walletProvider, loyaltyProvider, favoritesProvider, addressesProvider, notificationsProvider, settingsProvider (StateNotifier), and supportTicketsProvider. All screens converted to ConsumerStatefulWidget using ref.watch() pattern. GradientCard factories and AnimatedFadeIn staggering used throughout. Cannot run flutter analyze as SDK not installed but all imports follow established patterns."
+}

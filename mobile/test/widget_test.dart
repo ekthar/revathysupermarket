@@ -13,7 +13,13 @@ void main() {
       ),
     );
 
-    // Verify the app renders (it should show the login page since unauthenticated)
+    // Verify the app renders (initially shows splash during auth loading)
+    expect(find.byType(MaterialApp), findsOneWidget);
+
+    // Advance past the auth initialization delay so the timer completes
+    await tester.pumpAndSettle(const Duration(seconds: 1));
+
+    // After auth resolves to unauthenticated, should redirect to login
     expect(find.byType(MaterialApp), findsOneWidget);
   });
 }

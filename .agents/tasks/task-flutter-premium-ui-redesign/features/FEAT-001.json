@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Theme overhaul with Google Fonts (Inter Tight + Manrope), enhanced color palette, and shared UI components (shimmer, animated widgets, bottom nav shell)",
+  "status": "completed",
+  "steps": [
+    "Add google_fonts, shimmer, and animations packages to mobile/pubspec.yaml dependencies",
+    "Completely rewrite mobile/lib/core/theme/app_theme.dart to use Inter Tight for body/UI text (textTheme) and Manrope for display/headline text (displayLarge, displayMedium, displaySmall, headlineLarge, headlineMedium, headlineSmall). Apply via GoogleFonts.interTightTextTheme() and GoogleFonts.manropeTextTheme() merged. Enhance the color scheme with richer gradients, proper dark mode slate palette matching the web app.",
+    "Create mobile/lib/core/widgets/shimmer_widget.dart - a reusable shimmer loading placeholder widget with configurable shape (box, circle, rectangle) for use across all screens",
+    "Create mobile/lib/core/widgets/animated_fade_in.dart - a staggered fade-in + slide-up animation wrapper widget for list items",
+    "Create mobile/lib/core/widgets/gradient_card.dart - a reusable gradient card widget with customizable colors for wallet/loyalty/stats cards",
+    "Create mobile/lib/core/widgets/bottom_nav_shell.dart - a persistent bottom navigation bar (ScaffoldWithNavBar) with 5 tabs: Home, Categories, Cart (with badge), Orders, Account. Uses GoRouter ShellRoute pattern. Animate the active indicator. Include haptic feedback on tab change.",
+    "Update mobile/lib/core/router/app_router.dart to wrap customer routes in a ShellRoute using the new BottomNavShell, add route for /customer/categories, and add page transitions (shared axis for tabs, fade through for modals)",
+    "Update mobile/lib/app.dart to use the new theme"
+  ],
+  "acceptance_criteria": [
+    "pubspec.yaml includes google_fonts, shimmer, and animations packages",
+    "app_theme.dart uses Inter Tight for body text and Manrope for display/headline text via Google Fonts",
+    "Both light and dark themes are defined with premium emerald + slate palette",
+    "ShimmerWidget, AnimatedFadeIn, GradientCard, and BottomNavShell widgets exist and are importable",
+    "Bottom navigation has 5 tabs with cart badge support",
+    "Customer routes use ShellRoute with bottom nav, delivery routes do not"
+  ],
+  "verification": [
+    "Check that pubspec.yaml has google_fonts, shimmer, animations in dependencies",
+    "Check that app_theme.dart imports google_fonts and applies Inter Tight + Manrope fonts",
+    "Check that bottom_nav_shell.dart exists with proper widget structure",
+    "Check that app_router.dart uses ShellRoute for customer tabs",
+    "Verify all new widget files compile syntactically (no obvious Dart errors)"
+  ],
+  "blocked_reason": null,
+  "findings": "All steps implemented. Used StatefulShellRoute.indexedStack for bottom nav (GoRouter 14.x pattern). AnimatedBuilder used in animated_fade_in.dart (requires Dart 3.x). App.dart unchanged since it already references AppTheme.light/dark. The bottom_nav_shell cart badge count is hardcoded to 0 and will need to be wired to a cart provider in a later feature."
+}

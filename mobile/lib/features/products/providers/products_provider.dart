@@ -46,7 +46,7 @@ final productRepositoryProvider = Provider<ProductRepository>((ref) {
 
 /// Provider for featured products on the home screen.
 final featuredProductsProvider =
-    FutureProvider.autoDispose<List<Product>>((ref) async {
+    FutureProvider<List<Product>>((ref) async {
   final repo = ref.watch(productRepositoryProvider);
   final response = await repo.getProducts(featured: true, limit: 10);
   return response.items;
@@ -54,14 +54,14 @@ final featuredProductsProvider =
 
 /// Provider for all categories.
 final categoriesProvider =
-    FutureProvider.autoDispose<List<Category>>((ref) async {
+    FutureProvider<List<Category>>((ref) async {
   final repo = ref.watch(productRepositoryProvider);
   return repo.getCategories();
 });
 
 /// Provider for banners on the home screen.
 final bannersProvider =
-    FutureProvider.autoDispose<List<models.Banner>>((ref) async {
+    FutureProvider<List<models.Banner>>((ref) async {
   final repo = ref.watch(productRepositoryProvider);
   return repo.getBanners();
 });

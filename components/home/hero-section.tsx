@@ -42,7 +42,7 @@ export function HeroSection({
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
-                className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] tracking-tight text-slate-900 dark:text-white"
+                className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] tracking-tight text-neutral-900 dark:text-white"
               >
                 {storeName}
               </motion.h1>
@@ -50,7 +50,7 @@ export function HeroSection({
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.25 }}
-                className="mt-5 text-lg text-slate-600 dark:text-slate-300 max-w-md leading-relaxed"
+                className="mt-5 text-lg text-neutral-600 dark:text-neutral-300 max-w-md leading-relaxed"
               >
                 Shop from thousands of farm-fresh fruits, vegetables, dairy and daily essentials at unbeatable prices.
               </motion.p>
@@ -80,6 +80,9 @@ export function HeroSection({
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 src={heroImage}
                 alt={heroTitle}
+                width={800}
+                height={600}
+                style={{ aspectRatio: "4/3" }}
                 className="h-full w-full object-cover"
                 loading="eager"
               />
@@ -94,7 +97,7 @@ export function HeroSection({
                 <motion.div
                   animate={{ y: [-4, 4, -4] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="bg-white dark:bg-slate-900 rounded-2xl p-3 shadow-lg max-w-[160px]"
+                  className="bg-white dark:bg-neutral-900 rounded-2xl p-3 shadow-lg max-w-[160px]"
                 >
                   <Image
                     src="https://images.unsplash.com/photo-1540420773420-3366772f4999?w=120&h=80&fit=crop"
@@ -103,8 +106,8 @@ export function HeroSection({
                     height={64}
                     className="h-16 w-full rounded-xl object-cover"
                   />
-                  <p className="mt-2 text-[11px] font-bold text-slate-800">Fresh Vegetables</p>
-                  <p className="text-[11px] font-bold text-primary">₹18.00</p>
+                  <p className="mt-2 text-caption font-bold text-neutral-800">Fresh Vegetables</p>
+                  <p className="text-caption font-bold text-primary">₹18.00</p>
                 </motion.div>
               </motion.div>
 
@@ -118,7 +121,7 @@ export function HeroSection({
                 <motion.div
                   animate={{ y: [3, -3, 3], rotate: [-1, 1, -1] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="bg-primary text-white rounded-full px-4 py-2 text-[11px] font-bold shadow-premium"
+                  className="bg-primary text-white rounded-full px-4 py-2 text-caption font-bold shadow-premium"
                 >
                   Same-Day Delivery
                 </motion.div>
@@ -142,6 +145,9 @@ export function HeroSection({
             transition={{ duration: 0.8, ease: "easeOut" }}
             src={heroImage}
             alt={heroTitle}
+            width={800}
+            height={364}
+            style={{ aspectRatio: "2.2/1" }}
             className="h-full w-full object-cover"
             loading="eager"
           />
@@ -152,10 +158,10 @@ export function HeroSection({
             transition={{ delay: 0.3, duration: 0.5 }}
             className="absolute bottom-0 left-0 right-0 p-4"
           >
-            <span className="inline-block text-[10px] font-semibold text-white/90 bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5 mb-1.5">
+            <span className="inline-block text-micro font-semibold text-white/90 bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5 mb-1.5">
               {deliveryRadiusKm} KM delivery
             </span>
-            <h2 className="text-[17px] font-bold text-white leading-snug">{heroTitle}</h2>
+            <h2 className="text-title font-bold text-white leading-snug">{heroTitle}</h2>
           </motion.div>
         </Link>
       </motion.section>

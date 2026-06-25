@@ -9,7 +9,7 @@ export default async function DailyReturnsReportPage() {
   const role = session?.user?.role;
   if (!role || !["OWNER", "MANAGER", "ADMIN"].includes(role)) {
     return (
-      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
         <h2 className="font-display text-3xl font-black">Daily Returns Report</h2>
         <p className="mt-2 text-sm text-muted-foreground">Owner/Manager access required.</p>
       </div>
@@ -66,7 +66,7 @@ export default async function DailyReturnsReportPage() {
 
   return (
     <main className="grid gap-5">
-      <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(239,68,68,0.1),rgba(251,146,60,0.12))] p-5 sm:p-7">
+      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(239,68,68,0.1),rgba(251,146,60,0.12))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-red-600 dark:text-red-400">Returns deduction</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">Daily Returns Report</h1>
         <p className="mt-2 text-sm text-muted-foreground">Per-day return totals deducted from main software sales.</p>
@@ -74,26 +74,26 @@ export default async function DailyReturnsReportPage() {
 
       {/* Today's Net Summary */}
       <div className="grid gap-3 md:grid-cols-4">
-        <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4 shadow-soft dark:border-emerald-800 dark:bg-emerald-950/20">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 shadow-soft dark:border-emerald-800 dark:bg-emerald-950/20">
           <p className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400">Today Sales</p>
           <p className="mt-2 text-2xl font-black text-emerald-800 dark:text-emerald-300">{formatCurrency(todaySales)}</p>
         </div>
-        <div className="rounded-[1.5rem] border border-red-200 bg-red-50/80 p-4 shadow-soft dark:border-red-800 dark:bg-red-950/20">
+        <div className="rounded-xl border border-red-200 bg-red-50/80 p-4 shadow-soft dark:border-red-800 dark:bg-red-950/20">
           <p className="text-xs font-black uppercase text-red-700 dark:text-red-400">Today Returns</p>
           <p className="mt-2 text-2xl font-black text-red-800 dark:text-red-300">- {formatCurrency(todayReturns)}</p>
         </div>
-        <div className="rounded-[1.5rem] border border-blue-200 bg-blue-50/80 p-4 shadow-soft dark:border-blue-800 dark:bg-blue-950/20">
+        <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 shadow-soft dark:border-blue-800 dark:bg-blue-950/20">
           <p className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">Net Sales Today</p>
           <p className="mt-2 text-2xl font-black text-blue-800 dark:text-blue-300">{formatCurrency(netSales)}</p>
         </div>
-        <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50/80 p-4 shadow-soft dark:border-amber-800 dark:bg-amber-950/20">
+        <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 shadow-soft dark:border-amber-800 dark:bg-amber-950/20">
           <p className="text-xs font-black uppercase text-amber-700 dark:text-amber-400">30-Day Returns</p>
           <p className="mt-2 text-2xl font-black text-amber-800 dark:text-amber-300">{formatCurrency(grandTotal)}</p>
         </div>
       </div>
 
       {/* Daily breakdown */}
-      <section className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
+      <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
         <h2 className="font-display text-2xl font-black">Day-by-day breakdown</h2>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-sm">
@@ -132,7 +132,7 @@ export default async function DailyReturnsReportPage() {
       </section>
 
       {/* Recent returns detail */}
-      <section className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
+      <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
         <h2 className="font-display text-2xl font-black">Recent returns detail</h2>
         <div className="mt-4 grid gap-2">
           {returns.slice(0, 20).map((ret) => (

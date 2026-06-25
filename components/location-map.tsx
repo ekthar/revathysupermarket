@@ -21,7 +21,7 @@ export function LocationMap({
   const directionsUrl = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
 
   return (
-    <div className="relative h-full min-h-80 overflow-hidden rounded-[1.75rem] bg-muted">
+    <div className="relative h-full min-h-80 overflow-hidden rounded-xl bg-muted">
       <iframe
         title={`${storeName} Google Map`}
         src={embedUrl}
@@ -29,9 +29,9 @@ export function LocationMap({
         referrerPolicy="no-referrer-when-downgrade"
         className="h-full min-h-80 w-full border-0"
       />
-      <div className="glass-panel absolute inset-x-3 bottom-3 rounded-[1.5rem] p-3">
-        <p className="text-sm font-black text-slate-950 dark:text-white">{storeName}</p>
-        <p className="mt-0.5 text-[11px] text-muted-foreground">{storeAddress}</p>
+      <div className="glass-panel absolute inset-x-3 bottom-3 rounded-xl p-3">
+        <p className="text-sm font-black text-neutral-950 dark:text-white">{storeName}</p>
+        <p className="mt-0.5 text-caption text-muted-foreground">{storeAddress}</p>
         <p className="mt-1 text-xs font-semibold text-muted-foreground">Delivery within {deliveryRadiusKm} KM only</p>
         <div className="mt-3 grid grid-cols-2 gap-2">
           <Button asChild variant="outline" size="sm" className="rounded-2xl">

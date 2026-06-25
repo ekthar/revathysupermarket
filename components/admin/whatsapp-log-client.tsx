@@ -33,7 +33,7 @@ export function WhatsAppLogClient({ logs }: { logs: WhatsAppLogRow[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-[1.75rem] border border-white/70 bg-card/95 shadow-soft dark:border-white/10">
+    <div className="overflow-hidden rounded-xl border border-white/70 bg-card/95 shadow-soft dark:border-white/10">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[860px] text-left text-sm">
           <thead className="bg-muted text-xs font-black uppercase text-muted-foreground">

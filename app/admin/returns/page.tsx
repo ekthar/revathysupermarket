@@ -9,7 +9,7 @@ export default async function AdminReturnsPage() {
   const session = await auth();
   if (!canManageReturns(session?.user?.role)) {
     return (
-      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
         <h2 className="font-display text-3xl font-black">Returns</h2>
         <p className="mt-2 text-sm text-muted-foreground">Manager or owner access is required.</p>
       </div>
@@ -27,6 +27,7 @@ export default async function AdminReturnsPage() {
       returns={returns.map((entry) => ({
         id: entry.id,
         returnNumber: entry.returnNumber,
+        billNumber: entry.billNumber,
         orderNumber: entry.order.orderNumber,
         customerName: entry.order.customerName,
         paymentMethod: entry.order.paymentMethod,

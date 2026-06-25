@@ -126,7 +126,7 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
           <Plus className="h-4 w-4" /> New Offer
         </Button>
       ) : (
-        <form onSubmit={handleCreate} className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+        <form onSubmit={handleCreate} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-xl font-black">Create Offer</h3>
             <button type="button" onClick={() => { setShowCreate(false); resetForm(); }}>
@@ -172,7 +172,7 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
       )}
 
       {/* Offers list */}
-      <div className="rounded-[1.75rem] border border-white/70 bg-card/95 shadow-soft dark:border-white/10 overflow-hidden">
+      <div className="rounded-xl border border-white/70 bg-card/95 shadow-soft dark:border-white/10 overflow-hidden">
         {localOffers.length === 0 ? (
           <p className="p-8 text-center text-sm text-muted-foreground">No offers yet. Create your first offer above.</p>
         ) : (
@@ -191,15 +191,15 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
                     <div className="flex items-center gap-2">
                       <h4 className="font-bold text-slate-900 dark:text-white truncate">{offer.title}</h4>
                       {offer.badge && (
-                        <span className="text-[9px] font-black bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full shrink-0">
+                        <span className="text-micro font-black bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full shrink-0">
                           {offer.badge}
                         </span>
                       )}
-                      <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full shrink-0 ${offer.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>
+                      <span className={`text-micro font-bold px-2 py-0.5 rounded-full shrink-0 ${offer.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>
                         {offer.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                    <p className="text-caption text-muted-foreground mt-0.5">
                       {offer.discountType === "percentage" ? `${offer.discountValue}% off` : `${formatCurrency(offer.discountValue)} off`}
                       {offer.maxDiscount ? ` (max ${formatCurrency(offer.maxDiscount)})` : ""}
                       {" · "}

@@ -9,7 +9,7 @@ export default async function AdminCustomersPage() {
   const session = await auth();
   if (!canViewReports(session?.user?.role)) {
     return (
-      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
         <h2 className="font-display text-3xl font-black">Customers</h2>
         <p className="mt-2 text-sm text-muted-foreground">Manager or owner access is required.</p>
       </div>
@@ -24,14 +24,14 @@ export default async function AdminCustomersPage() {
 
   return (
     <div>
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
+      <div className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Customer care</p>
         <h2 className="mt-2 font-display text-4xl font-black leading-tight">Customers</h2>
         <p className="mt-2 text-sm text-muted-foreground">Quick contact and order history for repeat shoppers.</p>
       </div>
       <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {customers.map((customer) => (
-          <article key={customer.id} className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+          <article key={customer.id} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
             <div className="flex items-start gap-3">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
                 <UserRound className="h-5 w-5 text-primary" />

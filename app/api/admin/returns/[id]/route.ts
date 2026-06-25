@@ -74,6 +74,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
       const totals = await tx.returnRequest.aggregate({ where: { orderId: current.order.id, status: "REFUNDED" }, _sum: { refundAmount: true } });
       await tx.order.update({ where: { id: current.order.id }, data: { paymentStatus: Number(totals._sum.refundAmount ?? 0) >= Number(current.order.total) ? "REFUNDED" : "PARTIALLY_REFUNDED" } });
+
+      // Increment stock for returned items (batch lookup to avoid N+1)
+      const returnItems = Array.isArray(current.items) ? current.items as Array<{ orderItemId?: string; name?: string; quantity?: number; price?: number; amount?: number }> : [];
+      const validReturnItems = returnItems.filter((ri) => ri.orderItemId && ri.quantity);
+      const orderItemIds = validReturnItems.map((ri) => ri.orderItemId!);
+      const orderItems = orderItemIds.length > 0
+        ? await tx.orderItem.findMany({ where: { id: { in: orderItemIds } }, select: { id: true, productId: true } })
+        : [];
+      const orderItemProductMap = new Map(orderItems.map((oi) => [oi.id, oi.productId]));
+      for (const returnItem of validReturnItems) {
+        const productId = orderItemProductMap.get(returnItem.orderItemId!);
+        if (productId) {
+          await tx.product.update({ where: { id: productId }, data: { stock: { increment: returnItem.quantity! } } });
+        }
+      }
     }
     await tx.auditLog.create({ data: { actorId: permission.ctx.userId, actorRole: permission.ctx.role as never, action: `return.${action}`, targetType: "ReturnRequest", targetId: id, metadata: { reason, amount: transition.to === "REFUNDED" ? amount : undefined } } });
     return tx.returnRequest.findUniqueOrThrow({ where: { id } });

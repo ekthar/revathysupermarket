@@ -28,11 +28,11 @@ const cardVariants = {
 };
 
 const gradients = [
-  "from-yellow-200 via-yellow-100 to-yellow-50 dark:from-yellow-900/30 dark:via-slate-900 dark:to-slate-900",
-  "from-pink-200 via-pink-100 to-pink-50 dark:from-pink-900/30 dark:via-slate-900 dark:to-slate-900",
-  "from-emerald-200 via-emerald-100 to-emerald-50 dark:from-emerald-900/30 dark:via-slate-900 dark:to-slate-900",
-  "from-blue-200 via-blue-100 to-blue-50 dark:from-blue-900/30 dark:via-slate-900 dark:to-slate-900",
-  "from-orange-200 via-orange-100 to-orange-50 dark:from-orange-900/30 dark:via-slate-900 dark:to-slate-900"
+  "from-yellow-200 via-yellow-100 to-yellow-50 dark:from-yellow-900/30 dark:via-neutral-900 dark:to-neutral-900",
+  "from-pink-200 via-pink-100 to-pink-50 dark:from-pink-900/30 dark:via-neutral-900 dark:to-neutral-900",
+  "from-secondary-200 via-secondary-100 to-secondary-50 dark:from-secondary-900/30 dark:via-neutral-900 dark:to-neutral-900",
+  "from-blue-200 via-blue-100 to-blue-50 dark:from-blue-900/30 dark:via-neutral-900 dark:to-neutral-900",
+  "from-orange-200 via-orange-100 to-orange-50 dark:from-orange-900/30 dark:via-neutral-900 dark:to-neutral-900"
 ];
 
 export function PromoBanners({ banners }: { banners?: Banner[] }) {
@@ -61,11 +61,11 @@ export function PromoBanners({ banners }: { banners?: Banner[] }) {
             >
               <div className="flex-1 flex flex-col justify-between min-w-0">
                 <div>
-                  <h3 className="font-display text-[15px] font-black leading-tight text-slate-900 dark:text-white">
+                  <h3 className="font-display text-title font-black leading-tight text-neutral-900 dark:text-white">
                     {banner.title}
                   </h3>
                   {banner.subtitle && (
-                    <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                    <p className="mt-2 text-caption text-neutral-600 dark:text-neutral-300 leading-relaxed">
                       {banner.subtitle}
                     </p>
                   )}

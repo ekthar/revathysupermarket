@@ -2,8 +2,9 @@
 
 import { Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState, useOptimistic, useTransition } from "react";
+import { useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
+import { useToggleFavorite } from "@/lib/queries/favorites";
 
 interface FavoriteButtonProps {
   productId: string;
@@ -15,6 +16,7 @@ interface FavoriteButtonProps {
 export function FavoriteButton({ productId, initialFavorited = false, className, size = "sm" }: FavoriteButtonProps) {
   const [isFavorited, setIsFavorited] = useState(initialFavorited);
   const [isPending, startTransition] = useTransition();
+  const toggleFavoriteMutation = useToggleFavorite();
 
   async function toggleFavorite(e: React.MouseEvent) {
     e.preventDefault();
@@ -30,17 +32,10 @@ export function FavoriteButton({ productId, initialFavorited = false, className,
 
     startTransition(async () => {
       try {
-        if (newState) {
-          const res = await fetch("/api/favorites", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId })
-          });
-          if (!res.ok) setIsFavorited(false);
-        } else {
-          const res = await fetch(`/api/favorites/${productId}`, { method: "DELETE" });
-          if (!res.ok) setIsFavorited(true);
-        }
+        await toggleFavoriteMutation.mutateAsync({
+          productId,
+          isFavorited: newState,
+        });
       } catch {
         setIsFavorited(!newState);
       }

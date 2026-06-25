@@ -43,13 +43,13 @@ export default async function WalletPage() {
       <div className="flex items-center gap-3 mb-5">
         <Link
           href="/account"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-slate-800 card-shadow press"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-neutral-800 card-shadow press"
         >
-          <ArrowLeft className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+          <ArrowLeft className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
         </Link>
         <div>
-          <h1 className="text-[18px] font-bold text-slate-900 dark:text-white">My Wallet</h1>
-          <p className="text-[12px] text-slate-500 dark:text-slate-400">Balance & transaction history</p>
+          <h1 className="text-title font-bold text-neutral-900 dark:text-white">My Wallet</h1>
+          <p className="text-caption text-neutral-500 dark:text-neutral-400">Balance & transaction history</p>
         </div>
       </div>
 

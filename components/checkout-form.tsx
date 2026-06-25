@@ -362,18 +362,18 @@ export function CheckoutForm({
               <div className="flex justify-center">
                 <SuccessRing size={100} />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-black text-slate-900 dark:text-white">Order Successful!</h2>
-              <p className="mt-2 text-sm text-slate-500 leading-relaxed">
+              <h2 className="mt-6 font-display text-2xl font-black text-neutral-900 dark:text-white">Order Successful!</h2>
+              <p className="mt-2 text-sm text-neutral-500 leading-relaxed">
                 We&apos;re preparing your order. See updates in My Orders.
               </p>
               <div className="mt-6 grid gap-3">
                 <motion.div whileTap={{ scale: 0.97 }}>
-                  <Link href="/" className="flex h-[48px] items-center justify-center rounded-full bg-slate-900 text-sm font-bold text-white">
+                  <Link href="/" className="flex h-[48px] items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white">
                     Go Home
                   </Link>
                 </motion.div>
                 <motion.div whileTap={{ scale: 0.97 }}>
-                  <Link href="/dashboard" className="flex h-[48px] items-center justify-center rounded-full border-2 border-slate-200 text-sm font-bold text-slate-700">
+                  <Link href="/dashboard" className="flex h-[48px] items-center justify-center rounded-full border-2 border-neutral-200 text-sm font-bold text-neutral-700">
                     Track your order
                   </Link>
                 </motion.div>
@@ -391,10 +391,10 @@ export function CheckoutForm({
         className="flex items-center justify-between py-3 md:hidden"
       >
         <div className="flex items-center gap-3">
-          <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-50 dark:bg-slate-800 press">
-            <ArrowLeft className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+          <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+            <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
           </Link>
-          <h1 className="text-lg font-black text-slate-900 dark:text-white">Checkout</h1>
+          <h1 className="text-lg font-black text-neutral-900 dark:text-white">Checkout</h1>
         </div>
       </motion.div>
 
@@ -402,14 +402,14 @@ export function CheckoutForm({
         {/* Left column - Forms */}
         <div className="space-y-5">
           {/* Delivery ETA + Minimum Order Info */}
-          <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-white px-4 py-3 shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)] dark:bg-slate-900">
+          <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-white px-4 py-3 shadow-elevation-2 dark:bg-neutral-900">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
                 <Clock className="h-4 w-4" />
               </div>
               <div>
-                <p className="text-[12px] font-semibold text-slate-800 dark:text-white">Delivery in {deliveryEstimateMin}-{deliveryEstimateMax} min</p>
-                <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                <p className="text-caption font-semibold text-neutral-800 dark:text-white">Delivery in {deliveryEstimateMin}-{deliveryEstimateMax} min</p>
+                <p className="text-micro text-neutral-500 dark:text-neutral-400">
                   {subtotal < minimumOrderValue
                     ? `Add ₹${minimumOrderValue - subtotal} more (min order ₹${minimumOrderValue})`
                     : freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold
@@ -419,17 +419,17 @@ export function CheckoutForm({
               </div>
             </div>
             {subtotal < minimumOrderValue && (
-              <span className="text-[10px] font-bold text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-2 py-1 rounded-full">
+              <span className="text-micro font-bold text-orange-600 bg-orange-50 dark:bg-orange-950/30 px-2 py-1 rounded-full">
                 Min ₹{minimumOrderValue}
               </span>
             )}
           </div>
 
-          {slotsEnabled && <section className="rounded-2xl border border-slate-100 bg-white p-4 card-shadow dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-sm font-black text-slate-900 dark:text-white">Delivery time</h2>
+          {slotsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
+            <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery time</h2>
             <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setDeliveryMode("ASAP")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "ASAP" ? "bg-black text-white" : "bg-slate-100 dark:bg-slate-800"}`}>ASAP</button>
-              <button type="button" onClick={() => setDeliveryMode("SCHEDULED")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "SCHEDULED" ? "bg-black text-white" : "bg-slate-100 dark:bg-slate-800"}`}>Choose slot</button>
+              <button type="button" onClick={() => setDeliveryMode("ASAP")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "ASAP" ? "bg-black text-white" : "bg-neutral-100 dark:bg-neutral-800"}`}>ASAP</button>
+              <button type="button" onClick={() => setDeliveryMode("SCHEDULED")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "SCHEDULED" ? "bg-black text-white" : "bg-neutral-100 dark:bg-neutral-800"}`}>Choose slot</button>
             </div>
             {deliveryMode === "SCHEDULED" && <div className="mt-3 grid gap-2">
               {slots.length === 0 ? <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-700">No scheduled slots are available. Choose ASAP.</p> : slots.map((slot) => <label key={slot.id} className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm font-semibold">
@@ -440,8 +440,8 @@ export function CheckoutForm({
             </div>}
           </section>}
 
-          {rewardsEnabled && <section className="rounded-2xl border border-slate-100 bg-white p-4 card-shadow dark:border-slate-800 dark:bg-slate-900">
-            <h2 className="text-sm font-black text-slate-900 dark:text-white">Offers and rewards</h2>
+          {rewardsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
+            <h2 className="text-sm font-black text-neutral-900 dark:text-white">Offers and rewards</h2>
             <label className="mt-3 block text-xs font-bold text-muted-foreground">Promo code<input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" placeholder="Optional promo code" /></label>
             <label className="mt-3 block text-xs font-bold text-muted-foreground">Use points ({loyaltyBalance} available)<input type="number" min="0" max={loyaltyBalance} value={loyaltyPoints} onChange={(event) => setLoyaltyPoints(Math.min(loyaltyBalance, Math.max(0, Number(event.target.value))))} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" /></label>
             <p className="mt-2 text-xs text-muted-foreground">Each point is worth ₹{loyaltyRules.pointValueRupees}. Up to {loyaltyRules.maxRedemptionPercent}% of the order can be paid with points. Final discounts are verified securely when you place the order.</p>
@@ -452,14 +452,14 @@ export function CheckoutForm({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="rounded-[1.35rem] bg-white p-5 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900"
+            className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900"
           >
-            <h2 className="text-[15px] font-black text-slate-900 dark:text-white mb-4">Payment Method</h2>
+            <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Payment Method</h2>
             <div className="space-y-3">
               <PaymentMethodCard
                 active={form.paymentMethod === "COD"}
                 icon={<Wallet className="h-5 w-5" />}
-                iconBg="bg-green-100 text-green-700"
+                iconBg="bg-secondary-100 text-secondary-700"
                 label="Cash on Delivery"
                 description="Pay with cash when order arrives"
                 onClick={() => update("paymentMethod", "COD")}
@@ -486,7 +486,7 @@ export function CheckoutForm({
                 <PaymentMethodCard
                   active={form.paymentMethod === "WALLET"}
                   icon={<Wallet className="h-5 w-5" />}
-                  iconBg="bg-emerald-100 text-emerald-700"
+                  iconBg="bg-secondary-100 text-secondary-700"
                   label={`Wallet Balance (${formatCurrency(walletBalance)})`}
                   description={walletBalance >= totalAmount ? "Full amount covered" : `Remaining ${formatCurrency(totalAmount - walletBalance)} via COD`}
                   onClick={() => update("paymentMethod", "WALLET")}
@@ -495,7 +495,7 @@ export function CheckoutForm({
             </div>
             {form.paymentMethod === "WALLET" && walletBalance < totalAmount && (
               <div className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
-                <p className="text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+                <p className="text-caption font-semibold text-amber-700 dark:text-amber-300">
                   Wallet covers {formatCurrency(Math.min(walletBalance, totalAmount))}. Remaining {formatCurrency(totalAmount - walletBalance)} will be collected as Cash on Delivery.
                 </p>
               </div>
@@ -508,16 +508,16 @@ export function CheckoutForm({
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="rounded-[1.35rem] bg-white p-5 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900"
+            className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900"
           >
-            <h2 className="text-[15px] font-black text-slate-900 dark:text-white mb-4">Delivery Address</h2>
+            <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Delivery Address</h2>
 
             {savedAddresses.length > 0 && (
               <div className="mb-4">
                 <select
                   defaultValue=""
                   onChange={(event) => applySavedAddress(event.target.value)}
-                  className="h-11 w-full rounded-full border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-4 text-sm font-semibold text-slate-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
+                  className="h-11 w-full rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
                 >
                   <option value="">Choose saved address</option>
                   {savedAddresses.map((address) => (
@@ -530,33 +530,33 @@ export function CheckoutForm({
             )}
 
             {/* Location detection */}
-            <div className="rounded-2xl bg-slate-50 dark:bg-slate-800 p-4 mb-4">
+            <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800 p-4 mb-4">
               <div className="flex items-center gap-3">
                 <motion.div
                   animate={locationOk ? { scale: [1, 1.1, 1] } : {}}
                   transition={{ duration: 0.3 }}
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-green-100 text-green-700" : "bg-black text-white"}`}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-secondary-100 text-secondary-700" : "bg-black text-white"}`}
                 >
                   {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
                 </motion.div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-bold text-slate-800 dark:text-white">
+                  <p className="text-body font-bold text-neutral-800 dark:text-white">
                     {locationOk ? `${distance?.toFixed(1)} KM from store` : "GPS verification needed"}
                   </p>
-                  <p className="text-[11px] text-slate-500 mt-0.5">Delivery within {deliveryRadiusKm} KM only</p>
+                  <p className="text-caption text-neutral-500 mt-0.5">Delivery within {deliveryRadiusKm} KM only</p>
                 </div>
                 <motion.button
                   type="button"
                   onClick={useCurrentLocation}
                   disabled={locationState === "loading"}
                   whileTap={{ scale: 0.9 }}
-                  className="shrink-0 rounded-full bg-black px-3 py-2 text-[11px] font-bold text-white"
+                  className="shrink-0 rounded-full bg-black px-3 py-2 text-caption font-bold text-white"
                 >
                   {locationState === "loading" ? "Finding..." : locationOk ? "Refresh" : "Detect"}
                 </motion.button>
               </div>
               {isOutsideRadius && (
-                <p className="mt-3 text-[11px] font-semibold text-red-600 flex items-center gap-1.5">
+                <p className="mt-3 text-caption font-semibold text-red-600 flex items-center gap-1.5">
                   <AlertCircle className="h-3.5 w-3.5" />
                   Outside delivery radius ({distance?.toFixed(1)} KM)
                 </p>
@@ -581,7 +581,7 @@ export function CheckoutForm({
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -8 }}
-                  className="mt-3 rounded-xl px-3 py-2 text-[12px] font-semibold bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                  className="mt-3 rounded-xl px-3 py-2 text-caption font-semibold bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
                 >
                   {locationOk ? `✓ Within delivery range (${distance?.toFixed(1)} KM)` : "Tap Detect above to verify delivery eligibility"}
                 </motion.p>
@@ -590,18 +590,18 @@ export function CheckoutForm({
 
             <div className="mt-3">
               <label className="block">
-                <span className="text-[12px] font-bold text-slate-600">Delivery notes</span>
+                <span className="text-caption font-bold text-neutral-600">Delivery notes</span>
                 <textarea
                   value={form.notes}
                   onChange={(event) => update("notes", event.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 p-3 text-[13px] text-slate-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 transition-all"
+                  className="mt-1.5 w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-3 text-body text-neutral-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
                   placeholder="Gate color, preferred time..."
                 />
               </label>
             </div>
 
             {/* Manual coordinates */}
-            <button type="button" onClick={() => setShowManualLocation((c) => !c)} className="mt-3 flex items-center gap-1 text-[12px] font-bold text-black">
+            <button type="button" onClick={() => setShowManualLocation((c) => !c)} className="mt-3 flex items-center gap-1 text-caption font-bold text-black">
               Enter coordinates manually
               <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showManualLocation ? "rotate-180" : ""}`} />
             </button>
@@ -626,50 +626,50 @@ export function CheckoutForm({
           transition={{ delay: 0.3 }}
           className="lg:sticky lg:top-[90px] h-fit"
         >
-          <section className="rounded-[1.35rem] bg-white p-5 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] dark:bg-slate-900">
-            <h2 className="text-[15px] font-black text-slate-900 dark:text-white">Order Summary</h2>
+          <section className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900">
+            <h2 className="text-title font-black text-neutral-900 dark:text-white">Order Summary</h2>
             <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
               {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-[12px]">
-                  <span className="text-slate-600 dark:text-slate-400 truncate flex-1 mr-2">{item.name} x{item.quantity}</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200 shrink-0">{formatCurrency((item.discountPrice ?? item.price) * item.quantity)}</span>
+                <div key={item.id} className="flex items-center justify-between text-caption">
+                  <span className="text-neutral-600 dark:text-neutral-400 truncate flex-1 mr-2">{item.name} x{item.quantity}</span>
+                  <span className="font-semibold text-neutral-800 dark:text-neutral-200 shrink-0">{formatCurrency((item.discountPrice ?? item.price) * item.quantity)}</span>
                 </div>
               ))}
             </div>
-            <div className="mt-4 pt-4 border-t border-slate-100 space-y-2.5 text-[13px]">
+            <div className="mt-4 pt-4 border-t border-neutral-100 space-y-2.5 text-body">
               <div className="flex justify-between">
-                <span className="text-slate-500">Order Amount</span>
-                <span className="font-semibold text-slate-700">{formatCurrency(subtotal)}</span>
+                <span className="text-neutral-500">Order Amount</span>
+                <span className="font-semibold text-neutral-700">{formatCurrency(subtotal)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Delivery</span>
-                <span className="font-semibold text-slate-700">
-                  {feeQuoteLoading ? <span className="text-muted-foreground">Calculating…</span> : deliveryFee === 0 ? <span className="text-green-600">FREE</span> : formatCurrency(deliveryFee)}
+                <span className="text-neutral-500">Delivery</span>
+                <span className="font-semibold text-neutral-700">
+                  {feeQuoteLoading ? <span className="text-muted-foreground">Calculating…</span> : deliveryFee === 0 ? <span className="text-secondary-600">FREE</span> : formatCurrency(deliveryFee)}
                 </span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">{gstRatePercent > 0 ? `GST (${gstRatePercent}% incl.)` : "Tax"}</span>
-                <span className="font-semibold text-slate-700">{formatCurrency(gstAmount)}</span>
+                <span className="text-neutral-500">{gstRatePercent > 0 ? `GST (${gstRatePercent}% incl.)` : "Tax"}</span>
+                <span className="font-semibold text-neutral-700">{formatCurrency(gstAmount)}</span>
               </div>
-              <div className="border-t border-dashed border-slate-200 dark:border-slate-700 pt-3 flex justify-between">
-                <span className="font-black text-slate-900 dark:text-white">Total Amount</span>
-                <span className="font-black text-slate-900 dark:text-white text-[16px]">
+              <div className="border-t border-dashed border-neutral-200 dark:border-neutral-700 pt-3 flex justify-between">
+                <span className="font-black text-neutral-900 dark:text-white">Total Amount</span>
+                <span className="font-black text-neutral-900 dark:text-white text-title">
                   <span className="text-black">{"₹"}</span> {totalAmount.toFixed(2)}
                 </span>
               </div>
             </div>
-            {message && <p className="mt-4 rounded-xl bg-slate-50 dark:bg-slate-800 p-3 text-[12px] font-medium text-slate-600 dark:text-slate-300">{message}</p>}
+            {message && <p className="mt-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 p-3 text-caption font-medium text-neutral-600 dark:text-neutral-300">{message}</p>}
             <motion.button
               type="submit"
               disabled={!canSubmit}
               whileTap={{ scale: 0.97 }}
               whileHover={{ scale: canSubmit ? 1.01 : 1 }}
-              className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-[14px] font-black text-white shadow-[0_18px_32px_-22px_rgba(0,0,0,0.8)] transition-opacity disabled:cursor-not-allowed disabled:bg-slate-400 disabled:opacity-40"
+              className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-body font-black text-white shadow-premium transition-opacity disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
             >
               {isSubmitting ? "Placing order..." : "Pay Now"}
             </motion.button>
             {!canSubmit && (
-              <p className="mt-3 text-center text-[11px] font-medium text-slate-400">
+              <p className="mt-3 text-center text-caption font-medium text-neutral-400">
                 Complete address, pincode & GPS to proceed
               </p>
             )}
@@ -694,20 +694,20 @@ function PaymentMethodCard({
       whileTap={{ scale: 0.97 }}
       animate={active ? { borderColor: "rgba(5,5,5,1)" } : { borderColor: "rgba(241,245,249,1)" }}
       className={`w-full flex items-center gap-3 rounded-2xl p-4 text-left border-2 transition-colors ${
-        active ? "bg-black/[0.03]" : "hover:border-slate-200"
+        active ? "bg-black/[0.03]" : "hover:border-neutral-200"
       }`}
     >
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}>
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-bold text-slate-800 dark:text-white">{label}</p>
-        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">{description}</p>
+        <p className="text-body font-bold text-neutral-800 dark:text-white">{label}</p>
+        <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">{description}</p>
       </div>
       <motion.div
         animate={active ? { scale: 1, backgroundColor: "#050505" } : { scale: 1, backgroundColor: "transparent" }}
         className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-          active ? "border-black" : "border-slate-300"
+          active ? "border-black" : "border-neutral-300"
         }`}
       >
         <AnimatePresence>
@@ -735,14 +735,14 @@ function CheckoutField({
 }) {
   return (
     <label className={`min-w-0 ${className ?? ""}`}>
-      <span className="text-[12px] font-bold text-slate-600">{label}</span>
+      <span className="text-caption font-bold text-neutral-600">{label}</span>
       <input
         required
         type={type}
         inputMode={inputMode}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full h-11 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 text-[13px] text-slate-900 dark:text-white outline-none focus:border-primary/40 focus:bg-white dark:focus:bg-slate-700 transition-all"
+        className="mt-1.5 w-full h-11 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3.5 text-body text-neutral-900 dark:text-white outline-none focus:border-primary/40 focus:bg-white dark:focus:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
       />
     </label>
   );

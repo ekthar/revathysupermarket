@@ -34,7 +34,7 @@ export function DeliveryOtpCard({ otp }: { otp: string }) {
           <Copy className="h-4 w-4" />
         </button>
       </div>
-      <p className="mt-2 text-[11px] font-medium text-slate-500">
+      <p className="mt-2 text-caption font-medium text-slate-500">
         Share this code only with the delivery person at your door.
       </p>
     </motion.div>

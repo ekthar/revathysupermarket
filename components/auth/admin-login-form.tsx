@@ -41,12 +41,12 @@ export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null })
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-slate-900">
+    <form onSubmit={handleSubmit} className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm dark:border-white/10 dark:bg-neutral-900">
       <div className="space-y-4">
         <label className="block">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Email</span>
+          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Email</span>
           <div className="relative mt-1.5">
-            <Mail className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+            <Mail className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-neutral-400" />
             <Input
               type="email"
               value={email}
@@ -59,9 +59,9 @@ export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null })
         </label>
 
         <label className="block">
-          <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Password</span>
+          <span className="text-sm font-medium text-neutral-700 dark:text-neutral-300">Password</span>
           <div className="relative mt-1.5">
-            <Lock className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" />
+            <Lock className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-neutral-400" />
             <Input
               type={showPassword ? "text" : "password"}
               value={password}
@@ -74,7 +74,7 @@ export function AdminLoginForm({ callbackUrl }: { callbackUrl?: string | null })
               type="button"
               aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3.5 top-3.5 text-slate-400 hover:text-slate-600"
+              className="absolute right-3.5 top-3.5 text-neutral-400 hover:text-neutral-600"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>

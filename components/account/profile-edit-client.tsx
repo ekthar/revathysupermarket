@@ -154,12 +154,12 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
   return (
     <div className="space-y-5">
       {/* Avatar Section */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow p-5">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-4">Profile Photo</p>
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow p-5">
+        <p className="text-caption font-semibold text-neutral-400 uppercase tracking-wide mb-4">Profile Photo</p>
 
         <div className="flex items-center gap-4">
           <div className="relative">
-            <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-slate-800 flex items-center justify-center">
+            <div className="relative h-20 w-20 rounded-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 dark:from-primary/10 dark:to-neutral-800 flex items-center justify-center">
               {image ? (
                 <Image src={image} alt="Profile" fill sizes="80px" unoptimized className="object-cover" />
               ) : (
@@ -189,10 +189,10 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
           </div>
 
           <div className="flex-1">
-            <p className="text-[13px] font-semibold text-slate-800 dark:text-white">
+            <p className="text-body font-semibold text-neutral-800 dark:text-white">
               {name || "Add your name"}
             </p>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+            <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">
               Tap the camera to change photo
             </p>
             {image && (
@@ -200,7 +200,7 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
                 type="button"
                 onClick={removeAvatar}
                 disabled={uploading}
-                className="mt-2 text-[11px] font-semibold text-red-500 flex items-center gap-1 press"
+                className="mt-2 text-caption font-semibold text-red-500 flex items-center gap-1 press"
               >
                 <Trash2 className="h-3 w-3" /> Remove photo
               </button>
@@ -210,57 +210,57 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
       </div>
 
       {/* Profile Form */}
-      <form onSubmit={saveProfile} className="rounded-2xl bg-white dark:bg-slate-900 card-shadow p-5 space-y-4">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Personal Info</p>
+      <form onSubmit={saveProfile} className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow p-5 space-y-4">
+        <p className="text-caption font-semibold text-neutral-400 uppercase tracking-wide">Personal Info</p>
 
         <div>
-          <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Full Name</label>
+          <label className="text-caption font-semibold text-neutral-500 dark:text-neutral-400 mb-1.5 block">Full Name</label>
           <div className="relative">
-            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <User className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter your name"
-              className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-4 text-[14px] font-medium text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+              className="w-full h-12 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 pl-10 pr-4 text-body font-medium text-neutral-900 dark:text-white placeholder:text-neutral-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>
 
         <div>
-          <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Email Address</label>
+          <label className="text-caption font-semibold text-neutral-500 dark:text-neutral-400 mb-1.5 block">Email Address</label>
           <div className="relative">
-            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="your@email.com"
-              className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 pl-10 pr-4 text-[14px] font-medium text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+              className="w-full h-12 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 pl-10 pr-4 text-body font-medium text-neutral-900 dark:text-white placeholder:text-neutral-400 outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>
 
         {/* Phone section */}
         <div>
-          <label className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 mb-1.5 block">Phone Number</label>
+          <label className="text-caption font-semibold text-neutral-500 dark:text-neutral-400 mb-1.5 block">Phone Number</label>
           {initialUser.phone ? (
-            <div className="flex items-center gap-2 h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5">
+            <div className="flex items-center gap-2 h-12 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3.5">
               <Phone className="h-4 w-4 text-primary" />
-              <span className="text-[14px] font-medium text-slate-900 dark:text-white">{initialUser.phone}</span>
+              <span className="text-body font-medium text-neutral-900 dark:text-white">{initialUser.phone}</span>
               <Check className="h-4 w-4 text-primary ml-auto" />
-              <span className="text-[10px] text-primary font-semibold">Verified</span>
+              <span className="text-micro text-primary font-semibold">Verified</span>
             </div>
           ) : (
             <div className="space-y-2 rounded-xl bg-primary/5 dark:bg-primary/10 p-3">
               <div className="relative">
-                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                <Phone className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
                 <input
                   type="tel"
                   value={phoneDraft}
                   onChange={(e) => setPhoneDraft(e.target.value.replace(/\D/g, "").slice(0, 12))}
                   placeholder="10-digit phone number"
-                  className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 pl-10 pr-4 text-[14px] font-medium text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-primary transition-all"
+                  className="w-full h-12 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 pl-10 pr-4 text-body font-medium text-neutral-900 dark:text-white placeholder:text-neutral-400 outline-none focus:border-primary transition-all"
                 />
               </div>
               {otpSent && (
@@ -269,14 +269,14 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
                   value={phoneOtp}
                   onChange={(e) => setPhoneOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
                   placeholder="6-digit OTP"
-                  className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 text-[14px] font-medium text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:border-primary transition-all text-center tracking-[0.3em]"
+                  className="w-full h-12 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-4 text-body font-medium text-neutral-900 dark:text-white placeholder:text-neutral-400 outline-none focus:border-primary transition-all text-center tracking-[0.3em]"
                 />
               )}
               <button
                 type="button"
                 onClick={otpSent ? verifyPhoneOtp : sendPhoneOtp}
                 disabled={phoneLoading}
-                className="w-full h-11 rounded-xl bg-primary text-white text-[13px] font-bold press disabled:opacity-50"
+                className="w-full h-11 rounded-xl bg-primary text-white text-body font-bold press disabled:opacity-50"
               >
                 {phoneLoading ? "Please wait..." : otpSent ? "Verify OTP" : "Send WhatsApp OTP"}
               </button>
@@ -288,7 +288,7 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
         <button
           type="submit"
           disabled={saving || !name.trim()}
-          className="w-full h-12 rounded-xl bg-primary text-white text-[14px] font-bold flex items-center justify-center gap-2 press disabled:opacity-50 shadow-sm"
+          className="w-full h-12 rounded-xl bg-primary text-white text-body font-bold flex items-center justify-center gap-2 press disabled:opacity-50 shadow-sm"
         >
           {saving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -300,12 +300,12 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
       </form>
 
       {/* Link Google */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow p-5">
-        <p className="text-[11px] font-semibold text-slate-400 uppercase tracking-wide mb-3">Connected Accounts</p>
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow p-5">
+        <p className="text-caption font-semibold text-neutral-400 uppercase tracking-wide mb-3">Connected Accounts</p>
         <button
           type="button"
           onClick={() => signIn("google", { callbackUrl: "/account/edit" })}
-          className="w-full h-12 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-[13px] font-bold text-slate-700 dark:text-slate-200 flex items-center justify-center gap-2 press hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+          className="w-full h-12 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-body font-bold text-neutral-700 dark:text-neutral-200 flex items-center justify-center gap-2 press hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
         >
           <Chrome className="h-4 w-4" />
           Link Google Account
@@ -319,9 +319,9 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
-            className={`rounded-xl p-3 text-[13px] font-medium text-center ${
+            className={`rounded-xl p-3 text-body font-medium text-center ${
               message.type === "success"
-                ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
+                ? "bg-secondary-50 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300"
                 : "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-300"
             }`}
           >

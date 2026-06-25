@@ -15,7 +15,7 @@ export default async function AuditLogPage({
 
   if (!canView) {
     return (
-      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
         <h2 className="font-display text-3xl font-black">Audit log</h2>
         <p className="mt-2 text-sm text-muted-foreground">Owner or manager access is required.</p>
       </div>
@@ -34,7 +34,7 @@ export default async function AuditLogPage({
 
   return (
     <div>
-      <div className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
+      <div className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Security trail</p>
         <h2 className="mt-2 font-display text-4xl font-black leading-tight">Audit log</h2>
         <form className="mt-5 grid gap-3 sm:grid-cols-2">
@@ -54,9 +54,9 @@ export default async function AuditLogPage({
       </div>
       <div className="mt-5 grid gap-3">
         {logs.length === 0 ? (
-          <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">No audit events found.</div>
+          <div className="rounded-xl border border-dashed border-border p-10 text-center">No audit events found.</div>
         ) : logs.map((log) => (
-          <article key={log.id} className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+          <article key={log.id} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-black">{log.action}</h3>

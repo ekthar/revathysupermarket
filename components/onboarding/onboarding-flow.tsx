@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Chrome, LocateFixed, MapPin, Phone, ShoppingBasket, Sparkles } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, Chrome, LocateFixed, MapPin, Phone, ShoppingBasket, Sparkles, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OtpInput } from "@/components/onboarding/otp-input";
@@ -137,12 +137,12 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
   }
 
   return (
-    <main className="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-slate-950">
+    <main className="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-neutral-950">
       {/* Top bar */}
       {step !== "splash" && step !== "done" && (
         <div className="flex items-center justify-between px-4 pt-4">
           {currentIndex > 1 ? (
-            <button type="button" onClick={goBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 dark:bg-white/10">
+            <button type="button" onClick={goBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-white/10">
               <ArrowLeft className="h-4 w-4" />
             </button>
           ) : <span className="w-9" />}
@@ -169,7 +169,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 initial={{ scale: 0.6, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                className="flex h-20 w-20 items-center justify-center rounded-[1.5rem] bg-primary text-white shadow-lg overflow-hidden"
+                className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary text-white shadow-lg overflow-hidden"
               >
                 {logoUrl ? (
                   <img src={logoUrl} alt="" className="h-full w-full object-contain p-2" />
@@ -181,7 +181,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="mt-6 font-display text-3xl font-black text-slate-900 dark:text-white"
+                className="mt-6 font-display text-3xl font-black text-neutral-900 dark:text-white"
               >
                 {SITE.name}
               </motion.h1>
@@ -189,7 +189,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="mt-2 text-sm font-medium text-slate-500"
+                className="mt-2 text-sm font-medium text-neutral-500"
               >
                 Fresh groceries, delivered fast
               </motion.p>
@@ -210,10 +210,10 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Sparkles className="h-5 w-5" />
               </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-slate-900 dark:text-white sm:text-3xl">
+              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
                 What&apos;s your name?
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-neutral-500">
                 So we know what to call you when your groceries arrive.
               </p>
 
@@ -232,7 +232,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Enter your name"
                 autoFocus
-                className="mt-5 h-14 rounded-2xl border-slate-200 text-lg font-semibold shadow-sm placeholder:text-slate-400 focus-visible:ring-primary dark:border-white/10"
+                className="mt-5 h-14 rounded-2xl border-neutral-200 text-lg font-semibold shadow-sm placeholder:text-neutral-400 focus-visible:ring-primary dark:border-white/10"
               />
 
               <Button
@@ -249,7 +249,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 <button
                   type="button"
                   onClick={() => signIn("google", { callbackUrl: safeCallback })}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white text-sm font-semibold text-slate-700 shadow-sm transition active:scale-[0.98] dark:border-white/10 dark:bg-white/5 dark:text-white"
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white text-sm font-semibold text-neutral-700 shadow-sm transition active:scale-[0.98] dark:border-white/10 dark:bg-white/5 dark:text-white"
                 >
                   <Chrome className="h-4 w-4" />
                   Continue with Google
@@ -260,7 +260,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                     localStorage.setItem("onboarding-complete", "skipped");
                     router.push("/products");
                   }}
-                  className="w-full py-2 text-center text-sm font-medium text-slate-400 transition hover:text-slate-600"
+                  className="w-full py-2 text-center text-sm font-medium text-neutral-400 transition hover:text-neutral-600"
                 >
                   Skip for now
                 </button>
@@ -282,10 +282,10 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Phone className="h-5 w-5" />
               </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-slate-900 dark:text-white sm:text-3xl">
+              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
                 Enter your number
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-neutral-500">
                 We&apos;ll send a verification code on WhatsApp.
               </p>
 
@@ -325,11 +325,11 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <Check className="h-5 w-5" />
               </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-slate-900 dark:text-white sm:text-3xl">
+              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
                 Verify your number
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
-                Enter the 6-digit code sent to <span className="font-semibold text-slate-700 dark:text-white">+91 {phone}</span>
+              <p className="mt-2 text-sm text-neutral-500">
+                Enter the 6-digit code sent to <span className="font-semibold text-neutral-700 dark:text-white">+91 {phone}</span>
               </p>
 
               <div className="mt-8">
@@ -355,7 +355,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 type="button"
                 onClick={sendOtp}
                 disabled={timer > 0 || loading}
-                className="mt-4 w-full py-2 text-center text-sm font-medium text-slate-400 disabled:cursor-not-allowed"
+                className="mt-4 w-full py-2 text-center text-sm font-medium text-neutral-400 disabled:cursor-not-allowed"
               >
                 {timer > 0 ? `Resend code in 0:${String(timer).padStart(2, "0")}` : "Resend code"}
               </button>
@@ -376,19 +376,19 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
                 <MapPin className="h-5 w-5" />
               </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-slate-900 dark:text-white sm:text-3xl">
+              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
                 Set delivery location
               </h1>
-              <p className="mt-2 text-sm text-slate-500">
+              <p className="mt-2 text-sm text-neutral-500">
                 Allow location access so we can check if delivery is available in your area.
               </p>
 
-              <div className="mt-8 flex flex-col items-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 p-8 dark:border-white/10 dark:bg-white/5">
+              <div className="mt-8 flex flex-col items-center rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/50 p-8 dark:border-white/10 dark:bg-white/5">
                 <LocateFixed className={cn("h-12 w-12 text-primary", locating && "animate-pulse")} />
                 {locationAddress ? (
-                  <p className="mt-4 text-center text-sm font-medium text-slate-700 dark:text-white">{locationAddress}</p>
+                  <p className="mt-4 text-center text-sm font-medium text-neutral-700 dark:text-white">{locationAddress}</p>
                 ) : (
-                  <p className="mt-4 text-center text-sm text-slate-400">Tap below to detect your location</p>
+                  <p className="mt-4 text-center text-sm text-neutral-400">Tap below to detect your location</p>
                 )}
               </div>
 
@@ -411,7 +411,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               <button
                 type="button"
                 onClick={() => setStep("done")}
-                className="mt-3 w-full py-2 text-center text-sm font-medium text-slate-400 transition hover:text-slate-600"
+                className="mt-3 w-full py-2 text-center text-sm font-medium text-neutral-400 transition hover:text-neutral-600"
               >
                 Skip, I&apos;ll add later
               </button>
@@ -437,11 +437,11 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               >
                 <Check className="h-10 w-10 stroke-[3]" />
               </motion.div>
-              <h1 className="mt-6 font-display text-2xl font-black text-slate-900 dark:text-white sm:text-3xl">
+              <h1 className="mt-6 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
                 You&apos;re all set!
               </h1>
-              <p className="mt-2 text-base text-slate-500">
-                Welcome, <span className="font-semibold text-slate-700 dark:text-white">{name || "shopper"}</span>. Let&apos;s get your groceries.
+              <p className="mt-2 text-base text-neutral-500">
+                Welcome, <span className="font-semibold text-neutral-700 dark:text-white">{name || "shopper"}</span>. Let&apos;s get your groceries.
               </p>
 
               <Button
@@ -456,6 +456,19 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
           )}
         </AnimatePresence>
       </div>
+
+      {/* Staff login link - visible on all steps */}
+      {step !== "done" && (
+        <div className="pb-6 text-center">
+          <a
+            href="/staff-login"
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-neutral-400 transition hover:text-neutral-600 dark:hover:text-neutral-300"
+          >
+            <UserCog className="h-3.5 w-3.5" />
+            Staff? Login here
+          </a>
+        </div>
+      )}
     </main>
   );
 }

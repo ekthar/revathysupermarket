@@ -48,8 +48,8 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
   return (
     <div className="space-y-4">
       {/* Notifications Section */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow overflow-hidden">
-        <p className="px-4 pt-4 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Notifications</p>
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
+        <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">Notifications</p>
 
         <SettingToggle
           icon={Bell}
@@ -82,11 +82,11 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
       </div>
 
       {/* Appearance Section */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow overflow-hidden">
-        <p className="px-4 pt-4 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">Appearance</p>
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
+        <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">Appearance</p>
 
         <div className="px-4 py-4">
-          <p className="text-[13px] font-medium text-slate-800 dark:text-white mb-3">Theme</p>
+          <p className="text-body font-medium text-neutral-800 dark:text-white mb-3">Theme</p>
           <div className="grid grid-cols-3 gap-2">
             <ThemeOption
               icon={Sun}
@@ -111,24 +111,24 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
       </div>
 
       {/* About Section */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 card-shadow overflow-hidden">
-        <p className="px-4 pt-4 pb-2 text-[11px] font-semibold text-slate-400 uppercase tracking-wide">About</p>
-        <div className="px-4 py-3 border-t border-slate-50 dark:border-slate-800">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
+        <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">About</p>
+        <div className="px-4 py-3 border-t border-neutral-50 dark:border-neutral-800">
           <div className="flex justify-between items-center">
-            <span className="text-[13px] text-slate-600 dark:text-slate-300">App Version</span>
-            <span className="text-[12px] font-semibold text-slate-400">1.0.0</span>
+            <span className="text-body text-neutral-600 dark:text-neutral-300">App Version</span>
+            <span className="text-caption font-semibold text-neutral-400">1.0.0</span>
           </div>
         </div>
-        <div className="px-4 py-3 border-t border-slate-50 dark:border-slate-800">
+        <div className="px-4 py-3 border-t border-neutral-50 dark:border-neutral-800">
           <div className="flex justify-between items-center">
-            <span className="text-[13px] text-slate-600 dark:text-slate-300">Terms & Conditions</span>
-            <span className="text-[12px] text-primary font-semibold">View</span>
+            <span className="text-body text-neutral-600 dark:text-neutral-300">Terms & Conditions</span>
+            <span className="text-caption text-primary font-semibold">View</span>
           </div>
         </div>
-        <div className="px-4 py-3 border-t border-slate-50 dark:border-slate-800">
+        <div className="px-4 py-3 border-t border-neutral-50 dark:border-neutral-800">
           <div className="flex justify-between items-center">
-            <span className="text-[13px] text-slate-600 dark:text-slate-300">Privacy Policy</span>
-            <span className="text-[12px] text-primary font-semibold">View</span>
+            <span className="text-body text-neutral-600 dark:text-neutral-300">Privacy Policy</span>
+            <span className="text-caption text-primary font-semibold">View</span>
           </div>
         </div>
       </div>
@@ -140,7 +140,7 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0 }}
-            className="text-center text-[12px] font-medium text-red-500"
+            className="text-center text-caption font-medium text-red-500"
           >
             {message}
           </motion.p>
@@ -164,21 +164,21 @@ function SettingToggle({
   onToggle: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between px-4 py-3.5 border-t border-slate-50 dark:border-slate-800">
+    <div className="flex items-center justify-between px-4 py-3.5 border-t border-neutral-50 dark:border-neutral-800">
       <div className="flex items-center gap-3">
-        <div className="h-9 w-9 rounded-xl bg-slate-50 dark:bg-slate-800 flex items-center justify-center shrink-0">
-          <Icon className="h-4 w-4 text-slate-500 dark:text-slate-400" />
+        <div className="h-9 w-9 rounded-xl bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
+          <Icon className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
         </div>
         <div>
-          <p className="text-[13px] font-medium text-slate-800 dark:text-white">{label}</p>
-          <p className="text-[11px] text-slate-400 mt-0.5">{description}</p>
+          <p className="text-body font-medium text-neutral-800 dark:text-white">{label}</p>
+          <p className="text-caption text-neutral-400 mt-0.5">{description}</p>
         </div>
       </div>
       <button
         type="button"
         onClick={onToggle}
         className={`relative h-7 w-12 rounded-full transition-colors shrink-0 ${
-          enabled ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"
+          enabled ? "bg-primary" : "bg-neutral-200 dark:bg-neutral-700"
         }`}
         aria-label={`Toggle ${label}`}
       >
@@ -210,11 +210,11 @@ function ThemeOption({
       className={`flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all press ${
         active
           ? "bg-primary/10 dark:bg-primary/20 border-2 border-primary"
-          : "bg-slate-50 dark:bg-slate-800 border-2 border-transparent"
+          : "bg-neutral-50 dark:bg-neutral-800 border-2 border-transparent"
       }`}
     >
-      <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-slate-400"}`} />
-      <span className={`text-[11px] font-semibold ${active ? "text-primary" : "text-slate-500 dark:text-slate-400"}`}>
+      <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-neutral-400"}`} />
+      <span className={`text-caption font-semibold ${active ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}>
         {label}
       </span>
     </button>

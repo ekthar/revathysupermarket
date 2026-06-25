@@ -55,27 +55,27 @@ export default async function CancelledOrdersReportPage() {
     <div className="space-y-5">
       {/* Header */}
       <div className="rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-slate-900 p-5">
-        <p className="text-[11px] font-bold uppercase text-red-600 dark:text-red-400">Report</p>
+        <p className="text-caption font-bold uppercase text-red-600 dark:text-red-400">Report</p>
         <h1 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Cancelled Orders</h1>
-        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1">Track cancellations, reasons, and revenue impact</p>
+        <p className="text-caption text-slate-500 dark:text-slate-400 mt-1">Track cancellations, reasons, and revenue impact</p>
       </div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
         <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
-          <p className="text-[11px] text-slate-400 font-medium">Total Cancelled</p>
-          <p className="text-[22px] font-bold text-red-600 mt-1">{cancelledCount}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">orders</p>
+          <p className="text-caption text-slate-400 font-medium">Total Cancelled</p>
+          <p className="text-heading font-bold text-red-600 mt-1">{cancelledCount}</p>
+          <p className="text-micro text-slate-400 mt-0.5">orders</p>
         </div>
         <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
-          <p className="text-[11px] text-slate-400 font-medium">Revenue Lost</p>
-          <p className="text-[22px] font-bold text-slate-900 dark:text-white mt-1">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(totalCancelledValue)}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">total value</p>
+          <p className="text-caption text-slate-400 font-medium">Revenue Lost</p>
+          <p className="text-heading font-bold text-slate-900 dark:text-white mt-1">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(totalCancelledValue)}</p>
+          <p className="text-micro text-slate-400 mt-0.5">total value</p>
         </div>
         <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
-          <p className="text-[11px] text-slate-400 font-medium">Cancel Rate</p>
-          <p className="text-[22px] font-bold text-orange-600 mt-1">{cancelledRate}%</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">of all orders</p>
+          <p className="text-caption text-slate-400 font-medium">Cancel Rate</p>
+          <p className="text-heading font-bold text-orange-600 mt-1">{cancelledRate}%</p>
+          <p className="text-micro text-slate-400 mt-0.5">of all orders</p>
         </div>
       </div>
 

@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Staff Mobile Login - Add a discoverable staff login entry point on the main login page that uses the existing staff-credentials provider and redirects based on role.",
+  "status": "completed",
+  "steps": [
+    "Add a 'Staff Login' link at the bottom of the OnboardingFlow component (components/onboarding/onboarding-flow.tsx). The link should be visible on the splash/name/phone steps as a small, non-intrusive text link (like 'Staff? Login here') that navigates to /staff-login. Follow the pattern used by the delivery login client help text ('Not a delivery partner? Customer login').",
+    "Create a new route at app/staff-login/page.tsx that: checks session and redirects staff to /admin, delivery partners to /delivery, customers to /dashboard. If not authenticated, renders a StaffLoginClient component. This page should be accessible without authentication (not behind middleware staff check).",
+    "Create components/auth/staff-login-client.tsx - a mobile-friendly staff login form using email + password that calls signIn('staff-credentials', { redirect: false }). After successful signIn, fetch the session and redirect based on role: DELIVERY_PARTNER -> /delivery, staff roles (ADMIN/OWNER/MANAGER/PACKING_STAFF/STAFF) -> /admin. Style it similarly to the delivery login page (emerald/primary gradient bg, card form, lucide icons). Include a 'Customer login' link back to /login.",
+    "Update middleware.ts to NOT block /staff-login route (it should be accessible to unauthenticated users). The current matcher already only protects /admin/:path*, /dashboard/:path*, /checkout/:path*, /delivery/:path*, and /api/:path*, so /staff-login should already be accessible. Verify this.",
+    "Ensure the login page's existing redirect logic (in app/login/page.tsx) still works: if already authenticated as staff, redirect to /admin; if delivery partner, to /delivery."
+  ],
+  "acceptance_criteria": [
+    "A 'Staff? Login here' link is visible on the main login page (/login)",
+    "/staff-login route renders a mobile-friendly email/password login form",
+    "Successful staff login redirects to /admin for staff roles and /delivery for delivery partners",
+    "No new auth provider is created - reuses existing staff-credentials provider",
+    "Type check passes: npx tsc --noEmit --skipLibCheck"
+  ],
+  "verification": [
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": "All verification passed (tsc, lint). Middleware already does not block /staff-login route. Used UserCog icon for the staff login link in OnboardingFlow. The link is only shown when step !== done to avoid cluttering the success screen."
+}

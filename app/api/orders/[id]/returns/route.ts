@@ -24,6 +24,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     include: { items: true, returnRequests: { where: { status: { in: [...ACTIVE_STATUSES] } }, select: { items: true } } }
   });
   if (!order) return NextResponse.json({ error: "Order not found.", code: "ORDER_NOT_FOUND" }, { status: 404 });
+
+  // Validate bill number against current user's orders only (prevents order enumeration)
+  const billOrder = await prisma.order.findFirst({ where: { orderNumber: parsed.data.billNumber, userId: session.user.id } });
+  if (!billOrder) return NextResponse.json({ error: "Invalid bill number - no matching order found.", code: "INVALID_BILL_NUMBER" }, { status: 400 });
+
   if (order.status !== "DELIVERED") return NextResponse.json({ error: "Returns are available after delivery.", code: "ORDER_NOT_DELIVERED" }, { status: 400 });
 
   const deliveredAt = order.deliveryConfirmedAt ?? order.updatedAt;
@@ -49,7 +54,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const returnNumber = `RET-${Date.now().toString(36).toUpperCase()}-${crypto.randomUUID().slice(0, 4).toUpperCase()}`;
 
   const returnRequest = await prisma.returnRequest.create({
-    data: { orderId: id, returnNumber, items, reason: parsed.data.reason, photoUrl: evidenceUrls[0] ?? null, evidenceUrls, note: parsed.data.note, refundAmount: maxRefundAmount, maxRefundAmount, eligibleUntil }
+    data: { orderId: id, returnNumber, billNumber: parsed.data.billNumber, items, reason: parsed.data.reason, photoUrl: evidenceUrls[0] ?? null, evidenceUrls, note: parsed.data.note, refundAmount: maxRefundAmount, maxRefundAmount, eligibleUntil }
   });
   await writeAuditLog({ actorId: session.user.id, actorRole: session.user.role, action: "return_requested", targetType: "ReturnRequest", targetId: returnRequest.id, metadata: { orderId: id, maxRefundAmount } });
   return NextResponse.json({ returnRequest }, { status: 201 });

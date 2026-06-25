@@ -151,19 +151,19 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
         {/* Stats Row */}
         <div className="mt-4 grid grid-cols-3 gap-2">
           <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
-            <p className="text-[10px] font-bold text-white/70">Today</p>
+            <p className="text-micro font-bold text-white/70">Today</p>
             <p className="text-lg font-black text-white">{stats.todayDelivered}</p>
-            <p className="text-[10px] text-white/60">deliveries</p>
+            <p className="text-micro text-white/60">deliveries</p>
           </div>
           <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
-            <p className="text-[10px] font-bold text-white/70">Collected</p>
+            <p className="text-micro font-bold text-white/70">Collected</p>
             <p className="text-lg font-black text-white">{formatCurrency(stats.todayCash + stats.todayUpi)}</p>
-            <p className="text-[10px] text-white/60">cash + upi</p>
+            <p className="text-micro text-white/60">cash + upi</p>
           </div>
           <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
-            <p className="text-[10px] font-bold text-white/70">Lifetime</p>
+            <p className="text-micro font-bold text-white/70">Lifetime</p>
             <p className="text-lg font-black text-white">{stats.totalDelivered}</p>
-            <p className="text-[10px] text-white/60">total</p>
+            <p className="text-micro text-white/60">total</p>
           </div>
         </div>
       </header>
@@ -214,7 +214,7 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
                           <h3 className="text-lg font-black text-slate-900 dark:text-white">
                             #{order.orderNumber}
                           </h3>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-black ${statusColor(order.status)}`}>
+                          <span className={`rounded-full px-2 py-0.5 text-micro font-black ${statusColor(order.status)}`}>
                             {statusLabels[order.status as keyof typeof statusLabels] ?? order.status}
                           </span>
                         </div>
@@ -222,7 +222,7 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
                       </div>
                       <div className="text-right">
                         <p className="font-black text-slate-900 dark:text-white">{formatCurrency(order.total)}</p>
-                        <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-[10px] font-bold ${payment.className}`}>
+                        <span className={`mt-1 inline-block rounded-full px-2 py-0.5 text-micro font-bold ${payment.className}`}>
                           {payment.label}
                         </span>
                       </div>

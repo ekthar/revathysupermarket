@@ -26,7 +26,7 @@ export function MotionCategoryCard({ href, category, accent }: { href: string; c
     <motion.div whileTap={{ scale: 0.97 }} whileHover={{ y: -4 }} className="min-w-[154px] snap-start sm:min-w-0">
       <Link
         href={href}
-        className="block h-full rounded-[1.5rem] border border-white/70 bg-card/90 p-4 shadow-soft transition hover:border-primary/40 dark:border-white/10 sm:p-5"
+        className="block h-full rounded-xl border border-white/70 bg-card/90 p-4 shadow-soft transition hover:border-primary/40 dark:border-white/10 sm:p-5"
       >
         <span className={cn("flex h-12 w-12 items-center justify-center rounded-2xl font-display text-lg font-black ring-8", accent)}>
           {category.slice(0, 2)}
@@ -64,10 +64,10 @@ export function HowItWorksCard({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.06, duration: 0.35 }}
-      className="rounded-[1.5rem] border border-white/70 bg-card/90 p-5 shadow-soft dark:border-white/10"
+      className="rounded-xl border border-white/70 bg-card/90 p-5 shadow-soft dark:border-white/10"
     >
       <div className="flex items-center gap-3">
-        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-fresh/20">
+        <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-secondary-100">
           <Icon className="h-5 w-5 text-primary" />
         </span>
         <p className="font-black">{title}</p>

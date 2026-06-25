@@ -150,7 +150,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
   }
 
   return (
-    <section className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+    <section className="mt-5 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase text-primary">Spreadsheet mode</p>
@@ -195,7 +195,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
           ["Featured", health.featured]
         ].map(([label, value]) => (
           <div key={label} className="rounded-2xl bg-muted p-3">
-            <p className="text-[10px] font-black uppercase text-muted-foreground">{label}</p>
+            <p className="text-micro font-black uppercase text-muted-foreground">{label}</p>
             <p className="mt-1 text-2xl font-black">{value}</p>
           </div>
         ))}
@@ -225,7 +225,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
       {recentlyChanged > 0 && <p className="mt-4 rounded-2xl bg-lime-fresh/25 p-3 text-sm font-black text-primary">Recently changed: {recentlyChanged} products</p>}
 
       {importPreview.length > 0 && (
-        <div className="mt-4 rounded-[1.35rem] border border-primary/20 bg-primary/5 p-3">
+        <div className="mt-4 rounded-lg border border-primary/20 bg-primary/5 p-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="font-black">Import preview: {importPreview.length} rows</p>
             <Button type="button" size="sm" onClick={commitImport} disabled={importPreview.some((row) => row.errors.length > 0)}>
@@ -252,9 +252,9 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
         </div>
       )}
 
-      <div className="-mx-4 mt-4 max-w-[calc(100vw-1.5rem)] overflow-x-auto rounded-[1.25rem] border border-border sm:mx-0 sm:max-w-full">
+      <div className="-mx-4 mt-4 max-w-[calc(100vw-1.5rem)] overflow-x-auto rounded-lg border border-border sm:mx-0 sm:max-w-full">
         <table className="min-w-[1180px] border-collapse text-sm">
-          <thead className="bg-muted text-left text-[11px] uppercase text-muted-foreground">
+          <thead className="bg-muted text-left text-caption uppercase text-muted-foreground">
             <tr>
               {columns.map((column) => (
                 <th key={column.key} className="border-b border-border px-3 py-3 font-black">{column.label}</th>

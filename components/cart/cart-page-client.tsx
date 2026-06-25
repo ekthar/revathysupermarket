@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
+import { springPresets } from "@/lib/motion";
 
 type StoreConfig = {
   gstRatePercent: number;
@@ -108,12 +109,12 @@ export function CartPageClient() {
   if (items.length === 0) {
     return (
       <main className="flex min-h-[65dvh] flex-col items-center justify-center bg-background px-6 text-center">
-        <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-800 flex items-center justify-center">
-          <ShoppingBag className="h-9 w-9 text-slate-300 dark:text-slate-600" />
+        <div className="h-20 w-20 rounded-full bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
+          <ShoppingBag className="h-9 w-9 text-neutral-300 dark:text-neutral-600" />
         </div>
-        <h1 className="mt-5 text-xl font-bold text-slate-900 dark:text-white">Your cart is empty</h1>
-        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">Add items from the store to get started</p>
-        <Link href="/products" className="mt-6 h-12 px-8 inline-flex items-center justify-center rounded-full bg-slate-900 dark:bg-white dark:text-slate-900 text-sm font-bold text-white press shadow-lg">
+        <h1 className="mt-5 text-xl font-bold text-neutral-900 dark:text-white">Your cart is empty</h1>
+        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Add items from the store to get started</p>
+        <Link href="/products" className="mt-6 h-12 px-8 inline-flex items-center justify-center rounded-full bg-neutral-900 dark:bg-white dark:text-neutral-900 text-sm font-bold text-white hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-[0.98] transition-all press shadow-lg">
           Browse Products
         </Link>
       </main>
@@ -126,15 +127,15 @@ export function CartPageClient() {
       <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/products" className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 press">
-              <ArrowLeft className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+            <Link href="/products" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors press">
+              <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
             </Link>
             <div>
-              <p className="text-[11px] font-black uppercase tracking-[0.28em] text-slate-400">{items.length} item{items.length > 1 ? "s" : ""}</p>
-              <h1 className="text-[18px] font-black text-slate-900 dark:text-white">Your cart</h1>
+              <p className="text-caption font-black uppercase tracking-[0.28em] text-neutral-400">{items.length} item{items.length > 1 ? "s" : ""}</p>
+              <h1 className="text-title font-black text-neutral-900 dark:text-white">Your cart</h1>
             </div>
           </div>
-          <span className="text-[14px] font-bold text-slate-900 dark:text-white">{formatCurrency(subtotal)}</span>
+          <span className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(subtotal)}</span>
         </div>
       </div>
 
@@ -142,14 +143,14 @@ export function CartPageClient() {
       {belowMinimum && (
         <div className="mt-3 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3 flex items-start gap-2">
           <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-[12px] font-semibold text-amber-700 dark:text-amber-300">
+          <p className="text-caption font-semibold text-amber-700 dark:text-amber-300">
             Minimum order value is {formatCurrency(config.minimumOrderValue)}. Add {formatCurrency(config.minimumOrderValue - subtotal)} more to place order.
           </p>
         </div>
       )}
 
       {/* Cart Items */}
-      <div className="mt-3 overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.55)] divide-y divide-slate-50 dark:divide-slate-800">
+      <div className="mt-3 overflow-hidden rounded-lg bg-white shadow-elevation-3 divide-y divide-neutral-50 dark:divide-neutral-800">
         <AnimatePresence initial={false}>
           {items.map((item) => {
             const price = item.discountPrice ?? item.price;
@@ -164,37 +165,37 @@ export function CartPageClient() {
                 className="px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-4 w-4 rounded-sm border-2 border-emerald-500 flex items-center justify-center shrink-0">
-                    <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <div className="h-4 w-4 rounded-sm border-2 border-secondary-500 flex items-center justify-center shrink-0">
+                    <div className="h-2 w-2 rounded-full bg-secondary-500" />
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-semibold text-slate-800 dark:text-white truncate">{item.name}</p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">{item.unit || "per item"}</p>
+                    <p className="text-body font-semibold text-neutral-800 dark:text-white truncate">{item.name}</p>
+                    <p className="text-caption text-neutral-400 mt-0.5">{item.unit || "per item"}</p>
                   </div>
 
                   <div className="flex h-[30px] shrink-0 items-center overflow-hidden rounded-full bg-black">
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-7 h-full flex items-center justify-center text-white press"
+                      className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                     >
                       <Minus className="h-3 w-3" />
                     </button>
-                    <span className="w-6 text-center text-[12px] font-bold text-white">{item.quantity}</span>
+                    <span className="w-6 text-center text-caption font-bold text-white">{item.quantity}</span>
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-7 h-full flex items-center justify-center text-white press"
+                      className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                     >
                       <Plus className="h-3 w-3" />
                     </button>
                   </div>
 
                   <div className="text-right shrink-0 min-w-[60px]">
-                    <p className="text-[13px] font-bold text-slate-900 dark:text-white">{formatCurrency(price * item.quantity)}</p>
+                    <p className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(price * item.quantity)}</p>
                     {item.discountPrice && (
-                      <p className="text-[10px] text-slate-400 line-through">{formatCurrency(item.price * item.quantity)}</p>
+                      <p className="text-micro text-neutral-400 line-through">{formatCurrency(item.price * item.quantity)}</p>
                     )}
                   </div>
 
@@ -203,7 +204,7 @@ export function CartPageClient() {
                     onClick={() => handleRemove(item.id)}
                     className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors press shrink-0"
                   >
-                    <Trash2 className="h-3 w-3 text-slate-300 hover:text-red-400" />
+                    <Trash2 className="h-3 w-3 text-neutral-300 hover:text-red-400" />
                   </button>
                 </div>
               </motion.div>
@@ -213,16 +214,16 @@ export function CartPageClient() {
       </div>
 
       {/* Coupon Section */}
-      <div className="mt-3 rounded-[1.35rem] bg-white p-3.5 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.45)] dark:bg-slate-900">
+      <div className="mt-3 rounded-lg bg-white p-3.5 shadow-elevation-2 dark:bg-neutral-900">
         <div className="flex items-center gap-2">
-          <Tag className="h-4 w-4 text-slate-400 shrink-0" />
+          <Tag className="h-4 w-4 text-neutral-400 shrink-0" />
           {promoApplied ? (
             <div className="flex-1 flex items-center justify-between">
               <div>
-                <p className="text-[12px] font-semibold text-emerald-600">Code applied: {promoCode.toUpperCase()}</p>
-                <p className="text-[10px] text-slate-400">{promoDescription} &mdash; You save {formatCurrency(promoDiscount)}</p>
+                <p className="text-caption font-semibold text-secondary-600">Code applied: {promoCode.toUpperCase()}</p>
+                <p className="text-micro text-neutral-400">{promoDescription} &mdash; You save {formatCurrency(promoDiscount)}</p>
               </div>
-              <button type="button" onClick={removePromo} className="text-[11px] font-semibold text-red-500 press">Remove</button>
+              <button type="button" onClick={removePromo} className="text-caption font-semibold text-red-500 press">Remove</button>
             </div>
           ) : (
             <div className="flex-1">
@@ -232,63 +233,63 @@ export function CartPageClient() {
                   value={promoCode}
                   onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); }}
                   placeholder="Apply coupon code"
-                  className="flex-1 h-9 bg-transparent text-[13px] font-medium text-slate-800 dark:text-white outline-none placeholder:text-slate-400"
+                  className="flex-1 h-9 bg-transparent text-body font-medium text-neutral-800 dark:text-white outline-none placeholder:text-neutral-400"
                 />
                 <button
                   type="button"
                   onClick={applyPromo}
                   disabled={promoLoading}
-                  className="text-[12px] font-bold text-primary press disabled:opacity-50"
+                  className="text-caption font-bold text-primary press disabled:opacity-50"
                 >
                   {promoLoading ? "..." : "Apply"}
                 </button>
               </div>
-              {promoError && <p className="text-[10px] text-red-500 mt-1">{promoError}</p>}
+              {promoError && <p className="text-micro text-red-500 mt-1">{promoError}</p>}
             </div>
           )}
         </div>
       </div>
 
       {/* Bill Details */}
-      <div className="mt-3 rounded-[1.35rem] bg-white p-4 shadow-[0_18px_45px_-32px_rgba(15,23,42,0.45)] dark:bg-slate-900">
-        <h2 className="text-[13px] font-bold text-slate-900 dark:text-white mb-3">Bill Details</h2>
-        <div className="space-y-2.5 text-[12px]">
+      <div className="mt-3 rounded-lg bg-white p-4 shadow-elevation-2 dark:bg-neutral-900">
+        <h2 className="text-body font-bold text-neutral-900 dark:text-white mb-3">Bill Details</h2>
+        <div className="space-y-2.5 text-caption">
           <div className="flex justify-between">
-            <span className="text-slate-500 dark:text-slate-400">Item total</span>
-            <span className="font-medium text-slate-700 dark:text-slate-300">{formatCurrency(subtotal)}</span>
+            <span className="text-neutral-500 dark:text-neutral-400">Item total</span>
+            <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatCurrency(subtotal)}</span>
           </div>
           {gstRate > 0 && (
             <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">GST ({gstRate}% inclusive)</span>
-              <span className="font-medium text-slate-500 dark:text-slate-400">{formatCurrency(gstAmount)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">GST ({gstRate}% inclusive)</span>
+              <span className="font-medium text-neutral-500 dark:text-neutral-400">{formatCurrency(gstAmount)}</span>
             </div>
           )}
           {promoApplied && (
             <div className="flex justify-between">
-              <span className="text-slate-500 dark:text-slate-400">Coupon discount</span>
-              <span className="font-medium text-emerald-600">-{formatCurrency(promoDiscount)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Coupon discount</span>
+              <span className="font-medium text-secondary-600">-{formatCurrency(promoDiscount)}</span>
             </div>
           )}
           <div className="flex justify-between">
-            <span className="text-slate-500 dark:text-slate-400">Delivery fee</span>
-            <span className="font-medium text-slate-700 dark:text-slate-300">
-              {qualifiesFreeDelivery ? <span className="text-emerald-600">FREE</span> : <span>Calculated at checkout</span>}
+            <span className="text-neutral-500 dark:text-neutral-400">Delivery fee</span>
+            <span className="font-medium text-neutral-700 dark:text-neutral-300">
+              {qualifiesFreeDelivery ? <span className="text-secondary-600">FREE</span> : <span>Calculated at checkout</span>}
             </span>
           </div>
           {qualifiesFreeDelivery && (
-            <p className="text-[10px] text-emerald-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
+            <p className="text-micro text-secondary-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
           )}
-          <div className="border-t border-slate-100 dark:border-slate-800 pt-2.5 flex justify-between">
-            <span className="font-bold text-slate-900 dark:text-white">Cart total</span>
-            <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(totalAmount)}</span>
+          <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 flex justify-between">
+            <span className="font-bold text-neutral-900 dark:text-white">Cart total</span>
+            <span className="font-bold text-neutral-900 dark:text-white">{formatCurrency(totalAmount)}</span>
           </div>
           {gstRate > 0 && (
-            <p className="text-[10px] text-slate-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>
+            <p className="text-micro text-neutral-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>
           )}
         </div>
         {totalSavings > 0 && (
-          <div className="mt-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900 px-3 py-2">
-            <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-300">
+          <div className="mt-3 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-100 dark:border-secondary-900 px-3 py-2">
+            <p className="text-caption font-semibold text-secondary-700 dark:text-secondary-300">
               You&apos;re saving {formatCurrency(totalSavings)} on this order!
             </p>
           </div>
@@ -297,17 +298,19 @@ export function CartPageClient() {
 
       {/* Fixed bottom checkout button */}
       <div className="ios-floating-action md:relative md:bottom-0 md:left-auto md:right-auto md:mt-5 md:p-0">
-        <Link
-          href={belowMinimum ? "#" : "/checkout"}
-          onClick={(e) => { if (belowMinimum) e.preventDefault(); }}
-          className={`mx-auto flex h-[54px] max-w-md items-center justify-between rounded-2xl px-5 shadow-[0_20px_45px_-24px_rgba(0,0,0,0.85)] press ${belowMinimum ? "bg-slate-300 dark:bg-slate-700 cursor-not-allowed" : "bg-black text-white"}`}
-        >
-          <div>
-            <p className="text-[14px] font-bold">{belowMinimum ? "Add more items" : "Proceed to Checkout"}</p>
-            <p className="text-[10px] text-white/70">{items.length} item{items.length > 1 ? "s" : ""}</p>
-          </div>
-          <span className="text-[16px] font-bold">{formatCurrency(totalAmount)}</span>
-        </Link>
+        <motion.div whileTap={{ scale: 0.96 }} transition={springPresets.default}>
+          <Link
+            href={belowMinimum ? "#" : "/checkout"}
+            onClick={(e) => { if (belowMinimum) e.preventDefault(); }}
+            className={`mx-auto flex h-[54px] max-w-md items-center justify-between rounded-2xl px-5 shadow-premium press ${belowMinimum ? "bg-neutral-300 dark:bg-neutral-700 cursor-not-allowed" : "bg-black text-white"}`}
+          >
+            <div>
+              <p className="text-body font-bold">{belowMinimum ? "Add more items" : "Proceed to Checkout"}</p>
+              <p className="text-micro text-white/70">{items.length} item{items.length > 1 ? "s" : ""}</p>
+            </div>
+            <span className="text-title font-bold">{formatCurrency(totalAmount)}</span>
+          </Link>
+        </motion.div>
       </div>
     </main>
   );

@@ -96,7 +96,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en" suppressHydrationWarning className={`${interTight.variable} ${manrope.variable}`}>
       <body className="pt-safe">
-        <Providers>
+        <Providers session={session}>
           <ViewportStability />
           <ScrollProgress />
           <OnboardingTour />

@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Return product flow - add mandatory bill number field, printable return receipt, stock decrement on return completion, and bill number search in admin returns list.",
+  "status": "completed",
+  "steps": [
+    "Add a 'billNumber' field to the ReturnRequest model in prisma/schema.prisma. Type: String, required (no ? nullable). Add an index on billNumber for search. Run npx prisma generate after schema change. Also create a migration SQL file at prisma/migrations/<timestamp>_add_bill_number_to_return/migration.sql with the ALTER TABLE statement.",
+    "Update the returnRequestSchema in lib/validations.ts to add billNumber as a required z.string() field that matches an order number pattern. Add server-side validation in app/api/orders/[id]/returns/route.ts: before creating the ReturnRequest, verify that billNumber matches an existing order's orderNumber in the database. If no matching order is found, return a 400 error with code 'INVALID_BILL_NUMBER'.",
+    "Update the customer-facing return request UI in components/dashboard/customer-orders-client.tsx (the ReturnRequestSheet function): add a 'Bill Number / Order Invoice Number' input field that is required. Pre-fill it with the current order's orderNumber (since the customer is already on that order). Include it in the POST body to /api/orders/[id]/returns.",
+    "Update the admin returns list (app/admin/returns/page.tsx and components/admin/admin-returns-client.tsx): include billNumber in the data fetched and displayed. Add billNumber to the search filter so staff can search by bill number. Display billNumber prominently in each return card.",
+    "Add stock increment on return completion: In app/api/admin/returns/[id]/route.ts, when a return transitions to REFUNDED status, after processing the refund, increment the stock for each returned product. Parse the items JSON from the return request, and for each item with a productId (from the original OrderItem), increment Product.stock by the returned quantity. Use prisma product.update with stock: { increment: quantity }.",
+    "Create a printable return receipt component: Create components/admin/return-receipt-print.tsx - a client component that renders a print-friendly receipt with: return number, bill number (original order number), date, items returned (name, quantity, price), total refund amount, refund method. Add a 'Print Receipt' button in the admin returns client that opens a print dialog (window.print() targeting the receipt). Use CSS @media print to hide non-receipt content.",
+    "Update the GET endpoint for admin returns (if one exists at app/api/admin/returns/route.ts) to include billNumber in the response. If no GET endpoint exists, the page.tsx server component already fetches directly - update the prisma query there to include billNumber in select."
+  ],
+  "acceptance_criteria": [
+    "ReturnRequest model has a billNumber String field",
+    "Customer cannot submit a return without a valid bill number that matches an existing order",
+    "Admin returns list shows billNumber and allows searching by it",
+    "When a return is marked REFUNDED, product stock is incremented for each returned item",
+    "A printable return receipt is available with return details",
+    "Type check passes: npx tsc --noEmit --skipLibCheck",
+    "prisma generate succeeds"
+  ],
+  "verification": [
+    "npx prisma generate",
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": "All acceptance criteria met. billNumber added to ReturnRequest model, validation enforced client and server side, stock incremented on refund, print receipt available for REFUNDED returns. prisma generate + tsc + lint all pass."
+}

@@ -61,15 +61,16 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
     <AnimatePresence>
       {activeOrder && (
         <motion.div
-          initial={{ opacity: 0, y: -20, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: -20, scale: 0.95 }}
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="mx-4 mb-4 min-h-[78px]"
+          className="mx-4 overflow-hidden"
         >
+          <div className="pb-4">
           <Link
             href={`/track/${activeOrder.id}`}
-            className="block overflow-hidden rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-400 p-3.5 shadow-lg shadow-emerald-500/20 dark:shadow-emerald-900/30 press"
+            className="block overflow-hidden rounded-2xl bg-gradient-to-r from-secondary-600 via-secondary-500 to-secondary-400 p-3.5 shadow-lg shadow-secondary-500/20 dark:shadow-secondary-900/30 press"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -79,10 +80,10 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-white/80">
+                  <p className="text-micro font-bold uppercase tracking-wider text-white/80">
                     Live Order
                   </p>
-                  <p className="text-[13px] font-bold text-white">
+                  <p className="text-body font-bold text-white">
                     {statusLabels[activeOrder.status] || activeOrder.status}
                   </p>
                 </div>
@@ -98,12 +99,13 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
                 </div>
               </div>
             </div>
-            <p className="mt-1.5 text-[9px] font-semibold uppercase tracking-widest text-white/60">
+            <p className="mt-1.5 text-micro font-semibold uppercase tracking-widest text-white/60">
               Tap to track
             </p>
             {/* Decorative */}
             <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/10 pointer-events-none" />
           </Link>
+          </div>
         </motion.div>
       )}
     </AnimatePresence>

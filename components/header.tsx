@@ -43,7 +43,7 @@ export function Header({
   return (
     <>
       {/* Desktop Header */}
-      <header className="sticky top-0 z-40 hidden md:block bg-white dark:bg-slate-950 border-b border-slate-100 dark:border-slate-800">
+      <header className="sticky top-0 z-40 hidden md:block bg-white dark:bg-neutral-950 border-b border-neutral-100 dark:border-neutral-800">
         {/* Top bar */}
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
           <div className="flex items-center justify-between h-[70px]">
@@ -52,17 +52,17 @@ export function Header({
               {isInnerPage && (
                 <button
                   onClick={() => router.push(parentPath)}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 transition-colors press"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors press"
                   aria-label="Go back"
                 >
-                  <ArrowLeft className="h-5 w-5 text-slate-600 dark:text-slate-300" />
+                  <ArrowLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-300" />
                 </button>
               )}
               <Link href="/" className="flex items-center gap-2 press">
               {logoUrl && (
                 <img src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" />
               )}
-              <span className="font-display text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase">
+              <span className="font-display text-2xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
                 {storeName}
               </span>
             </Link>
@@ -77,7 +77,7 @@ export function Header({
                   className={`text-sm font-semibold transition-colors ${
                     pathname === link.href || pathname.startsWith(link.href.split("?")[0])
                       ? "text-primary"
-                      : "text-slate-600 hover:text-slate-900 dark:text-white"
+                      : "text-neutral-600 hover:text-neutral-900 dark:text-white"
                   }`}
                 >
                   {link.label}
@@ -89,28 +89,28 @@ export function Header({
             <div className="flex items-center gap-3 ml-6">
               <Link
                 href="/support"
-                className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
               >
                 <HelpCircle className="h-4 w-4" />
                 Help & Support
               </Link>
 
-              <Link href="/account/favorites" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">
-                <Heart className="h-[18px] w-[18px] text-slate-600 dark:text-slate-300" />
+              <Link href="/account/favorites" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+                <Heart className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
               </Link>
 
-              <Link href="/account/notifications" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">
-                <Bell className="h-[18px] w-[18px] text-slate-600 dark:text-slate-300" />
+              <Link href="/account/notifications" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+                <Bell className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
               </Link>
 
-              <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press">
-                <ShoppingBag className="h-[18px] w-[18px] text-slate-600 dark:text-slate-300" />
+              <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+                <ShoppingBag className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
                 {totalItems > 0 && (
                   <motion.span
                     key={totalItems}
                     initial={{ scale: 0.5 }}
                     animate={{ scale: 1 }}
-                    className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-[9px] font-bold text-white px-1"
+                    className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-micro font-bold text-white px-1"
                   >
                     {totalItems}
                   </motion.span>
@@ -120,18 +120,18 @@ export function Header({
               {user?.id ? (
                 <Link
                   href="/account"
-                  className="flex items-center gap-2 h-10 px-4 rounded-full bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors press"
+                  className="flex items-center gap-2 h-10 px-4 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press"
                 >
-                  <User className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{user.name?.split(" ")[0] || "Account"}</span>
+                  <User className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
+                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{user.name?.split(" ")[0] || "Account"}</span>
                 </Link>
               ) : (
                 <Link
                   href="/login"
-                  className="flex items-center gap-2 h-10 px-4 rounded-full border border-slate-200 dark:border-slate-700 hover:border-primary/30 hover:bg-primary/5 transition-all press"
+                  className="flex items-center gap-2 h-10 px-4 rounded-full border border-neutral-200 dark:border-neutral-700 hover:border-primary/30 hover:bg-primary/5 transition-all press"
                 >
-                  <User className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-                  <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">Login/Signup</span>
+                  <User className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
+                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Login/Signup</span>
                 </Link>
               )}
             </div>
@@ -144,34 +144,34 @@ export function Header({
         <div className="flex h-14 items-center justify-between px-4">
           {/* Back button on inner pages OR store branding on home */}
           {isInnerPage ? (
-            <button onClick={() => router.push(parentPath)} className="flex items-center gap-2 min-w-0 press">
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800">
-                <ArrowLeft className="h-4 w-4 text-slate-700 dark:text-slate-300" />
+            <button onClick={() => router.push(parentPath)} className="flex items-center gap-2 min-w-0 press group">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 transition-colors group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700">
+                <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
               </div>
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300 truncate">Back</span>
+              <span className="text-sm font-bold text-neutral-700 dark:text-neutral-300 truncate">Back</span>
             </button>
           ) : (
             <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
             {logoUrl ? (
               <img src={logoUrl} alt={storeName} width={32} height={32} className="h-8 w-8 rounded-xl object-contain" />
             ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 shadow-sm shadow-emerald-200 dark:shadow-emerald-900/30">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 shadow-sm shadow-secondary-200 dark:shadow-secondary-900/30">
                 <span className="text-sm font-black text-white">{storeName.charAt(0)}</span>
               </div>
             )}
             <div className="min-w-0">
-              <p className="font-display text-[15px] font-black tracking-tight text-slate-900 dark:text-white truncate">
+              <p className="font-display text-title font-black tracking-tight text-neutral-900 dark:text-white truncate">
                 {storeName}
               </p>
-              <p className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">Fresh & Fast Delivery</p>
+              <p className="text-micro font-medium text-secondary-600 dark:text-secondary-400">Fresh & Fast Delivery</p>
             </div>
           </Link>
           )}
 
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
-            <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-slate-50 dark:bg-slate-800 press">
-              <Bell className="h-[17px] w-[17px] text-slate-600 dark:text-slate-300" />
+            <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+              <Bell className="h-[17px] w-[17px] text-neutral-600 dark:text-neutral-300" />
             </Link>
           </div>
         </div>

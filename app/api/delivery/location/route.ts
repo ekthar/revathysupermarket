@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const distanceMetres = activeOrder ? distanceInMetres(parsed.data.latitude, parsed.data.longitude, Number(activeOrder.latitude), Number(activeOrder.longitude)) : null;
   await prisma.$transaction(async (tx) => {
     await tx.user.update({ where: { id: authResult.userId }, data: { currentLatitude: parsed.data.latitude, currentLongitude: parsed.data.longitude, locationUpdatedAt: new Date() } });
-    if (activeOrder) await tx.deliveryLocationEvent.create({ data: { orderId: activeOrder.id, deliveryPartnerId: authResult.userId, latitude: parsed.data.latitude, longitude: parsed.data.longitude } });
+    if (activeOrder) await tx.deliveryLocationEvent.create({ data: { orderId: activeOrder.id, deliveryPartnerId: authResult.userId, latitude: parsed.data.latitude, longitude: parsed.data.longitude, heading: parsed.data.heading ?? null } });
     await tx.deliveryLocationEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } });
   });
   return NextResponse.json({ ok: true, status: activeOrder?.status, distanceMetres });

@@ -93,6 +93,7 @@ export const returnRequestSchema = z.object({
     quantity: z.coerce.number().int().min(1)
   })).min(1),
   reason: z.enum(["wrong_item", "damaged", "quality_issue", "changed_mind", "other"]),
+  billNumber: z.string().min(1, "Bill number is required"),
   photoUrl: z.string().url().optional().or(z.literal("")),
   note: z.string().max(500).optional()
 });
@@ -139,7 +140,8 @@ export const deliveryAssignmentSchema = z.object({
 
 export const deliveryLocationSchema = z.object({
   latitude: z.coerce.number(),
-  longitude: z.coerce.number()
+  longitude: z.coerce.number(),
+  heading: z.coerce.number().optional()
 });
 
 export const deliveryActionSchema = z.object({

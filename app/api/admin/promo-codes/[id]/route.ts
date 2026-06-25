@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageSettings } from "@/lib/authz";
@@ -19,6 +20,9 @@ export async function PATCH(
     data: body
   });
 
+  revalidatePath("/offers");
+  revalidateTag("offers");
+
   return NextResponse.json({ promo });
 }
 
@@ -32,6 +36,9 @@ export async function DELETE(
 
   const { id } = await params;
   await prisma.promoCode.delete({ where: { id } });
+
+  revalidatePath("/offers");
+  revalidateTag("offers");
 
   return NextResponse.json({ ok: true });
 }

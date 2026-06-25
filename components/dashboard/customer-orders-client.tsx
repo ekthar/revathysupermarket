@@ -178,7 +178,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   if (orders.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-dashed border-border p-10 text-center">
-        <Package className="h-12 w-12 mx-auto text-slate-300" />
+        <Package className="h-12 w-12 mx-auto text-neutral-300" />
         <h2 className="mt-4 font-display text-xl font-bold">No orders yet</h2>
         <p className="mt-1 text-sm text-muted-foreground">Your grocery orders will appear here.</p>
       </motion.div>
@@ -188,9 +188,9 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   return (
     <div className="space-y-3">
       {returnOrder && <ReturnRequestSheet order={returnOrder} onClose={() => setReturnOrder(null)} />}
-      {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-slate-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
+      {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-neutral-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-neutral-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
       {/* Status bar */}
-      <div className="flex items-center justify-between rounded-2xl bg-white dark:bg-slate-900 px-3 py-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)] dark:shadow-none">
+      <div className="flex items-center justify-between rounded-2xl bg-white dark:bg-neutral-900 px-3 py-2 text-caption font-semibold text-neutral-500 dark:text-neutral-400 shadow-elevation-2 dark:shadow-none">
         <span>{lastUpdated ? "Updated just now" : streamUnavailable ? "Fallback updates active" : "Live updates connected"}</span>
         <RefreshCcw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin text-black")} />
       </div>
@@ -215,8 +215,8 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -12 }}
               className={cn(
-                "overflow-hidden rounded-[1.35rem] border bg-white shadow-[0_18px_45px_-34px_rgba(15,23,42,0.45)] transition-shadow dark:bg-slate-900",
-                cancelled ? "border-red-200" : "border-slate-100 dark:border-slate-800",
+                "overflow-hidden rounded-lg border bg-white shadow-elevation-2 transition-shadow dark:bg-neutral-900",
+                cancelled ? "border-red-200" : "border-neutral-100 dark:border-neutral-800",
                 isExpanded && "shadow-md"
               )}
             >
@@ -229,27 +229,27 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                 {/* Status icon */}
                 <div className={cn(
                   "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl",
-                  cancelled ? "bg-red-100" : delivered ? "bg-green-100" : "bg-black"
+                  cancelled ? "bg-red-100" : delivered ? "bg-success-100" : "bg-black"
                 )}>
                   {cancelled ? <XCircle className="h-5 w-5 text-red-600" /> :
-                   delivered ? <CheckCircle2 className="h-5 w-5 text-green-600" /> :
+                   delivered ? <CheckCircle2 className="h-5 w-5 text-success-500" /> :
                    <Package className="h-5 w-5 text-white" />}
                 </div>
 
                 {/* Order info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="text-[14px] font-bold text-slate-900 dark:text-white">Order #{order.orderNumber}</p>
+                    <p className="text-body font-bold text-neutral-900 dark:text-white">Order #{order.orderNumber}</p>
                     <span className={cn(
-                      "text-[10px] font-bold px-2 py-0.5 rounded-full",
+                      "text-micro font-bold px-2 py-0.5 rounded-full",
                       cancelled ? "bg-red-100 text-red-700" :
-                      delivered ? "bg-green-100 text-green-700" :
+                      delivered ? "bg-success-100 text-success-700" :
                       "bg-black text-white"
                     )}>
                       {statusLabels[order.status]}
                     </span>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 truncate">
+                  <p className="text-caption text-neutral-500 mt-0.5 truncate">
                     {itemNames}{moreCount > 0 ? ` +${moreCount} more` : ""}
                   </p>
                 </div>
@@ -257,14 +257,14 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                 {/* Price + date + chevron */}
                 <div className="text-right shrink-0 flex items-center gap-2">
                   <div>
-                    <p className="text-[13px] font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</p>
-                    <p className="text-[10px] text-slate-400 dark:text-slate-500">{formatDate(order.createdAt)}</p>
+                    <p className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(order.total)}</p>
+                    <p className="text-micro text-neutral-400 dark:text-neutral-500">{formatDate(order.createdAt)}</p>
                   </div>
                   <motion.div
                     animate={{ rotate: isExpanded ? 180 : 0 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                    <ChevronDown className="h-4 w-4 text-neutral-400" />
                   </motion.div>
                 </div>
               </button>
@@ -278,7 +278,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                     exit={{ opacity: 0, y: -6 }}
                     transition={{ duration: 0.16 }}
                   >
-                    <div className="px-4 pb-4 border-t border-slate-100 dark:border-slate-800 pt-3">
+                    <div className="px-4 pb-4 border-t border-neutral-100 dark:border-neutral-800 pt-3">
                       {/* Status timeline - compact */}
                       {!cancelled && (
                         <motion.div
@@ -294,14 +294,14 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                               className="flex items-center"
                             >
                               <div className={cn(
-                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[9px] font-bold transition-colors",
-                                index <= activeIndex ? "bg-black text-white" : "bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500",
+                                "flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-micro font-bold transition-colors",
+                                index <= activeIndex ? "bg-black text-white" : "bg-neutral-100 dark:bg-neutral-800 text-neutral-400 dark:text-neutral-500",
                                 index === activeIndex && "ring-2 ring-black/20 animate-pulse"
                               )}>
                                 {index < activeIndex ? "✓" : index + 1}
                               </div>
                               {index < orderStatuses.length - 2 && (
-                                <div className={cn("h-[2px] w-4 sm:w-6 transition-colors", index < activeIndex ? "bg-black" : "bg-slate-100 dark:bg-slate-800")} />
+                                <div className={cn("h-[2px] w-4 sm:w-6 transition-colors", index < activeIndex ? "bg-black" : "bg-neutral-100 dark:bg-neutral-800")} />
                               )}
                             </motion.div>
                           ))}
@@ -311,7 +311,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                       {cancelled && (
                         <div className="flex gap-2 rounded-xl bg-red-50 dark:bg-red-950/30 p-3 text-red-700 dark:text-red-400 mb-4">
                           <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" />
-                          <p className="text-[12px] font-semibold">This order was cancelled. Contact us for help.</p>
+                          <p className="text-caption font-semibold">This order was cancelled. Contact us for help.</p>
                         </div>
                       )}
 
@@ -321,34 +321,34 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                       )}
 
                       {/* Items list - compact */}
-                      <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3">
-                        <p className="text-[10px] font-bold text-slate-400 dark:text-slate-500 uppercase mb-2">Items</p>
+                      <div className="rounded-xl bg-neutral-50 dark:bg-neutral-800 p-3">
+                        <p className="text-micro font-bold text-neutral-400 dark:text-neutral-500 uppercase mb-2">Items</p>
                         <div className="space-y-1.5">
                           {visibleItems.map((item) => (
-                            <div key={item.id} className="flex justify-between text-[12px]">
-                              <span className="text-slate-700 dark:text-slate-300">{item.name} <span className="text-slate-400 dark:text-slate-500">x{item.quantity}</span></span>
-                              <span className="font-semibold text-slate-800 dark:text-slate-200">{formatCurrency(item.price * item.quantity)}</span>
+                            <div key={item.id} className="flex justify-between text-caption">
+                              <span className="text-neutral-700 dark:text-neutral-300">{item.name} <span className="text-neutral-400 dark:text-neutral-500">x{item.quantity}</span></span>
+                              <span className="font-semibold text-neutral-800 dark:text-neutral-200">{formatCurrency(item.price * item.quantity)}</span>
                             </div>
                           ))}
                         </div>
-                        <div className="mt-2 pt-2 border-t border-slate-200 dark:border-slate-700 flex justify-between text-[12px]">
-                          <span className="font-bold text-slate-900 dark:text-white">Total</span>
-                          <span className="font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</span>
+                        <div className="mt-2 pt-2 border-t border-neutral-200 dark:border-neutral-700 flex justify-between text-caption">
+                          <span className="font-bold text-neutral-900 dark:text-white">Total</span>
+                          <span className="font-bold text-neutral-900 dark:text-white">{formatCurrency(order.total)}</span>
                         </div>
                       </div>
 
                       {/* Actions for delivered orders */}
-                      {Boolean(order.returnRequests?.length || order.supportTickets?.length) && <div className="mt-3 space-y-2 rounded-xl bg-muted p-3 text-[11px]">{order.returnRequests?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Return {item.returnNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}{order.supportTickets?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Ticket {item.ticketNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}</div>}
+                      {Boolean(order.returnRequests?.length || order.supportTickets?.length) && <div className="mt-3 space-y-2 rounded-xl bg-muted p-3 text-caption">{order.returnRequests?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Return {item.returnNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}{order.supportTickets?.map((item) => <div key={item.id} className="flex justify-between gap-3"><span className="font-bold">Ticket {item.ticketNumber}</span><span>{item.status.replaceAll("_", " ")}</span></div>)}</div>}
                       {delivered && (
                         <div className="mt-3">
                           <div className="grid grid-cols-3 gap-2">
-                            <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-black text-[11px] font-bold text-white">
+                            <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-black text-caption font-bold text-white">
                               <RotateCcw className="h-3.5 w-3.5" /> Reorder
                             </button>
-                            <button onClick={() => setReturnOrder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                            <button onClick={() => setReturnOrder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-caption font-bold text-neutral-700 dark:text-neutral-300">
                               <RotateCcw className="h-3.5 w-3.5" /> Return
                             </button>
-                            <button onClick={() => setRatingOrderId(order.id)} className="h-9 flex items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 text-[11px] font-bold text-amber-700"><Star className="h-3.5 w-3.5" /> Rate</button>
+                            <button onClick={() => setRatingOrderId(order.id)} className="h-9 flex items-center justify-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 text-caption font-bold text-amber-700"><Star className="h-3.5 w-3.5" /> Rate</button>
                           </div>
                         </div>
                       )}
@@ -360,7 +360,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                       {!isComplete && (
                         <Link
                           href={`/track/${order.id}`}
-                          className="mt-3 flex h-10 items-center justify-center gap-2 rounded-xl bg-emerald-600 text-[12px] font-bold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                          className="mt-3 flex h-10 items-center justify-center gap-2 rounded-xl bg-secondary-600 text-caption font-bold text-white shadow-sm hover:bg-secondary-700 transition-colors"
                         >
                           <Navigation className="h-4 w-4" />
                           Track Order
@@ -383,6 +383,7 @@ function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose:
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [reason, setReason] = useState("quality_issue");
   const [note, setNote] = useState("");
+  const [billNumber, setBillNumber] = useState(order.orderNumber);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [photoUrl, setPhotoUrl] = useState("");
@@ -391,8 +392,9 @@ function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose:
 
   async function submit() {
     if (!selected.length) return setError("Select at least one item.");
+    if (!billNumber.trim()) return setError("Bill number is required.");
     setLoading(true); setError("");
-    const response = await fetch(`/api/orders/${order.id}/returns`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, note: note || undefined, photoUrl: photoUrl || undefined, items: selected.map((item) => ({ orderItemId: item.id, quantity: quantities[item.id] })) }) });
+    const response = await fetch(`/api/orders/${order.id}/returns`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reason, billNumber: billNumber.trim(), note: note || undefined, photoUrl: photoUrl || undefined, items: selected.map((item) => ({ orderItemId: item.id, quantity: quantities[item.id] })) }) });
     const data = await readApiResponse<{ error?: string; returnRequest?: { returnNumber?: string } }>(response);
     setLoading(false);
     if (!response.ok) return setError(data.error ?? "Return request could not be submitted.");
@@ -400,22 +402,22 @@ function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose:
   }
 
   async function upload(file?: File) { if (!file) return; setLoading(true); const body = new FormData(); body.set("file", file); const response = await fetch("/api/evidence/upload", { method: "POST", body }); const data = await response.json(); setLoading(false); if (!response.ok) return setError(data.error ?? "Evidence upload failed"); setPhotoUrl(data.url); }
-  return <div className="fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/60 p-2 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="return-title"><div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-start justify-between gap-3"><div><h2 id="return-title" className="font-display text-2xl font-black">Request a return</h2><p className="text-sm text-muted-foreground">Order #{order.orderNumber}</p></div><button onClick={onClose} aria-label="Close return form" className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"><XCircle className="h-5 w-5"/></button></div><div className="mt-4 divide-y divide-border rounded-2xl border border-border">{order.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 p-3"><div><p className="text-sm font-bold">{item.name}</p><p className="text-xs text-muted-foreground">{formatCurrency(item.price)} · purchased {item.quantity}</p></div><select aria-label={`Return quantity for ${item.name}`} value={quantities[item.id] ?? 0} onChange={(e) => setQuantities((current) => ({ ...current, [item.id]: Number(e.target.value) }))} className="h-10 rounded-xl border border-border bg-background px-3">{Array.from({ length: item.quantity + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}</select></div>)}</div><label className="mt-4 block text-sm font-bold">Reason<select value={reason} onChange={(e) => setReason(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"><option value="wrong_item">Wrong item</option><option value="damaged">Damaged</option><option value="quality_issue">Quality issue</option><option value="changed_mind">Changed my mind</option><option value="other">Other</option></select></label><label className="mt-4 block text-sm font-bold">Tell us what happened<textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-xl border border-border bg-background p-3"/></label><label className="mt-4 block text-sm font-bold">Evidence photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} className="mt-2 block w-full text-sm"/></label>{photoUrl && <p className="mt-2 text-xs font-bold text-emerald-700">Photo uploaded</p>}<div className="mt-4 flex items-center justify-between rounded-xl bg-muted p-3 text-sm"><span>Estimated refund</span><strong>{formatCurrency(estimate)}</strong></div>{error && <p className="mt-3 text-sm font-bold text-red-600">{error}</p>}<button disabled={loading || !selected.length} onClick={submit} className="mt-4 h-12 w-full rounded-2xl bg-primary font-black text-white disabled:opacity-50">{loading ? "Submitting…" : "Submit return request"}</button></div></div>;
+  return <div className="fixed inset-0 z-[95] flex items-end justify-center bg-neutral-950/60 p-2 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="return-title"><div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-start justify-between gap-3"><div><h2 id="return-title" className="font-display text-2xl font-black">Request a return</h2><p className="text-sm text-muted-foreground">Order #{order.orderNumber}</p></div><button onClick={onClose} aria-label="Close return form" className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"><XCircle className="h-5 w-5"/></button></div><div className="mt-4 divide-y divide-border rounded-2xl border border-border">{order.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 p-3"><div><p className="text-sm font-bold">{item.name}</p><p className="text-xs text-muted-foreground">{formatCurrency(item.price)} · purchased {item.quantity}</p></div><select aria-label={`Return quantity for ${item.name}`} value={quantities[item.id] ?? 0} onChange={(e) => setQuantities((current) => ({ ...current, [item.id]: Number(e.target.value) }))} className="h-10 rounded-xl border border-border bg-background px-3">{Array.from({ length: item.quantity + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}</select></div>)}</div><label className="mt-4 block text-sm font-bold">Bill Number / Order Invoice Number<input type="text" value={billNumber} onChange={(e) => setBillNumber(e.target.value)} required placeholder="Enter bill number" className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"/></label><label className="mt-4 block text-sm font-bold">Reason<select value={reason} onChange={(e) => setReason(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"><option value="wrong_item">Wrong item</option><option value="damaged">Damaged</option><option value="quality_issue">Quality issue</option><option value="changed_mind">Changed my mind</option><option value="other">Other</option></select></label><label className="mt-4 block text-sm font-bold">Tell us what happened<textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-xl border border-border bg-background p-3"/></label><label className="mt-4 block text-sm font-bold">Evidence photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} className="mt-2 block w-full text-sm"/></label>{photoUrl && <p className="mt-2 text-xs font-bold text-secondary-700">Photo uploaded</p>}<div className="mt-4 flex items-center justify-between rounded-xl bg-muted p-3 text-sm"><span>Estimated refund</span><strong>{formatCurrency(estimate)}</strong></div>{error && <p className="mt-3 text-sm font-bold text-red-600">{error}</p>}<button disabled={loading || !selected.length} onClick={submit} className="mt-4 h-12 w-full rounded-2xl bg-primary font-black text-white disabled:opacity-50">{loading ? "Submitting…" : "Submit return request"}</button></div></div>;
 }
 
 function OrderEditApprovalCard({ order, onDecision }: { order: CustomerOrder; onDecision: (decision: "approved" | "rejected") => void }) {
   const totalDelta = order.editLogs.reduce((sum, log) => sum + log.priceDelta, 0);
   return (
     <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 p-3 mb-4">
-      <p className="text-[12px] font-bold text-amber-800 dark:text-amber-300">Order edit needs your approval</p>
+      <p className="text-caption font-bold text-amber-800 dark:text-amber-300">Order edit needs your approval</p>
       <div className="mt-2 space-y-1.5">
         {order.editLogs.map((log) => {
           const original = readEditItem(log.originalItem);
           const updated = readEditItem(log.newItem);
           return (
-            <div key={log.id} className="flex justify-between text-[11px] bg-white/70 dark:bg-slate-800/70 rounded-lg p-2">
-              <span className="text-slate-700 dark:text-slate-300">{editActionLabel(log.action)}: {original.name}</span>
-              <span className={cn("font-bold", log.priceDelta >= 0 ? "text-amber-700" : "text-green-700")}>
+            <div key={log.id} className="flex justify-between text-caption bg-white/70 dark:bg-neutral-800/70 rounded-lg p-2">
+              <span className="text-neutral-700 dark:text-neutral-300">{editActionLabel(log.action)}: {original.name}</span>
+              <span className={cn("font-bold", log.priceDelta >= 0 ? "text-amber-700" : "text-success-700")}>
                 {log.priceDelta >= 0 ? "+" : ""}{formatCurrency(log.priceDelta)}
               </span>
             </div>
@@ -423,10 +425,10 @@ function OrderEditApprovalCard({ order, onDecision }: { order: CustomerOrder; on
         })}
       </div>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button onClick={() => onDecision("approved")} className="h-9 rounded-xl bg-primary text-[11px] font-bold text-white flex items-center justify-center gap-1">
+        <button onClick={() => onDecision("approved")} className="h-9 rounded-xl bg-primary text-caption font-bold text-white flex items-center justify-center gap-1">
           <CheckCircle2 className="h-3.5 w-3.5" /> Approve
         </button>
-        <button onClick={() => onDecision("rejected")} className="h-9 rounded-xl bg-red-600 text-[11px] font-bold text-white flex items-center justify-center gap-1">
+        <button onClick={() => onDecision("rejected")} className="h-9 rounded-xl bg-red-600 text-caption font-bold text-white flex items-center justify-center gap-1">
           <XCircle className="h-3.5 w-3.5" /> Reject
         </button>
       </div>
@@ -443,14 +445,14 @@ function LiveTrackingPanel({ order, live }: { order: CustomerOrder; live?: LiveO
   const etaMinutes = distance !== null ? Math.max(2, Math.ceil((distance / 18) * 60)) : null;
 
   return (
-    <div className="mt-3 rounded-xl border border-slate-100 dark:border-slate-800 overflow-hidden">
+    <div className="mt-3 rounded-xl border border-neutral-100 dark:border-neutral-800 overflow-hidden">
       <div className="p-3 space-y-2">
         {order.deliveryOtp && !order.deliveryOtp.includes("*") && ["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY"].includes(order.status) && (
           <DeliveryOtpCard otp={order.deliveryOtp} />
         )}
-        <div className="flex items-center gap-2 text-[11px]">
+        <div className="flex items-center gap-2 text-caption">
           <Navigation className="h-3.5 w-3.5 text-primary" />
-          <span className="font-semibold text-slate-700 dark:text-slate-300">
+          <span className="font-semibold text-neutral-700 dark:text-neutral-300">
             {rider ? `Rider ${distance?.toFixed(1)} km away` : "Waiting for rider"} 
             {etaMinutes ? ` • ~${etaMinutes} min` : ""}
           </span>

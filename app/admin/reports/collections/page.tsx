@@ -9,7 +9,7 @@ export default async function StaffCollectionVerificationPage() {
   const role = session?.user?.role;
   if (!role || !["OWNER", "MANAGER", "ADMIN"].includes(role)) {
     return (
-      <div className="rounded-[1.75rem] border border-border bg-card p-8 shadow-soft">
+      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
         <h2 className="font-display text-3xl font-black">Collection Verification</h2>
         <p className="mt-2 text-sm text-muted-foreground">Owner/Manager access required.</p>
       </div>
@@ -88,7 +88,7 @@ export default async function StaffCollectionVerificationPage() {
 
   return (
     <main className="grid gap-5">
-      <section className="rounded-[2rem] bg-[linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.12))] p-5 sm:p-7">
+      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(59,130,246,0.1),rgba(139,92,246,0.12))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-blue-600 dark:text-blue-400">Staff verification</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">Collection Verification</h1>
         <p className="mt-2 text-sm text-muted-foreground">Verify staff and delivery partner cash/UPI collections against expected amounts.</p>
@@ -96,19 +96,19 @@ export default async function StaffCollectionVerificationPage() {
 
       {/* Summary cards */}
       <div className="grid gap-3 md:grid-cols-4">
-        <div className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+        <div className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
           <p className="text-xs font-black uppercase text-muted-foreground">Total Expected</p>
           <p className="mt-2 text-2xl font-black">{formatCurrency(grandExpected)}</p>
         </div>
-        <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50/80 p-4 shadow-soft dark:border-emerald-800 dark:bg-emerald-950/20">
+        <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 shadow-soft dark:border-emerald-800 dark:bg-emerald-950/20">
           <p className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400">Total Collected</p>
           <p className="mt-2 text-2xl font-black text-emerald-800 dark:text-emerald-300">{formatCurrency(grandCollected)}</p>
         </div>
-        <div className="rounded-[1.5rem] border border-red-200 bg-red-50/80 p-4 shadow-soft dark:border-red-800 dark:bg-red-950/20">
+        <div className="rounded-xl border border-red-200 bg-red-50/80 p-4 shadow-soft dark:border-red-800 dark:bg-red-950/20">
           <p className="text-xs font-black uppercase text-red-700 dark:text-red-400">Shortfall</p>
           <p className="mt-2 text-2xl font-black text-red-800 dark:text-red-300">{formatCurrency(grandShortfall)}</p>
         </div>
-        <div className="rounded-[1.5rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+        <div className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
           <p className="text-xs font-black uppercase text-muted-foreground">Deliveries Today</p>
           <p className="mt-2 text-2xl font-black">{collections.length}</p>
         </div>
@@ -116,12 +116,12 @@ export default async function StaffCollectionVerificationPage() {
 
       {/* Per-partner breakdown */}
       {partnerData.length === 0 ? (
-        <div className="rounded-[1.75rem] border border-dashed border-border p-10 text-center">
+        <div className="rounded-xl border border-dashed border-border p-10 text-center">
           <p className="font-bold text-muted-foreground">No collections recorded today.</p>
         </div>
       ) : (
         partnerData.map((data) => (
-          <section key={data.partner.id} className="rounded-[1.75rem] border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
+          <section key={data.partner.id} className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="font-display text-xl font-black">{data.partner.name ?? "Delivery Partner"}</h2>
@@ -142,19 +142,19 @@ export default async function StaffCollectionVerificationPage() {
 
             <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
               <div className="rounded-xl bg-muted p-3">
-                <p className="text-[10px] font-black uppercase text-muted-foreground">Expected</p>
+                <p className="text-micro font-black uppercase text-muted-foreground">Expected</p>
                 <p className="mt-1 font-black">{formatCurrency(data.totalExpected)}</p>
               </div>
               <div className="rounded-xl bg-muted p-3">
-                <p className="text-[10px] font-black uppercase text-muted-foreground">Cash</p>
+                <p className="text-micro font-black uppercase text-muted-foreground">Cash</p>
                 <p className="mt-1 font-black">{formatCurrency(data.totalCash)}</p>
               </div>
               <div className="rounded-xl bg-muted p-3">
-                <p className="text-[10px] font-black uppercase text-muted-foreground">UPI</p>
+                <p className="text-micro font-black uppercase text-muted-foreground">UPI</p>
                 <p className="mt-1 font-black">{formatCurrency(data.totalUpi)}</p>
               </div>
               <div className="rounded-xl bg-muted p-3">
-                <p className="text-[10px] font-black uppercase text-muted-foreground">Status</p>
+                <p className="text-micro font-black uppercase text-muted-foreground">Status</p>
                 <p className="mt-1 text-sm font-bold">{data.settledCount} settled / {data.pendingCount} pending</p>
               </div>
             </div>
@@ -166,7 +166,7 @@ export default async function StaffCollectionVerificationPage() {
                   <div>
                     <span className="font-bold">#{col.order.orderNumber}</span>
                     <span className="ml-2 text-muted-foreground">{col.order.customerName}</span>
-                    <span className={`ml-2 rounded-full px-2 py-0.5 text-[10px] font-bold ${col.status === "SETTLED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : col.status === "SHORT" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"}`}>
+                    <span className={`ml-2 rounded-full px-2 py-0.5 text-micro font-bold ${col.status === "SETTLED" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : col.status === "SHORT" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300"}`}>
                       {col.status}
                     </span>
                   </div>

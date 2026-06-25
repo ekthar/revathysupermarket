@@ -17,6 +17,9 @@ type CartContextValue = {
 const CartContext = createContext<CartContextValue | null>(null);
 const CART_STORAGE_KEY = "msm-cart-v1";
 
+// Cart state is optimistic by design - updates are instant in React state,
+// persisted to localStorage synchronously. No server-side sync required.
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);

@@ -132,7 +132,7 @@ export function OnboardingTour() {
             <h3 className="text-xl font-black text-slate-900 dark:text-white">
               {currentStep.title}
             </h3>
-            <p className="mt-2 text-[14px] text-slate-600 dark:text-slate-400 leading-relaxed">
+            <p className="mt-2 text-body text-slate-600 dark:text-slate-400 leading-relaxed">
               {currentStep.description}
             </p>
 
@@ -140,7 +140,7 @@ export function OnboardingTour() {
             <div className="mt-6 flex items-center justify-between">
               <button
                 onClick={dismiss}
-                className="text-[13px] font-semibold text-slate-400 hover:text-slate-600 transition-colors"
+                className="text-body font-semibold text-slate-400 hover:text-slate-600 transition-colors"
               >
                 Skip tour
               </button>
@@ -148,7 +148,7 @@ export function OnboardingTour() {
               <motion.button
                 whileTap={{ scale: 0.95 }}
                 onClick={next}
-                className="flex items-center gap-2 h-11 px-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-bold press"
+                className="flex items-center gap-2 h-11 px-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-body font-bold press"
               >
                 {isLast ? "Get Started" : "Next"}
                 <ArrowRight className="h-4 w-4" />

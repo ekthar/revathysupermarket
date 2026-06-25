@@ -76,7 +76,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
-            className="absolute bottom-4 left-4 bg-orange-500 text-white text-[11px] font-bold px-3 py-1.5 rounded-full shadow-lg"
+            className="absolute bottom-4 left-4 bg-orange-500 text-white text-caption font-bold px-3 py-1.5 rounded-full shadow-lg"
           >
             -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
           </motion.span>
@@ -94,7 +94,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           >
             <ProductImage src={product.image} alt={product.name} className="object-cover" />
             {product.discountPrice && (
-              <span className="absolute top-4 left-4 bg-orange-500 text-white text-[12px] font-bold px-3 py-1.5 rounded-full shadow-lg">
+              <span className="absolute top-4 left-4 bg-orange-500 text-white text-caption font-bold px-3 py-1.5 rounded-full shadow-lg">
                 -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
               </span>
             )}
@@ -106,7 +106,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <span className="text-[12px] font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{product.category}</span>
+            <span className="text-caption font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{product.category}</span>
             <h1 className="mt-4 font-display text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">{product.name}</h1>
             <p className="mt-3 text-slate-600 dark:text-slate-400 leading-relaxed">{product.description}</p>
 
@@ -114,10 +114,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
             <div className="mt-4 flex items-center gap-4">
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-[13px] font-bold text-slate-700 dark:text-slate-300">4.8</span>
-                <span className="text-[12px] text-slate-400">(120+ ratings)</span>
+                <span className="text-body font-bold text-slate-700 dark:text-slate-300">4.8</span>
+                <span className="text-caption text-slate-400">(120+ ratings)</span>
               </div>
-              <span className="text-[12px] text-slate-500">Unit: {product.unit}</span>
+              <span className="text-caption text-slate-500">Unit: {product.unit}</span>
             </div>
 
             {/* Price */}
@@ -129,7 +129,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
             </div>
 
             {/* Stock */}
-            <p className={`mt-2 text-[13px] font-semibold ${outOfStock ? "text-red-500" : "text-primary"}`}>
+            <p className={`mt-2 text-body font-semibold ${outOfStock ? "text-red-500" : "text-primary"}`}>
               {outOfStock ? "Out of stock" : `${product.stock} in stock`}
             </p>
 
@@ -137,10 +137,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
             <div className="mt-6 flex items-center gap-3 rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
               <Truck className="h-5 w-5 text-primary shrink-0" />
               <div>
-                <p className="text-[13px] font-semibold text-slate-800 dark:text-slate-200">
+                <p className="text-body font-semibold text-slate-800 dark:text-slate-200">
                   Delivery from ₹30 based on distance{storeConfig.freeDeliveryThreshold > 0 ? ` · free above ${formatCurrency(storeConfig.freeDeliveryThreshold)}` : ""}
                 </p>
-                <p className="text-[11px] text-slate-500">Delivered within 15-30 minutes</p>
+                <p className="text-caption text-slate-500">Delivered within 15-30 minutes</p>
               </div>
             </div>
 
@@ -162,7 +162,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                         key={cartItem.quantity}
                         initial={{ scale: 1.3 }}
                         animate={{ scale: 1 }}
-                        className="w-8 text-center text-[15px] font-bold text-white"
+                        className="w-8 text-center text-title font-bold text-white"
                       >
                         {cartItem.quantity}
                       </motion.span>
@@ -170,7 +170,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
-                    <span className="text-[14px] font-semibold text-slate-600 dark:text-slate-400">
+                    <span className="text-body font-semibold text-slate-600 dark:text-slate-400">
                       {formatCurrency(price * cartItem.quantity)} total
                     </span>
                   </motion.div>
@@ -182,7 +182,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                     whileTap={{ scale: 0.95 }}
                     onClick={handleAdd}
                     disabled={outOfStock}
-                    className="flex items-center justify-center gap-2 h-12 px-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[14px] disabled:opacity-40 press shadow-lg"
+                    className="flex items-center justify-center gap-2 h-12 px-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-body disabled:opacity-40 press shadow-lg"
                   >
                     <ShoppingBag className="h-4 w-4" />
                     Add to Cart
@@ -197,18 +197,18 @@ export function ProductDetailClient({ product }: { product: Product }) {
       {/* Mobile: Product info below image */}
       <div className="md:hidden px-4 pt-5 pb-4">
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
-          <span className="text-[11px] font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{product.category}</span>
+          <span className="text-caption font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{product.category}</span>
           <h1 className="mt-3 text-2xl font-black text-slate-900 dark:text-white">{product.name}</h1>
 
           <div className="mt-2 flex items-center gap-3">
             <div className="flex items-center gap-1">
               <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-              <span className="text-[12px] font-bold text-slate-700 dark:text-slate-300">4.8</span>
+              <span className="text-caption font-bold text-slate-700 dark:text-slate-300">4.8</span>
             </div>
-            <span className="text-[11px] text-slate-500">{product.unit}</span>
+            <span className="text-caption text-slate-500">{product.unit}</span>
           </div>
 
-          <p className="mt-3 text-[13px] text-slate-600 dark:text-slate-400 leading-relaxed">{product.description}</p>
+          <p className="mt-3 text-body text-slate-600 dark:text-slate-400 leading-relaxed">{product.description}</p>
 
           {/* Price */}
           <div className="mt-4 flex items-baseline gap-2">
@@ -221,7 +221,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           {/* Delivery */}
           <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
             <Truck className="h-4 w-4 text-primary shrink-0" />
-            <p className="text-[12px] text-slate-600 dark:text-slate-400">
+            <p className="text-caption text-slate-600 dark:text-slate-400">
               Delivery from ₹30 by distance{storeConfig.freeDeliveryThreshold > 0 ? ` · free above ${formatCurrency(storeConfig.freeDeliveryThreshold)}` : ""} · 15-30 min
             </p>
           </div>
@@ -242,14 +242,14 @@ export function ProductDetailClient({ product }: { product: Product }) {
                 <button onClick={() => updateQuantity(product.id, cartItem.quantity - 1)} className="w-10 h-full flex items-center justify-center text-white">
                   <Minus className="h-3.5 w-3.5" />
                 </button>
-                <motion.span key={cartItem.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="w-7 text-center text-[14px] font-bold text-white">
+                <motion.span key={cartItem.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="w-7 text-center text-body font-bold text-white">
                   {cartItem.quantity}
                 </motion.span>
                 <button onClick={() => updateQuantity(product.id, cartItem.quantity + 1)} className="w-10 h-full flex items-center justify-center text-white">
                   <Plus className="h-3.5 w-3.5" />
                 </button>
               </div>
-              <Link href="/cart" className="h-11 px-6 flex items-center justify-center rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-[13px] font-bold press">
+              <Link href="/cart" className="h-11 px-6 flex items-center justify-center rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-body font-bold press">
                 View Cart • {formatCurrency(price * cartItem.quantity)}
               </Link>
             </motion.div>
@@ -261,7 +261,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
               whileTap={{ scale: 0.97 }}
               onClick={handleAdd}
               disabled={outOfStock}
-              className="flex items-center justify-center gap-2 h-12 w-full rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-[14px] disabled:opacity-40 press shadow-lg"
+              className="flex items-center justify-center gap-2 h-12 w-full rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-body disabled:opacity-40 press shadow-lg"
             >
               <ShoppingBag className="h-4 w-4" />
               Add to Cart • {formatCurrency(price)}

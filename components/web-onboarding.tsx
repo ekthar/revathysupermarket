@@ -56,7 +56,7 @@ export function WebOnboarding() {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[95] flex items-end justify-center bg-slate-950/58 p-3 backdrop-blur-sm sm:items-center sm:p-6"
+          className="fixed inset-0 z-[95] flex items-end justify-center bg-neutral-950/58 p-3 backdrop-blur-sm sm:items-center sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -65,9 +65,9 @@ export function WebOnboarding() {
             initial={reduceMotion ? false : { opacity: 0, y: 28, scale: 0.96 }}
             animate={reduceMotion ? undefined : { opacity: 1, y: 0, scale: 1 }}
             exit={reduceMotion ? undefined : { opacity: 0, y: 18, scale: 0.98 }}
-            className="glass-panel w-full max-w-md overflow-hidden rounded-[2rem] bg-card p-4 text-card-foreground"
+            className="glass-panel w-full max-w-md overflow-hidden rounded-xl bg-card p-4 text-card-foreground"
           >
-            <div className="relative overflow-hidden rounded-[1.6rem] bg-[linear-gradient(135deg,rgba(15,138,95,0.96),rgba(10,107,75,0.95))] p-5 text-white">
+            <div className="relative overflow-hidden rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.96),rgba(10,107,75,0.95))] p-5 text-white">
               <button
                 type="button"
                 onClick={close}
@@ -76,12 +76,12 @@ export function WebOnboarding() {
               >
                 <X className="h-4 w-4" />
               </button>
-              <div className="absolute -bottom-16 -right-10 h-44 w-44 rounded-full bg-lime-fresh/25 blur-3xl" />
+              <div className="absolute -bottom-16 -right-10 h-44 w-44 rounded-full bg-secondary-100 blur-3xl" />
               <div className="relative">
                 <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-primary shadow-lg">
                   <Icon className="h-7 w-7" />
                 </span>
-          <p className="mt-5 text-xs font-black uppercase tracking-wide text-lime-fresh">Welcome to {SITE.name.split(" ")[0]}</p>
+          <p className="mt-5 text-xs font-black uppercase tracking-wide text-secondary-500">Welcome to {SITE.name.split(" ")[0]}</p>
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={slide.title}

@@ -160,7 +160,7 @@ export function SettingsManagementClient({
       {/* Logo Upload Section */}
       <LogoUploadSection />
 
-      <form onSubmit={saveSettings} className="mt-5 grid gap-4 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5 md:grid-cols-2">
+      <form onSubmit={saveSettings} className="mt-5 grid gap-4 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5 md:grid-cols-2">
         <div className="flex items-center gap-3 md:col-span-2">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
             <Settings className="h-5 w-5 text-primary" />
@@ -171,7 +171,7 @@ export function SettingsManagementClient({
         <Input value={form.phone} onChange={(event) => update("phone", event.target.value)} placeholder="Phone number" className="h-12 rounded-2xl" />
         <Input value={form.whatsapp} onChange={(event) => update("whatsapp", event.target.value)} placeholder="WhatsApp number" className="h-12 rounded-2xl" />
         <Input value={form.deliveryRadiusKm} onChange={(event) => update("deliveryRadiusKm", Number(event.target.value))} type="number" min="1" max="50" placeholder="Delivery radius KM" className="h-12 rounded-2xl" />
-        <Input value={form.serviceablePincodes} onChange={(event) => update("serviceablePincodes", event.target.value)} placeholder="Pincodes (optional, for reference only)" className="h-12 rounded-2xl md:col-span-2" />
+        <Input value={form.serviceablePincodes} onChange={(event) => update("serviceablePincodes", event.target.value)} placeholder="Serviceable pincodes (reference only - delivery uses GPS distance)" className="h-12 rounded-2xl md:col-span-2" />
         <Input value={form.address} onChange={(event) => update("address", event.target.value)} placeholder="Address" className="h-12 rounded-2xl md:col-span-2" />
         <Input value={form.googleMapsUrl} onChange={(event) => update("googleMapsUrl", event.target.value)} placeholder="Google Maps place link" className="h-12 rounded-2xl md:col-span-2" />
         <Input value={form.instagramUrl} onChange={(event) => update("instagramUrl", event.target.value)} placeholder="Instagram URL" className="h-12 rounded-2xl" />
@@ -208,7 +208,7 @@ export function SettingsManagementClient({
         </Button>
       </form>
 
-      <section className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+      <section className="mt-5 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
             <MessageCircle className="h-5 w-5 text-primary" />
@@ -252,7 +252,7 @@ export function SettingsManagementClient({
         </div>
       </section>
 
-      <form onSubmit={createBanner} className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+      <form onSubmit={createBanner} className="mt-5 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lime-fresh/20">
             <Megaphone className="h-5 w-5 text-primary" />
@@ -286,7 +286,7 @@ export function SettingsManagementClient({
           {localBanners.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm font-bold text-muted-foreground">No banners yet.</p>
           ) : localBanners.map((banner) => (
-            <article key={banner.id} className="grid gap-3 rounded-[1.35rem] border border-border bg-background/70 p-3 sm:grid-cols-[110px_1fr]">
+            <article key={banner.id} className="grid gap-3 rounded-lg border border-border bg-background/70 p-3 sm:grid-cols-[110px_1fr]">
               <img src={banner.image} alt={banner.title} className="aspect-video w-full rounded-2xl object-cover sm:aspect-square" />
               <div className="min-w-0">
                 <p className={banner.isActive ? "text-xs font-black uppercase text-primary" : "text-xs font-black uppercase text-muted-foreground"}>{banner.isActive ? "Active" : "Disabled"}</p>
@@ -402,7 +402,7 @@ function LogoUploadSection() {
   }
 
   return (
-    <div className="mt-5 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+    <div className="mt-5 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
       <div className="flex items-center gap-3">
         <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10">
           <ImagePlus className="h-5 w-5 text-primary" />
@@ -438,7 +438,7 @@ function LogoUploadSection() {
               <Upload className="h-3.5 w-3.5" />
               {uploading ? "Uploading..." : "Upload file"}
             </Button>
-            <span className="text-[10px] text-muted-foreground">or upload PNG/SVG/JPG (max 2MB)</span>
+            <span className="text-micro text-muted-foreground">or upload PNG/SVG/JPG (max 2MB)</span>
           </div>
           <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={uploadLogo} />
         </div>

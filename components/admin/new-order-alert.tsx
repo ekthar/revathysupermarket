@@ -111,7 +111,7 @@ export function NewOrderAlert() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-[0_8px_30px_rgba(0,0,0,0.12)] border border-slate-200/80 overflow-hidden"
+            className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-elevation-2 border border-slate-200/80 overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-100">
@@ -119,8 +119,8 @@ export function NewOrderAlert() {
                 <Bell className="h-4 w-4 text-orange-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-semibold text-orange-900">New Order #{order.orderNumber}</p>
-                <p className="text-[11px] text-orange-600">{new Date(order.createdAt).toLocaleTimeString()}</p>
+                <p className="text-body font-semibold text-orange-900">New Order #{order.orderNumber}</p>
+                <p className="text-caption text-orange-600">{new Date(order.createdAt).toLocaleTimeString()}</p>
               </div>
               <button
                 type="button"
@@ -136,14 +136,14 @@ export function NewOrderAlert() {
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-[14px] font-semibold text-slate-900">{order.customerName}</p>
-                  <p className="text-[12px] text-slate-500 flex items-center gap-1 mt-0.5">
+                  <p className="text-body font-semibold text-slate-900">{order.customerName}</p>
+                  <p className="text-caption text-slate-500 flex items-center gap-1 mt-0.5">
                     <Phone className="h-3 w-3" /> {order.phone}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-[15px] font-bold text-slate-900">{formatCurrency(order.total)}</p>
-                  <p className="text-[11px] text-slate-400 flex items-center gap-1 justify-end">
+                  <p className="text-title font-bold text-slate-900">{formatCurrency(order.total)}</p>
+                  <p className="text-caption text-slate-400 flex items-center gap-1 justify-end">
                     <ShoppingBag className="h-3 w-3" /> {order.itemCount} items
                   </p>
                 </div>
@@ -156,7 +156,7 @@ export function NewOrderAlert() {
                 type="button"
                 onClick={() => acknowledge(order.id)}
                 disabled={acknowledging === order.id}
-                className="w-full h-10 rounded-xl bg-primary text-white text-[13px] font-semibold flex items-center justify-center gap-2 active:scale-[0.97] transition disabled:opacity-60"
+                className="w-full h-10 rounded-xl bg-primary text-white text-body font-semibold flex items-center justify-center gap-2 active:scale-[0.97] transition disabled:opacity-60"
               >
                 {acknowledging === order.id ? "Accepting..." : "Accept Order"}
               </button>

@@ -4,6 +4,8 @@ import { useState } from "react";
 import { signIn, signOut } from "next-auth/react";
 import { CheckCircle2, Chrome, Download, Home, Phone, Save, Trash2 } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
+import { useDeleteAddress, useMakeDefaultAddress } from "@/lib/queries/addresses";
+import { useToast } from "@/components/toast-provider";
 
 type Address = { id: string; label: string; houseName: string; street: string; landmark: string; pincode: string; isDefault: boolean };
 
@@ -14,6 +16,9 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
   const [phoneDraft, setPhoneDraft] = useState(user.phone);
   const [phoneOtp, setPhoneOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
+  const { showToast } = useToast();
+  const deleteAddressMutation = useDeleteAddress();
+  const makeDefaultMutation = useMakeDefaultAddress();
 
   async function saveProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -25,23 +30,26 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
     setMessage(response.ok ? "Profile saved." : "Profile update failed.");
   }
 
-  async function makeDefault(id: string) {
-    const response = await fetch(`/api/account/addresses/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ isDefault: true })
+  function makeDefault(id: string) {
+    makeDefaultMutation.mutate(id, {
+      onSuccess: () => {
+        setLocalAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
+      },
+      onError: (error) => {
+        setMessage(error.message ?? "Address update failed.");
+      },
     });
-    const data = await readApiResponse<{ error?: string }>(response);
-    if (!response.ok) {
-      setMessage(data.error ?? "Address update failed.");
-      return;
-    }
-    setLocalAddresses((current) => current.map((address) => ({ ...address, isDefault: address.id === id })));
   }
 
-  async function deleteAddress(id: string) {
-    const response = await fetch(`/api/account/addresses/${id}`, { method: "DELETE" });
-    if (response.ok) setLocalAddresses((current) => current.filter((address) => address.id !== id));
+  function deleteAddress(id: string) {
+    deleteAddressMutation.mutate(id, {
+      onSuccess: () => {
+        setLocalAddresses((current) => current.filter((address) => address.id !== id));
+      },
+      onError: () => {
+        showToast("Failed to delete address", "error");
+      },
+    });
   }
 
   async function sendPhoneOtp() {
@@ -88,7 +96,7 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
 
   return (
     <div className="mt-5 grid gap-5">
-      <form onSubmit={saveProfile} className="grid gap-3 rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+      <form onSubmit={saveProfile} className="grid gap-3 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
         <input value={profile.name} onChange={(event) => setProfile((current) => ({ ...current, name: event.target.value }))} className="h-11 rounded-2xl border border-border bg-background px-4 text-sm font-bold" placeholder="Name" />
         <input value={profile.email} onChange={(event) => setProfile((current) => ({ ...current, email: event.target.value }))} className="h-11 rounded-2xl border border-border bg-background px-4 text-sm font-bold" placeholder="Email" />
         <input value={profile.phone} disabled className="h-11 rounded-2xl border border-border bg-muted px-4 text-sm font-bold" placeholder="Phone" />
@@ -110,7 +118,7 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
           Link Google
         </button>
       </form>
-      <section className="rounded-[1.75rem] border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
+      <section className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
         <h2 className="font-display text-2xl font-black">Saved addresses</h2>
         <div className="mt-4 grid gap-3">
           {localAddresses.map((address) => (
@@ -128,7 +136,7 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
           ))}
         </div>
       </section>
-      <section className="rounded-[1.75rem] border border-red-200 bg-red-50 p-4 shadow-soft dark:border-red-500/30 dark:bg-red-950/20">
+      <section className="rounded-xl border border-red-200 bg-red-50 p-4 shadow-soft dark:border-red-500/30 dark:bg-red-950/20">
         <h2 className="font-display text-2xl font-black text-red-700 dark:text-red-200">Delete account</h2>
         <p className="mt-2 text-sm font-bold text-red-700/80 dark:text-red-100/80">This removes your login profile and saved addresses. Store order records are retained for billing and operations.</p>
         <button type="button" onClick={deleteAccount} className="mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-red-600 px-4 text-sm font-black text-white">

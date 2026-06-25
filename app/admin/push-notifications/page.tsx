@@ -36,9 +36,9 @@ export default async function AdminPushNotificationsPage() {
   return (
     <div className="space-y-5">
       <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-slate-900 p-5">
-        <p className="text-[11px] font-bold uppercase text-blue-600 dark:text-blue-400">Engagement</p>
+        <p className="text-caption font-bold uppercase text-blue-600 dark:text-blue-400">Engagement</p>
         <h1 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Push Notifications</h1>
-        <p className="text-[12px] text-slate-500 dark:text-slate-400 mt-1">
+        <p className="text-caption text-slate-500 dark:text-slate-400 mt-1">
           Send push notifications to {totalSubscribers} subscriber{totalSubscribers !== 1 ? "s" : ""} ({customerSubscribers} customers)
         </p>
       </div>

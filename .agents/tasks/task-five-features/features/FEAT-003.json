@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "fix",
+  "description": "Fix delivery order alert - ensure polling reliably triggers fullscreen alert + continuous looping sound, and add web push notification as backup when delivery partner assignment happens (for backgrounded PWA tabs).",
+  "status": "completed",
+  "steps": [
+    "Audit the delivery-alert-listener.tsx polling logic. Current issue: the shownOrdersRef tracking means if a poll returns an order that was already shown (but maybe not acknowledged due to a page reload), the alert will not re-trigger. Fix: on component mount, clear the shownOrdersRef so that ANY unacknowledged assignment from the server always triggers the fullscreen alert. The server already filters to only unacked orders, so if the server returns it, the client should always show it.",
+    "Fix the sound looping in delivery-alert-listener.tsx: currently the beep interval fires every 3000ms, which means there is silence between beeps. Make the sound loop more continuous: reduce interval to 2000ms and extend the tone duration. Also ensure the sound continues indefinitely until explicit acknowledgment (dismiss or view button tap). The current implementation stops on acknowledge which is correct.",
+    "Fix the 'Enable assignment alarm' button visibility: currently it only shows when soundEnabled is false AND alert is null. The issue is that if the user hasn't tapped 'Enable assignment alarm' yet, the first alert will arrive silently. Change the logic so that when an alert arrives and sound is not enabled, auto-resume the AudioContext (browsers allow this after user gesture, but the poll trigger counts as programmatic). If AudioContext resume fails, still show the visual alert. Add a persistent banner asking to enable sound if not enabled.",
+    "Update the service worker (public/sw.js) push handler to detect delivery assignment notifications and add the 'requireInteraction: true' flag plus a distinct tag 'delivery-assignment' so the notification persists until tapped. The push payload from lib/push.ts already sends requireInteraction, verify the sw.js uses it (it does via payload.requireInteraction).",
+    "Verify the push notification is sent when an order is assigned: In app/api/admin/orders/[id]/delivery/route.ts, sendPushToUser is already called for the delivery partner with requireInteraction: true. This is already wired up correctly. The backup push should work for backgrounded tabs.",
+    "Add logic so that clicking the push notification in service worker opens /delivery (the notification data.url is already '/delivery'). Verify the notificationclick handler in sw.js opens the correct URL and focuses the window - it already does this.",
+    "Ensure that when the PWA is foregrounded after a push notification click, the polling immediately fires and shows the fullscreen alert. Add a visibilitychange event listener in the delivery-alert-listener that triggers an immediate poll when the page becomes visible again."
+  ],
+  "acceptance_criteria": [
+    "When an order is assigned to a delivery partner, the fullscreen alert with sound triggers within 5 seconds (one poll cycle)",
+    "Sound loops continuously every 2 seconds until the delivery partner taps Dismiss or View",
+    "If the PWA tab is backgrounded, a web push notification is sent (already wired up) that persists until tapped",
+    "When the page becomes visible again (after push notification click or tab switch), an immediate poll triggers the alert",
+    "Page reload does not suppress pending unacknowledged assignments",
+    "Type check passes: npx tsc --noEmit --skipLibCheck"
+  ],
+  "verification": [
+    "npx tsc --noEmit --skipLibCheck",
+    "npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": "Removed shownOrdersRef entirely since server-side deliveryAlertAckAt=null filter handles deduplication. Added tryAutoEnableSound helper that attempts AudioContext.resume() programmatically. The sw.js push handler already correctly uses payload.requireInteraction and the notificationclick handler navigates to /delivery, so no changes were needed there. The enable-sound button now stays visible any time soundEnabled is false (regardless of alert state)."
+}

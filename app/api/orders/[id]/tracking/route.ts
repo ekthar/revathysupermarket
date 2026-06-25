@@ -25,6 +25,11 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
           locationUpdatedAt: true
         }
       },
+      deliveryLocationEvents: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { heading: true }
+      },
       statusEvents: { orderBy: { createdAt: "asc" } }
     }
   });
@@ -33,16 +38,19 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const headingValue = order.deliveryLocationEvents?.[0]?.heading ?? undefined;
+
   return NextResponse.json({
     id: order.id,
     orderNumber: order.orderNumber,
     status: order.status,
     deliveryOtp: ["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY"].includes(order.status) ? order.deliveryOtp : null,
     destination: { latitude: Number(order.latitude), longitude: Number(order.longitude) },
-    deliveryPartnerLocation: order.status === "OUT_FOR_DELIVERY" && order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude && order.deliveryPartner.locationUpdatedAt && Date.now() - order.deliveryPartner.locationUpdatedAt.getTime() < 5 * 60_000 ? {
+    deliveryPartnerLocation: ["OUT_FOR_DELIVERY", "ARRIVING", "CUSTOMER_UNAVAILABLE"].includes(order.status) && order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude && order.deliveryPartner.locationUpdatedAt && Date.now() - order.deliveryPartner.locationUpdatedAt.getTime() < 5 * 60_000 ? {
       latitude: Number(order.deliveryPartner.currentLatitude),
       longitude: Number(order.deliveryPartner.currentLongitude),
-      updatedAt: order.deliveryPartner.locationUpdatedAt?.toISOString()
+      updatedAt: order.deliveryPartner.locationUpdatedAt?.toISOString(),
+      ...(headingValue !== undefined && headingValue !== null ? { heading: headingValue } : {})
     } : null,
     statusEvents: order.statusEvents.map((event) => ({
       status: event.status,

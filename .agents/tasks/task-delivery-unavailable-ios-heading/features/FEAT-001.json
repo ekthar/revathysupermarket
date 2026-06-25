@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Customer Unavailable flow: Add button, API endpoint, waiting period, return-to-store capability with push notifications",
+  "status": "completed",
+  "steps": [
+    "1. Update prisma/schema.prisma: Add new OrderStatus enum values CUSTOMER_UNAVAILABLE and RETURNED_TO_STORE. Add fields to Order model: customerUnavailableAt DateTime? and customerUnavailableTimeout Int? (in seconds, default 300).",
+    "2. Update lib/constants.ts: Add CUSTOMER_UNAVAILABLE and RETURNED_TO_STORE to the orderStatuses array and statusLabels record.",
+    "3. Create app/api/delivery/unavailable/route.ts with a POST endpoint that: validates orderId from body using zod, authenticates via authenticateDeliveryPartnerRequest, finds the active order assigned to this partner with status ARRIVING (customer must be at doorstep), updates order status to CUSTOMER_UNAVAILABLE and sets customerUnavailableAt to now and customerUnavailableTimeout to 300 (5 minutes), creates an OrderEvent, sends push notification to the customer via sendPushToUser saying 'Your delivery partner is waiting. Please respond within 5 minutes or the order will be returned to store.', returns { ok: true, waitUntil: ISO string 5 mins from now }. Follow the pattern of app/api/delivery/damage/route.ts for auth, rate limiting, and error handling.",
+    "4. Create app/api/delivery/unavailable/return/route.ts with a POST endpoint that: validates orderId, authenticates, finds order with status CUSTOMER_UNAVAILABLE assigned to this partner, checks that customerUnavailableAt + customerUnavailableTimeout has elapsed (if not, return 409 with time remaining), updates order status to RETURNED_TO_STORE, creates OrderEvent with note 'Customer unavailable. Order returned to store.', sends push notification to customer saying 'Your order has been returned to the store because you were unavailable. Please contact support for re-delivery.', returns { ok: true, status: 'RETURNED_TO_STORE' }.",
+    "5. Update components/delivery/delivery-orders-client.tsx: Add state for tracking unavailable orders (unavailableOrders: Map<orderId, waitUntil timestamp>). Add a 'Customer Unavailable' button that appears when order status is ARRIVING (next to 'Report damage' button area). When clicked, call POST /api/delivery/unavailable. On success, store the waitUntil in state and update the order status locally to show a waiting state. Add a countdown timer display. After the wait period expires, show a 'Return to Store' button. When 'Return to Store' is clicked, call POST /api/delivery/unavailable/return. On success, remove the order from the list. Use the same pattern as existing buttons (loading states, error handling via showToast)."
+  ],
+  "acceptance_criteria": [
+    "prisma generate succeeds with the new schema fields",
+    "next build completes without TypeScript errors",
+    "POST /api/delivery/unavailable endpoint exists and validates input",
+    "POST /api/delivery/unavailable/return endpoint exists and enforces the timeout",
+    "The delivery-orders-client.tsx renders a 'Customer Unavailable' button for ARRIVING orders",
+    "A 'Return to Store' button appears after the waiting period",
+    "Push notifications are sent to the customer at both stages"
+  ],
+  "verification": [
+    "Run npx prisma generate to confirm schema compiles",
+    "Run npx next build to confirm no TypeScript/build errors",
+    "Run npx tsx --test tests/*.test.ts to confirm existing tests still pass"
+  ],
+  "blocked_reason": null,
+  "findings": "Pre-existing test failure in tests/scroll-preservation.test.ts test 29 (root elements allow native scrolling) - unrelated to this feature. Build and prisma generate both pass cleanly. npm install was required as node_modules was empty."
+}

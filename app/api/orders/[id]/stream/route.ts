@@ -15,16 +15,24 @@ async function trackingPayload(id: string) {
           currentLongitude: true,
           locationUpdatedAt: true
         }
+      },
+      deliveryLocationEvents: {
+        orderBy: { createdAt: "desc" },
+        take: 1,
+        select: { heading: true }
       }
     }
   });
+
+  const headingValue = latest?.deliveryLocationEvents?.[0]?.heading ?? undefined;
 
   return {
     status: latest?.status,
     deliveryPartnerLocation: latest?.deliveryPartner?.currentLatitude && latest.deliveryPartner.currentLongitude ? {
       latitude: Number(latest.deliveryPartner.currentLatitude),
       longitude: Number(latest.deliveryPartner.currentLongitude),
-      updatedAt: latest.deliveryPartner.locationUpdatedAt?.toISOString()
+      updatedAt: latest.deliveryPartner.locationUpdatedAt?.toISOString(),
+      ...(headingValue !== undefined && headingValue !== null ? { heading: headingValue } : {})
     } : null
   };
 }

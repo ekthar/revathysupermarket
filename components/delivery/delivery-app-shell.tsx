@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import {
-  Bike, CheckCircle2, CreditCard, ExternalLink, IndianRupee,
-  MapPin, Package, Phone, ShieldCheck, Truck, Zap,
+  Bike, CreditCard, ExternalLink,
+  MapPin, Package, ShieldCheck, Truck, Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
@@ -12,6 +12,8 @@ import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/toast-provider";
 import { InstallAppButton } from "@/components/install-app-button";
 import { SlideToConfirm } from "@/components/delivery/slide-to-confirm";
+import { DeliveryMapView } from "@/components/delivery/delivery-map-view";
+import { DeliveryOrderActions } from "@/components/delivery/delivery-order-actions";
 
 type DeliveryOrder = {
   id: string;
@@ -88,36 +90,7 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
   const [unavailableOrders, setUnavailableOrders] = useState<Map<string, number>>(new Map());
   const [tick, setTick] = useState(0);
 
-  // GPS Publishing
-  useEffect(() => {
-    if (!navigator.geolocation) return;
-    let lastPublishedAt = 0;
-    let request: AbortController | null = null;
-    const watch = navigator.geolocation.watchPosition(
-      (position) => {
-        const now = Date.now();
-        if (document.visibilityState === "hidden" || now - lastPublishedAt < 5000) return;
-        lastPublishedAt = now;
-        request?.abort();
-        request = new AbortController();
-        void fetch("/api/delivery/location", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-          }),
-          signal: request.signal,
-        }).catch(() => null);
-      },
-      () => undefined,
-      { enableHighAccuracy: true, maximumAge: 10000, timeout: 15000 }
-    );
-    return () => {
-      request?.abort();
-      navigator.geolocation.clearWatch(watch);
-    };
-  }, []);
+  // GPS Publishing handled by DeliveryMapView component
 
   // Countdown tick for customer unavailable timers
   useEffect(() => {
@@ -186,6 +159,8 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
 
   return (
     <div className="mx-auto max-w-lg pb-24">
+      {/* GPS location publisher */}
+      <DeliveryMapView />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-gradient-to-br from-emerald-600 to-emerald-700 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
         <div className="flex items-center gap-3">
@@ -318,89 +293,17 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
 
 
                     {/* Action Buttons */}
-                    <div className="space-y-3 p-4">
-                      {/* Call Customer - always visible */}
-                      <a
-                        href={`tel:${order.phone}`}
-                        className="flex h-12 items-center justify-center gap-2 rounded-xl border border-slate-200 font-bold text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                      >
-                        <Phone className="h-4 w-4" />
-                        Call Customer
-                      </a>
-
-                      {/* Slide to Accept - READY_FOR_DELIVERY */}
-                      {order.status === "READY_FOR_DELIVERY" && (
-                        <SlideToConfirm
-                          label="Slide to Accept"
-                          disabled={loading === order.id}
-                          onConfirm={() => handlePickup(order)}
-                        />
-                      )}
-
-                      {/* Report Issue + Collect Payment - ARRIVING */}
-                      {order.status === "ARRIVING" && (
-                        <div className="grid grid-cols-2 gap-2">
-                          <button
-                            onClick={() => setDamageOrder(order)}
-                            className="flex h-12 items-center justify-center gap-1.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-700 dark:border-slate-700 dark:text-slate-300"
-                          >
-                            Report Issue
-                          </button>
-                          <button
-                            onClick={() => setCollectOrder(order)}
-                            className="flex h-12 items-center justify-center gap-1.5 rounded-xl bg-blue-600 text-sm font-bold text-white"
-                          >
-                            <IndianRupee className="h-4 w-4" />
-                            Collect Payment
-                          </button>
-                        </div>
-                      )}
-
-                      {/* Customer Unavailable - ARRIVING */}
-                      {order.status === "ARRIVING" && (
-                        <button
-                          disabled={loading === order.id}
-                          onClick={() => markUnavailable(order)}
-                          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-amber-500 font-bold text-amber-700 disabled:opacity-40 dark:border-amber-600 dark:text-amber-400"
-                        >
-                          Customer Unavailable
-                        </button>
-                      )}
-
-                      {/* Customer Unavailable countdown + Return to Store */}
-                      {order.status === "CUSTOMER_UNAVAILABLE" && (() => {
-                        const waitUntil = unavailableOrders.get(order.id) ?? 0;
-                        const remaining = Math.max(0, Math.ceil((waitUntil - Date.now()) / 1000));
-                        const canReturn = remaining === 0;
-                        return (
-                          <div className="grid grid-cols-2 gap-2">
-                            <span className="flex h-12 items-center justify-center rounded-xl bg-amber-100 text-sm font-black text-amber-800 dark:bg-amber-900/40 dark:text-amber-300">
-                              {canReturn ? "Timer expired" : `Wait ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, "0")}`}
-                            </span>
-                            <button
-                              disabled={!canReturn || loading === order.id}
-                              onClick={() => returnToStore(order)}
-                              className="flex h-12 items-center justify-center rounded-xl bg-red-600 text-sm font-black text-white disabled:opacity-40"
-                            >
-                              Return to Store
-                            </button>
-                          </div>
-                        );
-                      })()}
-
-                      {/* Complete Delivery - ARRIVING + collection done */}
-                      {order.status === "ARRIVING" &&
-                        order.collection &&
-                        !["SHORT", "EXCESS"].includes(order.collection.status) && (
-                          <button
-                            onClick={() => setCompleteOrder(order)}
-                            className="flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 font-black text-white dark:bg-white dark:text-slate-900"
-                          >
-                            <CheckCircle2 className="h-5 w-5" />
-                            Complete Delivery
-                          </button>
-                        )}
-                    </div>
+                    <DeliveryOrderActions
+                      order={order}
+                      loading={loading}
+                      unavailableOrders={unavailableOrders}
+                      onPickup={handlePickup}
+                      onMarkUnavailable={markUnavailable}
+                      onReturnToStore={returnToStore}
+                      onOpenDamage={setDamageOrder}
+                      onOpenCollect={setCollectOrder}
+                      onOpenComplete={setCompleteOrder}
+                    />
                   </motion.article>
                 );
               })

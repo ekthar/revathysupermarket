@@ -565,37 +565,153 @@ bool _isCustomerRoute(String location) {
 // Inline Page Widgets
 // ===========================
 
-/// Splash screen that shows a loading indicator while auth state is determined.
-///
-/// The router redirect handles navigation once auth state resolves,
-/// so this screen simply shows a branded loading state.
-class _SplashScreen extends StatelessWidget {
+/// Splash screen with animated logo, emerald gradient background, and pulsing
+/// loading indicator. Shows a branded loading state while auth resolves.
+class _SplashScreen extends StatefulWidget {
   const _SplashScreen();
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen>
+    with TickerProviderStateMixin {
+  late final AnimationController _logoController;
+  late final AnimationController _pulseController;
+  late final Animation<double> _scaleAnimation;
+  late final Animation<double> _fadeAnimation;
+  late final Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // Logo scale + fade animation
+    _logoController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
+
+    _scaleAnimation = CurvedAnimation(
+      parent: _logoController,
+      curve: Curves.elasticOut,
+    );
+
+    _fadeAnimation = CurvedAnimation(
+      parent: _logoController,
+      curve: const Interval(0.0, 0.6, curve: Curves.easeIn),
+    );
+
+    // Pulsing loading indicator
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _pulseController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _logoController.forward();
+    _pulseController.repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _logoController.dispose();
+    _pulseController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.storefront,
-              size: 80,
-              color: theme.colorScheme.primary,
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'MSM Supermarket',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.colorScheme.primary,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: isDark
+                ? [
+                    const Color(0xFF064E3B), // Emerald 900
+                    const Color(0xFF0F172A), // Slate 900
+                  ]
+                : [
+                    const Color(0xFF059669), // Emerald 600
+                    const Color(0xFF047857), // Emerald 700
+                  ],
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // Animated logo
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: ScaleTransition(
+                  scale: _scaleAnimation,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: const Icon(
+                      Icons.storefront_rounded,
+                      size: 64,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
-            const CircularProgressIndicator(),
-          ],
+              const SizedBox(height: 32),
+              // App name with Manrope font (uses headlineLarge from theme)
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Text(
+                  'MSM Supermarket',
+                  style: theme.textTheme.headlineLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: Colors.white,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              FadeTransition(
+                opacity: _fadeAnimation,
+                child: Text(
+                  'Fresh. Fast. Delivered.',
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 48),
+              // Pulsing loading indicator
+              FadeTransition(
+                opacity: _pulseAnimation,
+                child: SizedBox(
+                  width: 32,
+                  height: 32,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 3,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

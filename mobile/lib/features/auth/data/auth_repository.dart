@@ -62,6 +62,46 @@ class AuthRepository {
     return _login({'email': email, 'password': password});
   }
 
+  /// Logs in with a Google ID token.
+  ///
+  /// Sends the [idToken] to the backend which verifies it with Google
+  /// and returns user credentials. The backend endpoint is POST /auth/google.
+  Future<LoginResult> loginWithGoogle({required String idToken}) async {
+    try {
+      final deviceId = await _tokenStorage.getDeviceId();
+
+      final response = await _dio.post<Map<String, dynamic>>(
+        '${_config.baseUrl}/auth/google',
+        data: {
+          'idToken': idToken,
+          if (deviceId != null) 'deviceId': deviceId,
+        },
+      );
+
+      final data = response.data;
+      if (data == null) {
+        throw const ServerException(message: 'Empty response from server.');
+      }
+
+      final accessToken = data['accessToken'] as String;
+      final refreshToken = data['refreshToken'] as String;
+      final userData = data['user'] as Map<String, dynamic>;
+
+      await Future.wait([
+        _tokenStorage.saveAccessToken(accessToken),
+        _tokenStorage.saveRefreshToken(refreshToken),
+      ]);
+
+      return LoginResult(
+        user: User.fromJson(userData),
+        accessToken: accessToken,
+        refreshToken: refreshToken,
+      );
+    } on DioException catch (e) {
+      throw ErrorHandler.fromDioException(e);
+    }
+  }
+
   /// Refreshes the access token using the stored refresh token.
   ///
   /// Returns true if refresh was successful, false otherwise.

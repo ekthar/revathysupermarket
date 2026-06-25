@@ -23,12 +23,12 @@ void main() {
       expect(find.text('Send OTP'), findsOneWidget);
     });
 
-    testWidgets('shows welcome text', (tester) async {
+    testWidgets('shows branding text', (tester) async {
       await tester.pumpWidget(createWidget());
 
-      expect(find.text('Welcome to MSM'), findsOneWidget);
+      expect(find.text('MSM Supermarket'), findsOneWidget);
       expect(
-        find.text('Enter your mobile number to continue'),
+        find.text('Fresh groceries delivered to your door'),
         findsOneWidget,
       );
     });

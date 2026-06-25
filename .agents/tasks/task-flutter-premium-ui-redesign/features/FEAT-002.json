@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Redesign Splash, Login, OTP screens with Google Auth, animations, and premium branding",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Rewrite the _SplashScreen in mobile/lib/core/router/app_router.dart - animated logo with scale + fade-in animation (AnimationController + CurvedAnimation), emerald gradient background, app name with Manrope font, pulsing loading indicator",
     "Completely redesign mobile/lib/features/auth/presentation/login_screen.dart with: gradient background (emerald to dark), app logo/branding at top with animation, 'Sign in with Google' button (white button with Google icon, elevated card style), divider with 'or' text, phone number OTP section (existing flow preserved), smooth transitions between elements, terms of service text at bottom",

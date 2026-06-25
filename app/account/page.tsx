@@ -3,9 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { getPublicStoreSettings } from "@/lib/store-settings";
 import { ChevronRight, CreditCard, Gift, Heart, HelpCircle, LogOut, MapPin, Package, Pencil, Phone, Settings, User, Wallet } from "lucide-react";
 import { ThemeToggleInline } from "@/components/ui/theme-toggle-inline";
 import { InstallAppButton } from "@/components/install-app-button";
+import { StoreInfoLinks } from "@/components/ui/store-info-links";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +29,8 @@ export default async function AccountPage() {
       prisma.walletTransaction.aggregate({ _sum: { amount: true }, where: { userId: session.user.id, type: "debit" } })
     ]).then(([c, d]) => Number(c._sum.amount ?? 0) - Number(d._sum.amount ?? 0)).catch(() => 0)
   ]);
+
+  const storeSettings = await getPublicStoreSettings();
 
   return (
     <main className="mx-auto min-h-screen max-w-lg space-y-4 bg-background px-4 pb-28 pt-8">
@@ -113,6 +117,19 @@ export default async function AccountPage() {
 
       {/* Logout */}
       <InstallAppButton />
+
+      {/* Store Links */}
+      {(storeSettings.googleMapsUrl || storeSettings.instagramUrl || storeSettings.facebookUrl) && (
+        <div className="overflow-hidden rounded-lg bg-white shadow-elevation-3 dark:bg-neutral-900 p-4">
+          <p className="mb-3 text-center text-caption font-semibold text-neutral-400 uppercase tracking-wide">Find Us</p>
+          <StoreInfoLinks
+            googleMapsUrl={storeSettings.googleMapsUrl}
+            instagramUrl={storeSettings.instagramUrl}
+            facebookUrl={storeSettings.facebookUrl}
+          />
+        </div>
+      )}
+
       <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
         <button
           type="submit"

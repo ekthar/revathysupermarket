@@ -422,6 +422,7 @@ model ReturnRequest {
   id                String             @id @default(cuid())
   returnNumber      String             @unique @default(cuid())
   orderId           String
+  billNumber        String             @default("")
   items             Json
   reason            String
   photoUrl          String?
@@ -451,6 +452,7 @@ model ReturnRequest {
   @@index([resolvedById])
   @@index([createdAt])
   @@index([returnNumber])
+  @@index([billNumber])
 }
 
 model WalletTransaction {

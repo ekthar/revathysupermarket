@@ -74,6 +74,16 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       }
       const totals = await tx.returnRequest.aggregate({ where: { orderId: current.order.id, status: "REFUNDED" }, _sum: { refundAmount: true } });
       await tx.order.update({ where: { id: current.order.id }, data: { paymentStatus: Number(totals._sum.refundAmount ?? 0) >= Number(current.order.total) ? "REFUNDED" : "PARTIALLY_REFUNDED" } });
+
+      // Increment stock for returned items
+      const returnItems = Array.isArray(current.items) ? current.items as Array<{ orderItemId?: string; name?: string; quantity?: number; price?: number; amount?: number }> : [];
+      for (const returnItem of returnItems) {
+        if (!returnItem.orderItemId || !returnItem.quantity) continue;
+        const orderItem = await tx.orderItem.findUnique({ where: { id: returnItem.orderItemId }, select: { productId: true } });
+        if (orderItem?.productId) {
+          await tx.product.update({ where: { id: orderItem.productId }, data: { stock: { increment: returnItem.quantity } } });
+        }
+      }
     }
     await tx.auditLog.create({ data: { actorId: permission.ctx.userId, actorRole: permission.ctx.role as never, action: `return.${action}`, targetType: "ReturnRequest", targetId: id, metadata: { reason, amount: transition.to === "REFUNDED" ? amount : undefined } } });
     return tx.returnRequest.findUniqueOrThrow({ where: { id } });

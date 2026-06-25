@@ -27,6 +27,7 @@ export default async function AdminReturnsPage() {
       returns={returns.map((entry) => ({
         id: entry.id,
         returnNumber: entry.returnNumber,
+        billNumber: entry.billNumber,
         orderNumber: entry.order.orderNumber,
         customerName: entry.order.customerName,
         paymentMethod: entry.order.paymentMethod,

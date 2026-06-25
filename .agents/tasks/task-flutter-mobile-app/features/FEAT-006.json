@@ -2,7 +2,7 @@
   "id": "FEAT-006",
   "type": "docs",
   "description": "Add Firebase setup documentation with placeholder configuration files, produce docs/flutter-release-checklist.md, run final validation (Prisma, backend build/tests, Flutter analyze/test, Android debug build), and fix any introduced failures.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create docs/firebase-setup.md documenting: (1) How to create a Firebase project. (2) How to add Android app with package name com.msmsupermarket.msm_mobile. (3) How to add iOS app. (4) Where to place google-services.json (mobile/android/app/) and GoogleService-Info.plist (mobile/ios/Runner/). (5) How to enable Cloud Messaging. (6) How to generate and set FIREBASE_SERVER_KEY or use Firebase Admin SDK service account. (7) Add FIREBASE_PROJECT_ID and FIREBASE_SERVICE_ACCOUNT_KEY to .env.example as placeholders. (8) Explain that the placeholder files (*.example) must be replaced but never commit real credentials.",
     "Ensure .gitignore entries exist for: mobile/android/app/google-services.json, mobile/ios/Runner/GoogleService-Info.plist, mobile/ios/Runner/firebase_app_id_file.json, and any *.jks or *.keystore files.",
@@ -36,5 +36,5 @@
     "Run 'cd mobile && flutter build apk --debug' - build succeeds"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All validation passed: prisma validate OK, npm build OK, npm test 37/38 (1 pre-existing scroll-preservation.test.ts failure), flutter analyze no issues, flutter test 80/80 pass, flutter build apk --debug succeeded. Required Java 17 (not Java 25) for Gradle 8.12 compatibility. Fixed NDK version to 27.0.12077973 and enabled core library desugaring for flutter_local_notifications compatibility."
 }

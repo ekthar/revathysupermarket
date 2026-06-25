@@ -29,10 +29,10 @@ function isDarkMode(): boolean {
 }
 
 function updateMetaThemeColor(color: string) {
-  const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) {
+  const metas = document.querySelectorAll('meta[name="theme-color"]');
+  metas.forEach((meta) => {
     meta.setAttribute("content", color);
-  }
+  });
 }
 
 export function ThemeColorSync() {

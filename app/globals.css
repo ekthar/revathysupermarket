@@ -229,6 +229,7 @@ html[data-keyboard-open] .pb-safe {
   padding-bottom: 1rem;
 }
 @media (min-width: 768px) { .pb-safe { padding-bottom: 0; } .pt-safe { padding-top: 0; } }
+/* Must appear after the (min-width: 768px) rule to take precedence for tablets with notches */
 @media (min-width: 768px) and (max-width: 1024px) { .pt-safe { padding-top: env(safe-area-inset-top, 0px); } }
 
 /* Premium card shadow */

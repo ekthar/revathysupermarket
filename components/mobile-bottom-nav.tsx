@@ -8,6 +8,7 @@ import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { cn } from "@/lib/utils";
+import { tapScale } from "@/lib/motion";
 
 export function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
@@ -48,7 +49,6 @@ function NavTab({ href, icon: Icon, label, active, badge, onPrefetch }: { href: 
   return (
     <Link
       href={href}
-      onTouchStart={onPrefetch}
       onMouseEnter={onPrefetch}
       className={cn(
         "relative flex min-w-0 flex-col items-center justify-center gap-[2px] rounded-2xl px-1 py-2 text-[10px] transition-colors",
@@ -70,7 +70,7 @@ function NavTab({ href, icon: Icon, label, active, badge, onPrefetch }: { href: 
       )}
 
       <motion.div
-        whileTap={{ scale: 0.92 }}
+        whileTap={tapScale.secondary}
         transition={{ type: "spring", stiffness: 500, damping: 25 }}
         className="relative z-10"
       >

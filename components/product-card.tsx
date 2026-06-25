@@ -10,6 +10,7 @@ import { ProductImage } from "@/components/product-image";
 import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/favorite-button";
+import { tapScale, springPresets } from "@/lib/motion";
 
 interface ProductCardProps {
   product: Product;
@@ -40,7 +41,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
       <motion.article
         whileTap={{ scale: 0.98 }}
         whileHover={{ y: -2 }}
-        transition={{ type: "spring", stiffness: 400, damping: 25 }}
+        transition={springPresets.snappy}
         className={cn(
           "product-list-card hover-lift",
           outOfStock && "opacity-50"
@@ -84,7 +85,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                whileTap={{ scale: 0.96 }}
+                whileTap={tapScale.primary}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 type="button"
                 disabled={outOfStock}
@@ -106,7 +107,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
     <motion.article
       whileTap={{ scale: 0.96 }}
       whileHover={{ y: -3 }}
-      transition={{ type: "spring", stiffness: 400, damping: 25 }}
+      transition={springPresets.snappy}
       className={cn(
         "relative overflow-hidden rounded-[1.35rem] bg-white shadow-[0_18px_45px_-32px_rgba(15,23,42,0.45)] ring-1 ring-black/[0.03] dark:bg-slate-900 product-card-animated",
         outOfStock && "opacity-50"
@@ -180,7 +181,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
                 initial={{ scale: 0.8, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.8, opacity: 0 }}
-                whileTap={{ scale: 0.96 }}
+                whileTap={tapScale.primary}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                 type="button"
                 disabled={outOfStock}

@@ -22,7 +22,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
           </div>
 
           {/* Header */}
-          {title && (
+          {title ? (
             <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100 dark:border-slate-800">
               <Drawer.Title className="text-[15px] font-bold text-slate-900 dark:text-white">
                 {title}
@@ -36,6 +36,8 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
                 <X className="h-4 w-4 text-slate-500" />
               </button>
             </div>
+          ) : (
+            <Drawer.Title className="sr-only">Dialog</Drawer.Title>
           )}
 
           {/* Scrollable content */}

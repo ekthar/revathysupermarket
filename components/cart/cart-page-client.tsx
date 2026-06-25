@@ -6,6 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
+import { springPresets } from "@/lib/motion";
 
 type StoreConfig = {
   gstRatePercent: number;
@@ -297,7 +298,7 @@ export function CartPageClient() {
 
       {/* Fixed bottom checkout button */}
       <div className="ios-floating-action md:relative md:bottom-0 md:left-auto md:right-auto md:mt-5 md:p-0">
-        <motion.div whileTap={{ scale: 0.96 }} transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+        <motion.div whileTap={{ scale: 0.96 }} transition={springPresets.default}>
           <Link
             href={belowMinimum ? "#" : "/checkout"}
             onClick={(e) => { if (belowMinimum) e.preventDefault(); }}

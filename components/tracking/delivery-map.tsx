@@ -90,7 +90,7 @@ export function DeliveryMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "/map-style.json",
+      style: "https://tiles.openfreemap.org/styles/liberty",
       center: [customerLocation.longitude, customerLocation.latitude],
       zoom: 14,
       attributionControl: false,

@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Add mandatory bill number entry before delivery assignment: schema migration, API route, and UI integration",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add 'billNumber String?' field to the Order model in prisma/schema.prisma (after the 'total' field or near the delivery fields). Create a new migration file at prisma/migrations/20260625040000_order_bill_number/migration.sql with: ALTER TABLE \"Order\" ADD COLUMN \"billNumber\" TEXT;",
     "Create a new API route at app/api/admin/orders/[id]/bill-number/route.ts: POST handler that accepts { billNumber: string } in the body, validates it (non-empty string), checks auth (requireOrderStaff), and updates the order's billNumber field. Return the updated order.",
@@ -24,5 +24,5 @@
     "npx next lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "prisma generate works without DATABASE_URL for type generation. The generated client in node_modules/.prisma/client/ was updated. tsconfig.tsbuildinfo also updated by tsc."
 }

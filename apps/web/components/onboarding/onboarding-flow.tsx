@@ -1,65 +1,56 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, LocateFixed, MapPin, Phone, ShoppingBasket, UserCog } from "lucide-react";
+import { ArrowRight, ShoppingBasket, UserCog, Wrench } from "lucide-react";
 import { AnimatedGoogleIcon, GoogleIcon } from "@/components/onboarding/google-icon";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { OtpInput } from "@/components/onboarding/otp-input";
-import { PhoneInput } from "@/components/onboarding/phone-input";
-import { ProgressDots } from "@/components/onboarding/progress-dots";
-import { readApiResponse } from "@/lib/client-api";
-import { cn } from "@/lib/utils";
 import { SITE } from "@/lib/constants";
 import { safeCallbackUrl } from "@/lib/safe-redirect";
 
-type Step = "splash" | "name" | "phone" | "otp" | "location" | "done";
-const STEPS: Step[] = ["splash", "name", "phone", "otp", "location", "done"];
+type Step = "splash" | "signin" | "done";
+const STEPS: Step[] = ["splash", "signin", "done"];
+
+const PHONE_COMING_SOON_MESSAGES = [
+  "Phone login is getting a makeover",
+  "OTP is out getting coffee",
+  "SMS is on vacation, Google's covering",
+  "Phone login will return... fancier",
+];
 
 export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callbackUrl?: string; logoUrl?: string | null }) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const [step, setStep] = useState<Step>("splash");
-  const [name, setName] = useState("");
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
   const [message, setMessage] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [timer, setTimer] = useState(30);
-  const [locationAddress, setLocationAddress] = useState("");
-  const [locating, setLocating] = useState(false);
+  const [phoneMessageIdx, setPhoneMessageIdx] = useState(0);
 
   const safeCallback = safeCallbackUrl(callbackUrl, "/", ["/", "/products", "/cart", "/checkout", "/dashboard", "/account", "/support"]);
-  const currentIndex = STEPS.indexOf(step);
 
-  // Auto-advance splash
+  // Auto-advance splash → signin
   useEffect(() => {
     if (step !== "splash") return;
-    const timeout = setTimeout(() => setStep("name"), 1800);
+    const timeout = setTimeout(() => setStep("signin"), 1800);
     return () => clearTimeout(timeout);
   }, [step]);
 
-  // OTP timer
-  useEffect(() => {
-    if (step !== "otp" || timer <= 0) return;
-    const interval = setInterval(() => setTimer((t) => Math.max(0, t - 1)), 1000);
-    return () => clearInterval(interval);
-  }, [step, timer]);
+  // Auto-redirect: trigger Google sign-in after splash (optional — uncomment to auto-redirect)
+  // useEffect(() => {
+  //   if (step !== "signin") return;
+  //   const timeout = setTimeout(() => signIn("google", { callbackUrl: safeCallback }), 3000);
+  //   return () => clearTimeout(timeout);
+  // }, [step, safeCallback]);
 
-  // Done auto-redirect
+  // Rotate phone coming soon messages
   useEffect(() => {
-    if (step !== "done") return;
-    localStorage.setItem("onboarding-complete", "true");
-    const timeout = setTimeout(() => {
-      router.push(safeCallback);
-      router.refresh();
-    }, 2500);
-    return () => clearTimeout(timeout);
-  }, [step, router, safeCallback]);
+    const interval = setInterval(() => {
+      setPhoneMessageIdx((prev) => (prev + 1) % PHONE_COMING_SOON_MESSAGES.length);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, []);
 
   const variants = useMemo<Variants>(() => ({
     initial: reduceMotion ? { opacity: 0 } : { opacity: 0, x: 60 },
@@ -67,93 +58,8 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
     exit: reduceMotion ? { opacity: 0 } : { opacity: 0, x: -60 }
   }), [reduceMotion]);
 
-  const goBack = useCallback(() => {
-    const idx = STEPS.indexOf(step);
-    if (idx > 1) setStep(STEPS[idx - 1]);
-  }, [step]);
-
-  async function sendOtp() {
-    if (phone.length !== 10) return;
-    setLoading(true);
-    setMessage("");
-
-    const res = await fetch("/api/auth/otp/send", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone })
-    });
-    const data = await readApiResponse<{ error?: string }>(res);
-    setLoading(false);
-    if (!res.ok) {
-      setMessage(data.error ?? "Could not send OTP. Try again.");
-      return;
-    }
-    setTimer(30);
-    setStep("otp");
-  }
-
-  async function verifyOtp() {
-    if (otp.length !== 6) return;
-    setLoading(true);
-    setMessage("");
-
-    const result = await signIn("phone-otp", { phone, otp, name, redirect: false });
-    setLoading(false);
-    if (result?.error) {
-      setMessage("Code is incorrect or expired. Try again.");
-      return;
-    }
-
-    // Save name
-    await fetch("/api/auth/complete-profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim() })
-    }).catch(() => null);
-    setStep("location");
-  }
-
-  function detectLocation() {
-    if (!navigator.geolocation) {
-      setMessage("Location not available on this device.");
-      return;
-    }
-    setLocating(true);
-    setMessage("");
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${pos.coords.latitude}&lon=${pos.coords.longitude}`);
-          const data = await res.json();
-          setLocationAddress(data?.display_name ?? `${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
-        } catch {
-          setLocationAddress(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
-        }
-        setLocating(false);
-      },
-      () => {
-        setMessage("Location access denied. You can add your address later.");
-        setLocating(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000 }
-    );
-  }
-
   return (
     <main className="fixed inset-0 z-[100] flex flex-col bg-white dark:bg-neutral-950">
-      {/* Top bar */}
-      {step !== "splash" && step !== "done" && (
-        <div className="flex items-center justify-between px-4 pt-4">
-          {currentIndex > 1 ? (
-            <button type="button" onClick={goBack} className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-white/10">
-              <ArrowLeft className="h-4 w-4" />
-            </button>
-          ) : <span className="w-9" />}
-          <ProgressDots current={Math.max(0, currentIndex - 1)} total={4} />
-          <span className="w-9" />
-        </div>
-      )}
-
       {/* Content */}
       <div className="flex flex-1 items-center justify-center overflow-hidden px-6">
         <AnimatePresence mode="wait">
@@ -199,10 +105,10 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
             </motion.div>
           )}
 
-          {/* ─── NAME + SIGN-IN (Google-first design) ─── */}
-          {step === "name" && (
+          {/* ─── SIGN-IN (Google only) ─── */}
+          {step === "signin" && (
             <motion.div
-              key="name"
+              key="signin"
               variants={variants}
               initial="initial"
               animate="animate"
@@ -243,7 +149,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 </motion.p>
               )}
 
-              {/* Google Sign-In - Primary CTA (Direct NextAuth OAuth redirect) */}
+              {/* Google Sign-In - Primary CTA */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -253,10 +159,9 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 <motion.button
                   type="button"
                   onClick={() => signIn("google", { callbackUrl: safeCallback })}
-                  disabled={loading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white text-base font-semibold text-neutral-800 shadow-lg shadow-neutral-200/60 ring-1 ring-neutral-200 transition-shadow hover:shadow-xl disabled:opacity-50 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:shadow-none dark:hover:bg-white/10"
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white text-base font-semibold text-neutral-800 shadow-lg shadow-neutral-200/60 ring-1 ring-neutral-200 transition-shadow hover:shadow-xl dark:bg-white/5 dark:text-white dark:ring-white/10 dark:shadow-none dark:hover:bg-white/10"
                 >
                   <GoogleIcon size={22} />
                   Continue with Google
@@ -280,24 +185,40 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 className="my-7 flex items-center gap-3"
               >
                 <div className="h-px flex-1 bg-neutral-200 dark:bg-white/10" />
-                <span className="text-xs font-medium text-neutral-400">or</span>
+                <span className="text-xs font-medium text-neutral-400">phone login</span>
                 <div className="h-px flex-1 bg-neutral-200 dark:bg-white/10" />
               </motion.div>
 
-              {/* Phone OTP - Secondary option */}
+              {/* Phone OTP - Coming Soon animated CTA */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 1.2 }}
+                className="relative overflow-hidden rounded-2xl border border-dashed border-amber-300 bg-amber-50/50 px-5 py-4 dark:border-amber-500/30 dark:bg-amber-500/5"
               >
-                <button
-                  type="button"
-                  onClick={() => setStep("phone")}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 active:scale-[0.98] dark:border-white/10 dark:bg-white/5 dark:text-neutral-300 dark:hover:bg-white/10"
-                >
-                  <Phone className="h-4 w-4" />
-                  Sign in with Phone OTP
-                </button>
+                <div className="flex items-center gap-3">
+                  <motion.div
+                    animate={{ rotate: [0, -10, 10, -10, 0] }}
+                    transition={{ repeat: Infinity, duration: 2, repeatDelay: 3 }}
+                  >
+                    <Wrench className="h-5 w-5 text-amber-500" />
+                  </motion.div>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                      Coming Soon
+                    </p>
+                    <motion.p
+                      key={phoneMessageIdx}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="text-xs text-amber-600/70 dark:text-amber-400/60"
+                    >
+                      {PHONE_COMING_SOON_MESSAGES[phoneMessageIdx]}
+                    </motion.p>
+                  </div>
+                  <span className="text-lg">📱</span>
+                </div>
               </motion.div>
 
               {/* Skip */}
@@ -320,203 +241,10 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               </motion.div>
             </motion.div>
           )}
-
-          {/* ─── PHONE ─── */}
-          {step === "phone" && (
-            <motion.div
-              key="phone"
-              variants={variants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="w-full max-w-sm"
-            >
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Phone className="h-5 w-5" />
-              </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
-                Sign in with phone
-              </h1>
-              <p className="mt-2 text-sm text-neutral-500">
-                We&apos;ll send a verification code via WhatsApp.
-              </p>
-
-              <div className="mt-6 space-y-4">
-                <Input
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Your name"
-                  className="h-12 rounded-2xl border-neutral-200 text-base font-medium shadow-sm placeholder:text-neutral-400 focus-visible:ring-primary dark:border-white/10"
-                />
-                <PhoneInput value={phone} onChange={setPhone} />
-              </div>
-
-              {message && (
-                <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400">
-                  {message}
-                </p>
-              )}
-
-              <Button
-                onClick={sendOtp}
-                disabled={loading || phone.length !== 10 || name.trim().length < 2}
-                size="lg"
-                className="mt-5 w-full rounded-2xl"
-              >
-                {loading ? "Sending code..." : "Send verification code"}
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          )}
-
-          {/* ─── OTP ─── */}
-          {step === "otp" && (
-            <motion.div
-              key="otp"
-              variants={variants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="w-full max-w-sm"
-            >
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Check className="h-5 w-5" />
-              </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
-                Verify your number
-              </h1>
-              <p className="mt-2 text-sm text-neutral-500">
-                Enter the 6-digit code sent to <span className="font-semibold text-neutral-700 dark:text-white">+91 {phone}</span>
-              </p>
-
-              <div className="mt-8">
-                <OtpInput value={otp} onChange={setOtp} />
-              </div>
-
-              {message && (
-                <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400">
-                  {message}
-                </p>
-              )}
-
-              <Button
-                onClick={verifyOtp}
-                disabled={loading || otp.length !== 6}
-                size="lg"
-                className="mt-6 w-full rounded-2xl"
-              >
-                {loading ? "Verifying..." : "Verify & Continue"}
-              </Button>
-
-              <button
-                type="button"
-                onClick={sendOtp}
-                disabled={timer > 0 || loading}
-                className="mt-4 w-full py-2 text-center text-sm font-medium text-neutral-400 disabled:cursor-not-allowed"
-              >
-                {timer > 0 ? `Resend code in 0:${String(timer).padStart(2, "0")}` : "Resend code"}
-              </button>
-            </motion.div>
-          )}
-
-          {/* ─── LOCATION ─── */}
-          {step === "location" && (
-            <motion.div
-              key="location"
-              variants={variants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="w-full max-w-sm"
-            >
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <MapPin className="h-5 w-5" />
-              </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
-                Set delivery location
-              </h1>
-              <p className="mt-2 text-sm text-neutral-500">
-                Allow location access so we can check if delivery is available in your area.
-              </p>
-
-              <div className="mt-8 flex flex-col items-center rounded-2xl border border-dashed border-neutral-200 bg-neutral-50/50 p-8 dark:border-white/10 dark:bg-white/5">
-                <LocateFixed className={cn("h-12 w-12 text-primary", locating && "animate-pulse")} />
-                {locationAddress ? (
-                  <p className="mt-4 text-center text-sm font-medium text-neutral-700 dark:text-white">{locationAddress}</p>
-                ) : (
-                  <p className="mt-4 text-center text-sm text-neutral-400">Tap below to detect your location</p>
-                )}
-              </div>
-
-              {message && (
-                <p className="mt-4 rounded-xl bg-amber-50 px-4 py-3 text-sm font-medium text-amber-700 dark:bg-amber-500/10 dark:text-amber-400">
-                  {message}
-                </p>
-              )}
-
-              <Button
-                onClick={locationAddress ? () => setStep("done") : detectLocation}
-                disabled={locating}
-                size="lg"
-                className="mt-5 w-full rounded-2xl"
-              >
-                {locating ? "Detecting..." : locationAddress ? "Continue" : "Allow Location"}
-                {!locating && <ArrowRight className="h-4 w-4" />}
-              </Button>
-
-              <button
-                type="button"
-                onClick={() => setStep("done")}
-                className="mt-3 w-full py-2 text-center text-sm font-medium text-neutral-400 transition hover:text-neutral-600"
-              >
-                Skip, I&apos;ll add later
-              </button>
-            </motion.div>
-          )}
-
-          {/* ─── DONE ─── */}
-          {step === "done" && (
-            <motion.div
-              key="done"
-              variants={variants}
-              initial="initial"
-              animate="animate"
-              exit="exit"
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
-              className="flex w-full max-w-sm flex-col items-center text-center"
-            >
-              <motion.div
-                initial={{ scale: 0.5 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 12 }}
-                className="flex h-20 w-20 items-center justify-center rounded-full bg-primary/10 text-primary"
-              >
-                <Check className="h-10 w-10 stroke-[3]" />
-              </motion.div>
-              <h1 className="mt-6 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
-                You&apos;re all set!
-              </h1>
-              <p className="mt-2 text-base text-neutral-500">
-                Welcome, <span className="font-semibold text-neutral-700 dark:text-white">{name || "shopper"}</span>. Let&apos;s get your groceries.
-              </p>
-
-              <Button
-                onClick={() => { router.push(safeCallback); router.refresh(); }}
-                size="lg"
-                className="mt-8 w-full rounded-2xl"
-              >
-                Start Shopping
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </motion.div>
-          )}
         </AnimatePresence>
       </div>
 
-      {/* Staff login link - visible on all steps */}
+      {/* Staff login link */}
       {step !== "done" && (
         <div className="pb-6 text-center">
           <a

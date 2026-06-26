@@ -1,129 +1,230 @@
-import { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Pressable,
-  KeyboardAvoidingView,
-  Platform,
-  ActivityIndicator,
-} from "react-native";
-import Animated, { FadeInDown } from "react-native-reanimated";
-import { router } from "expo-router";
-import { useAuthStore } from "@/stores/auth";
+import { useEffect, useState } from "react";
+import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import Animated, {
+  FadeInDown,
+  FadeInUp,
+  BounceIn,
+  FlipInXUp,
+  ZoomIn,
+  SlideInLeft,
+  SlideInRight,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withSequence,
+  withDelay,
+  Easing,
+} from "react-native-reanimated";
 import { useGoogleAuth } from "@/services/google-auth";
 
+const FUNNY_MESSAGES = [
+  "Our designer is on a chai break...",
+  "Pixels are being hand-crafted...",
+  "Teaching buttons how to behave...",
+  "Convincing fonts to look pretty...",
+  "OTP screen called in sick today...",
+  "UI is doing yoga, be right back...",
+];
+
 export default function LoginScreen() {
-  const [phone, setPhone] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { loginWithPhone } = useAuthStore();
   const { signIn: googleSignIn, isLoading: googleLoading } = useGoogleAuth();
+  const [messageIndex, setMessageIndex] = useState(0);
+  const [showRedirect, setShowRedirect] = useState(false);
 
-  const handleSendOtp = async () => {
-    const cleaned = phone.replace(/\s|-/g, "");
-    if (cleaned.length < 10) {
-      setError("Enter a valid phone number");
-      return;
-    }
+  // Rotate through funny messages
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setMessageIndex((prev) => (prev + 1) % FUNNY_MESSAGES.length);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
 
-    setError(null);
-    setIsLoading(true);
-    try {
-      await loginWithPhone(cleaned);
-      router.push({ pathname: "/(auth)/otp", params: { phone: cleaned } });
-    } catch (e: any) {
-      setError(e.response?.data?.error || "Failed to send OTP");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Show redirect hint after a delay
+  useEffect(() => {
+    const timeout = setTimeout(() => setShowRedirect(true), 3000);
+    return () => clearTimeout(timeout);
+  }, []);
+
+  // Floating animation for the construction emoji
+  const floatY = useSharedValue(0);
+  const wobble = useSharedValue(0);
+
+  useEffect(() => {
+    floatY.value = withRepeat(
+      withSequence(
+        withTiming(-12, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
+        withTiming(0, { duration: 1200, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+    wobble.value = withRepeat(
+      withSequence(
+        withTiming(-5, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(5, { duration: 800, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const floatingStyle = useAnimatedStyle(() => ({
+    transform: [
+      { translateY: floatY.value },
+      { rotate: `${wobble.value}deg` },
+    ],
+  }));
+
+  // Pulsing dots animation
+  const pulseScale = useSharedValue(1);
+
+  useEffect(() => {
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.2, { duration: 600 }),
+        withTiming(1, { duration: 600 })
+      ),
+      -1,
+      true
+    );
+  }, []);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      className="flex-1"
-    >
-      <View className="flex-1 bg-white px-6 justify-center">
-        {/* Header */}
-        <View className="mb-12">
-          <View className="w-16 h-16 bg-primary-100 rounded-2xl items-center justify-center mb-6">
-            <Text className="text-3xl">🛒</Text>
-          </View>
-          <Text className="text-3xl font-heading text-slate-900 mb-2">
-            Welcome to MSM
-          </Text>
-          <Text className="text-base text-slate-500">
-            Enter your phone number to get started
-          </Text>
-        </View>
-
-        {/* Phone Input */}
-        <View className="mb-6">
-          <Text className="text-sm font-sans-semibold text-slate-700 mb-2">
-            Phone Number
-          </Text>
-          <View className="flex-row items-center border border-slate-200 rounded-xl px-4 h-14 bg-slate-50">
-            <Text className="text-base text-slate-600 mr-2">+91</Text>
-            <View className="w-px h-6 bg-slate-200 mr-3" />
-            <TextInput
-              className="flex-1 text-base text-slate-900"
-              placeholder="98765 43210"
-              placeholderTextColor="#94a3b8"
-              value={phone}
-              onChangeText={setPhone}
-              keyboardType="phone-pad"
-              maxLength={12}
-              autoFocus
-            />
-          </View>
-          {error && (
-            <Text className="text-sm text-red-500 mt-2">{error}</Text>
-          )}
-        </View>
-
-        {/* Send OTP Button */}
-        <Pressable
-          onPress={handleSendOtp}
-          disabled={isLoading}
-          className={`h-14 rounded-xl items-center justify-center mb-4 ${
-            isLoading ? "bg-primary-400" : "bg-primary-600"
-          }`}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white text-base font-sans-bold">
-              Send OTP
-            </Text>
-          )}
-        </Pressable>
-
-        {/* Divider */}
-        <View className="flex-row items-center my-6">
-          <View className="flex-1 h-px bg-slate-200" />
-          <Text className="px-4 text-sm text-slate-400">or continue with</Text>
-          <View className="flex-1 h-px bg-slate-200" />
-        </View>
-
-        {/* Google Sign In */}
-        <Pressable
-          onPress={googleSignIn}
-          disabled={googleLoading}
-          className="h-14 rounded-xl items-center justify-center border border-slate-200 flex-row"
-        >
-          {googleLoading ? (
-            <ActivityIndicator color="#059669" />
-          ) : (
-            <>
-              <Text className="text-lg mr-2">G</Text>
-              <Text className="text-base font-sans-medium text-slate-700">
-                Continue with Google
-              </Text>
-            </>
-          )}
-        </Pressable>
+    <View className="flex-1 bg-white">
+      {/* Background decoration */}
+      <View className="absolute inset-0 overflow-hidden">
+        <Animated.View
+          entering={FadeInDown.delay(200).duration(1000)}
+          className="absolute top-16 left-6 w-20 h-20 rounded-full bg-amber-100/60"
+        />
+        <Animated.View
+          entering={FadeInDown.delay(400).duration(1000)}
+          className="absolute top-32 right-8 w-14 h-14 rounded-full bg-emerald-100/60"
+        />
+        <Animated.View
+          entering={FadeInDown.delay(600).duration(1000)}
+          className="absolute bottom-40 left-10 w-16 h-16 rounded-full bg-blue-100/60"
+        />
+        <Animated.View
+          entering={FadeInDown.delay(800).duration(1000)}
+          className="absolute bottom-60 right-12 w-12 h-12 rounded-full bg-pink-100/60"
+        />
       </View>
-    </KeyboardAvoidingView>
+
+      {/* Main content */}
+      <View className="flex-1 justify-center items-center px-8">
+        {/* Floating construction emoji */}
+        <Animated.View style={floatingStyle}>
+          <Animated.Text
+            entering={BounceIn.delay(300).duration(800)}
+            className="text-7xl mb-4"
+          >
+            🚧
+          </Animated.Text>
+        </Animated.View>
+
+        {/* Main heading */}
+        <Animated.View entering={FlipInXUp.delay(500).duration(700)}>
+          <Text className="text-4xl font-heading text-center text-slate-900 mb-2">
+            HOLD UP!
+          </Text>
+        </Animated.View>
+
+        <Animated.View entering={FadeInUp.delay(700).duration(600)}>
+          <Text className="text-xl font-sans-bold text-center text-emerald-600 mb-3">
+            Design in Progress
+          </Text>
+        </Animated.View>
+
+        {/* Funny rotating message */}
+        <Animated.View
+          entering={FadeInDown.delay(900).duration(500)}
+          className="bg-slate-100 rounded-2xl px-6 py-4 mb-8 min-h-[60px] justify-center"
+        >
+          <Animated.View style={pulseStyle}>
+            <Text className="text-base text-center text-slate-600 font-sans-medium">
+              {FUNNY_MESSAGES[messageIndex]}
+            </Text>
+          </Animated.View>
+        </Animated.View>
+
+        {/* Construction emojis row */}
+        <Animated.View
+          entering={SlideInLeft.delay(1100).duration(600)}
+          className="flex-row items-center gap-3 mb-8"
+        >
+          <Text className="text-2xl">👷</Text>
+          <Text className="text-2xl">🔨</Text>
+          <Text className="text-2xl">🎨</Text>
+          <Text className="text-2xl">✨</Text>
+          <Text className="text-2xl">💅</Text>
+        </Animated.View>
+
+        {/* Bold statement */}
+        <Animated.View entering={ZoomIn.delay(1400).duration(500)}>
+          <Text className="text-center text-lg font-heading text-slate-800 mb-2 px-4">
+            This page will be{" "}
+            <Text className="text-emerald-600">absolutely gorgeous</Text>
+          </Text>
+          <Text className="text-center text-sm text-slate-400 mb-10">
+            ...just not today. Meanwhile:
+          </Text>
+        </Animated.View>
+
+        {/* Google Sign In - the actual CTA */}
+        <Animated.View
+          entering={SlideInRight.delay(1800).duration(600)}
+          className="w-full"
+        >
+          <Pressable
+            onPress={googleSignIn}
+            disabled={googleLoading}
+            className="h-16 rounded-2xl items-center justify-center flex-row bg-white border-2 border-slate-200 shadow-lg shadow-slate-200/50"
+            style={{ elevation: 8 }}
+          >
+            {googleLoading ? (
+              <ActivityIndicator color="#059669" size="large" />
+            ) : (
+              <View className="flex-row items-center">
+                <Text className="text-2xl mr-3">G</Text>
+                <View>
+                  <Text className="text-lg font-sans-bold text-slate-800">
+                    Continue with Google
+                  </Text>
+                  <Text className="text-xs text-slate-400">
+                    The only way in (for now)
+                  </Text>
+                </View>
+              </View>
+            )}
+          </Pressable>
+        </Animated.View>
+
+        {/* Redirect hint */}
+        {showRedirect && (
+          <Animated.View entering={FadeInUp.duration(500)} className="mt-6">
+            <Text className="text-center text-xs text-slate-400">
+              Phone login coming soon{" "}
+              <Text className="text-amber-500">with confetti</Text> 🎉
+            </Text>
+          </Animated.View>
+        )}
+      </View>
+
+      {/* Bottom fun text */}
+      <Animated.View
+        entering={FadeInDown.delay(2200).duration(600)}
+        className="pb-10 px-6"
+      >
+        <Text className="text-center text-xs text-slate-300">
+          v0.0.1-alpha-pre-beta-not-even-close
+        </Text>
+      </Animated.View>
+    </View>
   );
 }

@@ -1,9 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
-import * as Font from "expo-font";
 import { useAuthStore } from "@/stores/auth";
 import { notificationService } from "@/services/notifications";
 import { OfflineBanner } from "@/components/OfflineBanner";
@@ -12,44 +11,25 @@ import "../global.css";
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [appReady, setAppReady] = useState(false);
   const { initialize } = useAuthStore();
 
   useEffect(() => {
     async function prepare() {
       try {
-        await Font.loadAsync({
-          InterTight_400Regular: require("../assets/fonts/InterTight-Regular.ttf"),
-          InterTight_500Medium: require("../assets/fonts/InterTight-Medium.ttf"),
-          InterTight_600SemiBold: require("../assets/fonts/InterTight-SemiBold.ttf"),
-          InterTight_700Bold: require("../assets/fonts/InterTight-Bold.ttf"),
-          Manrope_500Medium: require("../assets/fonts/Manrope-Medium.ttf"),
-          Manrope_600SemiBold: require("../assets/fonts/Manrope-SemiBold.ttf"),
-          Manrope_700Bold: require("../assets/fonts/Manrope-Bold.ttf"),
-        });
-
         await initialize();
         await notificationService.initialize();
       } catch (e) {
         console.warn("App initialization error:", e);
       } finally {
-        setAppReady(true);
+        SplashScreen.hideAsync().catch(() => {});
       }
     }
 
     prepare();
   }, []);
 
-  const onLayoutRootView = useCallback(async () => {
-    if (appReady) {
-      await SplashScreen.hideAsync();
-    }
-  }, [appReady]);
-
-  if (!appReady) return null;
-
   return (
-    <View className="flex-1" onLayout={onLayoutRootView}>
+    <View className="flex-1">
       <StatusBar style="auto" />
       <OfflineBanner />
       <Stack screenOptions={{ headerShown: false }}>

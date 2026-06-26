@@ -17,7 +17,4 @@ config.resolver.nodeModulesPaths = [
   path.resolve(monorepoRoot, "node_modules"),
 ];
 
-// Force resolving nested packages to the local node_modules folder
-config.resolver.disableHierarchicalLookup = true;
-
 module.exports = withNativeWind(config, { input: "./global.css" });

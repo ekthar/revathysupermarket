@@ -19,7 +19,11 @@
       "infoPlist": {
         "NSLocationAlwaysAndWhenInUseUsageDescription": "We need your location to show customers the delivery progress in real time.",
         "NSLocationWhenInUseUsageDescription": "We need your location to navigate to delivery addresses.",
-        "UIBackgroundModes": ["location", "audio", "remote-notification"]
+        "UIBackgroundModes": [
+          "location",
+          "audio",
+          "remote-notification"
+        ]
       }
     },
     "android": {
@@ -57,7 +61,9 @@
         {
           "icon": "./assets/images/notification-icon.png",
           "color": "#059669",
-          "sounds": ["./assets/audio/delivery_alarm.wav"]
+          "sounds": [
+            "./assets/audio/delivery_alarm.wav"
+          ]
         }
       ],
       [
@@ -67,7 +73,8 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 200
         }
-      ]
+      ],
+      "expo-font"
     ],
     "experiments": {
       "typedRoutes": true

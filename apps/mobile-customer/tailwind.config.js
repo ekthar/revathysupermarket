@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 module.exports = {
+  darkMode: "class",
   content: ["./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   presets: [require("nativewind/preset")],
   theme: {
@@ -33,13 +34,13 @@ module.exports = {
         },
       },
       fontFamily: {
-        sans: ["InterTight_400Regular"],
-        "sans-medium": ["InterTight_500Medium"],
-        "sans-semibold": ["InterTight_600SemiBold"],
-        "sans-bold": ["InterTight_700Bold"],
-        heading: ["Manrope_700Bold"],
-        "heading-medium": ["Manrope_500Medium"],
-        "heading-semibold": ["Manrope_600SemiBold"],
+        sans: ["System"],
+        "sans-medium": ["System"],
+        "sans-semibold": ["System"],
+        "sans-bold": ["System"],
+        heading: ["System"],
+        "heading-medium": ["System"],
+        "heading-semibold": ["System"],
       },
     },
   },

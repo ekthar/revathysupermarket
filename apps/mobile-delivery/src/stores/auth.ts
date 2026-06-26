@@ -4,6 +4,17 @@ import { api, tokenStorage } from "../services/api";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated";
 
+const STARTUP_AUTH_TIMEOUT_MS = 5000;
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error("Startup auth timed out")), ms)
+    ),
+  ]);
+}
+
 interface AuthState {
   user: User | null;
   status: AuthStatus;
@@ -24,7 +35,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ status: "unauthenticated", user: null });
         return;
       }
-      const { data } = await api.get("/auth/me");
+      const { data } = await withTimeout(
+        api.get("/auth/me"),
+        STARTUP_AUTH_TIMEOUT_MS
+      );
       // Verify this is a delivery partner
       if (data.user.role !== "DELIVERY_PARTNER") {
         await tokenStorage.clearTokens();

@@ -3,10 +3,22 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": ["./src/*"],
-      "@msm/shared": ["../../packages/shared/src"],
-      "@msm/shared/*": ["../../packages/shared/src/*"]
+      "@/*": [
+        "./src/*"
+      ],
+      "@msm/shared": [
+        "../../packages/shared/src"
+      ],
+      "@msm/shared/*": [
+        "../../packages/shared/src/*"
+      ]
     }
   },
-  "include": ["**/*.ts", "**/*.tsx", ".expo/types/**/*.ts", "expo-env.d.ts"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts",
+    "nativewind-env.d.ts"
+  ]
 }

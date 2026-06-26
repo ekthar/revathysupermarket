@@ -9,7 +9,9 @@ const staffRoles = new Set(["ADMIN", "STAFF", "OWNER", "MANAGER", "PACKING_STAFF
 export default auth((request) => {
   const isMobileWebAuthRoute =
     request.nextUrl.pathname === "/api/auth/google" ||
-    request.nextUrl.pathname === "/api/auth/me";
+    request.nextUrl.pathname === "/api/auth/me" ||
+    request.nextUrl.pathname === "/api/mobile/v1/auth/google" ||
+    request.nextUrl.pathname === "/api/mobile/v1/auth/me";
 
   if (isMobileWebAuthRoute && request.method === "OPTIONS") {
     return mobileOptionsResponse(request);

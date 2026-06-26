@@ -101,7 +101,7 @@ export const api: AxiosInstance = axios.create({
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     // Skip auth for login/refresh endpoints
-    const skipPaths = ["/auth/login", "/auth/refresh", "/auth/otp"];
+    const skipPaths = ["/auth/login", "/auth/refresh", "/auth/otp", "/mobile/v1/auth/google"];
     if (skipPaths.some((path) => config.url?.includes(path))) {
       return config;
     }
@@ -123,7 +123,7 @@ api.interceptors.response.use(
     if (!originalRequest) return Promise.reject(error);
 
     // Skip refresh for auth endpoints
-    const skipPaths = ["/auth/login", "/auth/refresh", "/auth/otp"];
+    const skipPaths = ["/auth/login", "/auth/refresh", "/auth/otp", "/mobile/v1/auth/google"];
     if (skipPaths.some((path) => originalRequest.url?.includes(path))) {
       return Promise.reject(error);
     }

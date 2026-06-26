@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Validate token by fetching profile
       const { data } = await withTimeout(
-        api.get("/auth/me"),
+        api.get("/mobile/v1/auth/me"),
         STARTUP_AUTH_TIMEOUT_MS
       );
       set({ user: data.user, status: "authenticated" });
@@ -70,7 +70,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   loginWithGoogle: async (idToken: string) => {
-    const { data } = await api.post("/auth/google", { idToken });
+    const { data } = await api.post("/mobile/v1/auth/google", { idToken });
     const { user, tokens } = data as { user: User; tokens: AuthTokens };
 
     await tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);

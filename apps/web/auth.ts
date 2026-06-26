@@ -6,6 +6,7 @@ import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 import authConfig from "@/auth.config";
 import { normalizeIndianPhone, verifyLatestOtp } from "@/lib/otp";
+import { adminAuth } from "@/lib/firebase-admin";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
@@ -195,6 +196,89 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           role: user.role,
           passwordVersion: user.passwordVersion
         };
+      }
+    }),
+    // Firebase Auth provider - verifies Firebase ID token and upserts user
+    // Supports both Google sign-in and Phone OTP through Firebase (FREE tier)
+    Credentials({
+      id: "firebase-token",
+      name: "Firebase",
+      credentials: {
+        idToken: {},
+        name: {}
+      },
+      async authorize(credentials) {
+        const idToken = String(credentials?.idToken ?? "");
+        const displayName = String(credentials?.name ?? "").trim();
+        if (!idToken) return null;
+
+        try {
+          const decoded = await adminAuth.verifyIdToken(idToken);
+          const { email, phone_number: firebasePhone, name: firebaseName, picture } = decoded;
+
+          // Normalize phone if present (Firebase returns +91XXXXXXXXXX format)
+          const phone = firebasePhone
+            ? firebasePhone.replace(/^\+/, "").replace(/^0+/, "")
+            : null;
+          const normalizedPhone = phone && /^91\d{10}$/.test(phone) ? phone : null;
+
+          const name = displayName || firebaseName || null;
+
+          // Find existing user by phone or email
+          let user = null;
+          if (normalizedPhone) {
+            user = await prisma.user.findUnique({ where: { phone: normalizedPhone } });
+          }
+          if (!user && email) {
+            user = await prisma.user.findUnique({ where: { email } });
+          }
+
+          if (user) {
+            // Update existing user
+            await prisma.user.update({
+              where: { id: user.id },
+              data: {
+                name: name || user.name || undefined,
+                email: email || user.email || undefined,
+                phone: normalizedPhone || user.phone || undefined,
+                phoneVerified: normalizedPhone ? true : user.phoneVerified,
+                emailVerified: email ? new Date() : user.emailVerified,
+                image: picture || user.image || undefined,
+                isActive: true,
+                lastLoginAt: new Date()
+              }
+            });
+          } else {
+            // Create new user
+            user = await prisma.user.create({
+              data: {
+                name,
+                email: email || null,
+                phone: normalizedPhone,
+                phoneVerified: Boolean(normalizedPhone),
+                emailVerified: email ? new Date() : null,
+                image: picture || null,
+                role: "CUSTOMER",
+                isActive: true,
+                lastLoginAt: new Date()
+              }
+            });
+          }
+
+          if (!user.isActive) return null;
+
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            phone: user.phone,
+            role: user.role,
+            passwordVersion: user.passwordVersion
+          };
+        } catch (error) {
+          console.error("[Firebase Auth] Token verification failed:", error);
+          return null;
+        }
       }
     })
   ]

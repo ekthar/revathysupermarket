@@ -1,0 +1,55 @@
+{
+  "expo": {
+    "name": "MSM Supermarket",
+    "slug": "msm-customer",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "msm-customer",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/images/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#059669"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "in.revathysupermarket.customer",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "We need your location to show delivery availability and estimate delivery times."
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#059669"
+      },
+      "package": "in.revathysupermarket.customer",
+      "googleServicesFile": "./google-services.json"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#059669",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#059669",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

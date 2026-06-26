@@ -18,7 +18,7 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { loginWithPhone } = useAuthStore();
-  const { signIn: googleSignIn, isLoading: googleLoading } = useGoogleAuth();
+  const { signIn: googleSignIn, isLoading: googleLoading, isConfigured: googleConfigured } = useGoogleAuth();
 
   const handleSendOtp = async () => {
     const cleaned = phone.replace(/\s|-/g, "");
@@ -99,30 +99,33 @@ export default function LoginScreen() {
           )}
         </Pressable>
 
-        {/* Divider */}
-        <View className="flex-row items-center my-6">
-          <View className="flex-1 h-px bg-slate-200" />
-          <Text className="px-4 text-sm text-slate-400">or continue with</Text>
-          <View className="flex-1 h-px bg-slate-200" />
-        </View>
+        {/* Google Sign In — only show if configured */}
+        {googleConfigured && (
+          <>
+            <View className="flex-row items-center my-6">
+              <View className="flex-1 h-px bg-slate-200" />
+              <Text className="px-4 text-sm text-slate-400">or continue with</Text>
+              <View className="flex-1 h-px bg-slate-200" />
+            </View>
 
-        {/* Google Sign In */}
-        <Pressable
-          onPress={googleSignIn}
-          disabled={googleLoading}
-          className="h-14 rounded-xl items-center justify-center border border-slate-200 flex-row"
-        >
-          {googleLoading ? (
-            <ActivityIndicator color="#059669" />
-          ) : (
-            <>
-              <Text className="text-lg mr-2">G</Text>
-              <Text className="text-base font-sans-medium text-slate-700">
-                Continue with Google
-              </Text>
-            </>
-          )}
-        </Pressable>
+            <Pressable
+              onPress={googleSignIn}
+              disabled={googleLoading}
+              className="h-14 rounded-xl items-center justify-center border border-slate-200 flex-row"
+            >
+              {googleLoading ? (
+                <ActivityIndicator color="#059669" />
+              ) : (
+                <>
+                  <Text className="text-lg mr-2">G</Text>
+                  <Text className="text-base font-sans-medium text-slate-700">
+                    Continue with Google
+                  </Text>
+                </>
+              )}
+            </Pressable>
+          </>
+        )}
       </View>
     </KeyboardAvoidingView>
   );

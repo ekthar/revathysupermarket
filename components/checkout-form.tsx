@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, ArrowLeft, Check, CheckCircle2, ChevronDown, Clock, Navigation, Plus, Smartphone, Wallet } from "lucide-react";
+import { ArrowLeft, Clock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { calculateDistanceKm } from "@/lib/distance";
@@ -14,6 +14,10 @@ import type { StoreSettings } from "@/lib/store-settings";
 import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
 import { useFirstOrderCelebration, FirstOrderCelebration } from "@/components/ui/first-order-celebration";
+import { PaymentMethodSelector } from "@/components/checkout/payment-method-selector";
+import { AddressSelector } from "@/components/checkout/address-selector";
+import { DeliveryModeSelector } from "@/components/checkout/delivery-mode-selector";
+import { OrderSummary } from "@/components/checkout/order-summary";
 
 
 type CheckoutState = {
@@ -41,7 +45,6 @@ type SavedAddress = {
   longitude: number;
   isDefault: boolean;
 };
-type DeliverySlot = { id: string; startsAt: string; endsAt: string; remaining: number; available: boolean };
 
 const STORAGE_KEY = "msm-customer-info";
 
@@ -114,14 +117,12 @@ export function CheckoutForm({
   const [placedOrderId, setPlacedOrderId] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [locationState, setLocationState] = useState<LocationState>("idle");
-  const [showManualLocation, setShowManualLocation] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const { show: showCelebration, triggerCelebration, dismiss: dismissCelebration } = useFirstOrderCelebration();
 
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [walletLoading, setWalletLoading] = useState(true);
   const [deliveryMode, setDeliveryMode] = useState<"ASAP" | "SCHEDULED">("ASAP");
-  const [slots, setSlots] = useState<DeliverySlot[]>([]);
   const [deliverySlotId, setDeliverySlotId] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [loyaltyBalance, setLoyaltyBalance] = useState(0);
@@ -145,15 +146,15 @@ export function CheckoutForm({
   }, []);
 
   useEffect(() => {
-    Promise.all([
-      slotsEnabled ? fetch("/api/delivery-slots").then((res) => res.ok ? res.json() : { slots: [] }) : Promise.resolve({ slots: [] }),
-      rewardsEnabled ? fetch("/api/account/loyalty").then((res) => res.ok ? res.json() : { balance: 0 }) : Promise.resolve({ balance: 0 })
-    ]).then(([slotData, loyaltyData]) => {
-      setSlots(slotData.slots ?? []);
-      setLoyaltyBalance(loyaltyData.balance ?? 0);
-      if (loyaltyData.config) setLoyaltyRules({ pointValueRupees: loyaltyData.config.pointValueRupees ?? 0.25, maxRedemptionPercent: loyaltyData.config.maxRedemptionPercent ?? 20 });
-    }).catch(() => undefined);
-  }, [rewardsEnabled, slotsEnabled]);
+    if (!rewardsEnabled) return;
+    fetch("/api/account/loyalty")
+      .then((res) => res.ok ? res.json() : { balance: 0 })
+      .then((loyaltyData) => {
+        setLoyaltyBalance(loyaltyData.balance ?? 0);
+        if (loyaltyData.config) setLoyaltyRules({ pointValueRupees: loyaltyData.config.pointValueRupees ?? 0.25, maxRedemptionPercent: loyaltyData.config.maxRedemptionPercent ?? 20 });
+      })
+      .catch(() => undefined);
+  }, [rewardsEnabled]);
 
   // Load saved customer info on mount (name, phone, address persist)
   useEffect(() => {
@@ -175,8 +176,6 @@ export function CheckoutForm({
     return calculateDistanceKm({ lat, lng }, storeCoords);
   }, [form.latitude, form.longitude, storeLatitude, storeLongitude]);
 
-  const pincodeReady = /^\d{6}$/.test(form.pincode);
-  const pincodeOk = true; // GPS radius is the only delivery check now — any pincode is fine
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
   const canSubmit = items.length > 0 && locationOk && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
@@ -209,65 +208,8 @@ export function CheckoutForm({
     setForm((current) => ({ ...current, [name]: value }));
   }
 
-  function applySavedAddress(addressId: string) {
-    const address = savedAddresses.find((entry) => entry.id === addressId);
-    if (!address) return;
-    setForm((current) => ({
-      ...current,
-      houseName: address.houseName,
-      street: address.street,
-      landmark: address.landmark,
-      pincode: address.pincode,
-      latitude: address.latitude.toString(),
-      longitude: address.longitude.toString()
-    }));
-    setLocationState("success");
-    showToast(`${address.label} address selected`, "success");
-  }
-
-  function useCurrentLocation() {
-    if (!navigator.geolocation) {
-      setLocationState("denied");
-      showToast("Location is not available", "error");
-      return;
-    }
-    setLocationState("loading");
-    setMessage("");
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude.toString();
-        const lng = position.coords.longitude.toString();
-        update("latitude", lat);
-        update("longitude", lng);
-        setLocationState("success");
-        showToast("Location detected — fetching address...", "success");
-
-        // Auto-fill address via reverse geocoding
-        try {
-          const res = await fetch(`/api/geocode/reverse?latitude=${lat}&longitude=${lng}`);
-          if (res.ok) {
-            const geo = await res.json();
-            setForm((current) => ({
-              ...current,
-              latitude: lat,
-              longitude: lng,
-              ...(geo.street && !current.street ? { street: geo.street } : {}),
-              ...(geo.landmark && !current.landmark ? { landmark: geo.landmark } : {}),
-              ...(geo.pincode && !current.pincode ? { pincode: geo.pincode } : {}),
-              ...(geo.houseName && !current.houseName ? { houseName: geo.houseName } : {})
-            }));
-            showToast("Address auto-filled from GPS", "success");
-          }
-        } catch {
-          // Geocoding failed silently — user can still enter manually
-        }
-      },
-      () => {
-        setLocationState("denied");
-        showToast("Location permission needed", "error");
-      },
-      { enableHighAccuracy: true, timeout: 12000 }
-    );
+  function handleFormPatch(patch: Record<string, string>) {
+    setForm((current) => ({ ...current, ...patch }));
   }
 
 
@@ -425,20 +367,14 @@ export function CheckoutForm({
             )}
           </div>
 
-          {slotsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery time</h2>
-            <div className="mt-3 grid grid-cols-2 gap-2">
-              <button type="button" onClick={() => setDeliveryMode("ASAP")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "ASAP" ? "bg-black text-white" : "bg-neutral-100 dark:bg-neutral-800"}`}>ASAP</button>
-              <button type="button" onClick={() => setDeliveryMode("SCHEDULED")} className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "SCHEDULED" ? "bg-black text-white" : "bg-neutral-100 dark:bg-neutral-800"}`}>Choose slot</button>
-            </div>
-            {deliveryMode === "SCHEDULED" && <div className="mt-3 grid gap-2">
-              {slots.length === 0 ? <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-700">No scheduled slots are available. Choose ASAP.</p> : slots.map((slot) => <label key={slot.id} className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm font-semibold">
-                <input type="radio" name="delivery-slot" value={slot.id} checked={deliverySlotId === slot.id} disabled={!slot.available} onChange={() => setDeliverySlotId(slot.id)} />
-                <span>{new Date(slot.startsAt).toLocaleString("en-IN", { weekday: "short", hour: "numeric", minute: "2-digit" })} – {new Date(slot.endsAt).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" })}</span>
-                <span className="ml-auto text-xs text-muted-foreground">{slot.remaining} left</span>
-              </label>)}
-            </div>}
-          </section>}
+          {/* Delivery Mode Selector */}
+          <DeliveryModeSelector
+            deliveryMode={deliveryMode}
+            onModeChange={setDeliveryMode}
+            deliverySlotId={deliverySlotId}
+            onSlotChange={setDeliverySlotId}
+            slotsEnabled={slotsEnabled}
+          />
 
           {rewardsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
             <h2 className="text-sm font-black text-neutral-900 dark:text-white">Offers and rewards</h2>
@@ -448,302 +384,45 @@ export function CheckoutForm({
           </section>}
 
           {/* Payment Method */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-            className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900"
-          >
-            <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Payment Method</h2>
-            <div className="space-y-3">
-              <PaymentMethodCard
-                active={form.paymentMethod === "COD"}
-                icon={<Wallet className="h-5 w-5" />}
-                iconBg="bg-secondary-100 text-secondary-700"
-                label="Cash on Delivery"
-                description="Pay with cash when order arrives"
-                onClick={() => update("paymentMethod", "COD")}
-              />
-              <PaymentMethodCard
-                active={form.paymentMethod === "UPI_ON_DELIVERY"}
-                icon={<Smartphone className="h-5 w-5" />}
-                iconBg="bg-blue-100 text-blue-700"
-                label="UPI on Delivery"
-                description="Pay via UPI/GPay to delivery partner"
-                onClick={() => update("paymentMethod", "UPI_ON_DELIVERY")}
-              />
-              {/* Card Payment */}
-              <PaymentMethodCard
-                active={form.paymentMethod === "CARD"}
-                icon={<Wallet className="h-5 w-5" />}
-                iconBg="bg-purple-100 text-purple-700"
-                label="Card Payment"
-                description="Pay via Debit/Credit card on delivery"
-                onClick={() => update("paymentMethod", "CARD")}
-              />
-              {/* Wallet Payment - only show if balance > 0 */}
-              {!walletLoading && walletBalance > 0 && (
-                <PaymentMethodCard
-                  active={form.paymentMethod === "WALLET"}
-                  icon={<Wallet className="h-5 w-5" />}
-                  iconBg="bg-secondary-100 text-secondary-700"
-                  label={`Wallet Balance (${formatCurrency(walletBalance)})`}
-                  description={walletBalance >= totalAmount ? "Full amount covered" : `Remaining ${formatCurrency(totalAmount - walletBalance)} via COD`}
-                  onClick={() => update("paymentMethod", "WALLET")}
-                />
-              )}
-            </div>
-            {form.paymentMethod === "WALLET" && walletBalance < totalAmount && (
-              <div className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">
-                <p className="text-caption font-semibold text-amber-700 dark:text-amber-300">
-                  Wallet covers {formatCurrency(Math.min(walletBalance, totalAmount))}. Remaining {formatCurrency(totalAmount - walletBalance)} will be collected as Cash on Delivery.
-                </p>
-              </div>
-            )}
-          </motion.section>
-
+          <PaymentMethodSelector
+            paymentMethod={form.paymentMethod}
+            onMethodChange={(method) => update("paymentMethod", method)}
+            walletBalance={walletBalance}
+            walletLoading={walletLoading}
+            totalAmount={totalAmount}
+          />
 
           {/* Delivery Address */}
-          <motion.section
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900"
-          >
-            <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Delivery Address</h2>
-
-            {savedAddresses.length > 0 && (
-              <div className="mb-4">
-                <select
-                  defaultValue=""
-                  onChange={(event) => applySavedAddress(event.target.value)}
-                  className="h-11 w-full rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  <option value="">Choose saved address</option>
-                  {savedAddresses.map((address) => (
-                    <option key={address.id} value={address.id}>
-                      {address.label}{address.isDefault ? " (default)" : ""} - {address.houseName}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-
-            {/* Location detection */}
-            <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800 p-4 mb-4">
-              <div className="flex items-center gap-3">
-                <motion.div
-                  animate={locationOk ? { scale: [1, 1.1, 1] } : {}}
-                  transition={{ duration: 0.3 }}
-                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-secondary-100 text-secondary-700" : "bg-black text-white"}`}
-                >
-                  {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
-                </motion.div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-body font-bold text-neutral-800 dark:text-white">
-                    {locationOk ? `${distance?.toFixed(1)} KM from store` : "GPS verification needed"}
-                  </p>
-                  <p className="text-caption text-neutral-500 mt-0.5">Delivery within {deliveryRadiusKm} KM only</p>
-                </div>
-                <motion.button
-                  type="button"
-                  onClick={useCurrentLocation}
-                  disabled={locationState === "loading"}
-                  whileTap={{ scale: 0.9 }}
-                  className="shrink-0 rounded-full bg-black px-3 py-2 text-caption font-bold text-white"
-                >
-                  {locationState === "loading" ? "Finding..." : locationOk ? "Refresh" : "Detect"}
-                </motion.button>
-              </div>
-              {isOutsideRadius && (
-                <p className="mt-3 text-caption font-semibold text-red-600 flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5" />
-                  Outside delivery radius ({distance?.toFixed(1)} KM)
-                </p>
-              )}
-            </div>
-
-
-            {/* Address fields - pre-filled from saved info */}
-            <div className="grid gap-3 sm:grid-cols-2">
-              <CheckoutField label="Customer name" value={form.customerName} onChange={(v) => update("customerName", v)} />
-              <CheckoutField label="Phone number" type="tel" value={form.phone} onChange={(v) => update("phone", v)} />
-              <CheckoutField label="House name / flat" value={form.houseName} onChange={(v) => update("houseName", v)} />
-              <CheckoutField label="Pincode" inputMode="numeric" value={form.pincode} onChange={(v) => update("pincode", v.replace(/\D/g, "").slice(0, 6))} />
-              <CheckoutField label="Street / area" value={form.street} onChange={(v) => update("street", v)} className="sm:col-span-2" />
-              <CheckoutField label="Landmark" value={form.landmark} onChange={(v) => update("landmark", v)} className="sm:col-span-2" />
-            </div>
-
-            <AnimatePresence mode="wait">
-              {form.pincode && /^\d{6}$/.test(form.pincode) && (
-                <motion.p
-                  key="pincode-info"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  className="mt-3 rounded-xl px-3 py-2 text-caption font-semibold bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
-                >
-                  {locationOk ? `✓ Within delivery range (${distance?.toFixed(1)} KM)` : "Tap Detect above to verify delivery eligibility"}
-                </motion.p>
-              )}
-            </AnimatePresence>
-
-            <div className="mt-3">
-              <label className="block">
-                <span className="text-caption font-bold text-neutral-600">Delivery notes</span>
-                <textarea
-                  value={form.notes}
-                  onChange={(event) => update("notes", event.target.value)}
-                  className="mt-1.5 w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-3 text-body text-neutral-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-                  placeholder="Gate color, preferred time..."
-                />
-              </label>
-            </div>
-
-            {/* Manual coordinates */}
-            <button type="button" onClick={() => setShowManualLocation((c) => !c)} className="mt-3 flex items-center gap-1 text-caption font-bold text-black">
-              Enter coordinates manually
-              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showManualLocation ? "rotate-180" : ""}`} />
-            </button>
-            <AnimatePresence>
-              {showManualLocation && (
-                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                    <CheckoutField label="Latitude" value={form.latitude} onChange={(v) => update("latitude", v)} />
-                    <CheckoutField label="Longitude" value={form.longitude} onChange={(v) => update("longitude", v)} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </motion.section>
+          <AddressSelector
+            form={form}
+            onUpdate={(name, value) => update(name as keyof CheckoutState, value)}
+            onFormPatch={handleFormPatch}
+            savedAddresses={savedAddresses}
+            locationState={locationState}
+            onLocationStateChange={setLocationState}
+            locationOk={locationOk}
+            isOutsideRadius={isOutsideRadius}
+            distance={distance}
+            deliveryRadiusKm={deliveryRadiusKm}
+          />
         </div>
 
 
         {/* Right column - Order Summary */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="lg:sticky lg:top-[90px] h-fit"
-        >
-          <section className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900">
-            <h2 className="text-title font-black text-neutral-900 dark:text-white">Order Summary</h2>
-            <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
-              {items.map((item) => (
-                <div key={item.id} className="flex items-center justify-between text-caption">
-                  <span className="text-neutral-600 dark:text-neutral-400 truncate flex-1 mr-2">{item.name} x{item.quantity}</span>
-                  <span className="font-semibold text-neutral-800 dark:text-neutral-200 shrink-0">{formatCurrency((item.discountPrice ?? item.price) * item.quantity)}</span>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 pt-4 border-t border-neutral-100 space-y-2.5 text-body">
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Order Amount</span>
-                <span className="font-semibold text-neutral-700">{formatCurrency(subtotal)}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">Delivery</span>
-                <span className="font-semibold text-neutral-700">
-                  {feeQuoteLoading ? <span className="text-muted-foreground">Calculating…</span> : deliveryFee === 0 ? <span className="text-secondary-600">FREE</span> : formatCurrency(deliveryFee)}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-neutral-500">{gstRatePercent > 0 ? `GST (${gstRatePercent}% incl.)` : "Tax"}</span>
-                <span className="font-semibold text-neutral-700">{formatCurrency(gstAmount)}</span>
-              </div>
-              <div className="border-t border-dashed border-neutral-200 dark:border-neutral-700 pt-3 flex justify-between">
-                <span className="font-black text-neutral-900 dark:text-white">Total Amount</span>
-                <span className="font-black text-neutral-900 dark:text-white text-title">
-                  <span className="text-black">{"₹"}</span> {totalAmount.toFixed(2)}
-                </span>
-              </div>
-            </div>
-            {message && <p className="mt-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 p-3 text-caption font-medium text-neutral-600 dark:text-neutral-300">{message}</p>}
-            <motion.button
-              type="submit"
-              disabled={!canSubmit}
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ scale: canSubmit ? 1.01 : 1 }}
-              className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-body font-black text-white shadow-premium transition-opacity disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
-            >
-              {isSubmitting ? "Placing order..." : "Pay Now"}
-            </motion.button>
-            {!canSubmit && (
-              <p className="mt-3 text-center text-caption font-medium text-neutral-400">
-                Complete address, pincode & GPS to proceed
-              </p>
-            )}
-          </section>
-        </motion.div>
+        <OrderSummary
+          items={items}
+          subtotal={subtotal}
+          deliveryFee={deliveryFee}
+          feeQuoteLoading={feeQuoteLoading}
+          freeDeliveryThreshold={freeDeliveryThreshold}
+          gstRatePercent={gstRatePercent}
+          gstAmount={gstAmount}
+          totalAmount={totalAmount}
+          canSubmit={canSubmit}
+          isSubmitting={isSubmitting}
+          message={message}
+        />
       </div>
     </form>
-  );
-}
-
-
-function PaymentMethodCard({
-  active, icon, iconBg, label, description, onClick
-}: {
-  active: boolean; icon: React.ReactNode; iconBg: string;
-  label: string; description: string; onClick: () => void;
-}) {
-  return (
-    <motion.button
-      type="button"
-      onClick={onClick}
-      whileTap={{ scale: 0.97 }}
-      animate={active ? { borderColor: "rgba(5,5,5,1)" } : { borderColor: "rgba(241,245,249,1)" }}
-      className={`w-full flex items-center gap-3 rounded-2xl p-4 text-left border-2 transition-colors ${
-        active ? "bg-black/[0.03]" : "hover:border-neutral-200"
-      }`}
-    >
-      <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}>
-        {icon}
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-body font-bold text-neutral-800 dark:text-white">{label}</p>
-        <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">{description}</p>
-      </div>
-      <motion.div
-        animate={active ? { scale: 1, backgroundColor: "#050505" } : { scale: 1, backgroundColor: "transparent" }}
-        className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
-          active ? "border-black" : "border-neutral-300"
-        }`}
-      >
-        <AnimatePresence>
-          {active && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
-            >
-              <Check className="h-3 w-3 text-white" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.div>
-    </motion.button>
-  );
-}
-
-function CheckoutField({
-  label, value, onChange, type = "text", inputMode, className
-}: {
-  label: string; value: string; onChange: (value: string) => void;
-  type?: string; inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"]; className?: string;
-}) {
-  return (
-    <label className={`min-w-0 ${className ?? ""}`}>
-      <span className="text-caption font-bold text-neutral-600">{label}</span>
-      <input
-        required
-        type={type}
-        inputMode={inputMode}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full h-11 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3.5 text-body text-neutral-900 dark:text-white outline-none focus:border-primary/40 focus:bg-white dark:focus:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-      />
-    </label>
   );
 }

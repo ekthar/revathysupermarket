@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { BellRing, CheckCircle2, ChevronDown, FileText, Phone, Search, Send, X } from "lucide-react";
+import { BellRing, ChevronDown, FileText, Phone, Send } from "lucide-react";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { statusLabels } from "@/lib/constants";
 import { SITE } from "@/lib/constants";
@@ -10,6 +10,9 @@ import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { useAdminOrders, useAcknowledgeOrder, useAssignDelivery, useRegenerateOtp, ADMIN_ORDERS_QUERY_KEY } from "@/lib/queries/admin-orders";
 import { useQueryClient } from "@tanstack/react-query";
+import { OrderActionModal } from "@/components/admin/orders/order-action-modal";
+import { OrderFilters } from "@/components/admin/orders/order-filters";
+import { OrderListBoard } from "@/components/admin/orders/order-list";
 
 type AdminOrder = {
   id: string;
@@ -318,88 +321,28 @@ export function AdminOrdersClient({
         .filter((order) => !dismissedAlertIds.has(order.id))
         .slice(0, 1)
         .map((order) => (
-          <div key={order.id} className="fixed inset-x-3 top-4 z-50 mx-auto max-w-2xl rounded-xl border border-red-200 bg-white p-4 shadow-premium dark:border-red-500/40 dark:bg-slate-950">
-            <div className="flex items-start gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
-                <BellRing className="h-5 w-5" />
-              </span>
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-black uppercase text-red-600">New order needs stock review</p>
-                <h3 className="mt-1 font-display text-2xl font-black">#{order.orderNumber} - {formatCurrency(order.total)}</h3>
-                <p className="mt-1 text-sm text-muted-foreground">{order.customerName} - {order.phone}</p>
-                <p className="mt-2 text-sm font-bold">Go to the rack, verify stock, make substitutions/removals if needed, then mark Stock OK.</p>
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                  <button onClick={() => acknowledgeOrder(order.id)} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-primary text-xs font-black text-white">
-                    <CheckCircle2 className="h-4 w-4" />
-                    Start stock review
-                  </button>
-                  <button onClick={() => dismissAlert(order.id)} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background text-xs font-black">
-                    <X className="h-4 w-4" />
-                    Keep open below
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ))}
-      <div className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-primary">Staff workflow</p>
-        <div className="mt-2 flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h2 className="font-display text-4xl font-black leading-tight">Orders</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Scan, call, update, and print from one screen.
-              {counts.new > 0 ? <span className="ml-2 font-black text-red-600">{counts.new} new unacknowledged</span> : null}
-            </p>
-          </div>
-          <a href="/api/admin/export/orders" className="inline-flex items-center gap-2 rounded-2xl bg-primary px-4 py-3 text-sm font-black text-white">
-            <FileText className="h-4 w-4" />
-            Export
-          </a>
-        </div>
-        <label className="relative mt-5 block">
-          <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-primary" />
-          <input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            className="h-12 w-full rounded-2xl border border-white/70 bg-white/90 pl-11 pr-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-slate-900"
-            placeholder="Search order number, customer, phone"
+          <OrderActionModal
+            key={order.id}
+            order={order}
+            onAcknowledge={acknowledgeOrder}
+            onDismiss={dismissAlert}
+            ackLoading={ackLoading}
           />
-        </label>
-        <div className="no-scrollbar mt-4 flex gap-2 overflow-x-auto pb-1">
-          {[
-            ["all", "All", counts.all],
-            ["new", "New", counts.new],
-            ["pending", "Pending", counts.pending],
-            ["packing", "Packing", counts.packing],
-            ["delivered", "Delivered", counts.delivered]
-          ].map(([key, label, count]) => (
-            <button
-              key={key}
-              type="button"
-              onClick={() => setTab(key as typeof tab)}
-              className={cn(
-                "h-10 shrink-0 rounded-full px-4 text-xs font-black transition active:scale-[0.98]",
-                tab === key ? "bg-primary text-white" : "border border-white/70 bg-white/80 text-foreground dark:border-white/10 dark:bg-slate-900"
-              )}
-            >
-              {label} {count}
-            </button>
-          ))}
-        </div>
-        <div className="mt-3 flex gap-2">
-          <button type="button" onClick={() => setView("board")} className={cn("h-10 rounded-full px-4 text-xs font-black", view === "board" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white/80 dark:bg-slate-800")}>Operations board</button>
-          <button type="button" onClick={() => setView("list")} className={cn("h-10 rounded-full px-4 text-xs font-black", view === "list" ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900" : "bg-white/80 dark:bg-slate-800")}>Detailed list</button>
-        </div>
-      </div>
-      {view === "board" && <div className="mt-5 grid gap-3 overflow-x-auto pb-2 lg:grid-cols-6">
-        {[
-          ["ORDER_RECEIVED", "New"], ["ACCEPTED", "Accepted"], ["PACKING", "Packing"], ["READY_FOR_DELIVERY", "Ready"], ["OUT_FOR_DELIVERY", "Out for delivery"], ["DELIVERED", "Completed"]
-        ].map(([status, label]) => {
-          const columnOrders = localOrders.filter((order) => order.status === status).slice(0, status === "DELIVERED" ? 10 : 30);
-          return <section key={status} className="min-w-[240px] rounded-2xl bg-slate-100/80 p-3 dark:bg-slate-900"><div className="flex items-center justify-between"><h3 className="text-sm font-black">{label}</h3><span className="rounded-full bg-white px-2 py-1 text-xs font-black dark:bg-slate-800">{columnOrders.length}</span></div><div className="mt-3 grid gap-2">{columnOrders.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-xs text-muted-foreground">No orders</p> : columnOrders.map((order) => <button key={order.id} type="button" onClick={() => { setQuery(order.orderNumber); setView("list"); }} className="rounded-xl bg-white p-3 text-left shadow-sm dark:bg-slate-800"><div className="flex justify-between gap-2"><span className="text-xs font-black">#{order.orderNumber.slice(-6)}</span><span className="text-xs font-black text-primary">{formatCurrency(order.total)}</span></div><p className="mt-1 truncate text-xs font-semibold">{order.customerName}</p><p className="mt-1 text-caption text-muted-foreground">{order.items.length} items · {timeSince(order.createdAt, now)}</p>{status === "READY_FOR_DELIVERY" && !order.deliveryPartnerId ? <p className="mt-2 rounded-lg bg-amber-100 px-2 py-1 text-caption font-black text-amber-700">Driver needed</p> : null}</button>)}</div></section>;
-        })}
-      </div>}
+        ))}
+      <OrderFilters
+        query={query}
+        onQueryChange={setQuery}
+        tab={tab}
+        onTabChange={setTab}
+        view={view}
+        onViewChange={setView}
+        counts={counts}
+      />
+      {view === "board" && <OrderListBoard
+        orders={localOrders}
+        now={now}
+        onSelectOrder={(orderNumber) => { setQuery(orderNumber); setView("list"); }}
+      />}
       <div className={cn("mt-5 grid gap-4", view === "board" && "hidden")}>
         {filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-10 text-center">No orders found.</div>

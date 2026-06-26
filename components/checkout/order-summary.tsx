@@ -1,0 +1,115 @@
+"use client";
+
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { formatCurrency } from "@/lib/utils";
+
+type CartItem = {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  discountPrice?: number | null;
+};
+
+interface OrderSummaryProps {
+  items: CartItem[];
+  subtotal: number;
+  deliveryFee: number;
+  feeQuoteLoading: boolean;
+  freeDeliveryThreshold: number;
+  gstRatePercent: number;
+  gstAmount: number;
+  totalAmount: number;
+  canSubmit: boolean;
+  isSubmitting: boolean;
+  message: string;
+}
+
+export function OrderSummary({
+  items,
+  subtotal,
+  deliveryFee,
+  feeQuoteLoading,
+  freeDeliveryThreshold,
+  gstRatePercent,
+  gstAmount,
+  totalAmount,
+  canSubmit,
+  isSubmitting,
+  message,
+}: OrderSummaryProps) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="lg:sticky lg:top-[90px] h-fit"
+    >
+      <section className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900">
+        <h2 className="text-title font-black text-neutral-900 dark:text-white">Order Summary</h2>
+        <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-center justify-between text-caption">
+              <span className="text-neutral-600 dark:text-neutral-400 truncate flex-1 mr-2">
+                {item.name} x{item.quantity}
+              </span>
+              <span className="font-semibold text-neutral-800 dark:text-neutral-200 shrink-0">
+                {formatCurrency((item.discountPrice ?? item.price) * item.quantity)}
+              </span>
+            </div>
+          ))}
+        </div>
+        <div className="mt-4 pt-4 border-t border-neutral-100 space-y-2.5 text-body">
+          <div className="flex justify-between">
+            <span className="text-neutral-500">Order Amount</span>
+            <span className="font-semibold text-neutral-700">{formatCurrency(subtotal)}</span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-500">Delivery</span>
+            <span className="font-semibold text-neutral-700">
+              {feeQuoteLoading ? (
+                <span className="text-muted-foreground">Calculating...</span>
+              ) : deliveryFee === 0 ? (
+                <span className="text-secondary-600">FREE</span>
+              ) : (
+                formatCurrency(deliveryFee)
+              )}
+            </span>
+          </div>
+          <div className="flex justify-between">
+            <span className="text-neutral-500">
+              {gstRatePercent > 0 ? `GST (${gstRatePercent}% incl.)` : "Tax"}
+            </span>
+            <span className="font-semibold text-neutral-700">{formatCurrency(gstAmount)}</span>
+          </div>
+          <div className="border-t border-dashed border-neutral-200 dark:border-neutral-700 pt-3 flex justify-between">
+            <span className="font-black text-neutral-900 dark:text-white">Total Amount</span>
+            <span className="font-black text-neutral-900 dark:text-white text-title">
+              <span className="text-black">{"₹"}</span> {totalAmount.toFixed(2)}
+            </span>
+          </div>
+        </div>
+        {message && (
+          <p className="mt-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 p-3 text-caption font-medium text-neutral-600 dark:text-neutral-300">
+            {message}
+          </p>
+        )}
+        <motion.button
+          type="submit"
+          disabled={!canSubmit}
+          whileTap={{ scale: 0.97 }}
+          whileHover={{ scale: canSubmit ? 1.01 : 1 }}
+          className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-body font-black text-white shadow-premium transition-opacity disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
+        >
+          {isSubmitting ? "Placing order..." : "Pay Now"}
+        </motion.button>
+        {!canSubmit && (
+          <p className="mt-3 text-center text-caption font-medium text-neutral-400">
+            Complete address, pincode & GPS to proceed
+          </p>
+        )}
+      </section>
+    </motion.div>
+  );
+}

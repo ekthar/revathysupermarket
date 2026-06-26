@@ -107,7 +107,7 @@
 - [ ] **Estimated delivery time**: ML-based ETA using traffic + distance + order size
 - [ ] **Order preparation timer**: Kitchen display for packing staff with countdown
 - [ ] **Instant refunds to wallet**: Automatic refund on cancellation
-- [ ] **Redis-based real-time**: Replace global Map with Redis Pub/Sub for multi-instance
+- [x] **Redis-based real-time**: Replace global Map with Redis list polling for multi-instance delivery alerts
 
 ### Phase 3: Customer Experience 🎨 (Following Sprint)
 - [ ] **Search with filters**: Category, price range, brand, dietary (veg/non-veg)

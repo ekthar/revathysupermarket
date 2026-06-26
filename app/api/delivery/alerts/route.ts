@@ -1,14 +1,33 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
+import { Redis } from "@upstash/redis";
 
-// Extend globalThis for SSE controller registry
-declare global {
-  var __deliveryAlertControllers: Map<string, Set<ReadableStreamDefaultController>> | undefined;
+/**
+ * Redis polling interval in milliseconds.
+ *
+ * Tradeoff: Lower values reduce alert delivery latency but increase Redis API
+ * calls (and therefore Upstash usage costs). 2.5 seconds strikes a balance
+ * between near-real-time delivery and reasonable request volume.
+ *
+ * For true sub-second pub/sub, an ioredis TCP client with SUBSCRIBE would be
+ * needed, but Upstash REST does not support long-lived TCP subscriptions.
+ */
+const POLL_INTERVAL_MS = 2500;
+
+function getRedis(): Redis | null {
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    return null;
+  }
+  return Redis.fromEnv();
 }
 
 /**
  * SSE endpoint for delivery partner real-time order alerts.
  * Delivery partners connect here to receive instant alerts when orders are assigned.
+ *
+ * Implementation uses Redis list polling instead of in-memory global state,
+ * enabling multi-instance deployments where any server can publish alerts
+ * and any server can deliver them to connected partners.
  */
 export async function GET(request: NextRequest) {
   const session = await auth();
@@ -24,12 +43,14 @@ export async function GET(request: NextRequest) {
   }
 
   const encoder = new TextEncoder();
+  const redis = getRedis();
+
   const stream = new ReadableStream({
     start(controller) {
       // Send initial connection confirmation
       controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: "connected", partnerId })}\n\n`));
 
-      // Keep-alive every 30 seconds
+      // Keep-alive every 30 seconds to prevent connection timeout
       const keepAlive = setInterval(() => {
         try {
           controller.enqueue(encoder.encode(`: keepalive\n\n`));
@@ -38,24 +59,33 @@ export async function GET(request: NextRequest) {
         }
       }, 30000);
 
-      // Store the controller in a global registry for push notifications
-      // In production, use Redis pub/sub for multi-instance support
-      if (!global.__deliveryAlertControllers) {
-        global.__deliveryAlertControllers = new Map();
-      }
-      const controllers = global.__deliveryAlertControllers!;
-      if (!controllers.has(partnerId)) {
-        controllers.set(partnerId, new Set());
-      }
-      controllers.get(partnerId)!.add(controller);
+      // Poll Redis for new alerts every POLL_INTERVAL_MS
+      const pollInterval = setInterval(async () => {
+        if (!redis) return;
+
+        try {
+          // Check partner-specific alerts (broadcasts now fan-out to individual keys)
+          const partnerKey = `delivery:alerts:${partnerId}`;
+          const partnerAlerts = await redis.lrange(partnerKey, 0, -1);
+          if (partnerAlerts.length > 0) {
+            // Remove all fetched messages
+            await redis.del(partnerKey);
+            // Send each alert to the client (reverse to send oldest first)
+            for (const alert of partnerAlerts.reverse()) {
+              const message = typeof alert === "string" ? alert : JSON.stringify(alert);
+              controller.enqueue(encoder.encode(`data: ${message}\n\n`));
+            }
+          }
+        } catch (error) {
+          // Log but do not kill the stream - next poll may succeed
+          console.error("[delivery-alerts] Redis poll error:", error);
+        }
+      }, POLL_INTERVAL_MS);
 
       // Cleanup on disconnect
       request.signal.addEventListener("abort", () => {
         clearInterval(keepAlive);
-        controllers.get(partnerId)?.delete(controller);
-        if (controllers.get(partnerId)?.size === 0) {
-          controllers.delete(partnerId);
-        }
+        clearInterval(pollInterval);
         try {
           controller.close();
         } catch {

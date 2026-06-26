@@ -1,11 +1,11 @@
 /**
- * Utility to push real-time alerts to connected delivery partners.
+ * Utility to push real-time alerts to delivery partners via Redis.
+ * Alerts are stored in Redis lists and polled by the SSE endpoint.
  * Works alongside the push notification system for comprehensive alerting.
  */
 
-declare global {
-  var __deliveryAlertControllers: Map<string, Set<ReadableStreamDefaultController>> | undefined;
-}
+import { Redis } from "@upstash/redis";
+import { prisma } from "@/lib/prisma";
 
 type AlertPayload = {
   type: "new_order";
@@ -18,53 +18,80 @@ type AlertPayload = {
   };
 };
 
-/**
- * Send a real-time SSE alert to a delivery partner.
- * Also triggers push notification as a fallback for when the app is in background.
- */
-export function sendDeliveryAlert(partnerId: string, payload: AlertPayload) {
-  const controllers = global.__deliveryAlertControllers;
+/** TTL for alert keys in seconds. Alerts auto-expire after 5 minutes to handle brief reconnections. */
+const ALERT_KEY_TTL_SECONDS = 300;
 
-  if (!controllers?.has(partnerId)) return false;
+let redis: Redis | null = null;
+let fallbackWarningLogged = false;
 
-  const encoder = new TextEncoder();
-  const message = `data: ${JSON.stringify(payload)}\n\n`;
-
-  let sent = false;
-  const partnerControllers = controllers.get(partnerId);
-  if (partnerControllers) {
-    for (const controller of partnerControllers) {
-      try {
-        controller.enqueue(encoder.encode(message));
-        sent = true;
-      } catch {
-        partnerControllers.delete(controller);
-      }
+function getRedis(): Redis | null {
+  if (redis) return redis;
+  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+    if (!fallbackWarningLogged) {
+      fallbackWarningLogged = true;
+      console.warn(
+        "[delivery-alerts] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not configured. " +
+          "Delivery alerts will be no-ops until Redis is available."
+      );
     }
+    return null;
   }
-
-  return sent;
+  redis = Redis.fromEnv();
+  return redis;
 }
 
 /**
- * Notify all delivery partners about a new unassigned order (for pickup).
- * Used when an order becomes ready and no specific partner is assigned yet.
+ * Build the Redis key for a specific partner's alert list.
  */
-export function broadcastToAllDeliveryPartners(payload: AlertPayload) {
-  const controllers = global.__deliveryAlertControllers;
+function partnerAlertKey(partnerId: string): string {
+  return `delivery:alerts:${partnerId}`;
+}
 
-  if (!controllers) return;
+/**
+ * Send a real-time alert to a specific delivery partner by pushing to their Redis list.
+ * The SSE endpoint polls this list and forwards messages to the connected client.
+ * Returns true if the alert was successfully enqueued; false if Redis is unavailable.
+ */
+export async function sendDeliveryAlert(partnerId: string, payload: AlertPayload): Promise<boolean> {
+  const client = getRedis();
+  if (!client) return false;
 
-  const encoder = new TextEncoder();
-  const message = `data: ${JSON.stringify(payload)}\n\n`;
+  try {
+    const key = partnerAlertKey(partnerId);
+    const message = JSON.stringify(payload);
+    await client.lpush(key, message);
+    // Set/refresh expiry so stale alerts auto-clean if partner never connects
+    await client.expire(key, ALERT_KEY_TTL_SECONDS);
+    return true;
+  } catch (error) {
+    console.error("[delivery-alerts] Failed to push alert to Redis:", error);
+    return false;
+  }
+}
 
-  for (const [, partnerControllers] of controllers) {
-    for (const controller of partnerControllers) {
-      try {
-        controller.enqueue(encoder.encode(message));
-      } catch {
-        partnerControllers.delete(controller);
-      }
-    }
+/**
+ * Notify all active delivery partners about a new unassigned order (for pickup).
+ * Uses per-partner fan-out: queries DB for all active delivery partners and
+ * pushes the alert to each partner's individual Redis key. This avoids the
+ * broadcast race condition where multiple SSE connections would compete for
+ * the same shared broadcast key (LRANGE + DEL is non-atomic).
+ */
+export async function broadcastToAllDeliveryPartners(payload: AlertPayload): Promise<void> {
+  const client = getRedis();
+  if (!client) return;
+
+  try {
+    // Get all active delivery partners from the database
+    const partners = await prisma.user.findMany({
+      where: { role: "DELIVERY_PARTNER", isActive: true },
+      select: { id: true },
+    });
+
+    // Fan-out: push alert to each partner's individual key
+    await Promise.all(
+      partners.map((partner) => sendDeliveryAlert(partner.id, payload))
+    );
+  } catch (error) {
+    console.error("[delivery-alerts] Failed to broadcast alert:", error);
   }
 }

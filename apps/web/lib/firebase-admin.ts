@@ -59,7 +59,7 @@ export const adminAuth = new Proxy({} as ReturnType<typeof getAuth>, {
   get(_, prop) {
     const auth = getAdminAuth();
     if (!auth) throw new Error("Firebase Admin Auth not configured - set FIREBASE_SERVICE_ACCOUNT_KEY");
-    return (auth as Record<string, unknown>)[prop as string];
+    return (auth as unknown as Record<string, unknown>)[prop as string];
   }
 });
 
@@ -67,7 +67,7 @@ export const adminMessaging = new Proxy({} as ReturnType<typeof getMessaging>, {
   get(_, prop) {
     const messaging = getAdminMessaging();
     if (!messaging) throw new Error("Firebase Admin Messaging not configured - set FIREBASE_SERVICE_ACCOUNT_KEY");
-    return (messaging as Record<string, unknown>)[prop as string];
+    return (messaging as unknown as Record<string, unknown>)[prop as string];
   }
 });
 

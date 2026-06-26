@@ -6,6 +6,7 @@ import { ThemeProvider } from "next-themes";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { PushNotificationManager } from "@/components/push-notification-manager";
+import { FcmRegistration } from "@/components/fcm-registration";
 import { ToastProvider } from "@/components/toast-provider";
 import { ProfileSync } from "@/components/profile-sync";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
@@ -26,6 +27,7 @@ export function Providers({ children, session }: { children: React.ReactNode; se
                 <ProfileSync />
                 <ServiceWorkerRegister />
                 <PushNotificationManager />
+                <FcmRegistration />
                 <InstallAppPrompt />
               </CartProvider>
             </ToastProvider>

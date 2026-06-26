@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Camera, Eye, EyeOff, ImagePlus, Megaphone, MessageCircle, Save, Settings, Trash2, Upload } from "lucide-react";
+import { Camera, Eye, EyeOff, ImagePlus, Megaphone, MessageCircle, Save, Search, Settings, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast-provider";
@@ -156,6 +156,9 @@ export function SettingsManagementClient({
 
   return (
     <>
+      {/* Settings Search */}
+      <SettingsSearch />
+
       {/* Logo Upload Section */}
       <LogoUploadSection />
 
@@ -489,5 +492,103 @@ function BannerUploadButton({ onUploaded }: { onUploaded: (url: string) => void 
       </Button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleUpload} />
     </>
+  );
+}
+
+
+const SETTINGS_SECTIONS = [
+  { id: "logo", label: "Store Logo", keywords: ["logo", "image", "brand", "icon", "upload"] },
+  { id: "store", label: "Store Details", keywords: ["store", "name", "phone", "whatsapp", "address", "maps", "social", "instagram", "facebook"] },
+  { id: "gst", label: "GST Billing", keywords: ["gst", "gstin", "tax", "billing", "business"] },
+  { id: "delivery", label: "Delivery & Orders", keywords: ["delivery", "radius", "fee", "minimum", "order", "estimate", "pincode"] },
+  { id: "whatsapp", label: "WhatsApp API", keywords: ["whatsapp", "api", "template", "message", "webhook"] },
+  { id: "banner", label: "Banner Management", keywords: ["banner", "offer", "promotion", "homepage", "image"] },
+];
+
+function SettingsSearch() {
+  const [query, setQuery] = useState("");
+  const [showResults, setShowResults] = useState(false);
+
+  const results = query.trim().length > 0
+    ? SETTINGS_SECTIONS.filter((section) =>
+        section.label.toLowerCase().includes(query.toLowerCase()) ||
+        section.keywords.some((kw) => kw.includes(query.toLowerCase()))
+      )
+    : [];
+
+  function scrollToSection(sectionId: string) {
+    setQuery("");
+    setShowResults(false);
+
+    // Map section IDs to heading text for scrolling
+    const headingMap: Record<string, string> = {
+      logo: "Store Logo",
+      store: "Store details",
+      gst: "GST billing",
+      delivery: "Delivery & Order Settings",
+      whatsapp: "WhatsApp Business API",
+      banner: "Banner management",
+    };
+
+    const targetText = headingMap[sectionId];
+    if (!targetText) return;
+
+    // Find the heading element and scroll to it
+    const headings = document.querySelectorAll("h3, h4");
+    for (const heading of headings) {
+      if (heading.textContent?.includes(targetText)) {
+        heading.scrollIntoView({ behavior: "smooth", block: "start" });
+        // Flash highlight effect
+        const parent = heading.closest("form, section, div[class*='rounded-xl']");
+        if (parent) {
+          parent.classList.add("ring-2", "ring-primary/40");
+          setTimeout(() => parent.classList.remove("ring-2", "ring-primary/40"), 2000);
+        }
+        break;
+      }
+    }
+  }
+
+  return (
+    <div className="mt-5 relative">
+      <div className="relative">
+        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => { setQuery(e.target.value); setShowResults(true); }}
+          onFocus={() => setShowResults(true)}
+          onBlur={() => setTimeout(() => setShowResults(false), 200)}
+          placeholder="Search settings... (logo, delivery, GST, banners...)"
+          className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-4 text-sm font-medium outline-none shadow-soft focus:ring-2 focus:ring-primary/30 transition-all"
+        />
+      </div>
+      {showResults && results.length > 0 && (
+        <div className="absolute z-30 mt-1 w-full rounded-xl border border-border bg-card shadow-lg overflow-hidden">
+          {results.map((section) => (
+            <button
+              key={section.id}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => scrollToSection(section.id)}
+              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-primary/5 transition-colors border-b border-border last:border-0"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <Search className="h-3.5 w-3.5 text-primary" />
+              </span>
+              <div>
+                <p className="text-sm font-bold text-neutral-900 dark:text-white">{section.label}</p>
+                <p className="text-xs text-muted-foreground">{section.keywords.slice(0, 4).join(", ")}</p>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+      {showResults && query.trim().length > 0 && results.length === 0 && (
+        <div className="absolute z-30 mt-1 w-full rounded-xl border border-border bg-card p-4 shadow-lg text-center">
+          <p className="text-sm text-muted-foreground">No matching settings found</p>
+        </div>
+      )}
+    </div>
   );
 }

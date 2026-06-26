@@ -57,31 +57,34 @@ export function Header({
                   <ArrowLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-300" />
                 </button>
               )}
-              <Link href="/" className="flex items-center gap-2 press">
-              {logoUrl && (
-                <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" unoptimized />
-              )}
-              <span className="font-display text-2xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
-                {storeName}
-              </span>
-            </Link>
+              <Link href="/" className="flex items-center gap-2.5 press">
+                {logoUrl && (
+                  <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" unoptimized />
+                )}
+                <span className="font-display text-2xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
+                  {storeName}
+                </span>
+              </Link>
             </div>
 
             {/* Navigation links */}
-            <nav className="hidden lg:flex items-center gap-6">
-              {navLinks.map((link) => (
-                <Link
-                  key={link.href}
-                  href={link.href}
-                  className={`text-sm font-semibold transition-colors ${
-                    pathname === link.href || pathname.startsWith(link.href.split("?")[0])
-                      ? "text-primary"
-                      : "text-neutral-600 hover:text-neutral-900 dark:text-white"
-                  }`}
-                >
-                  {link.label}
-                </Link>
-              ))}
+            <nav className="hidden lg:flex items-center gap-1">
+              {navLinks.map((link) => {
+                const isActive = pathname === link.href || (link.href !== "/products" && pathname.startsWith(link.href.split("?")[0]));
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className={`relative px-4 py-2 text-sm font-bold rounded-full transition-all ${
+                      isActive
+                        ? "bg-primary/10 text-primary"
+                        : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-neutral-800"
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
             </nav>
 
             {/* Right actions */}

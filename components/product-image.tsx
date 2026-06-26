@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import { safeProductImageUrl, PRODUCT_IMAGE_FALLBACK } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
@@ -21,16 +22,15 @@ export function ProductImage({
   }, [src]);
 
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={currentSrc}
-      alt={alt}
-      width={640}
-      height={640}
-      style={{ aspectRatio: "1/1" }}
-      className={cn("block h-full min-w-0 max-w-full object-cover", className)}
-      loading="lazy"
-      onError={() => setCurrentSrc(PRODUCT_IMAGE_FALLBACK)}
-    />
+    <div className={cn("relative aspect-square w-full", className)}>
+      <Image
+        src={currentSrc}
+        alt={alt}
+        fill
+        sizes="(max-width: 768px) 50vw, 25vw"
+        className="object-cover"
+        onError={() => setCurrentSrc(PRODUCT_IMAGE_FALLBACK)}
+      />
+    </div>
   );
 }

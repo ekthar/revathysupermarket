@@ -1,10 +1,9 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
+import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
 import { ArrowLeft, ArrowRight, Check, Chrome, LocateFixed, MapPin, Phone, ShoppingBasket, Sparkles, UserCog } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -172,7 +171,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary text-white shadow-lg overflow-hidden"
               >
                 {logoUrl ? (
-                  <img src={logoUrl} alt="" className="h-full w-full object-contain p-2" />
+                  <Image src={logoUrl} alt="" width={80} height={80} className="h-full w-full object-contain p-2" unoptimized />
                 ) : (
                   <ShoppingBasket className="h-10 w-10" />
                 )}

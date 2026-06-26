@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+import Image from "next/image";
 import Link from "next/link";
 import { BarChart3, Bell, ClipboardList, CreditCard, Home, LayoutDashboard, LogOut, MessageSquare, Package, RotateCcw, Settings, ShieldCheck, ShoppingBag, Tag, Ticket, Truck, Users } from "lucide-react";
 import { auth, signOut } from "@/auth";
@@ -83,9 +83,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="max-w-7xl mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
           <div className="flex items-center gap-3">
             <Link href="/admin" className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
+              <div className="relative h-8 w-8 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
                 {logoUrl ? (
-                  <img src={logoUrl} alt={settings.storeName} className="h-full w-full object-contain" />
+                  <Image src={logoUrl} alt={settings.storeName} fill className="object-contain" unoptimized />
                 ) : (
                   <ShoppingBag className="h-4 w-4 text-white" />
                 )}

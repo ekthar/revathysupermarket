@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+import Image from "next/image";
 import Link from "next/link";
 import { Tag, ArrowRight } from "lucide-react";
 import { prisma } from "@/lib/prisma";
@@ -55,7 +55,7 @@ export default async function OffersPage() {
             {offers.map((offer) => (
               <div key={offer.id} className="rounded-2xl border border-border bg-card overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                 {offer.image && (
-                  <img src={offer.image} alt={offer.title} className="w-full h-32 object-cover" />
+                  <Image src={offer.image} alt={offer.title} width={400} height={128} className="w-full h-32 object-cover" unoptimized />
                 )}
                 <div className="p-4">
                   <div className="flex items-center gap-2">

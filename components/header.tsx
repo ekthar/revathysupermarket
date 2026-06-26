@@ -1,7 +1,6 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element */
-
+import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Bell, Heart, HelpCircle, ShoppingBag, User } from "lucide-react";
 import { motion } from "framer-motion";
@@ -60,7 +59,7 @@ export function Header({
               )}
               <Link href="/" className="flex items-center gap-2 press">
               {logoUrl && (
-                <img src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" />
+                <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" unoptimized />
               )}
               <span className="font-display text-2xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
                 {storeName}
@@ -153,7 +152,7 @@ export function Header({
           ) : (
             <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
             {logoUrl ? (
-              <img src={logoUrl} alt={storeName} width={32} height={32} className="h-8 w-8 rounded-xl object-contain" />
+              <Image src={logoUrl} alt={storeName} width={32} height={32} className="h-8 w-8 rounded-xl object-contain" unoptimized />
             ) : (
               <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 shadow-sm shadow-secondary-200 dark:shadow-secondary-900/30">
                 <span className="text-sm font-black text-white">{storeName.charAt(0)}</span>

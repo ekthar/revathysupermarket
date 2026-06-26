@@ -1,4 +1,4 @@
-/* eslint-disable @next/next/no-img-element */
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { statusLabels } from "@/lib/constants";
@@ -65,7 +65,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       <div className="flex justify-between border-b pb-6">
         <div>
           <div className="flex items-center gap-3">
-            {logoUrl && <img src={logoUrl} alt={settings.storeName} className="h-12 w-12 rounded-lg object-contain" />}
+            {logoUrl && <Image src={logoUrl} alt={settings.storeName} width={48} height={48} className="h-12 w-12 rounded-lg object-contain" unoptimized />}
             <h1 className="font-display text-3xl font-black">{settings.storeName}</h1>
           </div>
           <p className="mt-1 text-sm">{settings.address}</p>

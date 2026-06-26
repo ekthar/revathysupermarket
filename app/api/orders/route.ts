@@ -280,69 +280,86 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const session = await auth();
     if (!session?.user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    const orders = await prisma.order.findMany({
-      where: isStaffRole(session.user.role) ? {} : { userId: session.user.id },
-      select: {
-        id: true,
-        orderNumber: true,
-        customerName: true,
-        phone: true,
-        houseName: true,
-        street: true,
-        landmark: true,
-        pincode: true,
-        notes: true,
-        latitude: true,
-        longitude: true,
-        distanceKm: true,
-        paymentMethod: true,
-        paymentStatus: true,
-        status: true,
-        editApprovalStatus: true,
-        deliveryOtp: true,
-        acknowledgedAt: true,
-        deliveryPartnerId: true,
-        subtotal: true,
-        total: true,
-        createdAt: true,
-        updatedAt: true,
-        items: {
-          include: {
-            product: {
-              include: { category: true }
+
+    const { searchParams } = new URL(request.url);
+    const cursor = searchParams.get("cursor") || undefined;
+    const limit = 50;
+
+    const whereClause = isStaffRole(session.user.role) ? {} : { userId: session.user.id };
+
+    const [orders, totalCount] = await Promise.all([
+      prisma.order.findMany({
+        where: whereClause,
+        take: limit + 1,
+        ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          phone: true,
+          houseName: true,
+          street: true,
+          landmark: true,
+          pincode: true,
+          notes: true,
+          latitude: true,
+          longitude: true,
+          distanceKm: true,
+          paymentMethod: true,
+          paymentStatus: true,
+          status: true,
+          editApprovalStatus: true,
+          deliveryOtp: true,
+          acknowledgedAt: true,
+          deliveryPartnerId: true,
+          subtotal: true,
+          total: true,
+          createdAt: true,
+          updatedAt: true,
+          items: {
+            include: {
+              product: {
+                include: { category: true }
+              }
             }
-          }
+          },
+          deliveryPartner: {
+            select: {
+              currentLatitude: true,
+              currentLongitude: true,
+              locationUpdatedAt: true
+            }
+          },
+          editLogs: {
+            where: { requiresCustomerApproval: true, customerDecision: null },
+            orderBy: { createdAt: "asc" },
+            select: {
+              id: true,
+              action: true,
+              originalItem: true,
+              newItem: true,
+              priceDelta: true,
+              reason: true,
+              createdAt: true
+            }
+          },
+          statusEvents: { orderBy: { createdAt: "asc" } }
         },
-        deliveryPartner: {
-          select: {
-            currentLatitude: true,
-            currentLongitude: true,
-            locationUpdatedAt: true
-          }
-        },
-        editLogs: {
-          where: { requiresCustomerApproval: true, customerDecision: null },
-          orderBy: { createdAt: "asc" },
-          select: {
-            id: true,
-            action: true,
-            originalItem: true,
-            newItem: true,
-            priceDelta: true,
-            reason: true,
-            createdAt: true
-          }
-        },
-        statusEvents: { orderBy: { createdAt: "asc" } }
-      },
-      orderBy: { createdAt: "desc" }
-    });
+        orderBy: { createdAt: "desc" }
+      }),
+      prisma.order.count({ where: whereClause }),
+    ]);
+
+    const hasMore = orders.length > limit;
+    const sliced = hasMore ? orders.slice(0, limit) : orders;
+    const nextCursor = hasMore ? sliced[sliced.length - 1].id : null;
+
     return NextResponse.json({
-      orders: orders.map((order) => ({
+      orders: sliced.map((order) => ({
         ...order,
         latitude: Number(order.latitude),
         longitude: Number(order.longitude),
@@ -384,7 +401,9 @@ export async function GET() {
           ...event,
           createdAt: event.createdAt.toISOString()
         }))
-      }))
+      })),
+      nextCursor,
+      totalCount,
     });
   } catch (error) {
     console.error("Order list failed", error);

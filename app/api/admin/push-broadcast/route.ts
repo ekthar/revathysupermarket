@@ -65,6 +65,7 @@ export async function POST(request: Request) {
 
   // Get target subscriptions based on audience
   let subscriptions;
+  // Intentionally unbounded - must reach all subscribers for broadcast delivery
   if (audience === "customers") {
     subscriptions = await prisma.pushSubscription.findMany({
       where: { user: { role: "CUSTOMER" } },

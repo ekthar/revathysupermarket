@@ -29,7 +29,8 @@ export async function GET() {
   }
 
   const offers = await prisma.offer.findMany({
-    orderBy: { createdAt: "desc" }
+    orderBy: { createdAt: "desc" },
+    take: 100,
   });
 
   return NextResponse.json({ offers });

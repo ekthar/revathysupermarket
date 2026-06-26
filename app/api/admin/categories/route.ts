@@ -17,6 +17,7 @@ export async function GET() {
   const session = await auth();
   const unauthorized = requireProductStaff(session);
   if (unauthorized) return unauthorized;
+  // Categories are admin-managed, typically <50 rows - no take limit needed
   const categories = await prisma.category.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
     include: { _count: { select: { products: true } } }

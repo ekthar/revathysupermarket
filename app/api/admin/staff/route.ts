@@ -9,6 +9,7 @@ export async function GET() {
   const result = await requirePermission("staff.manage");
   if ("error" in result) return result.error;
 
+  // Staff list is bounded by role filter, capped at 200
   const staff = await prisma.user.findMany({
     where: { role: { in: ["ADMIN", "OWNER", "MANAGER", "STAFF", "PACKING_STAFF", "DELIVERY_PARTNER"] } },
     select: {
@@ -17,6 +18,7 @@ export async function GET() {
       staffPermissions: { select: { permission: true } },
     },
     orderBy: { createdAt: "desc" },
+    take: 200,
   });
 
   return NextResponse.json({ staff });

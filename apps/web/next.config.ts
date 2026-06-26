@@ -9,7 +9,7 @@ const production = process.env.NODE_ENV === "production";
 // - Manifest must be accessible without CORS issues
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${production ? "" : " 'unsafe-eval'"} https://maps.googleapis.com https://vercel.live https://www.google.com https://www.gstatic.com`,
+  `script-src 'self' 'unsafe-inline'${production ? "" : " 'unsafe-eval'"} https://maps.googleapis.com https://vercel.live https://www.google.com https://www.gstatic.com https://apis.google.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://images.unsplash.com https://*.amazonaws.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://maps.gstatic.com https://maps.googleapis.com https://tiles.openfreemap.org https://*.openfreemap.org https://lh3.googleusercontent.com https://www.gstatic.com",

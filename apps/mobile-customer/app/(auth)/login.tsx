@@ -8,14 +8,17 @@ import {
   Platform,
   ActivityIndicator,
 } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import { useAuthStore } from "@/stores/auth";
+import { useGoogleAuth } from "@/services/google-auth";
 
 export default function LoginScreen() {
   const [phone, setPhone] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { loginWithPhone } = useAuthStore();
+  const { signIn: googleSignIn, isLoading: googleLoading } = useGoogleAuth();
 
   const handleSendOtp = async () => {
     const cleaned = phone.replace(/\s|-/g, "");
@@ -104,11 +107,21 @@ export default function LoginScreen() {
         </View>
 
         {/* Google Sign In */}
-        <Pressable className="h-14 rounded-xl items-center justify-center border border-slate-200 flex-row">
-          <Text className="text-lg mr-2">G</Text>
-          <Text className="text-base font-sans-medium text-slate-700">
-            Google
-          </Text>
+        <Pressable
+          onPress={googleSignIn}
+          disabled={googleLoading}
+          className="h-14 rounded-xl items-center justify-center border border-slate-200 flex-row"
+        >
+          {googleLoading ? (
+            <ActivityIndicator color="#059669" />
+          ) : (
+            <>
+              <Text className="text-lg mr-2">G</Text>
+              <Text className="text-base font-sans-medium text-slate-700">
+                Continue with Google
+              </Text>
+            </>
+          )}
         </Pressable>
       </View>
     </KeyboardAvoidingView>

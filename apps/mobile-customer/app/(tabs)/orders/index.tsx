@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
 import { View, Text, FlatList, Pressable, RefreshControl } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { router } from "expo-router";
 import { api } from "@/services/api";
 import type { OrderSummary } from "@msm/shared/types";
 import { formatCurrency, formatDate, formatOrderStatus } from "@msm/shared/utils";
 import { STATUS_LABELS } from "@msm/shared/constants";
+import { OrderRowSkeleton } from "@/components/ui";
 
 function statusColor(status: string): string {
   switch (status) {
@@ -64,7 +66,13 @@ export default function OrdersScreen() {
                 Your order history will appear here
               </Text>
             </View>
-          ) : null
+          ) : (
+            <View>
+              {[1, 2, 3, 4, 5].map((i) => (
+                <OrderRowSkeleton key={i} />
+              ))}
+            </View>
+          )
         }
         renderItem={({ item }) => (
           <Pressable

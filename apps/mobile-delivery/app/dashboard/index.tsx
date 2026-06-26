@@ -1,11 +1,13 @@
 import { useEffect } from "react";
 import { View, Text, ScrollView, Pressable, RefreshControl } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 import { Redirect, router } from "expo-router";
 import { useAuthStore } from "@/stores/auth";
 import { useDeliveryStore } from "@/stores/delivery";
 import { formatCurrency, getGreeting } from "@msm/shared/utils";
 import { STATUS_LABELS } from "@msm/shared/constants";
 import { AssignmentAlert } from "@/components/AssignmentAlert";
+import { StatCardSkeleton, ListItemSkeleton } from "@/components/ui";
 
 export default function DashboardScreen() {
   const { user, status, logout } = useAuthStore();
@@ -43,14 +45,22 @@ export default function DashboardScreen() {
         </View>
 
         {/* Stats Grid */}
-        <View className="px-5 mb-6 flex-row flex-wrap justify-between">
-          {stats.map((stat) => (
-            <View key={stat.label} className={`w-[48%] mb-3 ${stat.colors} rounded-2xl p-4`}>
-              <Text className="text-white/70 text-xs font-sans-medium">{stat.label}</Text>
-              <Text className="text-white text-lg font-heading mt-1">{stat.value}</Text>
-            </View>
-          ))}
-        </View>
+        {isLoading && !dashboard ? (
+          <View className="px-5 mb-6 flex-row flex-wrap justify-between">
+            {[1, 2, 3, 4].map((i) => (
+              <StatCardSkeleton key={i} />
+            ))}
+          </View>
+        ) : (
+          <Animated.View entering={FadeInDown.duration(400)} className="px-5 mb-6 flex-row flex-wrap justify-between">
+            {stats.map((stat) => (
+              <View key={stat.label} className={`w-[48%] mb-3 ${stat.colors} rounded-2xl p-4`}>
+                <Text className="text-white/70 text-xs font-sans-medium">{stat.label}</Text>
+                <Text className="text-white text-lg font-heading mt-1">{stat.value}</Text>
+              </View>
+            ))}
+          </Animated.View>
+        )}
 
         {/* Alert Health */}
         <Pressable onPress={() => router.push("/alert-setup")} className="mx-5 mb-6 border border-slate-200 rounded-xl p-4 flex-row items-center">

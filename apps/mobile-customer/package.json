@@ -15,8 +15,10 @@
   "dependencies": {
     "@msm/shared": "*",
     "@react-native-async-storage/async-storage": "*",
+    "@react-native-community/netinfo": "*",
     "axios": "^1.7.9",
     "expo": "~52.0.0",
+    "expo-auth-session": "*",
     "expo-constants": "*",
     "expo-font": "*",
     "expo-linking": "*",
@@ -25,6 +27,7 @@
     "expo-secure-store": "*",
     "expo-splash-screen": "*",
     "expo-status-bar": "*",
+    "expo-web-browser": "*",
     "nativewind": "^4.1.23",
     "react": "18.3.1",
     "react-native": "0.76.9",

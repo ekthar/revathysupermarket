@@ -8,12 +8,14 @@ import {
   FlatList,
   Image,
 } from "react-native";
+import Animated, { FadeInDown, FadeInRight } from "react-native-reanimated";
 import { router } from "expo-router";
 import { api } from "@/services/api";
 import type { Product, Category, Banner } from "@msm/shared/types";
 import { formatCurrency } from "@msm/shared/utils";
 import { useCartStore } from "@/stores/cart";
 import { useAuthStore } from "@/stores/auth";
+import { ProductCardSkeleton } from "@/components/ui";
 
 export default function HomeScreen() {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -92,7 +94,10 @@ export default function HomeScreen() {
       </View>
 
       {/* Search Bar */}
-      <Pressable className="mx-5 mb-5 h-12 bg-slate-50 rounded-xl flex-row items-center px-4 border border-slate-100">
+      <Pressable
+        onPress={() => router.push("/search")}
+        className="mx-5 mb-5 h-12 bg-slate-50 rounded-xl flex-row items-center px-4 border border-slate-100"
+      >
         <Text className="text-slate-400 mr-2">🔍</Text>
         <Text className="text-slate-400 text-sm">Search products...</Text>
       </Pressable>
@@ -175,8 +180,10 @@ export default function HomeScreen() {
           Featured Products
         </Text>
         {isLoading ? (
-          <View className="py-8 items-center">
-            <Text className="text-slate-400">Loading...</Text>
+          <View className="flex-row flex-wrap justify-between">
+            {[1, 2, 3, 4].map((i) => (
+              <ProductCardSkeleton key={i} />
+            ))}
           </View>
         ) : featured.length === 0 ? (
           <View className="py-8 items-center">

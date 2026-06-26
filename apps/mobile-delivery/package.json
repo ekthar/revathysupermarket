@@ -15,10 +15,12 @@
   "dependencies": {
     "@msm/shared": "*",
     "@react-native-async-storage/async-storage": "*",
+    "@react-native-community/netinfo": "*",
     "axios": "^1.7.9",
     "expo": "~52.0.0",
     "expo-av": "*",
     "expo-constants": "*",
+    "expo-font": "*",
     "expo-font": "*",
     "expo-linking": "*",
     "expo-location": "*",

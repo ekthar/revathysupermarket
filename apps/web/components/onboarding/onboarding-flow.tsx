@@ -312,27 +312,43 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 <ArrowRight className="h-4 w-4" />
               </Button>
 
+              {message && (
+                <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400">
+                  {message}
+                </p>
+              )}
+
               <div className="mt-8 space-y-3">
                 <button
                   type="button"
                   onClick={async () => {
                     if (useFirebaseAuth) {
                       setLoading(true);
-                      const result = await signInWithGoogleFirebase();
-                      if (result.ok && result.idToken) {
-                        const authResult = await signIn("firebase-token", {
-                          idToken: result.idToken,
-                          name: name.trim(),
-                          redirect: false
-                        });
-                        setLoading(false);
-                        if (!authResult?.error) {
-                          setStep("location");
-                          return;
+                      setMessage("");
+                      try {
+                        const result = await signInWithGoogleFirebase();
+                        if (result.ok && result.idToken) {
+                          const authResult = await signIn("firebase-token", {
+                            idToken: result.idToken,
+                            name: name.trim(),
+                            redirect: false
+                          });
+                          setLoading(false);
+                          if (!authResult?.error) {
+                            setStep("location");
+                            return;
+                          }
+                          setMessage("Server authentication failed. Please try again.");
+                        } else {
+                          setLoading(false);
+                          setMessage(result.error ?? "Google sign-in failed. Try again.");
                         }
+                      } catch (err: unknown) {
+                        setLoading(false);
+                        const errorMessage = err instanceof Error ? err.message : "Google sign-in failed unexpectedly.";
+                        console.error("[Google Sign-In]", err);
+                        setMessage(errorMessage);
                       }
-                      setLoading(false);
-                      setMessage(result.error ?? "Google sign-in failed. Try again.");
                     } else {
                       signIn("google", { callbackUrl: safeCallback });
                     }

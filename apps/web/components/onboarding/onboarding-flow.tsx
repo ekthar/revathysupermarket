@@ -16,16 +16,6 @@ import { readApiResponse } from "@/lib/client-api";
 import { cn } from "@/lib/utils";
 import { SITE } from "@/lib/constants";
 import { safeCallbackUrl } from "@/lib/safe-redirect";
-import {
-  initRecaptcha,
-  sendFirebaseOtp,
-  verifyFirebaseOtp,
-  signInWithGoogleFirebase,
-  cleanupRecaptcha,
-} from "@/lib/firebase-auth-client";
-
-// Use Firebase Auth if configured, otherwise fall back to WhatsApp OTP
-const useFirebaseAuth = Boolean(process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
 
 type Step = "splash" | "name" | "phone" | "otp" | "location" | "done";
 const STEPS: Step[] = ["splash", "name", "phone", "otp", "location", "done"];
@@ -42,29 +32,9 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
   const [timer, setTimer] = useState(30);
   const [locationAddress, setLocationAddress] = useState("");
   const [locating, setLocating] = useState(false);
-  const recaptchaInitialized = useRef(false);
 
   const safeCallback = safeCallbackUrl(callbackUrl, "/", ["/", "/products", "/cart", "/checkout", "/dashboard", "/account", "/support"]);
   const currentIndex = STEPS.indexOf(step);
-
-  // Initialize Firebase reCAPTCHA on mount
-  useEffect(() => {
-    if (useFirebaseAuth && !recaptchaInitialized.current) {
-      // Delay init to ensure DOM is ready
-      const timeout = setTimeout(() => {
-        initRecaptcha("recaptcha-container");
-        recaptchaInitialized.current = true;
-      }, 500);
-      return () => clearTimeout(timeout);
-    }
-  }, []);
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (useFirebaseAuth) cleanupRecaptcha();
-    };
-  }, []);
 
   // Auto-advance splash
   useEffect(() => {
@@ -107,32 +77,19 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
     setLoading(true);
     setMessage("");
 
-    if (useFirebaseAuth) {
-      // Use Firebase Phone Auth (FREE - 10K verifications/month)
-      const result = await sendFirebaseOtp(phone);
-      setLoading(false);
-      if (!result.ok) {
-        setMessage(result.error ?? "Could not send OTP. Try again.");
-        return;
-      }
-      setTimer(30);
-      setStep("otp");
-    } else {
-      // Fallback: WhatsApp OTP (costs money per message)
-      const res = await fetch("/api/auth/otp/send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone })
-      });
-      const data = await readApiResponse<{ error?: string }>(res);
-      setLoading(false);
-      if (!res.ok) {
-        setMessage(data.error ?? "Could not send OTP. Try again.");
-        return;
-      }
-      setTimer(30);
-      setStep("otp");
+    const res = await fetch("/api/auth/otp/send", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ phone })
+    });
+    const data = await readApiResponse<{ error?: string }>(res);
+    setLoading(false);
+    if (!res.ok) {
+      setMessage(data.error ?? "Could not send OTP. Try again.");
+      return;
     }
+    setTimer(30);
+    setStep("otp");
   }
 
   async function verifyOtp() {
@@ -140,33 +97,11 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
     setLoading(true);
     setMessage("");
 
-    if (useFirebaseAuth) {
-      // Verify via Firebase and sign into NextAuth with Firebase token
-      const firebaseResult = await verifyFirebaseOtp(otp);
-      if (!firebaseResult.ok || !firebaseResult.idToken) {
-        setLoading(false);
-        setMessage(firebaseResult.error ?? "Code is incorrect or expired. Try again.");
-        return;
-      }
-      // Sign into NextAuth using the Firebase ID token
-      const result = await signIn("firebase-token", {
-        idToken: firebaseResult.idToken,
-        name: name.trim(),
-        redirect: false
-      });
-      setLoading(false);
-      if (result?.error) {
-        setMessage("Authentication failed. Please try again.");
-        return;
-      }
-    } else {
-      // Fallback: WhatsApp OTP verification
-      const result = await signIn("phone-otp", { phone, otp, name, redirect: false });
-      setLoading(false);
-      if (result?.error) {
-        setMessage("Code is incorrect or expired. Try again.");
-        return;
-      }
+    const result = await signIn("phone-otp", { phone, otp, name, redirect: false });
+    setLoading(false);
+    if (result?.error) {
+      setMessage("Code is incorrect or expired. Try again.");
+      return;
     }
 
     // Save name
@@ -308,7 +243,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 </motion.p>
               )}
 
-              {/* Google Sign-In - Primary CTA */}
+              {/* Google Sign-In - Primary CTA (Direct NextAuth OAuth redirect) */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -317,54 +252,14 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               >
                 <motion.button
                   type="button"
-                  onClick={async () => {
-                    if (useFirebaseAuth) {
-                      setLoading(true);
-                      setMessage("");
-                      try {
-                        const result = await signInWithGoogleFirebase();
-                        if (result.ok && result.idToken) {
-                          const authResult = await signIn("firebase-token", {
-                            idToken: result.idToken,
-                            name: name.trim(),
-                            redirect: false
-                          });
-                          setLoading(false);
-                          if (!authResult?.error) {
-                            setStep("location");
-                            return;
-                          }
-                          setMessage("Server authentication failed. Please try again.");
-                        } else {
-                          setLoading(false);
-                          setMessage(result.error ?? "Google sign-in failed. Try again.");
-                        }
-                      } catch (err: unknown) {
-                        setLoading(false);
-                        const errorMessage = err instanceof Error ? err.message : "Google sign-in failed unexpectedly.";
-                        console.error("[Google Sign-In]", err);
-                        setMessage(errorMessage);
-                      }
-                    } else {
-                      signIn("google", { callbackUrl: safeCallback });
-                    }
-                  }}
+                  onClick={() => signIn("google", { callbackUrl: safeCallback })}
                   disabled={loading}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white text-base font-semibold text-neutral-800 shadow-lg shadow-neutral-200/60 ring-1 ring-neutral-200 transition-shadow hover:shadow-xl disabled:opacity-50 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:shadow-none dark:hover:bg-white/10"
                 >
-                  {loading ? (
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
-                    >
-                      <GoogleIcon size={22} />
-                    </motion.div>
-                  ) : (
-                    <GoogleIcon size={22} />
-                  )}
-                  {loading ? "Signing in..." : "Continue with Google"}
+                  <GoogleIcon size={22} />
+                  Continue with Google
                 </motion.button>
 
                 <motion.p
@@ -444,7 +339,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 Sign in with phone
               </h1>
               <p className="mt-2 text-sm text-neutral-500">
-                We&apos;ll send a free verification code via SMS.
+                We&apos;ll send a verification code via WhatsApp.
               </p>
 
               <div className="mt-6 space-y-4">
@@ -633,9 +528,6 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
           </a>
         </div>
       )}
-
-      {/* Hidden reCAPTCHA container for Firebase Phone Auth */}
-      <div id="recaptcha-container" />
     </main>
   );
 }

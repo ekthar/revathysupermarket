@@ -1,13 +1,32 @@
 {
   "project_info": {
-    "project_number": "REPLACE_WITH_YOUR_PROJECT_NUMBER",
-    "project_id": "msm-supermarket",
-    "storage_bucket": "msm-supermarket.appspot.com"
+    "project_number": "748059214340",
+    "project_id": "munna-supermarket",
+    "storage_bucket": "munna-supermarket.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:000000000000:android:bbbbbbbbbbbbbbbb",
+        "mobilesdk_app_id": "1:748059214340:android:9f51125aaa95d150d76b51",
+        "android_client_info": {
+          "package_name": "in.revathysupermarket.customer"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyChrWFKs8JmR3wCHxzY0DTAmAQCL5ADI6M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:748059214340:android:f881b15360272194d76b51",
         "android_client_info": {
           "package_name": "in.revathysupermarket.delivery"
         }
@@ -15,7 +34,7 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "REPLACE_WITH_YOUR_API_KEY"
+          "current_key": "AIzaSyChrWFKs8JmR3wCHxzY0DTAmAQCL5ADI6M"
         }
       ],
       "services": {

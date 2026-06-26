@@ -17,7 +17,8 @@
       "supportsTablet": false,
       "bundleIdentifier": "in.revathysupermarket.customer",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "We need your location to show delivery availability and estimate delivery times."
+        "NSLocationWhenInUseUsageDescription": "We need your location to show delivery availability and estimate delivery times.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -52,6 +53,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c4ffeb4a-f0ee-46a5-b3b0-b84f4ed169da"
+      }
     }
   }
 }

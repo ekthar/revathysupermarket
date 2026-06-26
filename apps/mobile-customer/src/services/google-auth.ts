@@ -7,9 +7,9 @@ import { useAuthStore } from "@/stores/auth";
 WebBrowser.maybeCompleteAuthSession();
 
 // Google OAuth client IDs - replace with your real ones from Google Cloud Console
-const GOOGLE_WEB_CLIENT_ID = "REPLACE_WITH_WEB_CLIENT_ID.apps.googleusercontent.com";
-const GOOGLE_ANDROID_CLIENT_ID = "REPLACE_WITH_ANDROID_CLIENT_ID.apps.googleusercontent.com";
-const GOOGLE_IOS_CLIENT_ID = "REPLACE_WITH_IOS_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_WEB_CLIENT_ID = "47754236417-n3n1a2395t9mcm1hfg6rsvqkehj1icgh.apps.googleusercontent.com";
+const GOOGLE_ANDROID_CLIENT_ID = "47754236417-8aerlthrl09j4va69d620212u47ocpvh.apps.googleusercontent.com";
+const GOOGLE_IOS_CLIENT_ID = "47754236417-2maistb30ua41m3dm5h2sf8jqit8onlh.apps.googleusercontent.com";
 
 /**
  * Hook for Google Sign-In using expo-auth-session.

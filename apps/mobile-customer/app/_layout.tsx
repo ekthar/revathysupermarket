@@ -46,7 +46,7 @@ export default function RootLayout() {
           options={{ headerShown: false, animation: "fade" }}
         />
         <Stack.Screen
-          name="checkout"
+          name="checkout/index"
           options={{
             headerShown: true,
             title: "Checkout",
@@ -54,7 +54,7 @@ export default function RootLayout() {
           }}
         />
         <Stack.Screen
-          name="orders/[id]/index"
+          name="orders/[id]"
           options={{ headerShown: true, title: "Order Details" }}
         />
         <Stack.Screen

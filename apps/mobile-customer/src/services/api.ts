@@ -4,11 +4,27 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import * as SecureStore from "expo-secure-store";
+import { Platform } from "react-native";
 import { API_BASE_URL } from "../config/api";
 
 // Keys for secure token storage
 const ACCESS_TOKEN_KEY = "msm_access_token";
 const REFRESH_TOKEN_KEY = "msm_refresh_token";
+
+const webStorage = {
+  getItem(key: string): string | null {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(key);
+  },
+  setItem(key: string, value: string): void {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(key, value);
+  },
+  removeItem(key: string): void {
+    if (typeof window === "undefined") return;
+    window.localStorage.removeItem(key);
+  },
+};
 
 // ============================================
 // Token Storage
@@ -16,14 +32,26 @@ const REFRESH_TOKEN_KEY = "msm_refresh_token";
 
 export const tokenStorage = {
   async getAccessToken(): Promise<string | null> {
+    if (Platform.OS === "web") {
+      return webStorage.getItem(ACCESS_TOKEN_KEY);
+    }
     return SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
   },
 
   async getRefreshToken(): Promise<string | null> {
+    if (Platform.OS === "web") {
+      return webStorage.getItem(REFRESH_TOKEN_KEY);
+    }
     return SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
   },
 
   async setTokens(accessToken: string, refreshToken: string): Promise<void> {
+    if (Platform.OS === "web") {
+      webStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+      webStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+      return;
+    }
+
     await Promise.all([
       SecureStore.setItemAsync(ACCESS_TOKEN_KEY, accessToken),
       SecureStore.setItemAsync(REFRESH_TOKEN_KEY, refreshToken),
@@ -31,6 +59,12 @@ export const tokenStorage = {
   },
 
   async clearTokens(): Promise<void> {
+    if (Platform.OS === "web") {
+      webStorage.removeItem(ACCESS_TOKEN_KEY);
+      webStorage.removeItem(REFRESH_TOKEN_KEY);
+      return;
+    }
+
     await Promise.all([
       SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
       SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),

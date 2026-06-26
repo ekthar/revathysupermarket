@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { AnimatePresence, motion, useReducedMotion, type Variants } from "framer-motion";
-import { ArrowLeft, ArrowRight, Check, Chrome, LocateFixed, MapPin, Phone, ShoppingBasket, Sparkles, UserCog } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, LocateFixed, MapPin, Phone, ShoppingBasket, UserCog } from "lucide-react";
+import { AnimatedGoogleIcon, GoogleIcon } from "@/components/onboarding/google-icon";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OtpInput } from "@/components/onboarding/otp-input";
@@ -263,7 +264,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
             </motion.div>
           )}
 
-          {/* ─── NAME (Swiggy-style: ask name first) ─── */}
+          {/* ─── NAME + SIGN-IN (Google-first design) ─── */}
           {step === "name" && (
             <motion.div
               key="name"
@@ -274,52 +275,47 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
               transition={{ type: "spring", stiffness: 300, damping: 25 }}
               className="w-full max-w-sm"
             >
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <Sparkles className="h-5 w-5" />
-              </span>
-              <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
-                What&apos;s your name?
-              </h1>
-              <p className="mt-2 text-sm text-neutral-500">
-                So we know what to call you when your groceries arrive.
-              </p>
+              {/* Animated Google Icon - Hero */}
+              <div className="flex flex-col items-center text-center">
+                <AnimatedGoogleIcon size={64} className="mb-6" />
 
-              {name.trim().length >= 2 && (
-                <motion.p
-                  initial={{ opacity: 0, y: 8 }}
+                <motion.h1
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-5 rounded-2xl bg-primary/5 px-4 py-3 text-center text-lg font-bold text-primary"
+                  transition={{ delay: 0.4 }}
+                  className="font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl"
                 >
-                  Hey, {name.trim()}! 👋
+                  Sign in to {SITE.name}
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.6 }}
+                  className="mt-2 text-sm text-neutral-500"
+                >
+                  One tap to get your groceries delivered
+                </motion.p>
+              </div>
+
+              {/* Error message */}
+              {message && (
+                <motion.p
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-5 rounded-xl bg-red-50 px-4 py-3 text-center text-sm font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400"
+                >
+                  {message}
                 </motion.p>
               )}
 
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Enter your name"
-                autoFocus
-                className="mt-5 h-14 rounded-2xl border-neutral-200 text-lg font-semibold shadow-sm placeholder:text-neutral-400 focus-visible:ring-primary dark:border-white/10"
-              />
-
-              <Button
-                onClick={() => setStep("phone")}
-                disabled={name.trim().length < 2}
-                size="lg"
-                className="mt-5 w-full rounded-2xl"
+              {/* Google Sign-In - Primary CTA */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.7, type: "spring", stiffness: 200, damping: 20 }}
+                className="mt-8"
               >
-                Continue
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-
-              {message && (
-                <p className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 dark:bg-red-500/10 dark:text-red-400">
-                  {message}
-                </p>
-              )}
-
-              <div className="mt-8 space-y-3">
-                <button
+                <motion.button
                   type="button"
                   onClick={async () => {
                     if (useFirebaseAuth) {
@@ -354,11 +350,68 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                     }
                   }}
                   disabled={loading}
-                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-white text-sm font-semibold text-neutral-700 shadow-sm transition active:scale-[0.98] dark:border-white/10 dark:bg-white/5 dark:text-white disabled:opacity-50"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="flex h-14 w-full items-center justify-center gap-3 rounded-2xl bg-white text-base font-semibold text-neutral-800 shadow-lg shadow-neutral-200/60 ring-1 ring-neutral-200 transition-shadow hover:shadow-xl disabled:opacity-50 dark:bg-white/5 dark:text-white dark:ring-white/10 dark:shadow-none dark:hover:bg-white/10"
                 >
-                  <Chrome className="h-4 w-4" />
+                  {loading ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                    >
+                      <GoogleIcon size={22} />
+                    </motion.div>
+                  ) : (
+                    <GoogleIcon size={22} />
+                  )}
                   {loading ? "Signing in..." : "Continue with Google"}
+                </motion.button>
+
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 1 }}
+                  className="mt-3 text-center text-xs text-neutral-400"
+                >
+                  Secure sign-in powered by Google
+                </motion.p>
+              </motion.div>
+
+              {/* Divider */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.1 }}
+                className="my-7 flex items-center gap-3"
+              >
+                <div className="h-px flex-1 bg-neutral-200 dark:bg-white/10" />
+                <span className="text-xs font-medium text-neutral-400">or</span>
+                <div className="h-px flex-1 bg-neutral-200 dark:bg-white/10" />
+              </motion.div>
+
+              {/* Phone OTP - Secondary option */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.2 }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setStep("phone")}
+                  className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl border border-neutral-200 bg-neutral-50 text-sm font-medium text-neutral-600 transition hover:bg-neutral-100 active:scale-[0.98] dark:border-white/10 dark:bg-white/5 dark:text-neutral-300 dark:hover:bg-white/10"
+                >
+                  <Phone className="h-4 w-4" />
+                  Sign in with Phone OTP
                 </button>
+              </motion.div>
+
+              {/* Skip */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 1.4 }}
+                className="mt-5"
+              >
                 <button
                   type="button"
                   onClick={() => {
@@ -369,7 +422,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 >
                   Skip for now
                 </button>
-              </div>
+              </motion.div>
             </motion.div>
           )}
 
@@ -388,13 +441,19 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 <Phone className="h-5 w-5" />
               </span>
               <h1 className="mt-4 font-display text-2xl font-black text-neutral-900 dark:text-white sm:text-3xl">
-                Enter your number
+                Sign in with phone
               </h1>
               <p className="mt-2 text-sm text-neutral-500">
                 We&apos;ll send a free verification code via SMS.
               </p>
 
-              <div className="mt-6">
+              <div className="mt-6 space-y-4">
+                <Input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  className="h-12 rounded-2xl border-neutral-200 text-base font-medium shadow-sm placeholder:text-neutral-400 focus-visible:ring-primary dark:border-white/10"
+                />
                 <PhoneInput value={phone} onChange={setPhone} />
               </div>
 
@@ -406,7 +465,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
 
               <Button
                 onClick={sendOtp}
-                disabled={loading || phone.length !== 10}
+                disabled={loading || phone.length !== 10 || name.trim().length < 2}
                 size="lg"
                 className="mt-5 w-full rounded-2xl"
               >

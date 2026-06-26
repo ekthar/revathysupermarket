@@ -40,6 +40,15 @@ const nextConfig: NextConfig = {
         ]
       },
       {
+        source: "/api/:path*",
+        headers: [
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Methods", value: "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
+          { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
+          { key: "Access-Control-Max-Age", value: "86400" }
+        ]
+      },
+      {
         // Service worker must be served with correct scope and content type
         source: "/sw.js",
         headers: [

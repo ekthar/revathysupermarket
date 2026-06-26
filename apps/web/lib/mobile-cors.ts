@@ -16,6 +16,11 @@ function allowedOrigins() {
   return new Set(configured?.length ? configured : DEFAULT_ALLOWED_ORIGINS);
 }
 
+export function isAllowedMobileCorsOrigin(request: Request) {
+  const origin = request.headers.get("origin");
+  return Boolean(origin && allowedOrigins().has(origin));
+}
+
 export function mobileCorsHeaders(request: Request) {
   const headers = new Headers();
   const origin = request.headers.get("origin");

@@ -1,24 +1,31 @@
 import NextAuth from "next-auth";
 import authConfig from "@/auth.config";
-import { mobileOptionsResponse } from "@/lib/mobile-cors";
+import { isAllowedMobileCorsOrigin, mobileOptionsResponse } from "@/lib/mobile-cors";
 import { isSameOriginRequest } from "@/lib/request-security";
 
 const { auth } = NextAuth(authConfig);
 const staffRoles = new Set(["ADMIN", "STAFF", "OWNER", "MANAGER", "PACKING_STAFF"]);
 
 export default auth((request) => {
+  const isApiRoute = request.nextUrl.pathname.startsWith("/api/");
   const isMobileWebAuthRoute =
     request.nextUrl.pathname === "/api/auth/google" ||
     request.nextUrl.pathname === "/api/auth/me" ||
     request.nextUrl.pathname === "/api/mobile/v1/auth/google" ||
     request.nextUrl.pathname === "/api/mobile/v1/auth/me";
 
-  if (isMobileWebAuthRoute && request.method === "OPTIONS") {
+  if (isApiRoute && request.method === "OPTIONS") {
     return mobileOptionsResponse(request);
   }
 
   const isMutatingRequest = !["GET", "HEAD", "OPTIONS"].includes(request.method);
-  if (isMutatingRequest && !isMobileWebAuthRoute && !isSameOriginRequest(request)) {
+  const isAllowedCorsApiRequest = isApiRoute && isAllowedMobileCorsOrigin(request);
+  if (
+    isMutatingRequest &&
+    !isMobileWebAuthRoute &&
+    !isAllowedCorsApiRequest &&
+    !isSameOriginRequest(request)
+  ) {
     return new Response("Forbidden", { status: 403 });
   }
 

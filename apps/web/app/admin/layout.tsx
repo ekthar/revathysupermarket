@@ -54,6 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     // Customers
     { href: "/admin/customers", label: "Customers", icon: "Users", group: "Customers", show: can("customers.view"), badge: 0 },
     { href: "/admin/feedback", label: "Feedback", icon: "Users", group: "Customers", show: can("customers.view"), badge: 0 },
+    { href: "/admin/rewards", label: "Rewards Points", icon: "Gift", group: "Customers", show: can("customers.view"), badge: 0 },
 
     // Marketing
     { href: "/admin/offers", label: "Offers", icon: "Tag", group: "Marketing", show: can("marketing.view"), badge: 0 },

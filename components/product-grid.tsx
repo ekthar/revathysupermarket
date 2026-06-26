@@ -1,68 +1,139 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SlidersHorizontal, Search } from "lucide-react";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/components/cart/cart-provider";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
-import { categories, products } from "@/lib/products";
+import { categories } from "@/lib/products";
 import type { Product } from "@/lib/types";
 
 type SortMode = "popularity" | "low" | "high" | "newest";
 
-export function ProductGrid({ items = products, initialCategory = "All", initialQuery = "" }: { items?: Product[]; initialCategory?: string; initialQuery?: string }) {
+type ProductsResponse = {
+  items: Product[];
+  nextCursor: string | null;
+  total: number;
+};
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debouncedValue;
+}
+
+async function fetchProducts(params: {
+  category: string;
+  q: string;
+  sort: string;
+  maxPrice: number;
+  cursor?: string;
+  limit?: number;
+}): Promise<ProductsResponse> {
+  const searchParams = new URLSearchParams();
+  if (params.category && params.category !== "All") searchParams.set("category", params.category);
+  if (params.q) searchParams.set("q", params.q);
+  if (params.sort) searchParams.set("sort", params.sort);
+  if (params.maxPrice < 350) searchParams.set("maxPrice", String(params.maxPrice));
+  if (params.cursor) searchParams.set("cursor", params.cursor);
+  searchParams.set("limit", String(params.limit || 24));
+
+  const res = await fetch(`/api/products?${searchParams.toString()}`);
+  if (!res.ok) throw new Error("Failed to fetch products");
+  return res.json();
+}
+
+export function ProductGrid({
+  initialItems = [],
+  initialTotal = 0,
+  initialNextCursor = null,
+  initialCategory = "All",
+  initialQuery = "",
+  initialSort = "popularity",
+}: {
+  initialItems?: Product[];
+  initialTotal?: number;
+  initialNextCursor?: string | null;
+  initialCategory?: string;
+  initialQuery?: string;
+  initialSort?: SortMode;
+}) {
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
   const [maxPrice, setMaxPrice] = useState(350);
-  const [sort, setSort] = useState<SortMode>("popularity");
-  const [visibleCount, setVisibleCount] = useState(24);
+  const [sort, setSort] = useState<SortMode>(initialSort);
   const { totalItems } = useCart();
   const [filterOpen, setFilterOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
-  const filtered = useMemo(() => {
-    return items
-      .filter((product) => {
-        const price = product.discountPrice ?? product.price;
-        return (
-          (category === "All" || product.category === category) &&
-          price <= maxPrice &&
-          product.name.toLowerCase().includes(query.toLowerCase())
-        );
-      })
-      .sort((a, b) => {
-        const aPrice = a.discountPrice ?? a.price;
-        const bPrice = b.discountPrice ?? b.price;
-        if (sort === "low") return aPrice - bPrice;
-        if (sort === "high") return bPrice - aPrice;
-        if (sort === "newest") return new Date(b.createdAt ?? 0).getTime() - new Date(a.createdAt ?? 0).getTime();
-        return b.popularity - a.popularity;
-      });
-  }, [category, items, maxPrice, query, sort]);
-  const visibleItems = filtered.slice(0, visibleCount);
+  const debouncedQuery = useDebounce(query, 300);
 
-  // Infinite scroll - auto-load more when scrolling to bottom
+  // Determine if we should use initial SSR data (when filters match initial state)
+  const isInitialState =
+    category === initialCategory &&
+    debouncedQuery === initialQuery &&
+    sort === initialSort &&
+    maxPrice === 350;
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+  } = useInfiniteQuery({
+    queryKey: ["products", category, debouncedQuery, sort, maxPrice],
+    queryFn: ({ pageParam }) =>
+      fetchProducts({
+        category,
+        q: debouncedQuery,
+        sort,
+        maxPrice,
+        cursor: pageParam as string | undefined,
+      }),
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    ...(isInitialState && initialItems.length > 0
+      ? {
+          initialData: {
+            pages: [
+              {
+                items: initialItems,
+                nextCursor: initialNextCursor,
+                total: initialTotal,
+              },
+            ],
+            pageParams: [undefined],
+          },
+        }
+      : {}),
+  });
+
+  const allItems = data?.pages.flatMap((page) => page.items) ?? [];
+  const total = data?.pages[0]?.total ?? initialTotal;
+
+  // Infinite scroll observer
   useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && visibleCount < filtered.length) {
-          setLoading(true);
-          setTimeout(() => {
-            setVisibleCount((c) => c + 24);
-            setLoading(false);
-          }, 300);
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
         }
       },
       { threshold: 0.1 }
     );
-    if (loadMoreRef.current) observer.observe(loadMoreRef.current);
+    observer.observe(el);
     return () => observer.disconnect();
-  }, [visibleCount, filtered.length]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
@@ -126,7 +197,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
         <div className="mt-3 hidden md:col-span-3 md:block">
           <div className="flex items-center justify-between text-xs font-black sm:text-sm">
             <span>Price up to Rs {maxPrice}</span>
-            <span className="rounded-full bg-black px-3 py-1 text-white">{filtered.length} items</span>
+            <span className="rounded-full bg-black px-3 py-1 text-white">{total} items</span>
           </div>
           <input
             type="range"
@@ -139,16 +210,20 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
         </div>
       </div>
 
-      {filtered.length > 0 ? (
+      {isLoading && allItems.length === 0 ? (
+        <div className="mt-5">
+          <ProductSkeletonGrid count={8} />
+        </div>
+      ) : allItems.length > 0 ? (
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {visibleItems.map((product) => (
+            {allItems.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
           </div>
-          {visibleItems.length < filtered.length ? (
+          {hasNextPage ? (
             <div ref={loadMoreRef} className="mt-6">
-              {loading && <ProductSkeletonGrid count={4} />}
+              {isFetchingNextPage && <ProductSkeletonGrid count={4} />}
             </div>
           ) : null}
         </>
@@ -161,7 +236,6 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
           </Button>
         </div>
       )}
-      {/* Cart bar is now handled by MobileBottomNav - removed duplicate here */}
 
       {/* Mobile filter bottom sheet */}
       <BottomSheet open={filterOpen} onClose={() => setFilterOpen(false)} title="Sort & Filter">
@@ -172,8 +246,8 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
             <div className="grid grid-cols-2 gap-2">
               {[
                 { value: "popularity" as const, label: "Popularity" },
-                { value: "low" as const, label: "Price: Low → High" },
-                { value: "high" as const, label: "Price: High → Low" },
+                { value: "low" as const, label: "Price: Low \u2192 High" },
+                { value: "high" as const, label: "Price: High \u2192 Low" },
                 { value: "newest" as const, label: "Newest First" }
               ].map((option) => (
                 <button
@@ -194,7 +268,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
 
           {/* Price range */}
           <div>
-            <p className="text-caption font-bold text-neutral-500 uppercase mb-2">Price range (up to ₹{maxPrice})</p>
+            <p className="text-caption font-bold text-neutral-500 uppercase mb-2">Price range (up to \u20B9{maxPrice})</p>
             <input
               type="range"
               min="20"
@@ -204,8 +278,8 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
               className="w-full accent-primary"
             />
             <div className="flex justify-between text-caption text-neutral-400 mt-1">
-              <span>₹20</span>
-              <span>₹350</span>
+              <span>{"\u20B9"}20</span>
+              <span>{"\u20B9"}350</span>
             </div>
           </div>
 
@@ -231,7 +305,7 @@ export function ProductGrid({ items = products, initialCategory = "All", initial
           </div>
 
           {/* Results count */}
-          <p className="text-center text-caption font-semibold text-black">{filtered.length} products found</p>
+          <p className="text-center text-caption font-semibold text-black">{total} products found</p>
         </div>
       </BottomSheet>
     </section>

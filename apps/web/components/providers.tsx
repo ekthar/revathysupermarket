@@ -8,6 +8,7 @@ import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { PushNotificationManager } from "@/components/push-notification-manager";
 import { FcmRegistration } from "@/components/fcm-registration";
 import { ToastProvider } from "@/components/toast-provider";
+import { Toaster } from "@/components/ui/sonner-toaster";
 import { ProfileSync } from "@/components/profile-sync";
 import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { ThemeColorSync } from "@/components/theme-color-sync";
@@ -31,6 +32,7 @@ export function Providers({ children, session }: { children: React.ReactNode; se
                 <InstallAppPrompt />
               </CartProvider>
             </ToastProvider>
+            <Toaster />
           </MotionConfig>
         </ThemeProvider>
       </QueryProvider>

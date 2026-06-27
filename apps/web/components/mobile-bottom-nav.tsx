@@ -50,6 +50,7 @@ function NavTab({ href, icon: Icon, label, active, badge, onPrefetch }: { href: 
     <Link
       href={href}
       onMouseEnter={onPrefetch}
+      onTouchStart={onPrefetch}
       className={cn(
         "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-2 text-micro transition-colors focus-visible:ring-2 focus-visible:ring-primary/30",
         active ? "text-white" : "text-neutral-500 hover:bg-white/65 dark:hover:bg-neutral-800/65"

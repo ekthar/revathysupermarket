@@ -1,6 +1,6 @@
 "use client";
 
-import { useAutoAnimate } from "@auto-animate/react";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { cn } from "@/lib/utils";
 
 /**

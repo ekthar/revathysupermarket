@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { SlidersHorizontal, Search } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/components/cart/cart-provider";
+// Cart import removed - was unused and causing unnecessary re-renders on cart changes
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
 import { categories } from "@/lib/products";
@@ -50,6 +50,40 @@ async function fetchProducts(params: {
   return res.json();
 }
 
+// Lazy-rendered product card - only renders when near viewport
+const LazyProductCard = memo(function LazyProductCard({ product }: { product: Product }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: "200px" } // Start rendering 200px before it enters viewport
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  if (!isVisible) {
+    // Placeholder with same dimensions to avoid layout shift
+    return <div ref={ref} className="aspect-[3/4] rounded-lg bg-neutral-50 dark:bg-neutral-900 animate-pulse" />;
+  }
+
+  return (
+    <div ref={ref}>
+      <ProductCard product={product} />
+    </div>
+  );
+});
+
 export function ProductGrid({
   initialItems = [],
   initialTotal = 0,
@@ -69,7 +103,6 @@ export function ProductGrid({
   const [category, setCategory] = useState(initialCategory);
   const [maxPrice, setMaxPrice] = useState(350);
   const [sort, setSort] = useState<SortMode>(initialSort);
-  const { totalItems } = useCart();
   const [filterOpen, setFilterOpen] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -135,6 +168,34 @@ export function ProductGrid({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  // Memoized handlers to prevent child re-renders
+  const handleQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const value = event.target.value;
+    setQuery(value);
+    if (value.trim().length >= 3) {
+      const saved = JSON.parse(window.localStorage.getItem("msm-search-history") || "[]") as string[];
+      window.localStorage.setItem("msm-search-history", JSON.stringify([value.trim(), ...saved.filter((item) => item !== value.trim())].slice(0, 8)));
+    }
+  }, []);
+
+  const handleCategoryChange = useCallback((item: string) => {
+    setCategory(item);
+  }, []);
+
+  const handleSortChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSort(event.target.value as SortMode);
+  }, []);
+
+  const handlePriceChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    setMaxPrice(Number(event.target.value));
+  }, []);
+
+  const handleResetFilters = useCallback(() => {
+    setQuery("");
+    setCategory("All");
+    setMaxPrice(350);
+  }, []);
+
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
       <div className="rounded-xl bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
@@ -142,14 +203,7 @@ export function ProductGrid({
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-neutral-400" />
           <Input
             value={query}
-            onChange={(event) => {
-              const value = event.target.value;
-              setQuery(value);
-              if (value.trim().length >= 3) {
-                const saved = JSON.parse(window.localStorage.getItem("msm-search-history") || "[]") as string[];
-                window.localStorage.setItem("msm-search-history", JSON.stringify([value.trim(), ...saved.filter((item) => item !== value.trim())].slice(0, 8)));
-              }
-            }}
+            onChange={handleQueryChange}
             placeholder="Search for items"
             className="h-12 rounded-2xl border-0 bg-white pl-11 text-title font-semibold shadow-elevation-2 placeholder:text-neutral-400"
           />
@@ -167,7 +221,7 @@ export function ProductGrid({
             <button
               key={item}
               type="button"
-              onClick={() => setCategory(item)}
+              onClick={() => handleCategoryChange(item)}
               className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-black/5 bg-white px-4 text-xs font-black text-neutral-700 shadow-sm whitespace-nowrap"}
             >
               {item}
@@ -176,7 +230,7 @@ export function ProductGrid({
         </div>
         <select
           value={category}
-          onChange={(event) => setCategory(event.target.value)}
+          onChange={(event) => handleCategoryChange(event.target.value)}
           className="mt-3 hidden h-12 rounded-2xl border border-input bg-background px-4 text-sm font-semibold md:mt-0 md:block"
         >
           <option>All</option>
@@ -186,7 +240,7 @@ export function ProductGrid({
         </select>
         <select
           value={sort}
-          onChange={(event) => setSort(event.target.value as SortMode)}
+          onChange={handleSortChange}
           className="mt-3 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold md:mt-0"
         >
           <option value="popularity">Popularity</option>
@@ -204,7 +258,7 @@ export function ProductGrid({
             min="20"
             max="350"
             value={maxPrice}
-            onChange={(event) => setMaxPrice(Number(event.target.value))}
+            onChange={handlePriceChange}
             className="mt-3 w-full accent-primary"
           />
         </div>
@@ -217,8 +271,13 @@ export function ProductGrid({
       ) : allItems.length > 0 ? (
         <>
           <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {allItems.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {allItems.map((product, index) => (
+              // First 8 items render immediately (above the fold), rest use lazy rendering
+              index < 8 ? (
+                <ProductCard key={product.id} product={product} />
+              ) : (
+                <LazyProductCard key={product.id} product={product} />
+              )
             ))}
           </div>
           {hasNextPage ? (
@@ -231,7 +290,7 @@ export function ProductGrid({
         <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center">
           <p className="font-display text-2xl font-bold">No matching products</p>
           <p className="mt-2 text-muted-foreground">Try a different search, category, or price range.</p>
-          <Button className="mt-5" onClick={() => { setQuery(""); setCategory("All"); setMaxPrice(350); }}>
+          <Button className="mt-5" onClick={handleResetFilters}>
             Reset filters
           </Button>
         </div>
@@ -274,7 +333,7 @@ export function ProductGrid({
               min="20"
               max="350"
               value={maxPrice}
-              onChange={(event) => setMaxPrice(Number(event.target.value))}
+              onChange={handlePriceChange}
               className="w-full accent-primary"
             />
             <div className="flex justify-between text-caption text-neutral-400 mt-1">
@@ -291,7 +350,7 @@ export function ProductGrid({
                 <button
                   key={item}
                   type="button"
-                  onClick={() => { setCategory(item); setFilterOpen(false); }}
+                  onClick={() => { handleCategoryChange(item); setFilterOpen(false); }}
                   className={`h-9 px-3 rounded-full text-caption font-semibold transition-colors ${
                     category === item
                       ? "bg-black text-white"

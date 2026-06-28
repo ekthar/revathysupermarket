@@ -1,8 +1,8 @@
 "use client";
 
 import { Heart } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState, useTransition } from "react";
+import { motion } from "framer-motion";
+import { memo, useCallback, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { useToggleFavorite } from "@/lib/queries/favorites";
 
@@ -13,19 +13,20 @@ interface FavoriteButtonProps {
   size?: "sm" | "md";
 }
 
-export function FavoriteButton({ productId, initialFavorited = false, className, size = "sm" }: FavoriteButtonProps) {
+// Memoized to prevent re-renders when parent ProductCard re-renders
+export const FavoriteButton = memo(function FavoriteButton({ productId, initialFavorited = false, className, size = "sm" }: FavoriteButtonProps) {
   const [isFavorited, setIsFavorited] = useState(initialFavorited);
   const [isPending, startTransition] = useTransition();
   const toggleFavoriteMutation = useToggleFavorite();
 
-  async function toggleFavorite(e: React.MouseEvent) {
+  const toggleFavorite = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
     const newState = !isFavorited;
     setIsFavorited(newState);
 
-    // Haptic feedback
+    // Haptic feedback - non-blocking
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(10);
     }
@@ -40,7 +41,7 @@ export function FavoriteButton({ productId, initialFavorited = false, className,
         setIsFavorited(!newState);
       }
     });
-  }
+  }, [isFavorited, productId, toggleFavoriteMutation, startTransition]);
 
   const sizeClasses = size === "sm"
     ? "h-7 w-7"
@@ -54,7 +55,7 @@ export function FavoriteButton({ productId, initialFavorited = false, className,
       onClick={toggleFavorite}
       whileTap={{ scale: 0.8 }}
       className={cn(
-        "flex items-center justify-center rounded-full transition-all press",
+        "flex items-center justify-center rounded-full transition-all press gpu-accelerated",
         isFavorited
           ? "bg-red-50 dark:bg-red-950/50"
           : "bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm",
@@ -63,24 +64,16 @@ export function FavoriteButton({ productId, initialFavorited = false, className,
       )}
       aria-label={isFavorited ? "Remove from favorites" : "Add to favorites"}
     >
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={isFavorited ? "filled" : "empty"}
-          initial={{ scale: 0, rotate: -45 }}
-          animate={{ scale: 1, rotate: 0 }}
-          exit={{ scale: 0, rotate: 45 }}
-          transition={{ type: "spring", stiffness: 500, damping: 15 }}
-        >
-          <Heart
-            className={cn(
-              iconSize,
-              isFavorited
-                ? "text-red-500 fill-red-500"
-                : "text-slate-400 dark:text-slate-500"
-            )}
-          />
-        </motion.div>
-      </AnimatePresence>
+      {/* Simplified: no AnimatePresence - just CSS transition for icon swap */}
+      <Heart
+        className={cn(
+          iconSize,
+          "transition-all duration-200",
+          isFavorited
+            ? "text-red-500 fill-red-500 scale-110"
+            : "text-slate-400 dark:text-slate-500 scale-100"
+        )}
+      />
     </motion.button>
   );
-}
+});

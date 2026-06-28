@@ -4,12 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Bell, Heart, HelpCircle, ShoppingBag, User } from "lucide-react";
 import { motion } from "framer-motion";
+import { memo } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { useCart } from "@/components/cart/cart-provider";
+import { useCartItemCount } from "@/components/cart/cart-provider";
 import { SITE } from "@/lib/constants";
 import type { SessionIdentity } from "@/components/session-identity-card";
 
-export function Header({
+export const Header = memo(function Header({
   user,
   storeName = SITE.name,
   storeAddress = SITE.address,
@@ -22,7 +23,6 @@ export function Header({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { totalItems } = useCart();
 
   // Hide on login/welcome/staff/admin/delivery
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/delivery")) return null;
@@ -105,19 +105,8 @@ export function Header({
                 <Bell className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
               </Link>
 
-              <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
-                <ShoppingBag className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
-                {totalItems > 0 && (
-                  <motion.span
-                    key={totalItems}
-                    initial={{ scale: 0.5 }}
-                    animate={{ scale: 1 }}
-                    className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-micro font-bold text-white px-1"
-                  >
-                    {totalItems}
-                  </motion.span>
-                )}
-              </Link>
+              {/* Isolated cart badge - only this re-renders on cart changes */}
+              <CartBadgeLink />
 
               {user?.id ? (
                 <Link
@@ -179,5 +168,25 @@ export function Header({
         </div>
       </header>
     </>
+  );
+});
+
+// Isolated cart badge link - only this component re-renders when cart count changes
+function CartBadgeLink() {
+  const totalItems = useCartItemCount();
+  return (
+    <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+      <ShoppingBag className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
+      {totalItems > 0 && (
+        <motion.span
+          key={totalItems}
+          initial={{ scale: 0.5 }}
+          animate={{ scale: 1 }}
+          className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-micro font-bold text-white px-1"
+        >
+          {totalItems}
+        </motion.span>
+      )}
+    </Link>
   );
 }

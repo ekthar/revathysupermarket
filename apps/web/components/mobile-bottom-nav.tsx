@@ -4,16 +4,15 @@ import Link from "next/link";
 import { Home, Search, ShoppingBag, User } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { LayoutGroup, motion } from "framer-motion";
-import { useCart } from "@/components/cart/cart-provider";
-import { formatCurrency } from "@/lib/utils";
+import { memo } from "react";
+import { useCartItemCount } from "@/components/cart/cart-provider";
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { cn } from "@/lib/utils";
 import { tapScale } from "@/lib/motion";
 
-export function MobileBottomNav({ user }: { user: SessionIdentity }) {
+export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { totalItems } = useCart();
 
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
 
@@ -29,7 +28,7 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
             <div className="grid min-h-[clamp(52px,8vh,58px)] grid-cols-4 items-center gap-1">
               <NavTab href="/" icon={Home} label="Home" active={pathname === "/"} onPrefetch={() => router.prefetch("/")} />
               <NavTab href="/products" icon={Search} label="Browse" active={pathname.startsWith("/products")} onPrefetch={() => router.prefetch("/products")} />
-              <NavTab href="/cart" icon={ShoppingBag} label="Cart" active={isCartFlow} badge={totalItems} onPrefetch={() => router.prefetch("/cart")} />
+              <CartNavTab href="/cart" active={isCartFlow} onPrefetch={() => router.prefetch("/cart")} />
               <NavTab
                 href={accountHref}
                 icon={User}
@@ -43,9 +42,17 @@ export function MobileBottomNav({ user }: { user: SessionIdentity }) {
       </nav>
     </>
   );
+});
+
+// Isolated cart nav tab - only this re-renders when cart count changes
+function CartNavTab({ href, active, onPrefetch }: { href: string; active: boolean; onPrefetch?: () => void }) {
+  const totalItems = useCartItemCount();
+  return (
+    <NavTab href={href} icon={ShoppingBag} label="Cart" active={active} badge={totalItems} onPrefetch={onPrefetch} />
+  );
 }
 
-function NavTab({ href, icon: Icon, label, active, badge, onPrefetch }: { href: string; icon: React.ElementType; label: string; active: boolean; badge?: number; onPrefetch?: () => void }) {
+const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, onPrefetch }: { href: string; icon: React.ElementType; label: string; active: boolean; badge?: number; onPrefetch?: () => void }) {
   return (
     <Link
       href={href}
@@ -93,4 +100,4 @@ function NavTab({ href, icon: Icon, label, active, badge, onPrefetch }: { href: 
       </span>
     </Link>
   );
-}
+});

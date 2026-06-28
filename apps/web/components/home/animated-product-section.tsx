@@ -3,30 +3,29 @@
 import Link from "next/link";
 import { ChevronUp } from "lucide-react";
 import { motion, useInView } from "framer-motion";
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/types";
 
+// Lighter transition - uses CSS transform instead of spring physics on each item
 const containerVariants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.06,
-      delayChildren: 0.1
+      staggerChildren: 0.04,
+      delayChildren: 0.08
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.95 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
     transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20
+      duration: 0.3,
+      ease: [0.25, 0.1, 0.25, 1]
     }
   }
 };
@@ -43,7 +42,7 @@ interface AnimatedProductSectionProps {
   hideHeader?: boolean;
 }
 
-export function AnimatedProductSection({
+export const AnimatedProductSection = memo(function AnimatedProductSection({
   title,
   icon,
   products,
@@ -67,7 +66,7 @@ export function AnimatedProductSection({
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
             className="flex items-center justify-between"
           >
             <div className="flex items-center gap-2">
@@ -77,7 +76,7 @@ export function AnimatedProductSection({
             <motion.div
               initial={{ opacity: 0, scale: 0.8 }}
               animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ type: "spring", stiffness: 300, damping: 20, delay: 0.2 }}
+              transition={{ duration: 0.25, ease: "easeOut", delay: 0.15 }}
             >
               <Link href="/products" className="show-all-pill text-xs md:text-sm">
                 Show All
@@ -91,17 +90,11 @@ export function AnimatedProductSection({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ delay: 0.15, type: "spring", stiffness: 200, damping: 20 }}
+              transition={{ delay: 0.1, duration: 0.3, ease: "easeOut" }}
               className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1"
             >
               {categoryPills.map((label, idx) => (
-                <motion.div
-                  key={label}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                  transition={{ delay: 0.2 + idx * 0.05, type: "spring", stiffness: 300, damping: 20 }}
-                  className="shrink-0"
-                >
+                <div key={label} className="shrink-0">
                   <Link
                     href={`/products?category=${encodeURIComponent(categories[idx] || label)}`}
                     className={`block whitespace-nowrap px-4 py-2 rounded-full text-caption font-semibold transition-all ${
@@ -112,36 +105,37 @@ export function AnimatedProductSection({
                   >
                     {label}
                   </Link>
-                </motion.div>
+                </div>
               ))}
             </motion.div>
           )}
         </div>
       )}
 
-      {/* Product display */}
+      {/* Product display - scroll layout uses CSS animations instead of per-item framer-motion */}
       {(layout === "scroll" || layout === "mixed") && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={isInView ? { opacity: 1 } : {}}
-          transition={{ delay: 0.25 }}
+        <div
           className={`mt-4 pb-2 max-w-7xl mx-auto ${layout === "mixed" ? "md:hidden" : ""}`}
+          style={{ opacity: isInView ? 1 : 0, transition: "opacity 0.3s ease" }}
         >
-          {/* Wheel-like smooth scroll container */}
+          {/* Wheel-like smooth scroll container - NO per-item motion.div wrappers */}
           <div className="wheel-scroll px-4 md:px-6 lg:px-8">
             {products.map((p, idx) => (
-              <motion.div
+              <div
                 key={p.id}
-                initial={{ opacity: 0, x: 30 }}
-                animate={isInView ? { opacity: 1, x: 0 } : {}}
-                transition={{ delay: 0.3 + idx * 0.05, type: "spring", stiffness: 200, damping: 20 }}
-                className="wheel-scroll-item w-[155px] sm:w-[170px] md:w-[200px]"
+                className="wheel-scroll-item w-[155px] sm:w-[170px] md:w-[200px] animate-fade-in-up"
+                style={{
+                  animationDelay: isInView ? `${idx * 40}ms` : "0ms",
+                  animationFillMode: "both",
+                  animationDuration: "0.35s",
+                  opacity: isInView ? undefined : 0,
+                }}
               >
                 <ProductCard product={p} compact />
-              </motion.div>
+              </div>
             ))}
           </div>
-        </motion.div>
+        </div>
       )}
 
       {(layout === "grid" || layout === "mixed") && (
@@ -162,4 +156,4 @@ export function AnimatedProductSection({
       )}
     </section>
   );
-}
+});

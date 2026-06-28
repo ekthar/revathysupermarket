@@ -4,10 +4,14 @@ import {
   Text,
   TextInput,
   Pressable,
-  ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from "react-native";
-import { useLocalSearchParams, router } from "expo-router";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { useLocalSearchParams, router, Stack } from "expo-router";
+import { ArrowLeft } from "lucide-react-native";
 import { useAuthStore } from "@/stores/auth";
+import { Button } from "@/components/ui/Button";
 
 const OTP_LENGTH = 6;
 
@@ -18,7 +22,7 @@ export default function OtpScreen() {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState(30);
   const inputs = useRef<Array<TextInput | null>>([]);
-  const { verifyOtp } = useAuthStore();
+  const { verifyOtp, loginWithPhone } = useAuthStore();
 
   // Countdown timer for resend
   useEffect(() => {
@@ -39,11 +43,7 @@ export default function OtpScreen() {
       setOtp(newOtp);
       const nextIndex = Math.min(index + digits.length, OTP_LENGTH - 1);
       inputs.current[nextIndex]?.focus();
-
-      // Auto-submit if all filled
-      if (newOtp.every((d) => d !== "")) {
-        handleVerify(newOtp.join(""));
-      }
+      if (newOtp.every((d) => d !== "")) handleVerify(newOtp.join(""));
       return;
     }
 
@@ -54,10 +54,7 @@ export default function OtpScreen() {
       inputs.current[index + 1]?.focus();
     }
 
-    // Auto-submit
-    if (newOtp.every((d) => d !== "")) {
-      handleVerify(newOtp.join(""));
-    }
+    if (newOtp.every((d) => d !== "")) handleVerify(newOtp.join(""));
   };
 
   const handleKeyPress = (key: string, index: number) => {
@@ -91,7 +88,6 @@ export default function OtpScreen() {
     setCountdown(30);
     setError(null);
     try {
-      const { loginWithPhone } = useAuthStore.getState();
       await loginWithPhone(phone || "");
     } catch {
       setError("Failed to resend OTP");
@@ -99,92 +95,85 @@ export default function OtpScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white px-6 justify-center">
-      {/* Back Button */}
-      <Pressable
-        onPress={() => router.back()}
-        className="absolute top-16 left-6"
+    <>
+      <Stack.Screen options={{ headerShown: false }} />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        className="flex-1 bg-white px-6"
       >
-        <Text className="text-primary-600 text-base font-sans-medium">
-          ← Back
-        </Text>
-      </Pressable>
+        {/* Back Button */}
+        <Pressable
+          onPress={() => router.back()}
+          className="mt-16 h-10 w-10 rounded-full bg-neutral-100 items-center justify-center"
+        >
+          <ArrowLeft size={18} color="#374151" />
+        </Pressable>
 
-      {/* Header */}
-      <View className="mb-10">
-        <Text className="text-2xl font-heading text-slate-900 mb-2">
-          Verify OTP
-        </Text>
-        <Text className="text-base text-slate-500">
-          Enter the 6-digit code sent to{" "}
-          <Text className="font-sans-semibold text-slate-700">
-            +91 {phone}
+        {/* Header */}
+        <Animated.View entering={FadeInDown.duration(400)} className="mt-8 mb-10">
+          <Text className="text-heading font-bold text-neutral-900">
+            Verify OTP
           </Text>
-        </Text>
-      </View>
-
-      {/* OTP Inputs */}
-      <View className="flex-row justify-between mb-6">
-        {otp.map((digit, i) => (
-          <TextInput
-            key={i}
-            ref={(ref) => {
-              inputs.current[i] = ref;
-            }}
-            className={`w-12 h-14 border-2 rounded-xl text-center text-xl font-sans-bold ${
-              digit
-                ? "border-primary-500 bg-primary-50"
-                : "border-slate-200 bg-slate-50"
-            }`}
-            value={digit}
-            onChangeText={(t) => handleChange(t, i)}
-            onKeyPress={({ nativeEvent }) =>
-              handleKeyPress(nativeEvent.key, i)
-            }
-            keyboardType="number-pad"
-            maxLength={1}
-            selectTextOnFocus
-            autoComplete="one-time-code"
-          />
-        ))}
-      </View>
-
-      {error && <Text className="text-sm text-red-500 mb-4">{error}</Text>}
-
-      {/* Verify Button */}
-      <Pressable
-        onPress={() => handleVerify()}
-        disabled={isLoading}
-        className={`h-14 rounded-xl items-center justify-center ${
-          isLoading ? "bg-primary-400" : "bg-primary-600"
-        }`}
-      >
-        {isLoading ? (
-          <ActivityIndicator color="white" />
-        ) : (
-          <Text className="text-white text-base font-sans-bold">
-            Verify & Continue
+          <Text className="text-body text-neutral-500 mt-2">
+            Enter the 6-digit code sent to{" "}
+            <Text className="font-bold text-neutral-700">+91 {phone}</Text>
           </Text>
+        </Animated.View>
+
+        {/* OTP Inputs */}
+        <Animated.View entering={FadeInUp.delay(100).duration(400)} className="flex-row justify-between mb-6">
+          {otp.map((digit, i) => (
+            <TextInput
+              key={i}
+              ref={(ref) => { inputs.current[i] = ref; }}
+              className={`w-12 h-14 border-2 rounded-xl text-center text-xl font-bold ${
+                digit
+                  ? "border-primary-900 bg-neutral-50"
+                  : "border-neutral-200 bg-neutral-50"
+              }`}
+              value={digit}
+              onChangeText={(t) => handleChange(t, i)}
+              onKeyPress={({ nativeEvent }) => handleKeyPress(nativeEvent.key, i)}
+              keyboardType="number-pad"
+              maxLength={1}
+              selectTextOnFocus
+              autoComplete="one-time-code"
+            />
+          ))}
+        </Animated.View>
+
+        {error && (
+          <View className="bg-error-50 rounded-xl p-3 mb-4">
+            <Text className="text-caption text-error-700 font-medium">{error}</Text>
+          </View>
         )}
-      </Pressable>
 
-      {/* Resend */}
-      <View className="mt-6 items-center">
-        {countdown > 0 ? (
-          <Text className="text-sm text-slate-400">
-            Resend OTP in{" "}
-            <Text className="font-sans-semibold text-slate-600">
-              {countdown}s
+        {/* Verify Button */}
+        <Button
+          onPress={() => handleVerify()}
+          loading={isLoading}
+          fullWidth
+          size="lg"
+        >
+          Verify & Continue
+        </Button>
+
+        {/* Resend */}
+        <View className="mt-6 items-center">
+          {countdown > 0 ? (
+            <Text className="text-caption text-neutral-400">
+              Resend OTP in{" "}
+              <Text className="font-bold text-neutral-600">{countdown}s</Text>
             </Text>
-          </Text>
-        ) : (
-          <Pressable onPress={handleResend}>
-            <Text className="text-sm font-sans-semibold text-primary-600">
-              Resend OTP
-            </Text>
-          </Pressable>
-        )}
-      </View>
-    </View>
+          ) : (
+            <Pressable onPress={handleResend}>
+              <Text className="text-caption font-bold text-primary-900">
+                Resend OTP
+              </Text>
+            </Pressable>
+          )}
+        </View>
+      </KeyboardAvoidingView>
+    </>
   );
 }

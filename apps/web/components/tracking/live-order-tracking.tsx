@@ -15,7 +15,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
-import { useOrderTracking } from "@/lib/hooks/use-order-tracking";
+import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
 
 const DeliveryMap = dynamic(
   () => import("./delivery-map").then((m) => ({ default: m.DeliveryMap })),
@@ -148,7 +148,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
   const { connectionState } = useOrderTracking({
     orderId: data.id,
     enabled: !isDelivered,
-    onUpdate: useCallback((update) => {
+    onUpdate: useCallback((update: TrackingUpdate) => {
       setData((prev) => ({
         ...prev,
         ...(update.status && { status: update.status }),

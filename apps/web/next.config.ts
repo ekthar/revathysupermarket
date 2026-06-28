@@ -12,8 +12,8 @@ const contentSecurityPolicy = [
   `script-src 'self' 'unsafe-inline'${production ? "" : " 'unsafe-eval'"} https://maps.googleapis.com https://apis.google.com https://vercel.live https://www.google.com https://www.gstatic.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com https://vercel.live data:",
-  "img-src 'self' data: blob: https://images.unsplash.com https://*.amazonaws.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://maps.gstatic.com https://maps.googleapis.com https://tiles.openfreemap.org https://*.openfreemap.org https://lh3.googleusercontent.com https://www.gstatic.com https://vercel.com https://vercel.live",
-  "connect-src 'self' https://*.upstash.io https://maps.googleapis.com https://nominatim.openstreetmap.org https://tiles.openfreemap.org https://*.openfreemap.org https://vercel.live wss://ws-us3.pusher.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://fcm.googleapis.com https://firebaseinstallations.googleapis.com",
+  "img-src 'self' data: blob: https://images.unsplash.com https://*.amazonaws.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://maps.gstatic.com https://maps.googleapis.com https://tiles.openfreemap.org https://*.openfreemap.org https://lh3.googleusercontent.com https://*.googleusercontent.com https://www.gstatic.com https://vercel.com https://vercel.live",
+  "connect-src 'self' https://*.upstash.io https://maps.googleapis.com https://nominatim.openstreetmap.org https://tiles.openfreemap.org https://*.openfreemap.org https://vercel.live wss://ws-us3.pusher.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://android.googleapis.com",
   "frame-src 'self' https://www.google.com https://maps.google.com https://vercel.live https://accounts.google.com https://*.firebaseapp.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
@@ -79,7 +79,9 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "**.amazonaws.com" },
       { protocol: "https", hostname: "**.r2.cloudflarestorage.com" },
-      { protocol: "https", hostname: "**.r2.dev" }
+      { protocol: "https", hostname: "**.r2.dev" },
+      { protocol: "https", hostname: "lh3.googleusercontent.com" },
+      { protocol: "https", hostname: "**.googleusercontent.com" }
     ]
   }
 };

@@ -66,7 +66,7 @@ export function NotificationsClient({ notifications }: { notifications: Notifica
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <p className="text-body font-semibold text-neutral-900 dark:text-white">{notif.title}</p>
-                  <span className="text-micro text-neutral-400 shrink-0">{timeAgo(notif.createdAt)}</span>
+                  <span suppressHydrationWarning className="text-micro text-neutral-400 shrink-0">{timeAgo(notif.createdAt)}</span>
                 </div>
                 <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5 leading-relaxed">{notif.body}</p>
                 {notif.orderId && (

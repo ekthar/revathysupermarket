@@ -54,7 +54,7 @@ export function isAllowedProductImageUrl(value: string) {
         if (!item) return [];
         try { return [new URL(item).hostname]; } catch { return []; }
       });
-    return url.hostname === "images.unsplash.com" || url.hostname.endsWith(".r2.cloudflarestorage.com") || url.hostname.endsWith(".r2.dev") || url.hostname.endsWith(".amazonaws.com") || configuredHosts.includes(url.hostname);
+    return url.hostname === "images.unsplash.com" || url.hostname.endsWith(".r2.cloudflarestorage.com") || url.hostname.endsWith(".r2.dev") || url.hostname.endsWith(".amazonaws.com") || url.hostname.endsWith(".googleusercontent.com") || configuredHosts.includes(url.hostname);
   } catch {
     return value.startsWith("/icons/");
   }

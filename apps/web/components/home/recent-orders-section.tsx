@@ -140,7 +140,7 @@ export function RecentOrdersSection() {
 
               {/* Time + table */}
               <div className="flex items-center gap-3 text-micro text-neutral-400">
-                <span className="flex items-center gap-1">
+                <span suppressHydrationWarning className="flex items-center gap-1">
                   <Clock className="h-3 w-3" />
                   {timeAgo(order.createdAt)}
                 </span>

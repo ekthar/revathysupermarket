@@ -25,9 +25,14 @@ interface AuthState {
 
   // Actions
   initialize: () => Promise<void>;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
+  register: (data: { name: string; phone: string; email: string; password: string }) => Promise<void>;
   loginWithPhone: (phone: string) => Promise<void>;
   verifyOtp: (phone: string, otp: string) => Promise<void>;
   loginWithGoogle: (idToken: string) => Promise<void>;
+  forgotPassword: (email: string) => Promise<void>;
+  resetPassword: (token: string, password: string) => Promise<void>;
+  updateProfile: (data: { name?: string; phone?: string; email?: string }) => Promise<void>;
   logout: () => Promise<void>;
   setUser: (user: User) => void;
 }
@@ -57,6 +62,29 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  loginWithEmail: async (email: string, password: string) => {
+    const { data } = await api.post("/auth/login", { email, password });
+    const { user, tokens } = data as { user: User; tokens: AuthTokens };
+
+    await tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+    set({ user, status: "authenticated" });
+  },
+
+  register: async (registerData) => {
+    // Create account
+    const { data: regData } = await api.post("/register", registerData);
+
+    // Auto-login after registration
+    const { data } = await api.post("/auth/login", {
+      email: registerData.email,
+      password: registerData.password,
+    });
+    const { user, tokens } = data as { user: User; tokens: AuthTokens };
+
+    await tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
+    set({ user, status: "authenticated" });
+  },
+
   loginWithPhone: async (phone: string) => {
     await api.post("/auth/otp/send", { phone });
   },
@@ -75,6 +103,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
     await tokenStorage.setTokens(tokens.accessToken, tokens.refreshToken);
     set({ user, status: "authenticated" });
+  },
+
+  forgotPassword: async (email: string) => {
+    await api.post("/auth/forgot-password", { email });
+  },
+
+  resetPassword: async (token: string, password: string) => {
+    await api.post("/auth/reset-password", { token, password });
+  },
+
+  updateProfile: async (profileData) => {
+    const { data } = await api.patch("/account/profile", profileData);
+    if (data.user) {
+      set({ user: data.user });
+    }
   },
 
   logout: async () => {

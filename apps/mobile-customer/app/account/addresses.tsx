@@ -1,7 +1,11 @@
 import { useState, useEffect } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable } from "react-native";
+import { router, Stack } from "expo-router";
+import { MapPin, Plus } from "lucide-react-native";
 import { api } from "@/services/api";
 import type { Address } from "@msm/shared/types";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
 
 export default function AddressesScreen() {
   const [addresses, setAddresses] = useState<Address[]>([]);
@@ -11,28 +15,47 @@ export default function AddressesScreen() {
     api.get("/addresses").then(({ data }) => setAddresses(data.items || [])).catch(() => {}).finally(() => setIsLoading(false));
   }, []);
 
-  if (isLoading) return <View className="flex-1 items-center justify-center bg-white"><ActivityIndicator color="#059669" /></View>;
+  if (isLoading) return <View className="flex-1 items-center justify-center bg-white"><ActivityIndicator color="#050505" /></View>;
 
   return (
-    <View className="flex-1 bg-white px-5 pt-4">
-      <FlatList
-        data={addresses}
-        keyExtractor={(item) => item.id}
-        ListEmptyComponent={<View className="py-16 items-center"><Text className="text-3xl mb-2">📍</Text><Text className="text-slate-400">No saved addresses</Text></View>}
-        renderItem={({ item }) => (
-          <View className="py-4 border-b border-slate-50">
-            <View className="flex-row items-center mb-1">
-              <Text className="text-sm font-sans-bold text-slate-800">{item.label}</Text>
-              {item.isDefault && <View className="ml-2 bg-primary-100 px-2 py-0.5 rounded"><Text className="text-xs text-primary-700">Default</Text></View>}
+    <>
+      <Stack.Screen options={{ headerShown: true, title: "Addresses", headerTintColor: "#050505" }} />
+      <View className="flex-1 bg-white px-4 pt-4">
+        <FlatList
+          data={addresses}
+          keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            <View className="py-16 items-center">
+              <MapPin size={32} color="#D1D5DB" />
+              <Text className="text-neutral-400 mt-3">No saved addresses</Text>
             </View>
-            <Text className="text-sm text-slate-500">{item.houseName}, {item.street}</Text>
-            <Text className="text-xs text-slate-400">{item.pincode}</Text>
-          </View>
-        )}
-      />
-      <Pressable className="mt-4 h-12 rounded-xl items-center justify-center border border-primary-600">
-        <Text className="text-primary-600 font-sans-semibold">+ Add New Address</Text>
-      </Pressable>
-    </View>
+          }
+          renderItem={({ item }) => (
+            <View className="py-4 border-b border-neutral-50">
+              <View className="flex-row items-center mb-1">
+                <Text className="text-body font-bold text-neutral-800">{item.label}</Text>
+                {item.isDefault && (
+                  <View className="ml-2">
+                    <Badge variant="secondary">Default</Badge>
+                  </View>
+                )}
+              </View>
+              <Text className="text-caption text-neutral-500">{item.houseName}, {item.street}</Text>
+              <Text className="text-micro text-neutral-400">{item.pincode}</Text>
+            </View>
+          )}
+        />
+        <View className="mt-4 mb-8">
+          <Button
+            variant="outline"
+            onPress={() => router.push("/account/add-address")}
+            fullWidth
+            icon={<Plus size={16} color="#050505" />}
+          >
+            Add New Address
+          </Button>
+        </View>
+      </View>
+    </>
   );
 }

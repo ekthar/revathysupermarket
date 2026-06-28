@@ -1,230 +1,331 @@
-import { useEffect, useState } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
-import Animated, {
-  FadeInDown,
-  FadeInUp,
-  BounceIn,
-  FlipInXUp,
-  ZoomIn,
-  SlideInLeft,
-  SlideInRight,
-  useSharedValue,
-  useAnimatedStyle,
-  withRepeat,
-  withTiming,
-  withSequence,
-  withDelay,
-  Easing,
-} from "react-native-reanimated";
+import { useState } from "react";
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from "react-native";
+import Animated, { FadeInDown, FadeInUp } from "react-native-reanimated";
+import { router } from "expo-router";
+import { ShoppingBag, Mail, Lock, Phone, ArrowRight, User } from "lucide-react-native";
+import { useAuthStore } from "@/stores/auth";
 import { useGoogleAuth } from "@/services/google-auth";
+import { Button } from "@/components/ui/Button";
+import { Input } from "@/components/ui/Input";
 
-const FUNNY_MESSAGES = [
-  "Our designer is on a chai break...",
-  "Pixels are being hand-crafted...",
-  "Teaching buttons how to behave...",
-  "Convincing fonts to look pretty...",
-  "OTP screen called in sick today...",
-  "UI is doing yoga, be right back...",
-];
+type Mode = "login" | "register" | "phone";
 
 export default function LoginScreen() {
+  const [mode, setMode] = useState<Mode>("login");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Login fields
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  // Register fields
+  const [name, setName] = useState("");
+  const [regPhone, setRegPhone] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPassword, setRegPassword] = useState("");
+
+  // Phone login
+  const [phone, setPhoneNumber] = useState("");
+
+  const { loginWithEmail, register, loginWithPhone } = useAuthStore();
   const { signIn: googleSignIn, isLoading: googleLoading } = useGoogleAuth();
-  const [messageIndex, setMessageIndex] = useState(0);
-  const [showRedirect, setShowRedirect] = useState(false);
 
-  // Rotate through funny messages
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setMessageIndex((prev) => (prev + 1) % FUNNY_MESSAGES.length);
-    }, 2500);
-    return () => clearInterval(interval);
-  }, []);
+  const handleLogin = async () => {
+    if (!email.trim() || !password.trim()) {
+      setError("Please enter email and password");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      await loginWithEmail(email.trim(), password);
+      router.replace("/(tabs)/home");
+    } catch (e: any) {
+      setError(e.response?.data?.error || e.message || "Invalid email or password");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Show redirect hint after a delay
-  useEffect(() => {
-    const timeout = setTimeout(() => setShowRedirect(true), 3000);
-    return () => clearTimeout(timeout);
-  }, []);
+  const handleRegister = async () => {
+    if (!name.trim() || !regEmail.trim() || !regPassword.trim()) {
+      setError("Please fill all required fields");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      await register({
+        name: name.trim(),
+        phone: regPhone.trim(),
+        email: regEmail.trim(),
+        password: regPassword,
+      });
+      router.replace("/(tabs)/home");
+    } catch (e: any) {
+      setError(e.response?.data?.error || e.message || "Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  // Floating animation for the construction emoji
-  const floatY = useSharedValue(0);
-  const wobble = useSharedValue(0);
+  const handlePhoneLogin = async () => {
+    const cleanPhone = phone.replace(/\D/g, "");
+    if (cleanPhone.length < 10) {
+      setError("Enter a valid phone number");
+      return;
+    }
+    setError("");
+    setLoading(true);
+    try {
+      await loginWithPhone(cleanPhone);
+      router.push({ pathname: "/(auth)/otp", params: { phone: cleanPhone } });
+    } catch (e: any) {
+      setError(e.response?.data?.error || "Failed to send OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  useEffect(() => {
-    floatY.value = withRepeat(
-      withSequence(
-        withTiming(-12, { duration: 1200, easing: Easing.inOut(Easing.ease) }),
-        withTiming(0, { duration: 1200, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
-    wobble.value = withRepeat(
-      withSequence(
-        withTiming(-5, { duration: 800, easing: Easing.inOut(Easing.ease) }),
-        withTiming(5, { duration: 800, easing: Easing.inOut(Easing.ease) })
-      ),
-      -1,
-      true
-    );
-  }, []);
-
-  const floatingStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateY: floatY.value },
-      { rotate: `${wobble.value}deg` },
-    ],
-  }));
-
-  // Pulsing dots animation
-  const pulseScale = useSharedValue(1);
-
-  useEffect(() => {
-    pulseScale.value = withRepeat(
-      withSequence(
-        withTiming(1.2, { duration: 600 }),
-        withTiming(1, { duration: 600 })
-      ),
-      -1,
-      true
-    );
-  }, []);
-
-  const pulseStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pulseScale.value }],
-  }));
+  const handleGoogleSignIn = async () => {
+    try {
+      await googleSignIn();
+    } catch {
+      Alert.alert("Sign-in failed", "Could not sign in with Google");
+    }
+  };
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Background decoration */}
-      <View className="absolute inset-0 overflow-hidden">
-        <Animated.View
-          entering={FadeInDown.delay(200).duration(1000)}
-          className="absolute top-16 left-6 w-20 h-20 rounded-full bg-amber-100/60"
-        />
-        <Animated.View
-          entering={FadeInDown.delay(400).duration(1000)}
-          className="absolute top-32 right-8 w-14 h-14 rounded-full bg-emerald-100/60"
-        />
-        <Animated.View
-          entering={FadeInDown.delay(600).duration(1000)}
-          className="absolute bottom-40 left-10 w-16 h-16 rounded-full bg-blue-100/60"
-        />
-        <Animated.View
-          entering={FadeInDown.delay(800).duration(1000)}
-          className="absolute bottom-60 right-12 w-12 h-12 rounded-full bg-pink-100/60"
-        />
-      </View>
-
-      {/* Main content */}
-      <View className="flex-1 justify-center items-center px-8">
-        {/* Floating construction emoji */}
-        <Animated.View style={floatingStyle}>
-          <Animated.Text
-            entering={BounceIn.delay(300).duration(800)}
-            className="text-7xl mb-4"
-          >
-            🚧
-          </Animated.Text>
-        </Animated.View>
-
-        {/* Main heading */}
-        <Animated.View entering={FlipInXUp.delay(500).duration(700)}>
-          <Text className="text-4xl font-heading text-center text-slate-900 mb-2">
-            HOLD UP!
-          </Text>
-        </Animated.View>
-
-        <Animated.View entering={FadeInUp.delay(700).duration(600)}>
-          <Text className="text-xl font-sans-bold text-center text-emerald-600 mb-3">
-            Design in Progress
-          </Text>
-        </Animated.View>
-
-        {/* Funny rotating message */}
-        <Animated.View
-          entering={FadeInDown.delay(900).duration(500)}
-          className="bg-slate-100 rounded-2xl px-6 py-4 mb-8 min-h-[60px] justify-center"
-        >
-          <Animated.View style={pulseStyle}>
-            <Text className="text-base text-center text-slate-600 font-sans-medium">
-              {FUNNY_MESSAGES[messageIndex]}
-            </Text>
-          </Animated.View>
-        </Animated.View>
-
-        {/* Construction emojis row */}
-        <Animated.View
-          entering={SlideInLeft.delay(1100).duration(600)}
-          className="flex-row items-center gap-3 mb-8"
-        >
-          <Text className="text-2xl">👷</Text>
-          <Text className="text-2xl">🔨</Text>
-          <Text className="text-2xl">🎨</Text>
-          <Text className="text-2xl">✨</Text>
-          <Text className="text-2xl">💅</Text>
-        </Animated.View>
-
-        {/* Bold statement */}
-        <Animated.View entering={ZoomIn.delay(1400).duration(500)}>
-          <Text className="text-center text-lg font-heading text-slate-800 mb-2 px-4">
-            This page will be{" "}
-            <Text className="text-emerald-600">absolutely gorgeous</Text>
-          </Text>
-          <Text className="text-center text-sm text-slate-400 mb-10">
-            ...just not today. Meanwhile:
-          </Text>
-        </Animated.View>
-
-        {/* Google Sign In - the actual CTA */}
-        <Animated.View
-          entering={SlideInRight.delay(1800).duration(600)}
-          className="w-full"
-        >
-          <Pressable
-            onPress={googleSignIn}
-            disabled={googleLoading}
-            className="h-16 rounded-2xl items-center justify-center flex-row bg-white border-2 border-slate-200 shadow-lg shadow-slate-200/50"
-            style={{ elevation: 8 }}
-          >
-            {googleLoading ? (
-              <ActivityIndicator color="#059669" size="large" />
-            ) : (
-              <View className="flex-row items-center">
-                <Text className="text-2xl mr-3">G</Text>
-                <View>
-                  <Text className="text-lg font-sans-bold text-slate-800">
-                    Continue with Google
-                  </Text>
-                  <Text className="text-xs text-slate-400">
-                    The only way in (for now)
-                  </Text>
-                </View>
-              </View>
-            )}
-          </Pressable>
-        </Animated.View>
-
-        {/* Redirect hint */}
-        {showRedirect && (
-          <Animated.View entering={FadeInUp.duration(500)} className="mt-6">
-            <Text className="text-center text-xs text-slate-400">
-              Phone login coming soon{" "}
-              <Text className="text-amber-500">with confetti</Text> 🎉
-            </Text>
-          </Animated.View>
-        )}
-      </View>
-
-      {/* Bottom fun text */}
-      <Animated.View
-        entering={FadeInDown.delay(2200).duration(600)}
-        className="pb-10 px-6"
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      className="flex-1"
+    >
+      <ScrollView
+        className="flex-1 bg-white"
+        contentContainerStyle={{ flexGrow: 1 }}
+        keyboardShouldPersistTaps="handled"
       >
-        <Text className="text-center text-xs text-slate-300">
-          v0.0.1-alpha-pre-beta-not-even-close
-        </Text>
-      </Animated.View>
-    </View>
+        {/* Hero section */}
+        <Animated.View
+          entering={FadeInDown.duration(600)}
+          className="bg-primary-900 px-6 pt-20 pb-10 rounded-b-3xl"
+        >
+          <View className="flex-row items-center mb-6">
+            <View className="h-14 w-14 rounded-2xl bg-white items-center justify-center">
+              <ShoppingBag size={28} color="#050505" />
+            </View>
+          </View>
+          <Text className="text-micro font-black uppercase tracking-widest text-secondary-400">
+            MSM Supermarket
+          </Text>
+          <Text className="text-display text-white mt-2">
+            Fresh groceries,{"\n"}made easy.
+          </Text>
+          <Text className="text-body text-white/70 mt-3">
+            Create your account, track orders, and checkout faster.
+          </Text>
+        </Animated.View>
+
+        {/* Content */}
+        <Animated.View
+          entering={FadeInUp.delay(200).duration(500)}
+          className="px-6 pt-8 pb-10"
+        >
+          {/* Mode Tabs */}
+          <View className="flex-row bg-neutral-100 rounded-xl p-1 mb-6">
+            {(["login", "register", "phone"] as const).map((m) => (
+              <Pressable
+                key={m}
+                onPress={() => { setMode(m); setError(""); }}
+                className={`flex-1 h-10 rounded-lg items-center justify-center ${
+                  mode === m ? "bg-white shadow-sm" : ""
+                }`}
+              >
+                <Text
+                  className={`text-caption font-bold ${
+                    mode === m ? "text-primary-900" : "text-neutral-400"
+                  }`}
+                >
+                  {m === "login" ? "Login" : m === "register" ? "Sign Up" : "Phone"}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+
+          {/* Login Form */}
+          {mode === "login" && (
+            <View>
+              <Input
+                label="Email"
+                placeholder="your@email.com"
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoComplete="email"
+                value={email}
+                onChangeText={setEmail}
+                icon={<Mail size={16} color="#9CA3AF" />}
+              />
+              <View className="mt-4">
+                <Input
+                  label="Password"
+                  placeholder="Enter password"
+                  secureTextEntry
+                  autoComplete="password"
+                  value={password}
+                  onChangeText={setPassword}
+                  icon={<Lock size={16} color="#9CA3AF" />}
+                />
+              </View>
+
+              {error ? (
+                <View className="mt-4 bg-error-50 rounded-xl p-3">
+                  <Text className="text-caption text-error-700 font-medium">{error}</Text>
+                </View>
+              ) : null}
+
+              <View className="mt-6">
+                <Button onPress={handleLogin} loading={loading} fullWidth size="lg">
+                  Login
+                </Button>
+              </View>
+
+              <Pressable
+                onPress={() => router.push("/(auth)/forgot-password")}
+                className="mt-4 items-center"
+              >
+                <Text className="text-caption font-semibold text-neutral-500">
+                  Forgot password?
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Register Form */}
+          {mode === "register" && (
+            <View>
+              <Input
+                label="Full Name"
+                placeholder="John Doe"
+                autoCapitalize="words"
+                autoComplete="name"
+                value={name}
+                onChangeText={setName}
+                icon={<User size={16} color="#9CA3AF" />}
+              />
+              <View className="mt-4">
+                <Input
+                  label="Phone Number"
+                  placeholder="98765 43210"
+                  keyboardType="phone-pad"
+                  autoComplete="tel"
+                  value={regPhone}
+                  onChangeText={setRegPhone}
+                  icon={<Phone size={16} color="#9CA3AF" />}
+                />
+              </View>
+              <View className="mt-4">
+                <Input
+                  label="Email"
+                  placeholder="your@email.com"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  value={regEmail}
+                  onChangeText={setRegEmail}
+                  icon={<Mail size={16} color="#9CA3AF" />}
+                />
+              </View>
+              <View className="mt-4">
+                <Input
+                  label="Password"
+                  placeholder="Create a password"
+                  secureTextEntry
+                  autoComplete="new-password"
+                  value={regPassword}
+                  onChangeText={setRegPassword}
+                  icon={<Lock size={16} color="#9CA3AF" />}
+                />
+              </View>
+
+              {error ? (
+                <View className="mt-4 bg-error-50 rounded-xl p-3">
+                  <Text className="text-caption text-error-700 font-medium">{error}</Text>
+                </View>
+              ) : null}
+
+              <View className="mt-6">
+                <Button onPress={handleRegister} loading={loading} fullWidth size="lg">
+                  Create Account
+                </Button>
+              </View>
+            </View>
+          )}
+
+          {/* Phone Login */}
+          {mode === "phone" && (
+            <View>
+              <Text className="text-heading font-bold text-neutral-900 mb-2">
+                Login with phone
+              </Text>
+              <Text className="text-body text-neutral-500 mb-6">
+                We'll send a 6-digit OTP to verify your number
+              </Text>
+
+              <Input
+                label="Phone Number"
+                placeholder="98765 43210"
+                keyboardType="phone-pad"
+                autoComplete="tel"
+                value={phone}
+                onChangeText={setPhoneNumber}
+                icon={<Phone size={16} color="#9CA3AF" />}
+              />
+
+              {error ? (
+                <View className="mt-4 bg-error-50 rounded-xl p-3">
+                  <Text className="text-caption text-error-700 font-medium">{error}</Text>
+                </View>
+              ) : null}
+
+              <View className="mt-6">
+                <Button onPress={handlePhoneLogin} loading={loading} fullWidth size="lg">
+                  Send OTP
+                </Button>
+              </View>
+            </View>
+          )}
+
+          {/* Divider */}
+          <View className="flex-row items-center my-6">
+            <View className="flex-1 h-px bg-neutral-200" />
+            <Text className="mx-4 text-micro font-bold text-neutral-400 uppercase">
+              or continue with
+            </Text>
+            <View className="flex-1 h-px bg-neutral-200" />
+          </View>
+
+          {/* Google Sign In */}
+          <Button
+            variant="outline"
+            onPress={handleGoogleSignIn}
+            loading={googleLoading}
+            fullWidth
+            size="lg"
+            icon={<Text className="text-lg mr-1">G</Text>}
+          >
+            Google
+          </Button>
+        </Animated.View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }

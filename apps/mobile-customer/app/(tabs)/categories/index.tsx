@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,9 @@ import {
   Image,
   RefreshControl,
 } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { useLocalSearchParams, router } from "expo-router";
+import { Plus } from "lucide-react-native";
 import { api } from "@/services/api";
 import { useCartStore } from "@/stores/cart";
 import type { Product, Category } from "@msm/shared/types";
@@ -46,7 +48,7 @@ export default function CategoriesScreen() {
     setIsLoading(false);
   };
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = useCallback((product: Product) => {
     addItem({
       productId: product.id,
       name: product.name,
@@ -57,13 +59,64 @@ export default function CategoriesScreen() {
       unit: product.unit,
       stock: product.stock,
     });
-  };
+  }, [addItem]);
+
+  const renderProductCard = useCallback(({ item }: { item: Product }) => (
+    <Pressable
+      className="flex-1 bg-white border border-neutral-100 rounded-xl overflow-hidden"
+      onPress={() => router.push(`/product/${item.id}`)}
+    >
+      <View className="h-28 bg-neutral-50 items-center justify-center">
+        {item.image ? (
+          <Image
+            source={{ uri: item.image }}
+            className="w-full h-full"
+            resizeMode="cover"
+          />
+        ) : (
+          <Text className="text-2xl">🛒</Text>
+        )}
+        {item.discountPrice && (
+          <View className="absolute top-2 left-2 bg-primary-900 px-1.5 py-0.5 rounded-full">
+            <Text className="text-[9px] font-black text-white">
+              {Math.round(((item.price - item.discountPrice) / item.price) * 100)}% OFF
+            </Text>
+          </View>
+        )}
+        {item.stock <= 0 && (
+          <View className="absolute inset-0 bg-white/80 items-center justify-center">
+            <View className="bg-neutral-900/90 px-2 py-0.5 rounded-full">
+              <Text className="text-micro font-semibold text-white">Sold out</Text>
+            </View>
+          </View>
+        )}
+      </View>
+      <View className="p-3">
+        <Text className="text-caption font-semibold text-neutral-800" numberOfLines={1}>
+          {item.name}
+        </Text>
+        <Text className="text-micro text-neutral-400">{item.unit}</Text>
+        <View className="flex-row items-center justify-between mt-2">
+          <Text className="text-body font-black text-neutral-900">
+            {formatCurrency(item.discountPrice || item.price)}
+          </Text>
+          <Pressable
+            onPress={() => handleAddToCart(item)}
+            disabled={item.stock <= 0}
+            className={`w-7 h-7 rounded-full items-center justify-center ${item.stock <= 0 ? "bg-neutral-200" : "bg-primary-900"}`}
+          >
+            <Plus size={14} color="#FFFFFF" strokeWidth={2.5} />
+          </Pressable>
+        </View>
+      </View>
+    </Pressable>
+  ), [handleAddToCart]);
 
   return (
     <View className="flex-1 bg-white pt-14">
       {/* Header */}
-      <View className="px-5 pb-3">
-        <Text className="text-xl font-heading text-slate-900">Categories</Text>
+      <View className="px-4 pb-3">
+        <Text className="text-heading font-bold text-neutral-900">Browse</Text>
       </View>
 
       {/* Category Chips */}
@@ -72,7 +125,7 @@ export default function CategoriesScreen() {
         data={[{ id: "all", name: "All", slug: "" } as any, ...categories]}
         keyExtractor={(item) => item.id}
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 12 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 12 }}
         renderItem={({ item }) => {
           const isActive =
             (item.slug === "" && !activeCategory) ||
@@ -81,12 +134,12 @@ export default function CategoriesScreen() {
             <Pressable
               onPress={() => setActiveCategory(item.slug || null)}
               className={`px-4 py-2 rounded-full mr-2 ${
-                isActive ? "bg-primary-600" : "bg-slate-100"
+                isActive ? "bg-primary-900" : "bg-neutral-100"
               }`}
             >
               <Text
-                className={`text-sm font-sans-medium ${
-                  isActive ? "text-white" : "text-slate-600"
+                className={`text-caption font-bold ${
+                  isActive ? "text-white" : "text-neutral-600"
                 }`}
               >
                 {item.name}
@@ -105,51 +158,17 @@ export default function CategoriesScreen() {
         columnWrapperStyle={{ gap: 12 }}
         ItemSeparatorComponent={() => <View className="h-3" />}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={fetchProducts} tintColor="#059669" />
+          <RefreshControl refreshing={isLoading} onRefresh={fetchProducts} tintColor="#050505" />
         }
         ListEmptyComponent={
           !isLoading ? (
             <View className="py-16 items-center">
               <Text className="text-3xl mb-2">📦</Text>
-              <Text className="text-slate-400 text-sm">No products found</Text>
+              <Text className="text-neutral-400 text-caption">No products found</Text>
             </View>
           ) : null
         }
-        renderItem={({ item }) => (
-          <Pressable
-            className="flex-1 bg-white border border-slate-100 rounded-2xl overflow-hidden"
-            onPress={() => router.push(`/product/${item.id}`)}
-          >
-            <View className="h-28 bg-slate-50 items-center justify-center">
-              {item.image ? (
-                <Image
-                  source={{ uri: item.image }}
-                  className="w-full h-full"
-                  resizeMode="cover"
-                />
-              ) : (
-                <Text className="text-2xl">🛒</Text>
-              )}
-            </View>
-            <View className="p-3">
-              <Text className="text-sm font-sans-medium text-slate-800" numberOfLines={1}>
-                {item.name}
-              </Text>
-              <Text className="text-xs text-slate-400">{item.unit}</Text>
-              <View className="flex-row items-center justify-between mt-2">
-                <Text className="text-sm font-sans-bold text-slate-900">
-                  {formatCurrency(item.discountPrice || item.price)}
-                </Text>
-                <Pressable
-                  onPress={() => handleAddToCart(item)}
-                  className="bg-primary-600 w-7 h-7 rounded-md items-center justify-center"
-                >
-                  <Text className="text-white text-sm">+</Text>
-                </Pressable>
-              </View>
-            </View>
-          </Pressable>
-        )}
+        renderItem={renderProductCard}
       />
     </View>
   );

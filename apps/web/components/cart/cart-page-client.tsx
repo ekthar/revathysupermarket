@@ -67,8 +67,15 @@ export function CartPageClient() {
       setPromoError("Enter a valid code");
       return;
     }
-    setPromoLoading(true);
+
+    // Optimistic: show coupon applied immediately with estimated discount
+    const estimatedDiscount = Math.min(subtotal * 0.1, 50); // Optimistic estimate
+    setPromoApplied(true);
+    setPromoDiscount(estimatedDiscount);
+    setPromoDescription("Validating...");
     setPromoError("");
+    setPromoLoading(true);
+
     try {
       const res = await fetch("/api/promo-codes/validate", {
         method: "POST",
@@ -77,16 +84,22 @@ export function CartPageClient() {
       });
       const data = await res.json();
       if (res.ok && data.valid) {
-        setPromoApplied(true);
+        // Update with actual server values
         setPromoDiscount(data.discount);
         setPromoDescription(data.description);
         setPromoError("");
       } else {
-        setPromoError(data.error || "Invalid code");
+        // Rollback: coupon invalid
         setPromoApplied(false);
         setPromoDiscount(0);
+        setPromoDescription("");
+        setPromoError(data.error || "Invalid code");
       }
     } catch {
+      // Rollback: network error
+      setPromoApplied(false);
+      setPromoDiscount(0);
+      setPromoDescription("");
       setPromoError("Could not validate code");
     } finally {
       setPromoLoading(false);
@@ -102,8 +115,13 @@ export function CartPageClient() {
   }
 
   function handleRemove(id: string) {
+    // Optimistic: immediately start exit animation and remove
     setRemovingId(id);
-    setTimeout(() => { removeItem(id); setRemovingId(null); }, 180);
+    // Remove from cart state immediately (optimistic) - animation handles visual
+    requestAnimationFrame(() => {
+      removeItem(id);
+      setRemovingId(null);
+    });
   }
 
   if (items.length === 0) {

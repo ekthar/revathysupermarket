@@ -12,6 +12,7 @@ import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/favorite-button";
 import { tapScale, springPresets } from "@/lib/motion";
+import { useRoutePreload } from "@/lib/hooks/use-preload";
 
 interface ProductCardProps {
   product: Product;
@@ -23,6 +24,10 @@ interface ProductCardProps {
 export const ProductCard = memo(function ProductCard({ product, compact = false, horizontal = false }: ProductCardProps) {
   const price = product.discountPrice ?? product.price;
   const outOfStock = product.stock <= 0;
+  const productHref = `/products/${product.slug}`;
+  
+  // Preload product detail page on hover/touch intent
+  const preload = useRoutePreload(productHref);
 
   // Horizontal list layout
   if (horizontal) {
@@ -36,7 +41,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
           outOfStock && "opacity-50"
         )}
       >
-        <Link href={`/products/${product.slug}`} className="shrink-0">
+        <Link href={productHref} className="shrink-0" onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
           <motion.div
             whileHover={{ scale: 1.05 }}
             className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50"
@@ -46,7 +51,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         </Link>
 
         <div className="flex-1 min-w-0">
-          <Link href={`/products/${product.slug}`}>
+          <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
             <h3 className="text-body font-bold text-neutral-800 leading-snug line-clamp-1">
               {product.name}
             </h3>
@@ -76,7 +81,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         outOfStock && "opacity-50"
       )}
     >
-      <Link href={`/products/${product.slug}`}>
+      <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
         <div className={cn(
           "relative bg-neutral-50 overflow-hidden",
           compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
@@ -107,7 +112,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       </Link>
 
       <div className={cn("p-3", compact && "p-2.5")}>
-        <Link href={`/products/${product.slug}`}>
+        <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
           <h3 className={cn(
             "font-semibold text-neutral-800 leading-snug line-clamp-2",
             compact ? "text-caption" : "text-caption"

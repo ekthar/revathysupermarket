@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 import { auth } from "@/auth";
 import { Header } from "@/components/header";
@@ -101,7 +102,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <ScrollProgress />
           <OnboardingTour />
           <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
-          <div className="pb-safe route-scroll-container">{children}</div>
+          <Suspense>
+            <div className="pb-safe route-scroll-container">{children}</div>
+          </Suspense>
           <ScrollToTop />
           <MobileBottomNav user={user} />
         </Providers>

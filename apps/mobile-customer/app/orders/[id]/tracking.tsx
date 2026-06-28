@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,8 +11,12 @@ import {
 import Animated, {
   FadeIn,
   FadeInDown,
-  FadeInUp,
-  SlideInLeft,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withSequence,
+  Easing,
 } from "react-native-reanimated";
 import { useLocalSearchParams, router, Stack } from "expo-router";
 import MapView, { Marker, PROVIDER_GOOGLE } from "react-native-maps";
@@ -24,11 +28,21 @@ import {
   Truck,
   Package,
   ShoppingBag,
-  Circle,
+  Wifi,
+  WifiOff,
+  RefreshCw,
 } from "lucide-react-native";
 import { api } from "@/services/api";
-import { formatCurrency } from "@msm/shared/utils";
 import { STATUS_LABELS } from "@msm/shared/constants";
+import {
+  getRealtimeService,
+  type OrderUpdateMessage,
+  type ConnectionState,
+} from "@/services/realtime";
+
+// ============================================
+// Types
+// ============================================
 
 interface TrackingData {
   id: string;
@@ -46,12 +60,24 @@ interface TrackingData {
   statusEvents?: Array<{ status: string; note: string | null; createdAt: string }>;
 }
 
+// ============================================
+// Constants
+// ============================================
+
 const TRACKING_STEPS = [
   { key: "ORDER_RECEIVED", label: "Order received", subtitle: "We got it. The store is preparing.", Icon: ShoppingBag },
   { key: "PACKING", label: "Packing your bag", subtitle: "Hand-picked items, carefully packed.", Icon: Package },
   { key: "OUT_FOR_DELIVERY", label: "Out for delivery", subtitle: "Your rider is on the way.", Icon: Truck },
   { key: "DELIVERED", label: "Delivered", subtitle: "Enjoy your fresh groceries!", Icon: CheckCircle2 },
 ];
+
+const STORE_PHONE = "+919876543210";
+const STORE_WHATSAPP = "919876543210";
+const MARKER_ANIMATION_DURATION = 1200; // ms for smooth rider movement
+
+// ============================================
+// Utility Functions
+// ============================================
 
 function getStepIndex(status: string): number {
   if (["ORDER_RECEIVED", "AWAITING_CUSTOMER_APPROVAL", "ACCEPTED"].includes(status)) return 0;
@@ -75,38 +101,189 @@ function distanceKm(a: { latitude: number; longitude: number }, b: { latitude: n
   return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-const POLL_INTERVAL = 6000; // 6s for smoother feel
-const STORE_PHONE = "+919876543210";
-const STORE_WHATSAPP = "919876543210";
+// ============================================
+// REST Fallback Adapter
+// ============================================
+
+/** Converts REST tracking response to OrderUpdateMessage format for the fallback */
+async function fetchTrackingAsMessage(orderId: string): Promise<OrderUpdateMessage | null> {
+  try {
+    const { data } = await api.get(`/orders/${orderId}/tracking`);
+    return {
+      type: "ORDER_UPDATE",
+      orderId,
+      status: data.status || "",
+      riderLat: data.deliveryPartnerLocation?.latitude ?? null,
+      riderLng: data.deliveryPartnerLocation?.longitude ?? null,
+      eta: data.estimatedMinutes ?? null,
+      timestamp: new Date().toISOString(),
+    };
+  } catch {
+    return null;
+  }
+}
+
+// ============================================
+// Main Component
+// ============================================
 
 export default function OrderTrackingScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [tracking, setTracking] = useState<TrackingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
-  const mapRef = useRef<any>(null);
+  const [connectionState, setConnectionState] = useState<ConnectionState>("connecting");
+  const mapRef = useRef<MapView>(null);
 
-  const fetchTracking = useCallback(async (orderId: string) => {
-    try {
-      const { data } = await api.get(`/orders/${orderId}/tracking`);
-      setTracking((prev) => {
-        // Only update if data actually changed — prevents unnecessary re-renders
-        if (prev && JSON.stringify(prev) === JSON.stringify(data)) return prev;
-        return data;
-      });
-    } catch {}
-    setIsLoading(false);
+  // Smooth rider position state — uses interpolation via requestAnimationFrame
+  const [riderDisplayPos, setRiderDisplayPos] = useState<{ latitude: number; longitude: number } | null>(null);
+  const riderTargetRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  const riderCurrentRef = useRef<{ latitude: number; longitude: number } | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+
+  // Pulse animation for live indicator
+  const pulseScale = useSharedValue(1);
+  useEffect(() => {
+    pulseScale.value = withRepeat(
+      withSequence(
+        withTiming(1.3, { duration: 800, easing: Easing.inOut(Easing.ease) }),
+        withTiming(1, { duration: 800, easing: Easing.inOut(Easing.ease) })
+      ),
+      -1,
+      false
+    );
+  }, []);
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulseScale.value }],
+  }));
+
+  // Smooth interpolation function for rider marker
+  const animateRiderTo = useCallback((target: { latitude: number; longitude: number }) => {
+    riderTargetRef.current = target;
+
+    if (!riderCurrentRef.current) {
+      // First position — snap immediately
+      riderCurrentRef.current = target;
+      setRiderDisplayPos(target);
+      return;
+    }
+
+    // Interpolate over MARKER_ANIMATION_DURATION using requestAnimationFrame
+    const start = { ...riderCurrentRef.current };
+    const startTime = Date.now();
+
+    const step = () => {
+      const elapsed = Date.now() - startTime;
+      const progress = Math.min(elapsed / MARKER_ANIMATION_DURATION, 1);
+
+      // Ease-out cubic for natural deceleration
+      const eased = 1 - Math.pow(1 - progress, 3);
+
+      const interpolated = {
+        latitude: start.latitude + (target.latitude - start.latitude) * eased,
+        longitude: start.longitude + (target.longitude - start.longitude) * eased,
+      };
+
+      setRiderDisplayPos(interpolated);
+
+      if (progress < 1) {
+        animationFrameRef.current = requestAnimationFrame(step);
+      } else {
+        riderCurrentRef.current = target;
+        animationFrameRef.current = null;
+      }
+    };
+
+    // Cancel any running animation
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    animationFrameRef.current = requestAnimationFrame(step);
   }, []);
 
+  // Cleanup animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  // ============================
+  // Initial REST fetch (for immediate display before WS connects)
+  // ============================
+  const fetchInitialData = useCallback(async (orderId: string) => {
+    try {
+      const { data } = await api.get(`/orders/${orderId}/tracking`);
+      setTracking(data);
+      // Set initial rider position
+      if (data.deliveryPartnerLocation) {
+        animateRiderTo(data.deliveryPartnerLocation);
+      }
+    } catch {}
+    setIsLoading(false);
+  }, [animateRiderTo]);
+
+  // ============================
+  // WebSocket Message Handler
+  // ============================
+  const handleRealtimeMessage = useCallback((message: OrderUpdateMessage) => {
+    setTracking((prev) => {
+      if (!prev) return prev;
+
+      const newTracking = { ...prev };
+
+      // Update status if changed
+      if (message.status && message.status !== prev.status) {
+        newTracking.status = message.status;
+      }
+
+      // Update ETA
+      if (message.eta !== null) {
+        newTracking.estimatedMinutes = message.eta;
+      }
+
+      // Update rider location with smooth animation
+      if (message.riderLat !== null && message.riderLng !== null) {
+        const newLoc = { latitude: message.riderLat, longitude: message.riderLng };
+        newTracking.deliveryPartnerLocation = newLoc;
+
+        // Trigger smooth interpolation animation
+        animateRiderTo(newLoc);
+      }
+
+      return newTracking;
+    });
+  }, [animateRiderTo]);
+
+  // ============================
+  // WebSocket Connection Lifecycle
+  // ============================
   useEffect(() => {
     if (!id) return;
-    fetchTracking(id);
-    pollRef.current = setInterval(() => fetchTracking(id), POLL_INTERVAL);
-    return () => { if (pollRef.current) clearInterval(pollRef.current); };
-  }, [id, fetchTracking]);
 
-  // Calculate ETA
+    // Fetch initial data immediately (don't wait for WS)
+    fetchInitialData(id);
+
+    // Connect WebSocket
+    const service = getRealtimeService();
+    service.connect(
+      id,
+      handleRealtimeMessage,
+      setConnectionState,
+      fetchTrackingAsMessage
+    );
+
+    // Cleanup on unmount
+    return () => {
+      service.disconnect();
+    };
+  }, [id, fetchInitialData, handleRealtimeMessage]);
+
+  // ============================
+  // ETA Calculation
+  // ============================
   useEffect(() => {
     if (!tracking) return;
     if (tracking.estimatedMinutes) {
@@ -122,6 +299,9 @@ export default function OrderTrackingScreen() {
     }
   }, [tracking]);
 
+  // ============================
+  // Actions
+  // ============================
   const callRider = () => {
     const phone = tracking?.deliveryPartner?.phone || STORE_PHONE;
     Linking.openURL(`tel:${phone}`);
@@ -131,6 +311,32 @@ export default function OrderTrackingScreen() {
     Linking.openURL(`https://wa.me/${STORE_WHATSAPP}`);
   };
 
+  // ============================
+  // Derived State
+  // ============================
+  const currentStep = tracking ? getStepIndex(tracking.status) : 0;
+  const isDelivered = tracking?.status === "DELIVERED";
+  const showMap = tracking && (
+    tracking.deliveryPartnerLocation ||
+    ["OUT_FOR_DELIVERY", "ARRIVING", "READY_FOR_DELIVERY"].includes(tracking.status)
+  );
+
+  // Connection state label
+  const connectionLabel = useMemo(() => {
+    switch (connectionState) {
+      case "connected": return "Live";
+      case "reconnecting": return "Reconnecting...";
+      case "polling": return "Updating";
+      case "connecting": return "Connecting...";
+      default: return "Offline";
+    }
+  }, [connectionState]);
+
+  const isLive = connectionState === "connected";
+
+  // ============================
+  // Loading State
+  // ============================
   if (isLoading) {
     return (
       <View className="flex-1 items-center justify-center bg-white">
@@ -147,10 +353,9 @@ export default function OrderTrackingScreen() {
     );
   }
 
-  const currentStep = getStepIndex(tracking.status);
-  const isDelivered = tracking.status === "DELIVERED";
-  const showMap = tracking.deliveryPartnerLocation || ["OUT_FOR_DELIVERY", "ARRIVING", "READY_FOR_DELIVERY"].includes(tracking.status);
-
+  // ============================
+  // Render
+  // ============================
   return (
     <>
       <Stack.Screen options={{ headerShown: false }} />
@@ -161,14 +366,14 @@ export default function OrderTrackingScreen() {
           <View className="absolute -bottom-6 -left-6 w-24 h-24 rounded-full bg-white/5" />
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center gap-3">
-              {/* Pulse dot */}
-              <View className="relative w-3 h-3">
-                <View className="absolute inset-0 rounded-full bg-white animate-ping opacity-75" />
-                <View className="w-3 h-3 rounded-full bg-white" />
-              </View>
+              {/* Live Pulse Indicator */}
+              <Animated.View style={pulseStyle} className="relative w-3 h-3">
+                <View className={`absolute inset-0 rounded-full ${isLive ? "bg-white" : "bg-white/50"}`} />
+                <View className={`w-3 h-3 rounded-full ${isLive ? "bg-white" : "bg-white/60"}`} />
+              </Animated.View>
               <View>
                 <Text className="text-micro font-bold uppercase tracking-wider text-white/80">
-                  Live Order
+                  {connectionLabel}
                 </Text>
                 <Text className="text-body font-bold text-white">
                   {getStatusLabel(tracking.status)}
@@ -185,6 +390,20 @@ export default function OrderTrackingScreen() {
             </View>
           </View>
         </Animated.View>
+
+        {/* Connection State Indicator (shown when not fully connected) */}
+        {connectionState === "reconnecting" && (
+          <View className="mx-4 mt-2 flex-row items-center justify-center gap-2 py-2 rounded-xl bg-warning-50 border border-warning-100">
+            <RefreshCw size={12} color="#B45309" />
+            <Text className="text-micro font-bold text-warning-700">Reconnecting to live updates...</Text>
+          </View>
+        )}
+        {connectionState === "disconnected" && (
+          <View className="mx-4 mt-2 flex-row items-center justify-center gap-2 py-2 rounded-xl bg-error-50 border border-error-100">
+            <WifiOff size={12} color="#B91C1C" />
+            <Text className="text-micro font-bold text-error-700">Connection lost</Text>
+          </View>
+        )}
 
         {/* Back button */}
         <Pressable
@@ -216,7 +435,7 @@ export default function OrderTrackingScreen() {
           )}
         </Animated.View>
 
-        {/* Map */}
+        {/* Map with Animated Rider Marker */}
         <Animated.View entering={FadeInDown.delay(200).duration(400)} className="mx-4 mt-4 rounded-2xl overflow-hidden h-64">
           {showMap && tracking.destination ? (
             <MapView
@@ -226,23 +445,25 @@ export default function OrderTrackingScreen() {
               initialRegion={{
                 latitude: tracking.destination.latitude,
                 longitude: tracking.destination.longitude,
-                latitudeDelta: 0.015,
-                longitudeDelta: 0.015,
+                latitudeDelta: 0.02,
+                longitudeDelta: 0.02,
               }}
               showsUserLocation
             >
-              {/* Customer location */}
+              {/* Customer destination marker */}
               <Marker
                 coordinate={tracking.destination}
                 title="Your location"
                 pinColor="#050505"
               />
-              {/* Rider location */}
-              {tracking.deliveryPartnerLocation && (
+              {/* Rider Marker — smoothly interpolates between positions via JS animation */}
+              {riderDisplayPos && (
                 <Marker
-                  coordinate={tracking.deliveryPartnerLocation}
+                  coordinate={riderDisplayPos}
                   title={tracking.deliveryPartner?.name || "Rider"}
                   pinColor="#22C55E"
+                  flat
+                  anchor={{ x: 0.5, y: 0.5 }}
                 />
               )}
             </MapView>
@@ -324,7 +545,6 @@ export default function OrderTrackingScreen() {
 
             return (
               <View key={step.key} className="flex-row gap-4">
-                {/* Timeline */}
                 <View className="items-center">
                   <View
                     className={`h-9 w-9 rounded-full items-center justify-center ${
@@ -347,8 +567,6 @@ export default function OrderTrackingScreen() {
                     />
                   )}
                 </View>
-
-                {/* Content */}
                 <View className="pb-6 pt-1.5 flex-1">
                   <Text
                     className={`text-body font-bold ${
@@ -392,11 +610,21 @@ export default function OrderTrackingScreen() {
           </Animated.View>
         )}
 
-        {/* Live indicator */}
-        <View className="flex-row items-center justify-center mt-6">
-          <View className="w-2 h-2 rounded-full bg-secondary-500 mr-2" />
+        {/* Connection state footer */}
+        <View className="flex-row items-center justify-center mt-6 gap-2">
+          {isLive ? (
+            <Wifi size={12} color="#22C55E" />
+          ) : connectionState === "polling" ? (
+            <RefreshCw size={12} color="#9CA3AF" />
+          ) : (
+            <WifiOff size={12} color="#9CA3AF" />
+          )}
           <Text className="text-micro text-neutral-400">
-            Updating every {POLL_INTERVAL / 1000} seconds
+            {isLive
+              ? "Real-time updates active"
+              : connectionState === "polling"
+              ? "Updating every 6s (WebSocket reconnecting)"
+              : connectionLabel}
           </Text>
         </View>
       </ScrollView>

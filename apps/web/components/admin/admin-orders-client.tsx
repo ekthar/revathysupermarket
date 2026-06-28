@@ -370,7 +370,7 @@ export function AdminOrdersClient({
                   ) : null}
                   <span className={cn("text-micro font-bold px-2 py-0.5 rounded-full", order.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</span>
                 </div>
-                <p className="text-caption text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
+                <p suppressHydrationWarning className="text-caption text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
               </div>
               <p className="text-body font-bold text-slate-900 shrink-0 mr-2">{formatCurrency(order.total)}</p>
               <ChevronDown className={cn("h-4 w-4 text-slate-400 shrink-0 transition-transform", expandedOrderIds.has(order.id) && "rotate-180")} />

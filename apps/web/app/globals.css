@@ -174,6 +174,8 @@ h1, h2, h3, h4, h5, h6, .font-display {
   backdrop-filter: saturate(180%) blur(22px);
   -webkit-backdrop-filter: saturate(180%) blur(22px);
   border: 1px solid rgba(255, 255, 255, 0.7);
+  will-change: transform;
+  transform: translateZ(0);
 }
 .dark .ios-glass {
   background: rgba(2, 6, 23, 0.74);
@@ -300,6 +302,8 @@ html[data-keyboard-open] .pb-safe {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
+  will-change: transform;
+  transform: translateZ(0);
 }
 .dark .glass-card {
   background: rgba(var(--shadow-color), 0.85);
@@ -388,20 +392,11 @@ html[data-keyboard-open] .pb-safe {
 .press {
   -webkit-user-select: none;
   user-select: none;
+  transform: translateZ(0);
 }
-.press:active { transform: scale(0.97); transition: transform 0.1s cubic-bezier(0.25, 0.1, 0.25, 1); }
+.press:active { transform: scale(0.97) translateZ(0); transition: transform 0.1s cubic-bezier(0.25, 0.1, 0.25, 1); }
 
-/* Smooth horizontal scroll */
-.scroll-x {
-  overflow-x: auto;
-  touch-action: pan-x pan-y;
-  scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-x: contain;
-  padding-inline: 1rem;
-  scroll-padding-inline: 1rem;
-}
-.scroll-x > * { scroll-snap-align: start; }
+/* Smooth horizontal scroll - see GPU-optimized version at bottom */
 
 /* Horizontal product list card */
 .product-list-card {
@@ -563,33 +558,36 @@ html[data-keyboard-open] .pb-safe {
 }
 .animate-slide-in-right { animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* 3D card press effect */
+/* 3D card press effect - optimized for mobile */
 .press-3d {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
-  transform-style: preserve-3d;
-  perspective: 800px;
+  transform: translateZ(0);
+  will-change: transform;
 }
 .press-3d:active {
-  transform: scale(0.97) rotateX(2deg);
+  transform: scale(0.97) translateZ(0);
   box-shadow: 0 2px 8px rgba(0,0,0,0.08);
 }
 
 /* Hover lift with enhanced shadow */
 .hover-lift {
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+  transform: translateZ(0);
+  will-change: transform;
 }
 .hover-lift:hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) translateZ(0);
   box-shadow: 0 12px 28px -8px rgba(0,0,0,0.12), 0 4px 12px -4px rgba(0,0,0,0.06);
 }
 
 /* Category card hover with tilt */
 .category-card-animated {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  transform-style: preserve-3d;
+  transform: translateZ(0);
+  will-change: transform;
 }
 .category-card-animated:hover {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-6px) translateZ(0);
   box-shadow: 0 16px 40px -12px rgba(0,0,0,0.15);
 }
 
@@ -608,13 +606,16 @@ html[data-keyboard-open] .pb-safe {
 /* Product card hover for desktop */
 .product-card-animated {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  will-change: transform;
+  transform: translateZ(0);
+  contain: layout style paint;
 }
 .product-card-animated:hover {
-  transform: translateY(-3px);
+  transform: translateY(-3px) translateZ(0);
   box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
 }
 .product-card-animated:active {
-  transform: scale(0.97);
+  transform: scale(0.97) translateZ(0);
 }
 
 /* Smooth scroll snap with elastic feel */
@@ -680,21 +681,25 @@ html[data-keyboard-open] .pb-safe {
   padding-bottom: 0.5rem;
   padding-inline: 1rem;
   scroll-padding-inline: 1rem;
-  /* Perspective for slight 3D wheel effect */
-  perspective: 1200px;
+  /* GPU acceleration for smooth scroll */
+  will-change: scroll-position;
+  transform: translateZ(0);
+  contain: layout style;
 }
 .wheel-scroll::-webkit-scrollbar { display: none; }
 
 .wheel-scroll-item {
   scroll-snap-align: center;
   flex-shrink: 0;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.3s ease;
+  transform: translateZ(0);
+  will-change: transform;
+  contain: layout style paint;
 }
 
 /* Desktop: hover reveals slight rotation for wheel feel */
 @media (min-width: 768px) {
   .wheel-scroll-item:hover {
-    transform: translateY(-4px) scale(1.02);
+    transform: translateY(-4px) translateZ(0);
   }
 }
 
@@ -784,4 +789,49 @@ html[data-keyboard-open] .pb-safe {
 .dark .category-card {
   border: 1px solid rgba(255,255,255,0.08);
   background-color: hsl(222 47% 12%) !important;
+}
+
+/* ===== GPU ACCELERATION UTILITIES ===== */
+/* Force GPU compositing for smoother animations on interactive elements */
+.gpu-accelerated {
+  transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Optimized scroll container for mobile */
+.scroll-x {
+  overflow-x: auto;
+  touch-action: pan-x pan-y;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding-inline: 1rem;
+  scroll-padding-inline: 1rem;
+  will-change: scroll-position;
+  transform: translateZ(0);
+}
+.scroll-x > * { scroll-snap-align: start; }
+
+/* Content containment for product grids - prevents layout thrashing */
+.contain-paint {
+  contain: layout style paint;
+}
+
+/* Reduce motion for non-essential animations on low-end devices */
+@media (prefers-reduced-motion: reduce) {
+  .product-card-animated,
+  .wheel-scroll-item,
+  .hover-lift,
+  .category-card-animated {
+    transition: none !important;
+  }
+}
+
+/* Optimize fixed/sticky elements to not trigger repaints */
+.ios-bottom-bar,
+.ios-sticky-tracking-header {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }

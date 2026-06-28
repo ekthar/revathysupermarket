@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -15,7 +15,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
-import { useOrderTrackingSocket } from "@/lib/hooks/use-order-tracking-socket";
+import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
 
 const DeliveryMap = dynamic(
   () => import("./delivery-map").then((m) => ({ default: m.DeliveryMap })),
@@ -141,29 +141,25 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
     setEtaMinutes(calculateEta(data.deliveryPartnerLocation));
   }, [data.deliveryPartnerLocation, calculateEta]);
 
-  // Real-time updates via WebSocket with SSE/polling fallback
-  // Uses the unified tracking socket hook for:
-  // - Auto reconnect with exponential backoff
-  // - Duplicate message deduplication
-  // - Graceful fallback chain: WebSocket → SSE → REST polling
-  const { connectionState } = useOrderTrackingSocket({
+  // ─── REAL-TIME UPDATES via Event-Driven SSE Gateway ───
+  // Connects to /api/realtime/orders/{id} which reads from Redis Streams.
+  // Zero database queries in the real-time loop.
+  const isDelivered = data.status === "DELIVERED";
+  const { connectionState } = useOrderTracking({
     orderId: data.id,
     enabled: !isDelivered,
-    onUpdate: useCallback((update) => {
+    onUpdate: useCallback((update: TrackingUpdate) => {
       setData((prev) => ({
         ...prev,
         ...(update.status && { status: update.status }),
         ...(update.deliveryPartnerLocation !== undefined && {
           deliveryPartnerLocation: update.deliveryPartnerLocation,
         }),
-        ...(update.riderName && { riderName: update.riderName }),
-        ...(update.riderPhone && { riderPhone: update.riderPhone }),
       }));
     }, []),
   });
 
   const currentStep = getStepIndex(data.status);
-  const isDelivered = data.status === "DELIVERED";
   const phoneNumber = data.riderPhone || SITE.phone;
 
   return (

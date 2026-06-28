@@ -11,6 +11,7 @@ import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
 import { checkoutErrorResponse, createAuthoritativeOrder } from "@/lib/order-checkout";
 import { broadcastToAllDeliveryPartners } from "@/lib/delivery-alerts";
+import { publishNewOrder, publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
 import { sendPushToUser } from "@/lib/push";
 
 function orderNumber() {
@@ -119,6 +120,22 @@ export async function POST(request: Request) {
           orderId: order.id
         }).catch(() => null);
       }
+
+      // ─── PUBLISH REAL-TIME EVENTS ───
+      const orderAddress = `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`;
+      publishNewOrder({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        customerName: data.customerName,
+        address: orderAddress,
+        total: Number(order.total),
+      }).catch(() => null);
+      publishOrderStatusChanged({
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        status: "ORDER_RECEIVED",
+        userId: session.user.id,
+      }).catch(() => null);
 
       return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber, total: Number(order.total) });
     }

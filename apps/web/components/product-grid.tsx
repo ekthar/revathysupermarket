@@ -11,6 +11,8 @@ import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
 import { categories } from "@/lib/products";
 import type { Product } from "@/lib/types";
+import { prefetchProductImages } from "@/lib/hooks/use-preload";
+import { useVirtualGrid } from "@/lib/hooks/use-virtual-grid";
 
 type SortMode = "popularity" | "low" | "high" | "newest";
 
@@ -84,6 +86,53 @@ const LazyProductCard = memo(function LazyProductCard({ product }: { product: Pr
   );
 });
 
+// Virtualized product list - only renders visible items + 2 screens buffer
+const VirtualProductList = memo(function VirtualProductList({
+  items,
+  hasNextPage,
+  isFetchingNextPage,
+  loadMoreRef,
+}: {
+  items: Product[];
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  loadMoreRef: React.RefObject<HTMLDivElement | null>;
+}) {
+  const { renderCount, hasMoreToRender, sentinelRef } = useVirtualGrid({
+    totalItems: items.length,
+    initialRenderCount: 8, // Above-the-fold
+    bufferItems: 8, // Render 8 more at a time (2 rows × 4 cols or 4 rows × 2 cols)
+    estimatedRowHeight: 320,
+  });
+
+  return (
+    <>
+      <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {items.slice(0, renderCount).map((product, index) => (
+          // First 8 render immediately, rest use lazy rendering as they enter buffer
+          index < 8 ? (
+            <ProductCard key={product.id} product={product} />
+          ) : (
+            <LazyProductCard key={product.id} product={product} />
+          )
+        ))}
+      </div>
+
+      {/* Sentinel for progressive rendering - triggers more items to render */}
+      {hasMoreToRender && (
+        <div ref={sentinelRef} className="h-1" aria-hidden="true" />
+      )}
+
+      {/* Infinite scroll trigger for fetching next page from server */}
+      {hasNextPage ? (
+        <div ref={loadMoreRef} className="mt-6">
+          {isFetchingNextPage && <ProductSkeletonGrid count={4} />}
+        </div>
+      ) : null}
+    </>
+  );
+});
+
 export function ProductGrid({
   initialItems = [],
   initialTotal = 0,
@@ -151,6 +200,15 @@ export function ProductGrid({
 
   const allItems = data?.pages.flatMap((page) => page.items) ?? [];
   const total = data?.pages[0]?.total ?? initialTotal;
+
+  // Prefetch images for items that will be visible soon (next screen)
+  useEffect(() => {
+    if (allItems.length > 8) {
+      // Prefetch images for items 9-16 (next visible batch)
+      const nextBatch = allItems.slice(8, 16);
+      prefetchProductImages(nextBatch);
+    }
+  }, [allItems.length]); // Only run when total count changes (new page loaded)
 
   // Infinite scroll observer
   useEffect(() => {
@@ -269,23 +327,12 @@ export function ProductGrid({
           <ProductSkeletonGrid count={8} />
         </div>
       ) : allItems.length > 0 ? (
-        <>
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-            {allItems.map((product, index) => (
-              // First 8 items render immediately (above the fold), rest use lazy rendering
-              index < 8 ? (
-                <ProductCard key={product.id} product={product} />
-              ) : (
-                <LazyProductCard key={product.id} product={product} />
-              )
-            ))}
-          </div>
-          {hasNextPage ? (
-            <div ref={loadMoreRef} className="mt-6">
-              {isFetchingNextPage && <ProductSkeletonGrid count={4} />}
-            </div>
-          ) : null}
-        </>
+        <VirtualProductList
+          items={allItems}
+          hasNextPage={!!hasNextPage}
+          isFetchingNextPage={isFetchingNextPage}
+          loadMoreRef={loadMoreRef}
+        />
       ) : (
         <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center">
           <p className="font-display text-2xl font-bold">No matching products</p>

@@ -1,37 +1,34 @@
-import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
+import { SkeletonPulse, ProductGridSkeleton } from "@/components/ui/streaming-skeleton";
 
+/**
+ * Products listing page loading skeleton.
+ * Renders search + filters + grid layout instantly.
+ * CSS-only shimmer - no JS computation during loading.
+ */
 export default function ProductsLoading() {
   return (
-    <div className="space-y-5 px-4 pt-4 pb-24">
-      {/* Header area */}
-      <div className="space-y-2">
-        <div className="relative h-8 w-32 overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-800">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
-        </div>
-        <div className="relative h-4 w-48 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">
-          <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
-        </div>
-      </div>
-
+    <div className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
       {/* Search input */}
-      <div className="relative h-12 overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800">
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
-      </div>
+      <SkeletonPulse className="h-12 rounded-2xl" />
 
-      {/* Category chips row */}
-      <div className="flex gap-2.5 overflow-hidden">
+      {/* Category chips row (mobile) */}
+      <div className="mt-3 flex gap-2.5 overflow-hidden md:hidden">
+        <SkeletonPulse className="h-10 w-20 shrink-0 rounded-2xl" />
         {Array.from({ length: 5 }).map((_, i) => (
-          <div
-            key={i}
-            className="relative h-9 w-20 shrink-0 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800"
-          >
-            <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
-          </div>
+          <SkeletonPulse key={i} className="h-9 w-20 shrink-0 rounded-full" />
         ))}
       </div>
 
+      {/* Desktop filters */}
+      <div className="mt-3 hidden md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+        <SkeletonPulse className="h-12 rounded-2xl" />
+        <SkeletonPulse className="h-12 rounded-2xl" />
+      </div>
+
       {/* Product grid */}
-      <ProductSkeletonGrid count={8} />
+      <div className="mt-5">
+        <ProductGridSkeleton count={8} />
+      </div>
     </div>
   );
 }

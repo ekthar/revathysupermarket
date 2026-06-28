@@ -4,33 +4,33 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { memo, useMemo } from "react";
 import type { Product } from "@/lib/types";
 
+// Lighter transitions - CSS easing instead of spring physics per item
 const containerVariants = {
   hidden: {},
   visible: {
     transition: {
-      staggerChildren: 0.07,
-      delayChildren: 0.15
+      staggerChildren: 0.05,
+      delayChildren: 0.1
     }
   }
 };
 
 const itemVariants = {
-  hidden: { opacity: 0, y: 20, scale: 0.9 },
+  hidden: { opacity: 0, y: 16 },
   visible: {
     opacity: 1,
     y: 0,
-    scale: 1,
     transition: {
-      type: "spring",
-      stiffness: 260,
-      damping: 20
+      duration: 0.3,
+      ease: [0.25, 0.1, 0.25, 1]
     }
   }
 };
 
-export function AnimatedCategories({
+export const AnimatedCategories = memo(function AnimatedCategories({
   categories,
   categoryImages,
   categoryColors,
@@ -43,6 +43,15 @@ export function AnimatedCategories({
   categoryIcons: Record<string, string>;
   allProducts: Product[];
 }) {
+  // Memoize product counts per category - avoid O(n*m) on every render
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const product of allProducts) {
+      counts[product.category] = (counts[product.category] || 0) + 1;
+    }
+    return counts;
+  }, [allProducts]);
+
   return (
     <>
       {/* Popular Categories - Desktop with staggered entrance */}
@@ -51,7 +60,7 @@ export function AnimatedCategories({
           initial={{ opacity: 0, x: -20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           className="flex items-center justify-between mb-6"
         >
           <h2 className="section-title">Popular Categories</h2>
@@ -80,14 +89,14 @@ export function AnimatedCategories({
                     alt={cat}
                     fill
                     sizes="64px"
-                    className="object-cover transition-transform duration-500 hover:scale-110"
+                    className="object-cover"
                     loading="lazy"
                   />
                 </div>
                 <div className="text-center">
                   <p className="text-body font-bold text-neutral-800 dark:text-white">{cat}</p>
                   <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">
-                    {allProducts.filter((p) => p.category === cat).length} Products
+                    {categoryCounts[cat] || 0} Products
                   </p>
                 </div>
               </Link>
@@ -102,7 +111,7 @@ export function AnimatedCategories({
           initial={{ opacity: 0, x: -15 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           className="flex items-center justify-between"
         >
           <h2 className="text-title font-bold text-neutral-900 dark:text-white">What are you looking for?</h2>
@@ -121,13 +130,9 @@ export function AnimatedCategories({
                 href={`/products?category=${encodeURIComponent(cat)}`}
                 className="flex flex-col items-center gap-1.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 py-3 px-1 press hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
               >
-                <motion.span
-                  whileHover={{ scale: 1.2, rotate: 10 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="text-2xl leading-none"
-                >
+                <span className="text-2xl leading-none">
                   {categoryIcons[cat] ?? "\ud83d\uded2"}
-                </motion.span>
+                </span>
                 <span className="text-micro font-medium text-neutral-600 dark:text-neutral-300 text-center leading-tight line-clamp-1">{cat}</span>
               </Link>
             </motion.div>
@@ -136,4 +141,4 @@ export function AnimatedCategories({
       </section>
     </>
   );
-}
+});

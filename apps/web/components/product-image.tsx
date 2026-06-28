@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import { safeProductImageUrl, PRODUCT_IMAGE_FALLBACK } from "@/lib/image";
 import { cn } from "@/lib/utils";
 
-export function ProductImage({
+export const ProductImage = memo(function ProductImage({
   src,
   alt,
   className
@@ -21,6 +21,10 @@ export function ProductImage({
     setCurrentSrc(safeProductImageUrl(src));
   }, [src]);
 
+  const handleError = useCallback(() => {
+    setCurrentSrc(PRODUCT_IMAGE_FALLBACK);
+  }, []);
+
   return (
     <div className={cn("relative aspect-square w-full", className)}>
       <Image
@@ -29,8 +33,9 @@ export function ProductImage({
         fill
         sizes="(max-width: 768px) 50vw, 25vw"
         className="object-cover"
-        onError={() => setCurrentSrc(PRODUCT_IMAGE_FALLBACK)}
+        onError={handleError}
+        loading="lazy"
       />
     </div>
   );
-}
+});

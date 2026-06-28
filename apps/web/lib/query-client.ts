@@ -4,8 +4,15 @@ export function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // 1 minute
-        gcTime: 5 * 60 * 1000, // 5 minutes
+        // Keep data fresh for 2 minutes (reduces refetches on navigation)
+        staleTime: 2 * 60 * 1000,
+        // Keep unused data in memory for 10 minutes (instant back-navigation)
+        gcTime: 10 * 60 * 1000,
+        // Don't refetch when window regains focus (prevents scroll position loss)
+        refetchOnWindowFocus: false,
+        // Retry once on failure (quick recovery without blocking UI)
+        retry: 1,
+        retryDelay: 1000,
       },
     },
   });

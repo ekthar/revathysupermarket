@@ -153,7 +153,11 @@ async function publishToStreams(streamKeys: string[], event: RealtimeEvent): Pro
     await Promise.all(
       streamKeys.map(async (key) => {
         // XADD with approximate MAXLEN trimming
-        await redis.xadd(key, "*", entry, { MAXLEN: STREAM_MAXLEN, approx: true } as never);
+        // Upstash xadd signature: xadd(key, id, fields)
+        // For MAXLEN trimming, we use a separate XTRIM call
+        await redis.xadd(key, "*", entry);
+        // Trim to approximate MAXLEN to bound memory
+        await redis.xtrim(key, { strategy: "MAXLEN", threshold: STREAM_MAXLEN, exactness: "~" });
         // Refresh TTL so inactive streams expire
         await redis.expire(key, STREAM_TTL_SECONDS);
       })

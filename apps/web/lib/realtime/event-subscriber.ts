@@ -146,10 +146,10 @@ export function createStreamSubscription(options: SubscriptionOptions): () => vo
         if (cursor === "$") {
           // First poll with "$": no history, just set cursor to latest entry
           // Read the latest entry to establish our starting position
-          const latest = await redis.xrevrange(stream, "+", "-", 1) as Array<[string, string[]]> | null;
+          const latest = (await redis.xrevrange(stream, "+", "-", 1)) as unknown as Array<{ id: string;[key: string]: unknown }> | null;
           if (latest && latest.length > 0) {
             // Set cursor to the latest entry ID — we'll start reading AFTER this
-            cursors.set(stream, latest[0][0]);
+            cursors.set(stream, latest[0].id);
           } else {
             // Stream is empty or doesn't exist yet — use "0" and wait
             cursors.set(stream, "0-0");
@@ -158,16 +158,16 @@ export function createStreamSubscription(options: SubscriptionOptions): () => vo
         }
 
         // Normal XREAD: get entries after our cursor
-        const result = await redis.xrange(stream, `(${cursor}`, "+", batchSize) as Array<[string, string[]]> | null;
+        const result = (await redis.xrange(stream, `(${cursor}`, "+", batchSize)) as unknown as Array<{ id: string;[key: string]: unknown }> | null;
 
         if (result && result.length > 0) {
-          entries = result.map(([id, fields]) => {
-            // fields is a flat array: [key1, val1, key2, val2, ...]
+          entries = result.map((entry) => {
+            // Upstash returns entries as { id, field1: val1, field2: val2, ... }
             const fieldMap: Record<string, string> = {};
-            for (let i = 0; i < fields.length; i += 2) {
-              fieldMap[fields[i]] = fields[i + 1];
+            for (const [key, value] of Object.entries(entry)) {
+              if (key !== "id") fieldMap[key] = String(value ?? "");
             }
-            return { id, fields: fieldMap };
+            return { id: entry.id, fields: fieldMap };
           });
         }
 
@@ -247,20 +247,20 @@ export async function readRecentEvents(
   if (!redis) return [];
 
   try {
-    const result = await redis.xrevrange(streamKey, "+", "-", count) as Array<[string, string[]]> | null;
+    const result = (await redis.xrevrange(streamKey, "+", "-", count)) as unknown as Array<{ id: string;[key: string]: unknown }> | null;
     if (!result || result.length === 0) return [];
 
     return result
-      .map(([id, fields]) => {
+      .map((entry) => {
         const fieldMap: Record<string, string> = {};
-        for (let i = 0; i < fields.length; i += 2) {
-          fieldMap[fields[i]] = fields[i + 1];
+        for (const [key, value] of Object.entries(entry)) {
+          if (key !== "id") fieldMap[key] = String(value ?? "");
         }
         try {
           const event = JSON.parse(fieldMap.payload || "{}") as RealtimeEvent;
           return {
-            id,
-            eventId: fieldMap.eventId || id,
+            id: entry.id,
+            eventId: fieldMap.eventId || entry.id,
             type: fieldMap.type || event.type,
             event,
             timestamp: Number(fieldMap.ts) || 0,

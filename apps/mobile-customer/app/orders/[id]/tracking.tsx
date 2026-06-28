@@ -75,7 +75,7 @@ function distanceKm(a: { latitude: number; longitude: number }, b: { latitude: n
   return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
-const POLL_INTERVAL = 8000;
+const POLL_INTERVAL = 6000; // 6s for smoother feel
 const STORE_PHONE = "+919876543210";
 const STORE_WHATSAPP = "919876543210";
 
@@ -90,7 +90,11 @@ export default function OrderTrackingScreen() {
   const fetchTracking = useCallback(async (orderId: string) => {
     try {
       const { data } = await api.get(`/orders/${orderId}/tracking`);
-      setTracking(data);
+      setTracking((prev) => {
+        // Only update if data actually changed — prevents unnecessary re-renders
+        if (prev && JSON.stringify(prev) === JSON.stringify(data)) return prev;
+        return data;
+      });
     } catch {}
     setIsLoading(false);
   }, []);

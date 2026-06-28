@@ -1,24 +1,22 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { View, Text, FlatList, Pressable, RefreshControl } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 import { router } from "expo-router";
+import { ClipboardList } from "lucide-react-native";
 import { api } from "@/services/api";
 import type { OrderSummary } from "@msm/shared/types";
 import { formatCurrency, formatDate, formatOrderStatus } from "@msm/shared/utils";
 import { STATUS_LABELS } from "@msm/shared/constants";
-import { OrderRowSkeleton } from "@/components/ui";
+import { OrderRowSkeleton } from "@/components/ui/Skeleton";
+import { Badge } from "@/components/ui/Badge";
 
-function statusColor(status: string): string {
+function statusVariant(status: string): "success" | "error" | "info" | "warning" | "default" {
   switch (status) {
-    case "DELIVERED":
-      return "bg-green-100 text-green-700";
-    case "CANCELLED":
-      return "bg-red-100 text-red-700";
+    case "DELIVERED": return "success";
+    case "CANCELLED": return "error";
     case "OUT_FOR_DELIVERY":
-    case "ARRIVING":
-      return "bg-blue-100 text-blue-700";
-    default:
-      return "bg-amber-100 text-amber-700";
+    case "ARRIVING": return "info";
+    default: return "warning";
   }
 }
 
@@ -26,43 +24,72 @@ export default function OrdersScreen() {
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const { data } = await api.get("/orders");
       setOrders(data.items || data || []);
     } catch {}
     setIsLoading(false);
-  };
+  }, []);
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
+
+  const renderItem = useCallback(({ item }: { item: OrderSummary }) => (
+    <Pressable
+      onPress={() => router.push(`/orders/${item.id}`)}
+      className="py-4 border-b border-neutral-50"
+    >
+      <View className="flex-row justify-between items-start mb-2">
+        <View>
+          <Text className="text-body font-bold text-neutral-800">
+            #{item.orderNumber}
+          </Text>
+          <Text className="text-micro text-neutral-400 mt-0.5">
+            {formatDate(item.createdAt)}
+          </Text>
+        </View>
+        <Badge variant={statusVariant(item.status)}>
+          {STATUS_LABELS[item.status as keyof typeof STATUS_LABELS] || formatOrderStatus(item.status)}
+        </Badge>
+      </View>
+      <View className="flex-row justify-between items-center">
+        <Text className="text-micro text-neutral-500">
+          {item.itemCount} item{item.itemCount > 1 ? "s" : ""}
+        </Text>
+        <Text className="text-body font-bold text-neutral-900">
+          {formatCurrency(item.total)}
+        </Text>
+      </View>
+    </Pressable>
+  ), []);
 
   return (
     <View className="flex-1 bg-white pt-14">
-      <View className="px-5 pb-3">
-        <Text className="text-xl font-heading text-slate-900">My Orders</Text>
+      <View className="px-4 pb-3">
+        <Text className="text-heading font-bold text-neutral-900">My Orders</Text>
       </View>
 
       <FlatList
         data={orders}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 80 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 80 }}
         refreshControl={
           <RefreshControl
             refreshing={isLoading}
             onRefresh={fetchOrders}
-            tintColor="#059669"
+            tintColor="#050505"
           />
         }
         ListEmptyComponent={
           !isLoading ? (
             <View className="py-16 items-center">
-              <Text className="text-4xl mb-3">📋</Text>
-              <Text className="text-lg font-heading text-slate-700 mb-1">
+              <ClipboardList size={40} color="#D1D5DB" />
+              <Text className="text-title font-bold text-neutral-700 mt-4 mb-1">
                 No orders yet
               </Text>
-              <Text className="text-sm text-slate-400 text-center">
+              <Text className="text-caption text-neutral-400 text-center">
                 Your order history will appear here
               </Text>
             </View>
@@ -74,36 +101,7 @@ export default function OrdersScreen() {
             </View>
           )
         }
-        renderItem={({ item }) => (
-          <Pressable
-            onPress={() => router.push(`/orders/${item.id}`)}
-            className="py-4 border-b border-slate-50"
-          >
-            <View className="flex-row justify-between items-start mb-2">
-              <View>
-                <Text className="text-sm font-sans-bold text-slate-800">
-                  #{item.orderNumber}
-                </Text>
-                <Text className="text-xs text-slate-400 mt-0.5">
-                  {formatDate(item.createdAt)}
-                </Text>
-              </View>
-              <View className={`px-2.5 py-1 rounded-full ${statusColor(item.status).split(" ")[0]}`}>
-                <Text className={`text-xs font-sans-semibold ${statusColor(item.status).split(" ")[1]}`}>
-                  {STATUS_LABELS[item.status as keyof typeof STATUS_LABELS] || formatOrderStatus(item.status)}
-                </Text>
-              </View>
-            </View>
-            <View className="flex-row justify-between items-center">
-              <Text className="text-xs text-slate-500">
-                {item.itemCount} item{item.itemCount > 1 ? "s" : ""}
-              </Text>
-              <Text className="text-sm font-sans-bold text-slate-900">
-                {formatCurrency(item.total)}
-              </Text>
-            </View>
-          </Pressable>
-        )}
+        renderItem={renderItem}
       />
     </View>
   );

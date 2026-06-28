@@ -9,6 +9,7 @@ import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { createDeliveryOtp, deliveryOtpExpiryDate } from "@/lib/delivery";
 import { sendDeliveryAlert } from "@/lib/delivery-alerts";
 import { sendFcmToUser } from "@/lib/fcm-admin";
+import { publishOrderAssigned } from "@/lib/realtime/event-publisher";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -109,6 +110,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       url: "/dashboard",
       orderId: id
     });
+
+    // ─── PUBLISH REAL-TIME EVENT ───
+    publishOrderAssigned({
+      orderId: id,
+      orderNumber: order.orderNumber,
+      riderId: parsed.data.deliveryPartnerId,
+      customerName: order.customerName,
+      address: `${order.houseName}, ${order.street}, ${order.landmark}, ${order.pincode}`,
+      total: Number(order.total),
+      userId: order.userId,
+    }).catch(() => null); // Fire-and-forget
   }
 
   return NextResponse.json({ order });

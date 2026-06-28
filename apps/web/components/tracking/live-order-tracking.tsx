@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -15,6 +15,7 @@ import {
   CircleDot,
 } from "lucide-react";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
+import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
 
 const DeliveryMap = dynamic(
   () => import("./delivery-map").then((m) => ({ default: m.DeliveryMap })),
@@ -140,111 +141,25 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
     setEtaMinutes(calculateEta(data.deliveryPartnerLocation));
   }, [data.deliveryPartnerLocation, calculateEta]);
 
-  // SSE live updates with polling fallback for Vercel/single-payload environments
-  const retryCountRef = useRef(0);
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const messageCountRef = useRef(0);
-  const sseClosedQuicklyRef = useRef(false);
-  const MAX_RETRIES = 3;
-  const BASE_DELAY_MS = 1000;
-  const POLL_INTERVAL_MS = 8000;
-
-  // Polling fallback - fetches tracking data via REST when SSE isn't persistent
-  const startPolling = useCallback(() => {
-    if (pollingRef.current) return; // already polling
-    async function poll() {
-      try {
-        const res = await fetch(`/api/orders/${data.id}/tracking`, { cache: "no-store" });
-        if (!res.ok) return;
-        const update = await res.json();
-        setData((prev) => ({
-          ...prev,
-          ...(update.status && { status: update.status }),
-          ...(update.deliveryPartnerLocation !== undefined && {
-            deliveryPartnerLocation: update.deliveryPartnerLocation,
-          }),
-        }));
-      } catch {
-        // ignore network errors, will retry next interval
-      }
-    }
-    poll(); // immediate first poll
-    pollingRef.current = setInterval(poll, POLL_INTERVAL_MS);
-  }, [data.id]);
-
-  useEffect(() => {
-    let source: EventSource | null = null;
-    let cancelled = false;
-
-    function connect() {
-      if (cancelled) return;
-      messageCountRef.current = 0;
-      source = new EventSource(`/api/orders/${data.id}/stream`);
-
-      source.onmessage = (event) => {
-        retryCountRef.current = 0;
-        messageCountRef.current += 1;
-        try {
-          const update = JSON.parse(event.data) as {
-            status?: string;
-            deliveryPartnerLocation?: {
-              latitude: number;
-              longitude: number;
-              heading?: number;
-              updatedAt?: string;
-            } | null;
-          };
-          setData((prev) => ({
-            ...prev,
-            ...(update.status && { status: update.status }),
-            ...(update.deliveryPartnerLocation !== undefined && {
-              deliveryPartnerLocation: update.deliveryPartnerLocation,
-            }),
-          }));
-        } catch {
-          // ignore parse errors
-        }
-      };
-
-      source.onerror = () => {
-        source?.close();
-        if (cancelled) return;
-
-        // If SSE closed after only 1 message, the server sent a single payload
-        // (Vercel/non-persistent mode) — switch to polling instead of retrying SSE
-        if (messageCountRef.current <= 1) {
-          sseClosedQuicklyRef.current = true;
-          startPolling();
-          return;
-        }
-
-        if (retryCountRef.current < MAX_RETRIES) {
-          const delay = Math.min(
-            BASE_DELAY_MS * Math.pow(2, retryCountRef.current),
-            30000
-          );
-          retryCountRef.current += 1;
-          retryTimerRef.current = setTimeout(connect, delay);
-        } else {
-          // Exhausted retries, fall back to polling
-          startPolling();
-        }
-      };
-    }
-
-    connect();
-
-    return () => {
-      cancelled = true;
-      source?.close();
-      if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
-      if (pollingRef.current) clearInterval(pollingRef.current);
-    };
-  }, [data.id, startPolling]);
+  // ─── REAL-TIME UPDATES via Event-Driven SSE Gateway ───
+  // Connects to /api/realtime/orders/{id} which reads from Redis Streams.
+  // Zero database queries in the real-time loop.
+  const isDelivered = data.status === "DELIVERED";
+  const { connectionState } = useOrderTracking({
+    orderId: data.id,
+    enabled: !isDelivered,
+    onUpdate: useCallback((update: TrackingUpdate) => {
+      setData((prev) => ({
+        ...prev,
+        ...(update.status && { status: update.status }),
+        ...(update.deliveryPartnerLocation !== undefined && {
+          deliveryPartnerLocation: update.deliveryPartnerLocation,
+        }),
+      }));
+    }, []),
+  });
 
   const currentStep = getStepIndex(data.status);
-  const isDelivered = data.status === "DELIVERED";
   const phoneNumber = data.riderPhone || SITE.phone;
 
   return (

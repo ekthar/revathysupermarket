@@ -8,7 +8,6 @@ import { memo } from "react";
 import { useCartItemCount } from "@/components/cart/cart-provider";
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { cn } from "@/lib/utils";
-import { tapScale } from "@/lib/motion";
 
 export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
@@ -63,37 +62,30 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
         active ? "text-white" : "text-neutral-500 hover:bg-white/65 dark:hover:bg-neutral-800/65"
       )}
     >
-      {/* Animated active background indicator */}
+      {/* Active background indicator — no layoutId animation on mount to prevent CLS */}
       {active && (
         <motion.div
           layoutId="nav-active-indicator"
           className="absolute inset-0 rounded-2xl bg-black shadow-elevation-3"
+          style={{ willChange: "transform" }}
           transition={{
             type: "spring",
             stiffness: 380,
             damping: 32,
             mass: 0.8,
           }}
+          // Prevent initial mount animation (no slide-in from wrong position)
+          initial={false}
         />
       )}
 
-      <motion.div
-        whileTap={tapScale.secondary}
-        transition={{ type: "spring", stiffness: 500, damping: 25 }}
-        className="relative z-10"
-      >
+      <div className="relative z-10">
         <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.8} />
-      </motion.div>
+      </div>
       {badge ? (
-        <motion.span
-          key={badge}
-          initial={{ scale: 0.5, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 20 }}
-          className="absolute right-[22%] top-1 z-10 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary-500 px-1 text-micro font-black text-white"
-        >
+        <span className="absolute right-[22%] top-1 z-10 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary-500 px-1 text-micro font-black text-white">
           {badge}
-        </motion.span>
+        </span>
       ) : null}
       <span className={cn("relative z-10 max-w-full truncate leading-none", active ? "font-black" : "font-semibold")}>
         {label}

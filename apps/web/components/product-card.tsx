@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { Clock, Minus, Plus } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useCart } from "@/components/cart/cart-provider";
+import { memo, useCallback } from "react";
+import { useCartItem, useCartActions } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "@/components/product-image";
@@ -18,22 +19,10 @@ interface ProductCardProps {
   horizontal?: boolean;
 }
 
-export function ProductCard({ product, compact = false, horizontal = false }: ProductCardProps) {
-  const { addItem, items, updateQuantity } = useCart();
-  const { showToast } = useToast();
+// Memoized product card - only re-renders when product prop changes
+export const ProductCard = memo(function ProductCard({ product, compact = false, horizontal = false }: ProductCardProps) {
   const price = product.discountPrice ?? product.price;
-  const cartItem = items.find((i) => i.id === product.id);
   const outOfStock = product.stock <= 0;
-
-  function add() {
-    if (outOfStock) return;
-    addItem(product);
-    // Haptic feedback on mobile
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(10);
-    }
-    showToast(`Added ${product.name}`, "success");
-  }
 
   // Horizontal list layout
   if (horizontal) {
@@ -70,33 +59,7 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
         </div>
 
         <div className="shrink-0">
-          <AnimatePresence mode="wait" initial={false}>
-            {cartItem ? (
-              <QuantityStepper
-                key="qty"
-                quantity={cartItem.quantity}
-                onIncrement={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                onDecrement={() => updateQuantity(product.id, cartItem.quantity - 1)}
-                vertical
-              />
-            ) : (
-              <motion.button
-                key="add"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                whileTap={tapScale.primary}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                type="button"
-                disabled={outOfStock}
-                onClick={add}
-                className="flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                <Plus className="h-3 w-3" />
-                Add to Cart
-              </motion.button>
-            )}
-          </AnimatePresence>
+          <CartControls product={product} outOfStock={outOfStock} variant="horizontal" />
         </div>
       </motion.article>
     );
@@ -126,15 +89,10 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
             <ProductImage src={product.image} alt={product.name} className="object-cover" />
           </motion.div>
           {product.discountPrice && (
-            <motion.span
-              initial={{ scale: 0, rotate: -10 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.2 }}
-              className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md"
-            >
+            <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md">
               <Clock className="h-2.5 w-2.5" />
               {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
-            </motion.span>
+            </span>
           )}
           {outOfStock && (
             <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
@@ -166,40 +124,74 @@ export function ProductCard({ product, compact = false, horizontal = false }: Pr
             )}
           </div>
 
-          {/* Cart control */}
-          <AnimatePresence mode="wait" initial={false}>
-            {cartItem ? (
-              <QuantityStepper
-                key="qty"
-                quantity={cartItem.quantity}
-                onIncrement={() => updateQuantity(product.id, cartItem.quantity + 1)}
-                onDecrement={() => updateQuantity(product.id, cartItem.quantity - 1)}
-              />
-            ) : (
-              <motion.button
-                key="add"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                whileTap={tapScale.primary}
-                transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                type="button"
-                disabled={outOfStock}
-                onClick={add}
-                className="flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 shadow-elevation-3 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
-              >
-                <Plus className="h-4 w-4" />
-              </motion.button>
-            )}
-          </AnimatePresence>
+          {/* Cart control - isolated to prevent parent re-render */}
+          <CartControls product={product} outOfStock={outOfStock} variant="grid" />
         </div>
       </div>
     </motion.article>
   );
+});
+
+// Isolated cart controls component - only this re-renders on cart changes
+function CartControls({ product, outOfStock, variant }: { product: Product; outOfStock: boolean; variant: "grid" | "horizontal" }) {
+  const cartItem = useCartItem(product.id);
+  const { addItem, updateQuantity } = useCartActions();
+  const { showToast } = useToast();
+
+  const handleAdd = useCallback(() => {
+    if (outOfStock) return;
+    addItem(product);
+    // Haptic feedback on mobile - non-blocking
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(10);
+    }
+    showToast(`Added ${product.name}`, "success");
+  }, [outOfStock, addItem, product, showToast]);
+
+  const handleIncrement = useCallback(() => {
+    if (cartItem) updateQuantity(product.id, cartItem.quantity + 1);
+  }, [cartItem, updateQuantity, product.id]);
+
+  const handleDecrement = useCallback(() => {
+    if (cartItem) updateQuantity(product.id, cartItem.quantity - 1);
+  }, [cartItem, updateQuantity, product.id]);
+
+  return (
+    <AnimatePresence mode="wait" initial={false}>
+      {cartItem ? (
+        <QuantityStepper
+          key="qty"
+          quantity={cartItem.quantity}
+          onIncrement={handleIncrement}
+          onDecrement={handleDecrement}
+          vertical={variant === "horizontal"}
+        />
+      ) : (
+        <motion.button
+          key="add"
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.8, opacity: 0 }}
+          whileTap={tapScale.primary}
+          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          type="button"
+          disabled={outOfStock}
+          onClick={handleAdd}
+          className={variant === "horizontal"
+            ? "flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+            : "flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 shadow-elevation-3 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+          }
+        >
+          <Plus className="h-4 w-4" />
+          {variant === "horizontal" && "Add to Cart"}
+        </motion.button>
+      )}
+    </AnimatePresence>
+  );
 }
 
 // Animated quantity stepper with number bounce
-function QuantityStepper({
+const QuantityStepper = memo(function QuantityStepper({
   quantity,
   onIncrement,
   onDecrement,
@@ -244,12 +236,6 @@ function QuantityStepper({
         >
           <Minus className="h-3 w-3" />
         </motion.button>
-        <motion.button
-          type="button"
-          onClick={onDecrement}
-          className="absolute -bottom-0.5 w-full flex items-center justify-center"
-        >
-        </motion.button>
       </motion.div>
     );
   }
@@ -289,4 +275,4 @@ function QuantityStepper({
       </motion.button>
     </motion.div>
   );
-}
+});

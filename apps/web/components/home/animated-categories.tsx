@@ -56,8 +56,8 @@ export const AnimatedCategories = memo(function AnimatedCategories({
       {/* Popular Categories - Desktop with staggered entrance */}
       <section className="hidden md:block max-w-7xl mx-auto px-6 lg:px-8 pt-12">
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          whileInView={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           className="flex items-center justify-between mb-6"
@@ -107,8 +107,8 @@ export const AnimatedCategories = memo(function AnimatedCategories({
       {/* Categories grid - Mobile with staggered entrance */}
       <section className="px-4 pt-5 md:hidden">
         <motion.div
-          initial={{ opacity: 0, x: -15 }}
-          whileInView={{ opacity: 1, x: 0 }}
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           className="flex items-center justify-between"

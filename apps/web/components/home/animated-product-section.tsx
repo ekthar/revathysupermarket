@@ -63,8 +63,8 @@ export const AnimatedProductSection = memo(function AnimatedProductSection({
       {!hideHeader && (
         <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
           <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={isInView ? { opacity: 1, x: 0 } : {}}
+            initial={{ opacity: 0 }}
+            animate={isInView ? { opacity: 1 } : {}}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
             className="flex items-center justify-between"
           >
@@ -87,8 +87,8 @@ export const AnimatedProductSection = memo(function AnimatedProductSection({
           {/* Category filter pills */}
           {showCategoryPills && (
             <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              initial={{ opacity: 0 }}
+              animate={isInView ? { opacity: 1 } : {}}
               transition={{ delay: 0.1, duration: 0.3, ease: "easeOut" }}
               className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1"
             >

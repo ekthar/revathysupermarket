@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
+import { publishOrderStatusChanged, publishRiderLocation } from "@/lib/realtime/event-publisher";
 
 /**
  * POST /api/delivery/arrive
@@ -63,6 +64,23 @@ export async function POST(req: Request) {
       },
     }).catch(() => {});
   }
+
+  // ─── PUBLISH REAL-TIME EVENTS ───
+  publishOrderStatusChanged({
+    orderId,
+    orderNumber: "", // Not available in current scope, non-critical for tracking
+    status: "ARRIVING",
+    previousStatus: "OUT_FOR_DELIVERY",
+    userId: order.userId,
+  }).catch(() => null);
+
+  publishRiderLocation({
+    orderId,
+    riderId: session.user.id,
+    latitude,
+    longitude,
+    distanceMetres: distanceM,
+  }).catch(() => null);
 
   return NextResponse.json({ success: true, status: "ARRIVING", distance: Math.round(distanceM) });
 }

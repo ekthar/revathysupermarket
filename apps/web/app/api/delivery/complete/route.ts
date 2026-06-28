@@ -6,6 +6,7 @@ import { awardDeliveredOrderBenefits } from "@/lib/loyalty";
 import { sendPushToUser } from "@/lib/push";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 import { authenticateDeliveryPartnerRequest } from "@/lib/hybrid-auth";
+import { publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
 
 const schema = z.object({ orderId: z.string().min(1), otp: z.string().regex(/^\d{6}$/) });
 const cents = (value: Prisma.Decimal | number) => Math.round(Number(value) * 100);
@@ -49,5 +50,15 @@ export async function POST(request: Request) {
   }
   await awardDeliveredOrderBenefits(order.id).catch(() => null);
   await sendPushToUser(order.userId, { title: "Order delivered", body: `Order #${order.orderNumber} was delivered.`, url: "/dashboard", orderId: order.id }).catch(() => null);
+
+  // ─── PUBLISH REAL-TIME EVENT ───
+  publishOrderStatusChanged({
+    orderId: order.id,
+    orderNumber: order.orderNumber,
+    status: "DELIVERED",
+    previousStatus: order.status,
+    userId: order.userId,
+  }).catch(() => null); // Fire-and-forget
+
   return NextResponse.json({ success: true, status: "DELIVERED", completionReference, deliveredAt: now.toISOString() });
 }

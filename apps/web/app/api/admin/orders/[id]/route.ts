@@ -8,6 +8,7 @@ import { orderStatusSchema } from "@/lib/validations";
 import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
 import { awardDeliveredOrderBenefits, releaseCancelledOrderReservations } from "@/lib/loyalty";
+import { publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -70,5 +71,14 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       await sendWhatsAppTemplate({ to: before.phone, template: "out_for_delivery", params: [before.orderNumber, before.deliveryOtp ?? ""], orderId: id });
     }
   }
+  // ─── PUBLISH REAL-TIME EVENT ───
+  publishOrderStatusChanged({
+    orderId: id,
+    orderNumber: before?.orderNumber ?? "",
+    status: parsed.data.status,
+    previousStatus: before?.status,
+    userId: before?.userId,
+  }).catch(() => null); // Fire-and-forget: DB is source of truth
+
   return NextResponse.json({ order });
 }

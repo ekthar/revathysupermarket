@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { deliveryLocationSchema } from "@/lib/validations";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 import { authenticateDeliveryRequest } from "@/lib/hybrid-auth";
+import { publishRiderLocation } from "@/lib/realtime/event-publisher";
 
 export async function POST(request: Request) {
   const authResult = await authenticateDeliveryRequest(request);
@@ -23,6 +24,19 @@ export async function POST(request: Request) {
     if (activeOrder) await tx.deliveryLocationEvent.create({ data: { orderId: activeOrder.id, deliveryPartnerId: authResult.userId, latitude: parsed.data.latitude, longitude: parsed.data.longitude, heading: parsed.data.heading ?? null } });
     await tx.deliveryLocationEvent.deleteMany({ where: { createdAt: { lt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) } } });
   });
+
+  // ─── PUBLISH REAL-TIME EVENT ───
+  if (activeOrder) {
+    publishRiderLocation({
+      orderId: activeOrder.id,
+      riderId: authResult.userId,
+      latitude: parsed.data.latitude,
+      longitude: parsed.data.longitude,
+      heading: parsed.data.heading ?? undefined,
+      distanceMetres: distanceMetres,
+    }).catch(() => null); // Fire-and-forget
+  }
+
   return NextResponse.json({ ok: true, status: activeOrder?.status, distanceMetres });
 }
 

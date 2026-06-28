@@ -74,17 +74,14 @@ export function HeroSection({
               style={{ y: imageY, scale: imageScale }}
               className="relative aspect-[4/3] rounded-3xl overflow-hidden"
             >
-              <motion.img
-                initial={{ opacity: 0, scale: 1.1 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+              <Image
                 src={heroImage}
                 alt={heroTitle}
-                width={800}
-                height={600}
-                style={{ aspectRatio: "4/3" }}
+                fill
+                sizes="50vw"
                 className="h-full w-full object-cover"
-                loading="eager"
+                priority
+                fetchPriority="high"
               />
 
               {/* Floating product card with bob animation */}
@@ -131,25 +128,17 @@ export function HeroSection({
         </div>
       </section>
 
-      {/* Hero banner - Mobile with entrance animation */}
-      <motion.section
-        initial={{ opacity: 0, y: 20, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        className="px-4 pt-3 pb-1 md:hidden"
-      >
+      {/* Hero banner - Mobile — NO initial opacity:0 to avoid delaying LCP */}
+      <section className="px-4 pt-3 pb-1 md:hidden">
         <Link href={heroHref} className="block relative overflow-hidden rounded-2xl aspect-[2.2/1] press">
-          <motion.img
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+          <Image
             src={heroImage}
             alt={heroTitle}
-            width={800}
-            height={364}
-            style={{ aspectRatio: "2.2/1" }}
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
             className="h-full w-full object-cover"
-            loading="eager"
+            priority
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <motion.div
@@ -164,7 +153,7 @@ export function HeroSection({
             <h2 className="text-title font-bold text-white leading-snug">{heroTitle}</h2>
           </motion.div>
         </Link>
-      </motion.section>
+      </section>
     </>
   );
 }

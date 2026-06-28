@@ -96,6 +96,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en" suppressHydrationWarning className={`${interTight.variable} ${manrope.variable}`}>
+      <head>
+        {/* Preconnect to image CDNs for faster LCP */}
+        <link rel="preconnect" href="https://images.unsplash.com" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
       <body className="pt-safe">
         <Providers session={session}>
           <ViewportStability />

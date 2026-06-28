@@ -23,7 +23,6 @@
     "firebase": "^11.0.0",
     "firebase-admin": "^13.0.0",
     "@msm/shared": "*",
-    "@prisma/adapter-neon": "^6.1.0",
     "@prisma/client": "^6.1.0",
     "@radix-ui/react-dialog": "^1.1.4",
     "@radix-ui/react-dropdown-menu": "^2.1.4",

@@ -9,6 +9,9 @@ import { Redis } from "@upstash/redis";
 import { createHash } from "crypto";
 import { rateLimit as localRateLimit } from "@/lib/rate-limit";
 
+// Matches @upstash/ratelimit's Duration type: `${number} ${unit}`
+type Duration = `${number} ${"ms" | "s" | "m" | "h" | "d"}`;
+
 // ─── Redis client (singleton) ────────────────────────────────────────────────
 
 function getRedis(): Redis | null {
@@ -20,7 +23,7 @@ function getRedis(): Redis | null {
 
 // ─── Limiter factory ─────────────────────────────────────────────────────────
 
-function createLimiter(limit: number, window: string, prefix: string): Ratelimit | null {
+function createLimiter(limit: number, window: Duration, prefix: string): Ratelimit | null {
   const redis = getRedis();
   if (!redis) return null;
   return new Ratelimit({

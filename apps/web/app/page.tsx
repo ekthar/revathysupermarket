@@ -3,8 +3,7 @@ import Image from "next/image";
 import { unstable_cache } from "next/cache";
 import { ChevronRight, ChevronUp, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
-import { StoryBanners } from "@/components/home/story-banners";
-import { LightningDeals } from "@/components/home/lightning-deals";
+import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { AnimatedCategories } from "@/components/home/animated-categories";
@@ -123,25 +122,8 @@ export default async function HomePage() {
         deliveryRadiusKm={settings.deliveryRadiusKm}
       />
 
-      {/* Story Banners — Swiggy-level full-bleed carousel with countdown + coupon copy */}
-      <StoryBanners banners={promoBanners.map((b) => ({
-        ...b,
-        endsAt: null,
-        couponCode: null,
-        badge: null,
-      }))} />
-
-      {/* Lightning Deals — products with discount, urgency stock bar */}
-      {offers.length > 0 && (
-        <LightningDeals
-          deals={offers.slice(0, 10).map((p) => ({
-            product: p,
-            discountPercent: p.discountPrice ? Math.round(((p.price - p.discountPrice) / p.price) * 100) : 0,
-            stockSoldPercent: Math.max(20, Math.min(95, 100 - Math.round((p.stock / Math.max(p.stock + p.popularity, 1)) * 100))),
-            expiresAt: null,
-          }))}
-        />
-      )}
+      {/* Mobile promo banners - dynamic from admin */}
+      <PromoBanners banners={promoBanners} />
 
       {/* Recent Orders - Foodizo horizontal cards (mobile only) */}
       <RecentOrdersSection />

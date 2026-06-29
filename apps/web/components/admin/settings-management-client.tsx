@@ -292,21 +292,61 @@ export function SettingsManagementClient({
         </div>
       </section>
 
-      <div className="mt-5 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
+      <form onSubmit={createBanner} className="mt-5 rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
         <div className="flex items-center gap-3">
           <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-lime-fresh/20">
             <Megaphone className="h-5 w-5 text-primary" />
           </span>
-          <div>
-            <h3 className="font-display text-2xl font-black">Banner management</h3>
-            <p className="text-sm text-muted-foreground mt-1">Banners have moved to their own dedicated page with live preview, countdown scheduling, and more.</p>
-          </div>
+          <h3 className="font-display text-2xl font-black">Banner management</h3>
         </div>
-        <a href="/admin/banners" className="mt-4 inline-flex h-11 items-center gap-2 rounded-2xl bg-primary px-5 text-sm font-bold text-primary-foreground shadow-elevation-2 hover:bg-primary/90 transition">
-          <Megaphone className="h-4 w-4" />
-          Go to Banners
-        </a>
-      </div>
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          <Input required value={bannerForm.title} onChange={(event) => setBannerForm((current) => ({ ...current, title: event.target.value }))} placeholder="Offer title" className="h-12 rounded-2xl" />
+          <Input value={bannerForm.subtitle} onChange={(event) => setBannerForm((current) => ({ ...current, subtitle: event.target.value }))} placeholder="Subtitle" className="h-12 rounded-2xl" />
+          <div className="md:col-span-2">
+            <div className="flex gap-2">
+              <Input required value={bannerForm.image} onChange={(event) => setBannerForm((current) => ({ ...current, image: event.target.value }))} placeholder="Paste image URL or upload →" className="h-12 rounded-2xl flex-1" />
+              <BannerUploadButton onUploaded={(url) => setBannerForm((current) => ({ ...current, image: url }))} />
+            </div>
+            {bannerForm.image && (
+              <Image src={bannerForm.image} alt="Preview" width={800} height={64} className="mt-2 h-16 w-full rounded-xl object-cover border border-border" unoptimized onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }} onLoad={(e) => { (e.target as HTMLImageElement).style.display = "block"; }} />
+            )}
+          </div>
+          <Input value={bannerForm.href} onChange={(event) => setBannerForm((current) => ({ ...current, href: event.target.value }))} placeholder="Promotion link" className="h-12 rounded-2xl" />
+          <label className="flex min-h-12 items-center gap-3 rounded-2xl border border-border px-4">
+            <input type="checkbox" checked={bannerForm.isActive} onChange={(event) => setBannerForm((current) => ({ ...current, isActive: event.target.checked }))} />
+            <span className="text-sm font-bold">Enable promotion</span>
+          </label>
+          <Button className="md:col-span-2">
+            <Save className="h-4 w-4" />
+            Save banner
+          </Button>
+        </div>
+
+        <div className="mt-5 grid gap-3">
+          {localBanners.length === 0 ? (
+            <p className="rounded-2xl border border-dashed border-border p-6 text-center text-sm font-bold text-muted-foreground">No banners yet.</p>
+          ) : localBanners.map((banner) => (
+            <article key={banner.id} className="grid gap-3 rounded-lg border border-border bg-background/70 p-3 sm:grid-cols-[110px_1fr]">
+              <Image src={banner.image} alt={banner.title} width={110} height={110} className="aspect-video w-full rounded-2xl object-cover sm:aspect-square" unoptimized />
+              <div className="min-w-0">
+                <p className={banner.isActive ? "text-xs font-black uppercase text-primary" : "text-xs font-black uppercase text-muted-foreground"}>{banner.isActive ? "Active" : "Disabled"}</p>
+                <h4 className="truncate font-black">{banner.title}</h4>
+                {banner.subtitle && <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{banner.subtitle}</p>}
+                <div className="mt-3 grid grid-cols-2 gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => toggleBanner(banner)}>
+                    {banner.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    {banner.isActive ? "Disable" : "Enable"}
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => deleteBanner(banner)} className="text-red-600">
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </form>
     </>
   );
 }

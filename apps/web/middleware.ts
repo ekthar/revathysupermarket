@@ -100,7 +100,7 @@ export default auth(async (request) => {
   return handleAuthRedirects(request);
 });
 
-function handleAuthRedirects(request: { nextUrl: URL; auth?: { user?: { id?: string; role?: string } } }) {
+function handleAuthRedirects(request: { nextUrl: URL; auth?: { user?: { id?: string; role?: string } } | null }) {
   const { pathname } = request.nextUrl;
   const isAdminRoute = pathname.startsWith("/admin");
   const isAdminLoginRoute = pathname === "/admin/login";

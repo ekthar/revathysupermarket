@@ -53,7 +53,7 @@ export async function apiFetch<T = unknown>(
       error?: string;
     };
     const retryAfter = data.retryAfter ??
-      Number(response.headers.get("Retry-After")) || 60;
+      (Number(response.headers.get("Retry-After")) || 60);
 
     if (!suppressRateLimitToast) {
       showRateLimitToast(retryAfter);

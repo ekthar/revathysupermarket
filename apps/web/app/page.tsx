@@ -252,14 +252,14 @@ export default async function HomePage() {
               <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Main Pages</h4>
               <ul className="mt-3 space-y-2">
                 <li><Link href="/" className="text-sm text-neutral-500 hover:text-neutral-700">Home</Link></li>
-                <li><Link href="/products" className="text-sm text-neutral-500 hover:text-neutral-700">About Us</Link></li>
+                <li><Link href="/products" className="text-sm text-neutral-500 hover:text-neutral-700">Shop All</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Help</h4>
               <ul className="mt-3 space-y-2">
-                <li><Link href="/products" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Help Center</Link></li>
-                <li><Link href="/products" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Return Policy</Link></li>
+                <li><Link href="/support" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Help Center</Link></li>
+                <li><Link href="/account/settings" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Return Policy</Link></li>
               </ul>
             </div>
             <div>

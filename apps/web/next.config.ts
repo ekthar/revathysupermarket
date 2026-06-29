@@ -40,12 +40,15 @@ const nextConfig: NextConfig = {
         ]
       },
       {
-        source: "/api/:path*",
+        // CORS headers for mobile API routes only — session-based routes
+        // rely on same-origin and middleware CSRF checks.
+        source: "/api/mobile/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin", value: "*" },
+          { key: "Access-Control-Allow-Origin", value: process.env.MOBILE_CORS_ORIGIN || "https://revathysupermarket.vercel.app" },
           { key: "Access-Control-Allow-Methods", value: "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
           { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
-          { key: "Access-Control-Max-Age", value: "86400" }
+          { key: "Access-Control-Max-Age", value: "86400" },
+          { key: "Vary", value: "Origin" }
         ]
       },
       {

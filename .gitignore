@@ -39,6 +39,10 @@ apps/mobile-customer/ios/
 apps/mobile-delivery/android/
 apps/mobile-delivery/ios/
 
+# Firebase service configuration (contains API keys)
+google-services.json
+GoogleService-Info.plist
+
 # EAS & signing
 *.jks
 *.keystore

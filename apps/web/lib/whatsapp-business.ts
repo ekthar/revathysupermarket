@@ -17,6 +17,14 @@ type SendParams = {
   orderId?: string;
 };
 
+/** Sanitize a template parameter to prevent injection or truncation issues */
+function sanitizeParam(value: string, maxLength = 1024): string {
+  return value
+    .replace(/[\x00-\x1F\x7F]/g, "") // strip control characters
+    .slice(0, maxLength)
+    .trim();
+}
+
 function normalizeToWhatsAppPhone(phone: string) {
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 10) return `91${digits}`;
@@ -59,7 +67,7 @@ export async function sendWhatsAppTemplate(params: SendParams): Promise<{ succes
           components: [
             {
               type: "body",
-              parameters: params.params.map((value) => ({ type: "text", text: String(value) }))
+              parameters: params.params.map((value) => ({ type: "text", text: sanitizeParam(String(value)) }))
             }
           ]
         }

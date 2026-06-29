@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   description: `Search and order fresh groceries from ${SITE.name}.`
 };
 
+export const revalidate = 60;
+
 type ProductFilters = {
   category?: string;
   q?: string;

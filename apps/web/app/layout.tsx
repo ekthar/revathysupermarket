@@ -12,8 +12,8 @@ import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-sett
 import { Inter_Tight, Manrope } from "next/font/google";
 import { ViewportStability } from "@/components/ui/viewport-stability";
 
-const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
-const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
+const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap", adjustFontFallback: true });
+const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap", adjustFontFallback: true });
 
 async function withFallback<T>(promise: Promise<T>, fallback: T, timeoutMs = 2_000): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;

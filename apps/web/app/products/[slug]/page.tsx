@@ -7,6 +7,8 @@ import { prisma } from "@/lib/prisma";
 import type { Product } from "@/lib/types";
 import { safeProductImageUrl } from "@/lib/image";
 
+export const revalidate = 300;
+
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
 }

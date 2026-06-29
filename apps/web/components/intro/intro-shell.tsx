@@ -41,7 +41,7 @@ export function IntroShell({ onComplete }: IntroShellProps) {
   const [showSkip, setShowSkip] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
   const prefersReduced = useReducedMotion();
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const preloadStarted = useRef(false);
 
   // Preload homepage data during Stage 3

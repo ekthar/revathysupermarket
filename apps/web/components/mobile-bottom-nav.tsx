@@ -22,7 +22,7 @@ export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: S
   return (
     <>
       <nav className="ios-bottom-bar md:hidden" data-disable-edge-swipe="true">
-        <div className="ios-glass mx-auto w-full max-w-[24rem] rounded-xl p-2 shadow-elevation-3">
+        <div className="ios-glass mx-auto w-full max-w-[min(24rem,calc(100vw-1.5rem))] rounded-xl p-2 shadow-elevation-3">
           <LayoutGroup>
             <div className="grid min-h-[clamp(52px,8vh,58px)] grid-cols-4 items-center gap-1">
               <NavTab href="/" icon={Home} label="Home" active={pathname === "/"} onPrefetch={() => router.prefetch("/")} />

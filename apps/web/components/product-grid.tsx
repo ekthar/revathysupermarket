@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { SlidersHorizontal, Search } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
@@ -153,6 +153,7 @@ export function ProductGrid({
   const [maxPrice, setMaxPrice] = useState(350);
   const [sort, setSort] = useState<SortMode>(initialSort);
   const [filterOpen, setFilterOpen] = useState(false);
+  const [isPending, startTransition] = useTransition();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const debouncedQuery = useDebounce(query, 300);
@@ -237,22 +238,24 @@ export function ProductGrid({
   }, []);
 
   const handleCategoryChange = useCallback((item: string) => {
-    setCategory(item);
-  }, []);
+    startTransition(() => setCategory(item));
+  }, [startTransition]);
 
   const handleSortChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSort(event.target.value as SortMode);
-  }, []);
+    startTransition(() => setSort(event.target.value as SortMode));
+  }, [startTransition]);
 
   const handlePriceChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     setMaxPrice(Number(event.target.value));
   }, []);
 
   const handleResetFilters = useCallback(() => {
-    setQuery("");
-    setCategory("All");
-    setMaxPrice(350);
-  }, []);
+    startTransition(() => {
+      setQuery("");
+      setCategory("All");
+      setMaxPrice(350);
+    });
+  }, [startTransition]);
 
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
@@ -327,12 +330,14 @@ export function ProductGrid({
           <ProductSkeletonGrid count={8} />
         </div>
       ) : allItems.length > 0 ? (
-        <VirtualProductList
-          items={allItems}
-          hasNextPage={!!hasNextPage}
-          isFetchingNextPage={isFetchingNextPage}
-          loadMoreRef={loadMoreRef}
-        />
+        <div className={isPending ? "opacity-60 transition-opacity duration-200" : "transition-opacity duration-200"}>
+          <VirtualProductList
+            items={allItems}
+            hasNextPage={!!hasNextPage}
+            isFetchingNextPage={isFetchingNextPage}
+            loadMoreRef={loadMoreRef}
+          />
+        </div>
       ) : (
         <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center">
           <p className="font-display text-2xl font-bold">No matching products</p>
@@ -359,7 +364,7 @@ export function ProductGrid({
                 <button
                   key={option.value}
                   type="button"
-                  onClick={() => { setSort(option.value); setFilterOpen(false); }}
+                  onClick={() => { startTransition(() => setSort(option.value)); setFilterOpen(false); }}
                   className={`h-10 rounded-xl text-caption font-semibold transition-colors ${
                     sort === option.value
                       ? "bg-black text-white"

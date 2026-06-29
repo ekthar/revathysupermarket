@@ -1,34 +1,46 @@
-import { SkeletonPulse, ProductGridSkeleton } from "@/components/ui/streaming-skeleton";
-
 /**
- * Products listing page loading skeleton.
- * Renders search + filters + grid layout instantly.
- * CSS-only shimmer - no JS computation during loading.
+ * Products page skeleton loader.
+ * Renders instantly while the server fetches products from DB.
+ * Matches the actual page layout to prevent CLS (Cumulative Layout Shift).
  */
 export default function ProductsLoading() {
   return (
-    <div className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
-      {/* Search input */}
-      <SkeletonPulse className="h-12 rounded-2xl" />
+    <main className="min-h-screen bg-background pb-24">
+      {/* Header area */}
+      <section className="overflow-hidden px-4 pb-1 pt-8 sm:py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="h-10 w-40 rounded-lg bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+          <div className="mt-2 h-4 w-28 rounded bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+        </div>
+      </section>
 
-      {/* Category chips row (mobile) */}
-      <div className="mt-3 flex gap-2.5 overflow-hidden md:hidden">
-        <SkeletonPulse className="h-10 w-20 shrink-0 rounded-2xl" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <SkeletonPulse key={i} className="h-9 w-20 shrink-0 rounded-full" />
-        ))}
+      {/* Category pills skeleton */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="flex gap-2 overflow-hidden">
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="h-9 w-20 shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+          ))}
+        </div>
       </div>
 
-      {/* Desktop filters */}
-      <div className="mt-3 hidden md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
-        <SkeletonPulse className="h-12 rounded-2xl" />
-        <SkeletonPulse className="h-12 rounded-2xl" />
+      {/* Product grid skeleton */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mt-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <div key={i} className="rounded-2xl bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+              <div className="aspect-[4/3.2] bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+              <div className="p-3 space-y-2">
+                <div className="h-3.5 w-3/4 rounded bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+                <div className="h-3 w-1/2 rounded bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+                <div className="flex items-center justify-between pt-1">
+                  <div className="h-5 w-14 rounded bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+                  <div className="h-8 w-8 rounded-full bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-
-      {/* Product grid */}
-      <div className="mt-5">
-        <ProductGridSkeleton count={8} />
-      </div>
-    </div>
+    </main>
   );
 }

@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canManageProducts, canViewReports } from "@/lib/authz";
@@ -177,55 +178,67 @@ export default async function AdminPage() {
 }
 
 async function getMonthlyRevenue() {
-  const months: { month: string; revenue: number; orders: number }[] = [];
-  const now = new Date();
+  return unstable_cache(
+    async () => {
+      const months: { month: string; revenue: number; orders: number }[] = [];
+      const now = new Date();
 
-  for (let i = 5; i >= 0; i--) {
-    const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
-    const monthName = start.toLocaleString("en-US", { month: "short" });
+      for (let i = 5; i >= 0; i--) {
+        const start = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const end = new Date(now.getFullYear(), now.getMonth() - i + 1, 0, 23, 59, 59, 999);
+        const monthName = start.toLocaleString("en-US", { month: "short" });
 
-    const [revenue, orders] = await Promise.all([
-      prisma.order.aggregate({
-        _sum: { total: true },
-        where: { status: "DELIVERED", createdAt: { gte: start, lte: end } }
-      }).then((r) => Number(r._sum.total ?? 0)).catch(() => 0),
-      prisma.order.count({ where: { createdAt: { gte: start, lte: end } } }).catch(() => 0)
-    ]);
+        const [revenue, orders] = await Promise.all([
+          prisma.order.aggregate({
+            _sum: { total: true },
+            where: { status: "DELIVERED", createdAt: { gte: start, lte: end } }
+          }).then((r) => Number(r._sum.total ?? 0)).catch(() => 0),
+          prisma.order.count({ where: { createdAt: { gte: start, lte: end } } }).catch(() => 0)
+        ]);
 
-    months.push({ month: monthName, revenue, orders });
-  }
+        months.push({ month: monthName, revenue, orders });
+      }
 
-  return months;
+      return months;
+    },
+    ["admin-monthly-revenue"],
+    { revalidate: 300, tags: ["admin-dashboard"] }
+  )();
 }
 
 async function getCategorySales() {
-  try {
-    const items = await prisma.orderItem.findMany({
-      where: { order: { status: "DELIVERED" } },
-      select: {
-        quantity: true,
-        price: true,
-        product: { select: { category: { select: { name: true } } } }
+  return unstable_cache(
+    async () => {
+      try {
+        const items = await prisma.orderItem.findMany({
+          where: { order: { status: "DELIVERED" } },
+          select: {
+            quantity: true,
+            price: true,
+            product: { select: { category: { select: { name: true } } } }
+          }
+        });
+
+        const salesByCategory = new Map<string, { revenue: number; quantity: number }>();
+        for (const item of items) {
+          const catName = item.product?.category?.name ?? "Uncategorized";
+          const existing = salesByCategory.get(catName) ?? { revenue: 0, quantity: 0 };
+          existing.revenue += Number(item.price) * item.quantity;
+          existing.quantity += item.quantity;
+          salesByCategory.set(catName, existing);
+        }
+
+        return [...salesByCategory.entries()]
+          .sort((a, b) => b[1].revenue - a[1].revenue)
+          .slice(0, 8)
+          .map(([name, data]) => ({ name, revenue: Math.round(data.revenue), quantity: data.quantity }));
+      } catch {
+        return [];
       }
-    });
-
-    const salesByCategory = new Map<string, { revenue: number; quantity: number }>();
-    for (const item of items) {
-      const catName = item.product?.category?.name ?? "Uncategorized";
-      const existing = salesByCategory.get(catName) ?? { revenue: 0, quantity: 0 };
-      existing.revenue += Number(item.price) * item.quantity;
-      existing.quantity += item.quantity;
-      salesByCategory.set(catName, existing);
-    }
-
-    return [...salesByCategory.entries()]
-      .sort((a, b) => b[1].revenue - a[1].revenue)
-      .slice(0, 8)
-      .map(([name, data]) => ({ name, revenue: Math.round(data.revenue), quantity: data.quantity }));
-  } catch {
-    return [];
-  }
+    },
+    ["admin-category-sales"],
+    { revalidate: 300, tags: ["admin-dashboard"] }
+  )();
 }
 
 async function getPeakHours(today: Date) {

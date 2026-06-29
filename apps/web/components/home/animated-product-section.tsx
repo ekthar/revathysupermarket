@@ -122,7 +122,7 @@ export const AnimatedProductSection = memo(function AnimatedProductSection({
             {products.map((p, idx) => (
               <div
                 key={p.id}
-                className="wheel-scroll-item w-[155px] sm:w-[170px] md:w-[200px] animate-fade-in-up"
+                className="wheel-scroll-item w-[clamp(140px,42vw,155px)] sm:w-[170px] md:w-[200px] animate-fade-in-up"
                 style={{
                   animationDelay: isInView ? `${idx * 40}ms` : "0ms",
                   animationFillMode: "both",

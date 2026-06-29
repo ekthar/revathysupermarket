@@ -340,7 +340,7 @@ export function CheckoutForm({
         </div>
       </motion.div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_380px] lg:gap-8">
+      <div className="grid gap-5 lg:grid-cols-[1fr_min(380px,35vw)] lg:gap-8">
         {/* Left column - Forms */}
         <div className="space-y-5">
           {/* Delivery ETA + Minimum Order Info */}

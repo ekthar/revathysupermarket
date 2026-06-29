@@ -234,7 +234,7 @@ export default async function HomePage() {
             See all <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-2.5 mt-3">
+        <div className="grid grid-cols-2 gap-2 mt-3">
           {allProducts.slice(0, 12).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
@@ -249,7 +249,7 @@ export default async function HomePage() {
       {/* Footer - Desktop */}
       <footer className="hidden md:block border-t border-neutral-100 dark:border-neutral-800 mt-12">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <h3 className="font-display text-lg font-black text-neutral-900 dark:text-white">{settings.storeName}</h3>
               <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">

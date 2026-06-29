@@ -183,7 +183,7 @@ export function CartPageClient() {
                 className="px-4 py-3"
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-4 w-4 rounded-sm border-2 border-secondary-500 flex items-center justify-center shrink-0">
+                  <div className="h-4 w-4 rounded-sm border-2 border-secondary-500 flex items-center justify-center shrink-0 hidden xs:flex">
                     <div className="h-2 w-2 rounded-full bg-secondary-500" />
                   </div>
 
@@ -197,20 +197,22 @@ export function CartPageClient() {
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
                       className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                      aria-label={`Decrease ${item.name} quantity`}
                     >
                       <Minus className="h-3 w-3" />
                     </button>
-                    <span className="w-6 text-center text-caption font-bold text-white">{item.quantity}</span>
+                    <span className="w-5 text-center text-caption font-bold text-white">{item.quantity}</span>
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
                       className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                      aria-label={`Increase ${item.name} quantity`}
                     >
                       <Plus className="h-3 w-3" />
                     </button>
                   </div>
 
-                  <div className="text-right shrink-0 min-w-[60px]">
+                  <div className="text-right shrink-0 min-w-[52px]">
                     <p className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(price * item.quantity)}</p>
                     {item.discountPrice && (
                       <p className="text-micro text-neutral-400 line-through">{formatCurrency(item.price * item.quantity)}</p>

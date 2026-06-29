@@ -107,7 +107,7 @@ const VirtualProductList = memo(function VirtualProductList({
 
   return (
     <>
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
+      <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(min(150px,45vw),1fr))] gap-2 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
         {items.slice(0, renderCount).map((product, index) => (
           // First 8 render immediately, rest use lazy rendering as they enter buffer
           index < 8 ? (

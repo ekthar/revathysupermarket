@@ -50,9 +50,9 @@ export function StoryBanners({ banners }: StoryBannersProps) {
   const startTimeRef = useRef(Date.now());
 
   const count = banners.length;
-  if (count === 0) return null;
 
   const advance = useCallback(() => {
+    if (count === 0) return;
     setActive((prev) => (prev + 1) % count);
     setProgress(0);
     startTimeRef.current = Date.now();
@@ -60,7 +60,7 @@ export function StoryBanners({ banners }: StoryBannersProps) {
 
   // Auto-advance timer
   useEffect(() => {
-    if (paused) return;
+    if (paused || count === 0) return;
     startTimeRef.current = Date.now();
 
     intervalRef.current = setInterval(() => {
@@ -71,7 +71,9 @@ export function StoryBanners({ banners }: StoryBannersProps) {
     }, 50);
 
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [active, paused, advance]);
+  }, [active, paused, advance, count]);
+
+  if (count === 0) return null;
 
   const goTo = (index: number) => {
     setActive(index);

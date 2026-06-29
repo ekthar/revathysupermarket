@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { Zap, Clock, Plus, Minus, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/utils";
@@ -58,8 +59,8 @@ export function LightningDeals({ deals }: LightningDealsProps) {
         </Link>
       </div>
 
-      {/* Horizontal scroll rail — fixed height to prevent CLS */}
-      <div className="mt-4 flex gap-3 overflow-x-auto no-scrollbar scroll-x px-4 md:px-6 lg:px-8 md:max-w-7xl md:mx-auto pb-2" style={{ minHeight: "320px" }}>
+      {/* Horizontal scroll rail */}
+      <div className="mt-4 flex gap-3 overflow-x-auto no-scrollbar scroll-x px-4 md:px-6 lg:px-8 md:max-w-7xl md:mx-auto pb-2">
         {deals.map((deal, i) => (
           <DealCard key={deal.product.id} deal={deal} index={i} />
         ))}
@@ -77,7 +78,11 @@ function DealCard({ deal, index }: { deal: LightningDeal; index: number }) {
   const price = product.discountPrice ?? product.price;
 
   return (
-    <article
+    <motion.article
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-20px" }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
       className={cn(
         "relative flex-shrink-0 w-[155px] sm:w-[170px] rounded-2xl bg-white dark:bg-neutral-900 overflow-hidden shadow-elevation-1 border border-neutral-100 dark:border-neutral-800",
         outOfStock && "opacity-60"
@@ -141,7 +146,7 @@ function DealCard({ deal, index }: { deal: LightningDeal; index: number }) {
         {/* Add to cart */}
         <QuickAddButton product={product} outOfStock={outOfStock} />
       </div>
-    </article>
+    </motion.article>
   );
 }
 
@@ -151,14 +156,17 @@ function StockBar({ soldPercent, almostGone }: { soldPercent: number; almostGone
   return (
     <div className="space-y-0.5">
       <div className="relative h-[5px] w-full rounded-full bg-neutral-100 dark:bg-neutral-700 overflow-hidden">
-        <div
+        <motion.div
+          initial={{ width: 0 }}
+          whileInView={{ width: `${Math.min(soldPercent, 100)}%` }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
           className={cn(
-            "absolute inset-y-0 left-0 rounded-full transition-all duration-700 ease-out",
+            "absolute inset-y-0 left-0 rounded-full",
             almostGone
               ? "bg-gradient-to-r from-red-500 to-orange-400"
               : "bg-gradient-to-r from-green-500 to-emerald-400"
           )}
-          style={{ width: `${Math.min(soldPercent, 100)}%` }}
         />
       </div>
       <p className={cn(

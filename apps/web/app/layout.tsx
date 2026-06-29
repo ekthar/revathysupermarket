@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
+import dynamic from "next/dynamic";
 import "./globals.css";
 import { auth } from "@/auth";
 import { Header } from "@/components/header";
@@ -11,6 +12,12 @@ import { OnboardingTour } from "@/components/ui/onboarding-tour";
 import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
 import { ViewportStability } from "@/components/ui/viewport-stability";
+
+// Cinematic intro — code-split, client-only, excluded from admin routes
+const IntroGate = dynamic(
+  () => import("@/components/intro/intro-gate").then((m) => ({ default: m.IntroGate })),
+  { ssr: false }
+);
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
@@ -103,6 +110,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="pt-safe">
         <Providers session={session}>
+          <IntroGate />
           <ViewportStability />
           <ScrollProgress />
           <OnboardingTour />

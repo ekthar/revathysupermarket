@@ -44,6 +44,32 @@ const config: Config = {
           800: "#106630",
           900: "#0E5429"
         },
+
+        // ─── Semantic surface tokens ───────────────────────────────────────
+        surface: {
+          DEFAULT: "hsl(var(--background))",
+          elevated: "hsl(var(--card))",
+          muted: "hsl(var(--muted))",
+        },
+        "text-primary": "hsl(var(--foreground))",
+        "text-secondary": "hsl(var(--muted-foreground))",
+
+        // ─── Brand tokens ──────────────────────────────────────────────────
+        brand: {
+          saffron: "#F97316",
+          leaf: "#16A34A",
+          cream: "#FFFBF5",
+          kerala: "#0E5429",
+        },
+
+        // ─── State tokens ──────────────────────────────────────────────────
+        state: {
+          success: "#16A34A",
+          warn: "#F59E0B",
+          danger: "#EF4444",
+          info: "#3B82F6",
+        },
+
         success: {
           DEFAULT: "#22C55E",
           foreground: "#FFFFFF",
@@ -129,7 +155,20 @@ const config: Config = {
         xl: "28px",
         "2xl": "1.5rem",
         full: "9999px"
-      }
+      },
+      // ─── Touch target minimum ──────────────────────────────────────────
+      minWidth: {
+        touch: "44px",
+      },
+      minHeight: {
+        touch: "44px",
+      },
+      spacing: {
+        "safe-top": "env(safe-area-inset-top, 0px)",
+        "safe-bottom": "env(safe-area-inset-bottom, 0px)",
+        "safe-left": "env(safe-area-inset-left, 0px)",
+        "safe-right": "env(safe-area-inset-right, 0px)",
+      },
     }
   },
   plugins: [tailwindcssAnimate]

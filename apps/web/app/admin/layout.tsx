@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BarChart3, Bell, ClipboardList, CreditCard, Home, LayoutDashboard, LogOut, MessageSquare, Package, RotateCcw, Settings, ShieldCheck, ShoppingBag, Tag, Ticket, Truck, Users } from "lucide-react";
+import { BarChart3, Bell, ClipboardList, CreditCard, Home, LayoutDashboard, LogOut, Megaphone, MessageSquare, Package, RotateCcw, Settings, ShieldCheck, ShoppingBag, Tag, Ticket, Truck, Users } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { isStaffRole } from "@/lib/authz";
 import { roleLabel } from "@/lib/roles";
@@ -57,6 +57,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/rewards", label: "Rewards Points", icon: "Gift", group: "Customers", show: can("customers.view"), badge: 0 },
 
     // Marketing
+    { href: "/admin/banners", label: "Banners", icon: "Megaphone", group: "Marketing", show: can("marketing.view"), badge: 0 },
     { href: "/admin/offers", label: "Offers", icon: "Tag", group: "Marketing", show: can("marketing.view"), badge: 0 },
     { href: "/admin/promo-codes", label: "Promos", icon: "Ticket", group: "Marketing", show: can("marketing.view"), badge: 0 },
     { href: "/admin/push-notifications", label: "Push", icon: "Bell", group: "Marketing", show: can("marketing.manage"), badge: 0 },

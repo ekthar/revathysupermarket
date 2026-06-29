@@ -138,39 +138,47 @@ export default async function HomePage() {
       />
 
       {/* Weekly Best Selling Items */}
-      <AnimatedProductSection
-        title="Weekly Best Selling Items"
-        products={trending.slice(0, 8)}
-        showCategoryPills
-        categoryPills={["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Bakery", "Meat & Fish", "Beverages"]}
-        categories={categories}
-      />
+      <div className="cv-auto">
+        <AnimatedProductSection
+          title="Weekly Best Selling Items"
+          products={trending.slice(0, 8)}
+          showCategoryPills
+          categoryPills={["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Bakery", "Meat & Fish", "Beverages"]}
+          categories={categories}
+        />
+      </div>
 
       {/* Just for you / Today's Offers */}
       {offers.length > 0 && (
-        <AnimatedProductSection
-          title="Just for you"
-          icon={<Zap className="h-5 w-5 text-orange-500" />}
-          products={offers}
-        />
+        <div className="cv-auto">
+          <AnimatedProductSection
+            title="Just for you"
+            icon={<Zap className="h-5 w-5 text-orange-500" />}
+            products={offers}
+          />
+        </div>
       )}
 
       {/* Most Selling Products - Desktop grid */}
-      <AnimatedProductSection
-        title="Most Selling Products"
-        icon={<TrendingUp className="h-5 w-5 text-primary" />}
-        products={trending.slice(0, 10)}
-        layout="grid"
-        desktopOnly
-      />
+      <div className="cv-auto-lg">
+        <AnimatedProductSection
+          title="Most Selling Products"
+          icon={<TrendingUp className="h-5 w-5 text-primary" />}
+          products={trending.slice(0, 10)}
+          layout="grid"
+          desktopOnly
+        />
+      </div>
 
       {/* Today's Fresh Picks */}
-      <AnimatedProductSection
-        title="Today's Fresh Picks"
-        icon={<Sparkles className="h-5 w-5 text-yellow-500" />}
-        products={freshPicks}
-        layout="mixed"
-      />
+      <div className="cv-auto">
+        <AnimatedProductSection
+          title="Today's Fresh Picks"
+          icon={<Sparkles className="h-5 w-5 text-yellow-500" />}
+          products={freshPicks}
+          layout="mixed"
+        />
+      </div>
 
       {/* All Products with side banner - Desktop */}
       <section className="hidden md:block max-w-7xl mx-auto px-6 lg:px-8 pt-12">

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ChevronUp } from "lucide-react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
 
 export function HeroSection({
@@ -20,14 +20,16 @@ export function HeroSection({
   deliveryRadiusKm: number;
 }) {
   const heroRef = useRef<HTMLDivElement>(null);
+  const reduceMotion = useReducedMotion();
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
   });
 
-  const imageY = useTransform(scrollYProgress, [0, 1], [0, 80]);
-  const textY = useTransform(scrollYProgress, [0, 1], [0, -30]);
-  const imageScale = useTransform(scrollYProgress, [0, 0.5], [1, 1.05]);
+  // Disable parallax transforms when user prefers reduced motion
+  const imageY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, 80]);
+  const textY = useTransform(scrollYProgress, [0, 1], reduceMotion ? [0, 0] : [0, -30]);
+  const imageScale = useTransform(scrollYProgress, [0, 0.5], reduceMotion ? [1, 1] : [1, 1.05]);
   const opacity = useTransform(scrollYProgress, [0, 0.8], [1, 0.6]);
 
   return (

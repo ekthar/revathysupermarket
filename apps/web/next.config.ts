@@ -9,12 +9,12 @@ const production = process.env.NODE_ENV === "production";
 // - Manifest must be accessible without CORS issues
 const contentSecurityPolicy = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${production ? "" : " 'unsafe-eval'"} https://maps.googleapis.com https://apis.google.com https://vercel.live https://www.google.com https://www.gstatic.com`,
+  `script-src 'self' 'unsafe-inline'${production ? "" : " 'unsafe-eval'"} https://maps.googleapis.com https://apis.google.com https://vercel.live https://www.google.com https://www.gstatic.com https://challenges.cloudflare.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com https://vercel.live data:",
   "img-src 'self' data: blob: https://images.unsplash.com https://*.amazonaws.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://maps.gstatic.com https://maps.googleapis.com https://tiles.openfreemap.org https://*.openfreemap.org https://lh3.googleusercontent.com https://*.googleusercontent.com https://www.gstatic.com https://vercel.com https://vercel.live",
-  "connect-src 'self' https://*.upstash.io https://maps.googleapis.com https://nominatim.openstreetmap.org https://tiles.openfreemap.org https://*.openfreemap.org https://vercel.live wss://ws-us3.pusher.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://android.googleapis.com",
-  "frame-src 'self' https://www.google.com https://maps.google.com https://vercel.live https://accounts.google.com https://*.firebaseapp.com",
+  "connect-src 'self' https://*.upstash.io https://challenges.cloudflare.com https://maps.googleapis.com https://nominatim.openstreetmap.org https://tiles.openfreemap.org https://*.openfreemap.org https://vercel.live wss://ws-us3.pusher.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://fcm.googleapis.com https://fcmregistrations.googleapis.com https://firebaseinstallations.googleapis.com https://android.googleapis.com",
+  "frame-src 'self' https://www.google.com https://maps.google.com https://vercel.live https://accounts.google.com https://*.firebaseapp.com https://challenges.cloudflare.com",
   "worker-src 'self' blob:",
   "object-src 'none'",
   "base-uri 'self'",
@@ -30,8 +30,9 @@ const nextConfig: NextConfig = {
         headers: [
           // Standard security headers
           { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
+          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self), payment=(self), interest-cohort=()" },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
           { key: "X-XSS-Protection", value: "1; mode=block" },
           // COOP/COEP set to unsafe-none to allow PWA install prompts on Samsung/Android

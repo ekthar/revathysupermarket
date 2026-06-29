@@ -1,3 +1,4 @@
+import { randomInt } from "crypto";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
@@ -18,7 +19,7 @@ export function phoneForDisplay(phone: string) {
 }
 
 export function generateOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return String(randomInt(100000, 999999));
 }
 
 export async function hashOtp(otp: string) {

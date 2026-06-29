@@ -97,11 +97,11 @@ export const Header = memo(function Header({
                 Help & Support
               </Link>
 
-              <Link href="/account/favorites" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+              <Link href="/account/favorites" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Favorites">
                 <Heart className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
               </Link>
 
-              <Link href="/account/notifications" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+              <Link href="/account/notifications" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Notifications">
                 <Bell className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
               </Link>
 
@@ -161,7 +161,7 @@ export const Header = memo(function Header({
 
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
-            <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+            <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Notifications">
               <Bell className="h-[17px] w-[17px] text-neutral-600 dark:text-neutral-300" />
             </Link>
           </div>
@@ -175,7 +175,7 @@ export const Header = memo(function Header({
 function CartBadgeLink() {
   const totalItems = useCartItemCount();
   return (
-    <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
+    <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}>
       <ShoppingBag className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
       {totalItems > 0 && (
         <motion.span

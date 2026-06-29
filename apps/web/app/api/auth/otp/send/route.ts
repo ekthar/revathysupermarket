@@ -61,8 +61,8 @@ export async function POST(request: Request) {
       success: true,
       message: "OTP sent to your WhatsApp",
       expiresAt: expiresAt.toISOString(),
-      // Only include OTP in development for testing
-      ...(process.env.NODE_ENV !== "production" ? { devOtp: otp } : {})
+      // Only expose OTP when explicitly opted in via a local-only env flag
+      ...(process.env.EXPOSE_DEV_OTP === "true" ? { devOtp: otp } : {})
     });
   } catch (error) {
     console.error("OTP send error:", error);

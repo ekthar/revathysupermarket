@@ -182,6 +182,7 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
           type="button"
           disabled={outOfStock}
           onClick={handleAdd}
+          aria-label={`Add ${product.name} to cart`}
           className={variant === "horizontal"
             ? "flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
             : "flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 shadow-elevation-3 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
@@ -220,6 +221,7 @@ const QuantityStepper = memo(function QuantityStepper({
           type="button"
           onClick={onIncrement}
           whileTap={{ scale: 1.3 }}
+          aria-label="Increase quantity"
           className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
           <Plus className="h-3 w-3" />
@@ -230,6 +232,7 @@ const QuantityStepper = memo(function QuantityStepper({
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: "spring", stiffness: 500, damping: 15 }}
           className="text-caption font-bold text-white"
+          aria-label={`Quantity: ${quantity}`}
         >
           {quantity}
         </motion.span>
@@ -237,6 +240,7 @@ const QuantityStepper = memo(function QuantityStepper({
           type="button"
           onClick={onDecrement}
           whileTap={{ scale: 1.3 }}
+          aria-label="Decrease quantity"
           className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
           <Minus className="h-3 w-3" />
@@ -257,6 +261,7 @@ const QuantityStepper = memo(function QuantityStepper({
         type="button"
         onClick={onDecrement}
         whileTap={{ scale: 1.4 }}
+        aria-label="Decrease quantity"
         className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
         <Minus className="h-3 w-3" />
@@ -267,6 +272,7 @@ const QuantityStepper = memo(function QuantityStepper({
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 500, damping: 15 }}
         className="w-5 text-center text-caption font-bold text-white"
+        aria-label={`Quantity: ${quantity}`}
       >
         {quantity}
       </motion.span>
@@ -274,6 +280,7 @@ const QuantityStepper = memo(function QuantityStepper({
         type="button"
         onClick={onIncrement}
         whileTap={{ scale: 1.4 }}
+        aria-label="Increase quantity"
         className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
         <Plus className="h-3 w-3" />

@@ -8,6 +8,17 @@ const redisLimiters = new Map<string, Ratelimit>();
 let fallbackWarningLogged = false;
 
 function enforceLocalFallback(key: string, limit: number, windowSeconds: number) {
+  // In production serverless, local fallback is unreliable. Block the request
+  // to fail-safe rather than silently allowing unlimited traffic.
+  if (process.env.NODE_ENV === "production" && process.env.VERCEL) {
+    return {
+      limited: true,
+      remaining: 0,
+      reset: 0, // Signals "unavailable" to rateLimitResponse()
+      unavailable: true
+    };
+  }
+
   const local = localRateLimit(`fallback:${hashRateLimitKey(key)}`, limit, windowSeconds * 1000);
   return {
     limited: local.limited,

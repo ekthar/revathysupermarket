@@ -1,101 +1,98 @@
-name: Build Flutter App (Android & Web)
+name: Build Mobile Apps (EAS)
 
 on:
   workflow_dispatch:
     inputs:
-      build_type:
-        description: "Build type"
+      platform:
+        description: "Platform to build"
         required: true
-        default: "debug"
+        default: "android"
         type: choice
         options:
-          - debug
-          - release
+          - android
+          - ios
+          - all
+      profile:
+        description: "EAS Build profile"
+        required: true
+        default: "preview"
+        type: choice
+        options:
+          - development
+          - preview
+          - production
+      app:
+        description: "Which app to build"
+        required: true
+        default: "customer"
+        type: choice
+        options:
+          - customer
+          - delivery
+          - both
   push:
     tags:
       - "v*"
 
 jobs:
-  build-android:
-    name: Build Android APK
+  build-customer:
+    name: Build Customer App
     runs-on: ubuntu-latest
+    if: inputs.app == 'customer' || inputs.app == 'both' || startsWith(github.ref, 'refs/tags/v')
     defaults:
       run:
-        working-directory: mobile
+        working-directory: apps/mobile-customer
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-java@v4
+      - uses: actions/setup-node@v4
         with:
-          distribution: "temurin"
-          java-version: "17"
+          node-version: 22
+          cache: npm
 
-      - uses: subosito/flutter-action@v2
+      - run: npm ci
+        working-directory: .
+
+      - uses: expo/expo-github-action@v8
         with:
-          flutter-version: "3.32.2"
-          channel: "stable"
-          cache: true
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
+      - name: Build Android
+        if: inputs.platform == 'android' || inputs.platform == 'all' || startsWith(github.ref, 'refs/tags/v')
+        run: eas build --platform android --profile ${{ inputs.profile || 'preview' }} --non-interactive
 
-      - name: Build Debug APK
-        if: inputs.build_type == 'debug' || inputs.build_type == ''
-        run: flutter build apk --debug
+      - name: Build iOS
+        if: inputs.platform == 'ios' || inputs.platform == 'all'
+        run: eas build --platform ios --profile ${{ inputs.profile || 'preview' }} --non-interactive
 
-      - name: Build Release APK
-        if: inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v')
-        run: flutter build apk --release
-
-      - name: Upload Debug APK
-        if: inputs.build_type == 'debug' || inputs.build_type == ''
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-debug-apk
-          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
-
-      - name: Upload Release APK
-        if: inputs.build_type == 'release' || startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-artifact@v4
-        with:
-          name: app-release-apk
-          path: mobile/build/app/outputs/flutter-apk/app-release.apk
-
-      - name: Attach APK to Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: mobile/build/app/outputs/flutter-apk/app-release.apk
-
-  build-web:
-    name: Build Flutter Web
+  build-delivery:
+    name: Build Delivery App
     runs-on: ubuntu-latest
+    if: inputs.app == 'delivery' || inputs.app == 'both' || startsWith(github.ref, 'refs/tags/v')
     defaults:
       run:
-        working-directory: mobile
+        working-directory: apps/mobile-delivery
     steps:
       - uses: actions/checkout@v4
 
-      - uses: subosito/flutter-action@v2
+      - uses: actions/setup-node@v4
         with:
-          flutter-version: "3.32.2"
-          channel: "stable"
-          cache: true
+          node-version: 22
+          cache: npm
 
-      - name: Get Flutter dependencies
-        run: flutter pub get
+      - run: npm ci
+        working-directory: .
 
-      - name: Build Web Release
-        run: flutter build web --release
-
-      - name: Upload Web Build
-        uses: actions/upload-artifact@v4
+      - uses: expo/expo-github-action@v8
         with:
-          name: web-build
-          path: mobile/build/web
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Attach Web Build to Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: mobile/build/web
+      - name: Build Android
+        if: inputs.platform == 'android' || inputs.platform == 'all' || startsWith(github.ref, 'refs/tags/v')
+        run: eas build --platform android --profile ${{ inputs.profile || 'preview' }} --non-interactive
+
+      - name: Build iOS
+        if: inputs.platform == 'ios' || inputs.platform == 'all'
+        run: eas build --platform ios --profile ${{ inputs.profile || 'preview' }} --non-interactive

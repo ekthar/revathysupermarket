@@ -8,6 +8,7 @@ import { Providers } from "@/components/providers";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
+import { OfflineBanner } from "@/components/ui/offline-banner";
 import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
 import { ViewportStability } from "@/components/ui/viewport-stability";
@@ -104,6 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body className="pt-safe">
         <Providers session={session}>
           <ViewportStability />
+          <OfflineBanner />
           <ScrollProgress />
           <OnboardingTour />
           <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />

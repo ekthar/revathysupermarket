@@ -112,15 +112,13 @@ export function IntroShell({ onComplete }: IntroShellProps) {
   }
 
   return (
-    <div className="fixed inset-0 z-[200] overflow-hidden" aria-hidden="true">
-      <AnimatePresence mode="wait">
-        {stage === 0 && <StageColdOpen key="cold-open" />}
-        {stage === 1 && <StageColdOpen key="cold-open" />}
-        {stage === 2 && <StageLogoReveal key="logo-reveal" />}
-        {stage === 3 && <StageTagline key="tagline" />}
-        {stage === 4 && <StageStorefront key="storefront" />}
-        {stage === 5 && <StageHandoff key="handoff" />}
-      </AnimatePresence>
+    <div className="fixed inset-0 z-[200] overflow-hidden bg-black" aria-hidden="true">
+      {/* Stage backgrounds — crossfade between stages */}
+      {stage <= 1 && <StageColdOpen />}
+      {stage === 2 && <StageLogoReveal />}
+      {stage === 3 && <StageTagline />}
+      {stage === 4 && <StageStorefront />}
+      {stage === 5 && <StageHandoff />}
 
       {/* Skip button - visible after 800ms */}
       <AnimatePresence>

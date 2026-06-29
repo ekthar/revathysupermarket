@@ -78,6 +78,7 @@ export function StaffLoginClient({ logoUrl }: { logoUrl?: string | null }) {
               onChange={(e) => { setEmail(e.target.value); setError(""); }}
               placeholder="staff@msmsupermarket.in"
               required
+              autoComplete="email"
               className="mt-2 h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 text-base font-semibold outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:focus:border-emerald-400"
               autoFocus
             />
@@ -92,6 +93,7 @@ export function StaffLoginClient({ logoUrl }: { logoUrl?: string | null }) {
                 onChange={(e) => { setPassword(e.target.value); setError(""); }}
                 placeholder="Enter your password"
                 required
+                autoComplete="current-password"
                 className="h-14 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 pr-12 text-base font-semibold outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-slate-600 dark:bg-slate-700 dark:text-white dark:focus:border-emerald-400"
               />
               <button

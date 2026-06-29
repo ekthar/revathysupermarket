@@ -835,3 +835,74 @@ html[data-keyboard-open] .pb-safe {
   will-change: transform, opacity;
   backface-visibility: hidden;
 }
+
+
+/* ===== RESPONSIVENESS: 320px FIXES ===== */
+
+/**
+ * These rules ensure nothing overflows on the smallest supported viewport (320px).
+ * Key principle: use fluid widths (clamp, min, %) instead of fixed pixels.
+ */
+
+/* Horizontal scroll container with fade indicators (admin data tables) */
+.scroll-x-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scroll-behavior: smooth;
+}
+
+/* Fade gradient on scroll edges to indicate more content */
+.scroll-x-fade {
+  position: relative;
+}
+.scroll-x-fade::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2rem;
+  background: linear-gradient(to right, transparent, hsl(var(--background)));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.scroll-x-fade[data-can-scroll-right="true"]::after {
+  opacity: 1;
+}
+
+/* Ensure no horizontal overflow on the viewport at 320px */
+@media (max-width: 360px) {
+  /* Tighter padding on very narrow screens */
+  .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
+  .px-6 { padding-left: 1rem; padding-right: 1rem; }
+
+  /* Reduce gap in tight grids */
+  .gap-3 { gap: 0.5rem; }
+
+  /* Ensure product cards don't push out */
+  .product-card-animated { max-width: 100%; }
+}
+
+/* Tablet-specific: footer and sidebar adjustments */
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* 2-column footer on tablets instead of cramped 4-col */
+  .footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}
+
+/* Safe text wrapping for very long words (addresses, order numbers) */
+.break-anywhere {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  hyphens: auto;
+}
+
+/* Fluid container that respects safe areas and never overflows */
+.fluid-container {
+  width: 100%;
+  max-width: min(100vw - 2rem, var(--max-content-width, 80rem));
+  margin-inline: auto;
+  padding-inline: max(1rem, env(safe-area-inset-left, 0px));
+}

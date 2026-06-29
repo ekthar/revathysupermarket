@@ -87,7 +87,7 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
                 )}
               >
                 <Icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-slate-400 dark:text-slate-500")} />
-                <span className="whitespace-nowrap">{item.label}</span>
+                <span className="truncate">{item.label}</span>
                 {item.badge > 0 && (
                   <span className={cn(
                     "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-micro font-bold",

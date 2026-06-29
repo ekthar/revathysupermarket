@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
-import dynamic from "next/dynamic";
 import "./globals.css";
 import { auth } from "@/auth";
 import { Header } from "@/components/header";
@@ -10,15 +9,10 @@ import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
 import { OfflineBanner } from "@/components/ui/offline-banner";
+import { IntroLoader } from "@/components/intro/intro-loader";
 import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
 import { ViewportStability } from "@/components/ui/viewport-stability";
-
-// Cinematic intro — code-split, client-only, excluded from admin routes
-const IntroGate = dynamic(
-  () => import("@/components/intro/intro-gate").then((m) => ({ default: m.IntroGate })),
-  { ssr: false }
-);
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap", adjustFontFallback: true });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap", adjustFontFallback: true });
@@ -111,7 +105,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="pt-safe">
         <Providers session={session}>
-          <IntroGate />
+          <IntroLoader />
           <ViewportStability />
           <OfflineBanner />
           <ScrollProgress />

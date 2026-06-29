@@ -46,7 +46,7 @@ export function StoryBanners({ banners }: StoryBannersProps) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
   const [progress, setProgress] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval>>();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
   const startTimeRef = useRef(Date.now());
 
   const count = banners.length;

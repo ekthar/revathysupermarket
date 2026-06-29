@@ -1,9 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { RefreshCw, ShoppingCart } from "lucide-react";
+import { RefreshCw, ShoppingBag } from "lucide-react";
 
-export default function CheckoutError({
+export default function ProductsError({
   error,
   reset,
 }: {
@@ -12,15 +12,15 @@ export default function CheckoutError({
 }) {
   return (
     <main className="mx-auto flex min-h-[50dvh] max-w-md flex-col items-center justify-center px-6 py-16 text-center">
-      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-red-50 dark:bg-red-950/30">
-        <ShoppingCart className="h-7 w-7 text-red-500" />
+      <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-50 dark:bg-amber-950/30">
+        <ShoppingBag className="h-7 w-7 text-amber-500" />
       </div>
 
       <h1 className="mt-5 font-display text-xl font-black text-neutral-900 dark:text-white">
-        Checkout could not load
+        Could not load products
       </h1>
-      <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-        Don&apos;t worry &mdash; your cart items are saved. Try again or go back to your cart.
+      <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+        Check your internet connection and try again.
       </p>
 
       <div className="mt-6 flex gap-3">
@@ -32,10 +32,10 @@ export default function CheckoutError({
           Retry
         </button>
         <Link
-          href="/cart"
+          href="/"
           className="flex h-11 items-center rounded-full border border-neutral-200 dark:border-neutral-700 px-5 text-sm font-bold text-neutral-600 dark:text-neutral-300 transition-transform active:scale-[0.97]"
         >
-          Back to cart
+          Home
         </Link>
       </div>
     </main>

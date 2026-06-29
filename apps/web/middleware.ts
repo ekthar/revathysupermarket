@@ -13,12 +13,18 @@ import {
 const { auth } = NextAuth(authConfig);
 const staffRoles = new Set(["ADMIN", "STAFF", "OWNER", "MANAGER", "PACKING_STAFF"]);
 
-// Routes exempt from rate limiting (health checks, static assets, etc.)
+// Routes exempt from rate limiting (health checks, auth callbacks, static assets)
 const RATE_LIMIT_EXEMPT = new Set([
   "/api/health",
   "/api/auth/session",
   "/api/auth/csrf",
   "/api/auth/providers",
+  "/api/auth/callback/staff-credentials",
+  "/api/auth/callback/phone-otp",
+  "/api/auth/callback/google",
+  "/api/auth/callback/credentials",
+  "/api/auth/signin",
+  "/api/auth/signout",
 ]);
 
 function rateLimitHeaders(result: RateLimitResult): Record<string, string> {
@@ -58,7 +64,7 @@ export default auth(async (request) => {
   }
 
   // ─── Rate limiting for API routes ──────────────────────────────────────────
-  if (isApiRoute && !RATE_LIMIT_EXEMPT.has(pathname)) {
+  if (isApiRoute && !RATE_LIMIT_EXEMPT.has(pathname) && !pathname.startsWith("/api/auth/callback")) {
     const userId = request.auth?.user?.id;
     const key = resolveRateLimitKey(userId, request);
     const limiterName = getLimiterForRoute(pathname, request.method);

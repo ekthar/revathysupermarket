@@ -29,9 +29,44 @@ function timeSince(value: string, now: number) {
   return `${hours}h ${minutes % 60}m ago`;
 }
 
+// Colour coding per status column
+const columnStyle: Record<string, { bg: string; badge: string; card: string }> = {
+  ORDER_RECEIVED: {
+    bg: "bg-red-50 dark:bg-red-950/30",
+    badge: "bg-red-600 text-white",
+    card: "border-red-100 dark:border-red-800",
+  },
+  ACCEPTED: {
+    bg: "bg-blue-50 dark:bg-blue-950/30",
+    badge: "bg-blue-600 text-white",
+    card: "border-blue-100 dark:border-blue-800",
+  },
+  PACKING: {
+    bg: "bg-purple-50 dark:bg-purple-950/30",
+    badge: "bg-purple-600 text-white",
+    card: "border-purple-100 dark:border-purple-800",
+  },
+  READY_FOR_DELIVERY: {
+    bg: "bg-amber-50 dark:bg-amber-950/30",
+    badge: "bg-amber-500 text-white",
+    card: "border-amber-100 dark:border-amber-800",
+  },
+  OUT_FOR_DELIVERY: {
+    bg: "bg-cyan-50 dark:bg-cyan-950/30",
+    badge: "bg-cyan-600 text-white",
+    card: "border-cyan-100 dark:border-cyan-800",
+  },
+  DELIVERED: {
+    bg: "bg-green-50 dark:bg-green-950/30",
+    badge: "bg-green-600 text-white",
+    card: "border-green-100 dark:border-green-800",
+  },
+};
+
 export function OrderListBoard({ orders, now, onSelectOrder }: OrderListBoardProps) {
   return (
-    <div className="mt-5 grid gap-3 overflow-x-auto pb-2 lg:grid-cols-6">
+    // Horizontal scroll only to show all 6 columns; each column scrolls vertically independently
+    <div className="mt-5 flex gap-3 overflow-x-auto pb-3">
       {(
         [
           ["ORDER_RECEIVED", "New"],
@@ -42,23 +77,25 @@ export function OrderListBoard({ orders, now, onSelectOrder }: OrderListBoardPro
           ["DELIVERED", "Completed"],
         ] as const
       ).map(([status, label]) => {
-        const columnOrders = orders
-          .filter((order) => order.status === status)
-          .slice(0, status === "DELIVERED" ? 10 : 30);
+        const columnOrders = orders.filter((order) => order.status === status);
+        const style = columnStyle[status] ?? { bg: "bg-slate-100 dark:bg-slate-900", badge: "bg-slate-600 text-white", card: "border-slate-100" };
         return (
           <section
             key={status}
-            className="min-w-[240px] rounded-2xl bg-slate-100/80 p-3 dark:bg-slate-900"
+            className={`flex w-[260px] shrink-0 flex-col rounded-2xl ${style.bg} p-3`}
           >
+            {/* Column header — fixed, doesn't scroll */}
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-black">{label}</h3>
-              <span className="rounded-full bg-white px-2 py-1 text-xs font-black dark:bg-slate-800">
+              <span className={`rounded-full px-2 py-0.5 text-xs font-black ${style.badge}`}>
                 {columnOrders.length}
               </span>
             </div>
-            <div className="mt-3 grid gap-2">
+
+            {/* Cards — vertically scrollable, max height ~70vh so you don't have to scroll the whole page */}
+            <div className="mt-3 flex max-h-[70vh] flex-col gap-2 overflow-y-auto pb-1 pr-0.5">
               {columnOrders.length === 0 ? (
-                <p className="rounded-xl border border-dashed border-slate-300 p-4 text-center text-xs text-muted-foreground">
+                <p className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-4 text-center text-xs text-muted-foreground">
                   No orders
                 </p>
               ) : (
@@ -67,20 +104,24 @@ export function OrderListBoard({ orders, now, onSelectOrder }: OrderListBoardPro
                     key={order.id}
                     type="button"
                     onClick={() => onSelectOrder(order.orderNumber)}
-                    className="rounded-xl bg-white p-3 text-left shadow-sm dark:bg-slate-800"
+                    className={`rounded-xl border bg-white dark:bg-slate-800 p-3 text-left shadow-sm transition-shadow hover:shadow-md ${style.card}`}
                   >
                     <div className="flex justify-between gap-2">
-                      <span className="text-xs font-black">#{order.orderNumber.slice(-6)}</span>
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+                        #{order.orderNumber.slice(-6)}
+                      </span>
                       <span className="text-xs font-black text-primary">
                         {formatCurrency(order.total)}
                       </span>
                     </div>
-                    <p className="mt-1 truncate text-xs font-semibold">{order.customerName}</p>
-                    <p className="mt-1 text-caption text-muted-foreground">
+                    <p className="mt-1 truncate text-xs font-semibold text-slate-700 dark:text-slate-300">
+                      {order.customerName}
+                    </p>
+                    <p className="mt-1 text-[11px] text-muted-foreground">
                       {order.items.length} items &middot; {timeSince(order.createdAt, now)}
                     </p>
                     {status === "READY_FOR_DELIVERY" && !order.deliveryPartnerId ? (
-                      <p className="mt-2 rounded-lg bg-amber-100 px-2 py-1 text-caption font-black text-amber-700">
+                      <p className="mt-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 px-2 py-1 text-[11px] font-black text-amber-700 dark:text-amber-400">
                         Driver needed
                       </p>
                     ) : null}

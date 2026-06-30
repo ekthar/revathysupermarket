@@ -52,13 +52,20 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       {/* Back + Print buttons - hidden on print */}
       <div className="flex items-center justify-between mb-6 print:hidden">
         <a
-          href="javascript:history.back()"
+          href={`/admin/orders/${order.id}`}
           className="inline-flex items-center gap-2 text-sm font-semibold text-slate-600 hover:text-slate-900 transition-colors"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
-          Back to Orders
+          Back to Order
         </a>
-        <PrintButton />
+        <div className="flex items-center gap-3">
+          {order.printedAt && (
+            <span className="text-xs font-semibold text-green-600 bg-green-50 px-3 py-1.5 rounded-full">
+              ✓ Printed {new Date(order.printedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", day: "2-digit", month: "short" })}
+            </span>
+          )}
+          <PrintButton orderId={order.id} trackPrint />
+        </div>
       </div>
 
       {/* Header */}

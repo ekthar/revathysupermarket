@@ -342,6 +342,8 @@ model Order {
   customerUnavailableTimeout Int?
   billNumber              String?
   staffNote               String?
+  printedAt               DateTime?
+  printedById             String?
   deliveryMode            DeliveryMode            @default(ASAP)
   deliverySlotId          String?
   estimatedDeliveryAt     DateTime?

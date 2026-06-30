@@ -35,7 +35,8 @@ export async function createAuthoritativeOrder({
   if (subtotal < settings.minimumOrderValue) throw new Error("MINIMUM_ORDER");
   const loyaltyConfig = await getLoyaltyConfig();
   const feeQuote = await calculateDeliveryFee(distanceKm, subtotal);
-  if (feeQuote.fee < 0 || !feeQuote.freeDelivery && !feeQuote.slabApplied) throw new Error("DELIVERY_OUT_OF_RANGE");
+  // freeDelivery orders have no slab applied — that's expected and valid
+  if (feeQuote.fee < 0) throw new Error("DELIVERY_OUT_OF_RANGE");
 
   return prisma.$transaction(async (tx) => {
     let estimatedDeliveryAt = new Date(Date.now() + settings.deliveryEstimateMax * 60_000);
@@ -153,6 +154,6 @@ export function checkoutErrorResponse(error: unknown) {
   if (message === "PROMO_INVALID" || message === "PROMO_EXHAUSTED") return { status: 409, error: "That promo code is no longer available.", code: message };
   if (message === "LOYALTY_BALANCE") return { status: 409, error: "Your points balance changed. Review and try again.", code: message };
   if (message === "WALLET_BALANCE") return { status: 409, error: "Insufficient wallet balance.", code: message };
-  if (message === "DELIVERY_OUT_OF_RANGE") return { status: 400, error: "No delivery-fee range covers this address.", code: message };
+  if (message === "DELIVERY_OUT_OF_RANGE") return { status: 400, error: "Sorry, we are unable to deliver to your address. Please contact us for assistance.", code: message };
   return null;
 }

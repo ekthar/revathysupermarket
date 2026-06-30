@@ -17,6 +17,5 @@ export async function POST(request: Request) {
   const distanceKm = calculateDistanceKm({ lat: parsed.data.latitude, lng: parsed.data.longitude }, { lat: settings.storeLatitude, lng: settings.storeLongitude });
   if (distanceKm > settings.deliveryRadiusKm) return NextResponse.json({ error: "Address is outside the delivery area.", code: "OUTSIDE_DELIVERY_AREA", distanceKm }, { status: 400 });
   const quote = await calculateDeliveryFee(distanceKm, parsed.data.subtotal);
-  if (quote.fee < 0) return NextResponse.json({ error: "Delivery pricing is unavailable for this distance.", code: "FEE_RANGE_MISSING" }, { status: 503 });
   return NextResponse.json(quote);
 }

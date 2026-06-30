@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Clock, CreditCard, MapPin, Package, Phone, RotateCcw, Truck, User } from "lucide-react";
+import { ArrowLeft, Clock, CreditCard, FileText, MapPin, Package, Phone, RotateCcw, Truck, User } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 
@@ -57,9 +57,23 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             <p className="text-xs text-slate-500">Placed {new Date(order.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p>
           </div>
         </div>
-        <span className={`inline-flex h-7 items-center rounded-full px-3 text-xs font-bold ${statusColors[order.status] || "bg-slate-100 text-slate-800"}`}>
-          {order.status.replace(/_/g, " ")}
-        </span>
+        <div className="flex items-center gap-2 flex-wrap">
+          {order.printedAt && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
+              ✓ Printed {new Date(order.printedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })}
+            </span>
+          )}
+          <Link
+            href={`/admin/orders/${order.id}/invoice`}
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <FileText className="h-4 w-4" />
+            Print Invoice
+          </Link>
+          <span className={`inline-flex h-7 items-center rounded-full px-3 text-xs font-bold ${statusColors[order.status] || "bg-slate-100 text-slate-800"}`}>
+            {order.status.replace(/_/g, " ")}
+          </span>
+        </div>
       </div>
 
       {/* Grid layout */}

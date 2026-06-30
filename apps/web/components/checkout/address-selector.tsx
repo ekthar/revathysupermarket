@@ -88,21 +88,24 @@ export function AddressSelector({
         onLocationStateChange("success");
         showToast("Location detected - fetching address...", "success");
 
-        // Auto-fill address via reverse geocoding
+        // Auto-fill address via reverse geocoding — always overwrite all fields
+        // (the user explicitly tapped Detect, so they want fresh address data)
         try {
           const res = await fetch(`/api/geocode/reverse?latitude=${lat}&longitude=${lng}`);
           if (res.ok) {
             const geo = await res.json();
             const patch: Record<string, string> = { latitude: lat, longitude: lng };
-            if (geo.street && !form.street) patch.street = geo.street;
-            if (geo.landmark && !form.landmark) patch.landmark = geo.landmark;
-            if (geo.pincode && !form.pincode) patch.pincode = geo.pincode;
-            if (geo.houseName && !form.houseName) patch.houseName = geo.houseName;
+            if (geo.street) patch.street = geo.street;
+            if (geo.landmark) patch.landmark = geo.landmark;
+            if (geo.pincode) patch.pincode = geo.pincode;
+            if (geo.houseName) patch.houseName = geo.houseName;
             onFormPatch(patch);
             showToast("Address auto-filled from GPS", "success");
+          } else {
+            showToast("GPS location set — enter address manually", "success");
           }
         } catch {
-          // Geocoding failed silently
+          showToast("GPS location set — enter address manually", "success");
         }
       },
       () => {

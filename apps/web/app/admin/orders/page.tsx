@@ -23,6 +23,7 @@ export default async function AdminOrdersPage() {
       staffNote: true,
       billNumber: true,
       acknowledgedAt: true,
+      printedAt: true,
       createdAt: true,
       items: {
         select: {
@@ -35,7 +36,7 @@ export default async function AdminOrdersPage() {
       }
     },
     orderBy: { createdAt: "desc" },
-    take: 50
+    take: 200
   }).catch(() => []);
   const products = await prisma.product.findMany({
     where: { isActive: true },
@@ -92,6 +93,7 @@ export default async function AdminOrdersPage() {
         staffNote: order.staffNote,
         billNumber: order.billNumber ?? null,
         acknowledgedAt: order.acknowledgedAt?.toISOString() ?? null,
+        printedAt: order.printedAt?.toISOString() ?? null,
         createdAt: order.createdAt.toISOString(),
         items: order.items.map((item) => ({
           id: item.id,

@@ -29,6 +29,7 @@ type AdminOrder = {
   staffNote?: string | null;
   billNumber?: string | null;
   acknowledgedAt: string | null;
+  printedAt: string | null;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
   whatsappLogs: Array<{ id: string; template: string; status: string; createdAt: string }>;
@@ -343,10 +344,27 @@ export function AdminOrdersClient({
         now={now}
         onSelectOrder={(orderNumber) => { setQuery(orderNumber); setView("list"); }}
       />}
-      <div className={cn("mt-5 grid gap-4", view === "board" && "hidden")}>
+      <div className={cn("mt-5 space-y-6", view === "board" && "hidden")}>
         {filtered.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border p-10 text-center">No orders found.</div>
-        ) : filtered.map((order) => (
+        ) : (() => {
+          // Group orders by IST calendar day
+          const groups = new Map<string, typeof filtered>();
+          for (const order of filtered) {
+            const day = new Date(order.createdAt).toLocaleDateString("en-IN", { timeZone: "Asia/Kolkata", weekday: "short", day: "2-digit", month: "short", year: "numeric" });
+            if (!groups.has(day)) groups.set(day, []);
+            groups.get(day)!.push(order);
+          }
+          return Array.from(groups.entries()).map(([day, dayOrders]) => (
+            <div key={day}>
+              {/* Day separator */}
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">{day}</span>
+                <div className="flex-1 border-t border-border" />
+                <span className="text-xs font-bold text-muted-foreground">{dayOrders.length} order{dayOrders.length !== 1 ? "s" : ""}</span>
+              </div>
+              <div className="grid gap-3">
+        {dayOrders.map((order) => (
           <article
             key={order.id}
             className={cn(
@@ -354,7 +372,7 @@ export function AdminOrdersClient({
               order.status === "CANCELLED" ? "border-red-200 bg-red-50/90 dark:border-red-500/30 dark:bg-red-950/25" : "border-white/70"
             )}
           >
-            {/* Collapsible header - always visible */}
+            {/* Collapsible header */}
             <button
               type="button"
               onClick={() => toggleOrderExpand(order.id)}
@@ -362,17 +380,20 @@ export function AdminOrdersClient({
             >
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-title font-bold text-slate-900">#{order.orderNumber}</h3>
+                  <h3 className="text-title font-bold text-slate-900 dark:text-white">#{order.orderNumber}</h3>
                   {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-micro font-bold text-white">
                       <BellRing className="h-3 w-3" /> New
                     </span>
                   ) : null}
                   <span className={cn("text-micro font-bold px-2 py-0.5 rounded-full", order.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</span>
+                  {order.printedAt && (
+                    <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">✓ Printed</span>
+                  )}
                 </div>
                 <p suppressHydrationWarning className="text-caption text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
               </div>
-              <p className="text-body font-bold text-slate-900 shrink-0 mr-2">{formatCurrency(order.total)}</p>
+              <p className="text-body font-bold text-slate-900 dark:text-white shrink-0 mr-2">{formatCurrency(order.total)}</p>
               <ChevronDown className={cn("h-4 w-4 text-slate-400 shrink-0 transition-transform", expandedOrderIds.has(order.id) && "rotate-180")} />
             </button>
 
@@ -393,9 +414,17 @@ export function AdminOrdersClient({
                 <Send className="h-4 w-4 text-primary" />
                 Manual send
               </a>
-              <a href={`/admin/orders/${order.id}/invoice`} className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-sm font-black sm:col-span-1">
-                <FileText className="h-4 w-4 text-primary" />
-                Print invoice
+              <a
+                href={`/admin/orders/${order.id}/invoice`}
+                className={cn(
+                  "col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl text-sm font-black sm:col-span-1",
+                  order.printedAt
+                    ? "bg-green-100 text-green-800 border border-green-200"
+                    : "border border-border bg-background/70"
+                )}
+              >
+                <FileText className="h-4 w-4" />
+                {order.printedAt ? "Printed ✓" : "Print invoice"}
               </a>
               {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt ? (
                 <button
@@ -409,18 +438,29 @@ export function AdminOrdersClient({
                 </button>
               ) : null}
             </div>
+            {/* Items — clearly colour-coded */}
             <ul className="mt-4 grid gap-1.5 text-sm">
-              {order.items.map((item) => {
+              {order.items.map((item, idx) => {
                 const itemTotal = item.price * item.quantity;
                 const gstRate = item.gstRate ?? 0;
                 const gstAmt = gstRate > 0 ? itemTotal - itemTotal / (1 + gstRate / 100) : 0;
                 return (
-                  <li key={item.id} className="flex items-center justify-between px-3 py-2 rounded-xl bg-muted/60">
-                    <div>
-                      <span className="text-body text-slate-700 dark:text-slate-300">{item.name} <span className="text-slate-400">x{item.quantity}</span></span>
-                      {gstRate > 0 && <span className="ml-2 text-micro text-slate-400">({gstRate}% GST: {formatCurrency(gstAmt)})</span>}
+                  <li key={item.id} className={cn(
+                    "flex items-center justify-between px-3 py-2.5 rounded-xl",
+                    idx % 2 === 0
+                      ? "bg-slate-50 dark:bg-slate-800/60"
+                      : "bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800"
+                  )}>
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white text-xs font-black">
+                        {item.quantity}
+                      </span>
+                      <div className="min-w-0">
+                        <span className="block text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</span>
+                        {gstRate > 0 && <span className="text-[11px] text-slate-400">GST {gstRate}%: {formatCurrency(gstAmt)}</span>}
+                      </div>
                     </div>
-                    <span className="text-body font-semibold text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
+                    <span className="ml-3 shrink-0 text-sm font-black text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
                   </li>
                 );
               })}
@@ -571,6 +611,10 @@ export function AdminOrdersClient({
             )}
           </article>
         ))}
+              </div>
+            </div>
+          ))
+        })()}
       </div>
     </>
   );

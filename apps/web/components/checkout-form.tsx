@@ -130,6 +130,7 @@ export function CheckoutForm({
   const [loyaltyRules, setLoyaltyRules] = useState({ pointValueRupees: 0.25, maxRedemptionPercent: 20 });
   const [quotedDeliveryFee, setQuotedDeliveryFee] = useState<number | null>(null);
   const [feeQuoteLoading, setFeeQuoteLoading] = useState(false);
+  const [addressNotCovered, setAddressNotCovered] = useState(false);
 
   const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
@@ -178,18 +179,29 @@ export function CheckoutForm({
 
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
-  const canSubmit = items.length > 0 && locationOk && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
+  const canSubmit = items.length > 0 && locationOk && !addressNotCovered && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
 
   useEffect(() => {
     const latitude = Number(form.latitude);
     const longitude = Number(form.longitude);
-    if (!locationOk || !Number.isFinite(latitude) || !Number.isFinite(longitude)) { setQuotedDeliveryFee(null); return; }
+    if (!locationOk || !Number.isFinite(latitude) || !Number.isFinite(longitude)) { setQuotedDeliveryFee(null); setAddressNotCovered(false); return; }
     const controller = new AbortController();
     const timer = window.setTimeout(async () => {
       setFeeQuoteLoading(true);
+      setAddressNotCovered(false);
       const response = await fetch("/api/delivery-fee/preview", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ latitude, longitude, subtotal }), signal: controller.signal }).catch(() => null);
-      if (response?.ok) { const data = await response.json(); setQuotedDeliveryFee(Number(data.fee)); }
-      else setQuotedDeliveryFee(null);
+      if (response?.ok) {
+        const data = await response.json();
+        setQuotedDeliveryFee(Number(data.fee));
+        setAddressNotCovered(false);
+      } else {
+        setQuotedDeliveryFee(null);
+        // OUTSIDE_DELIVERY_AREA means the address is genuinely outside the radius
+        if (response?.status === 400) {
+          const data = await response.json().catch(() => null);
+          if (data?.code === "OUTSIDE_DELIVERY_AREA") setAddressNotCovered(true);
+        }
+      }
       setFeeQuoteLoading(false);
     }, 300);
     return () => { window.clearTimeout(timer); controller.abort(); };
@@ -421,6 +433,7 @@ export function CheckoutForm({
           canSubmit={canSubmit}
           isSubmitting={isSubmitting}
           message={message}
+          addressNotCovered={addressNotCovered}
         />
       </div>
     </form>

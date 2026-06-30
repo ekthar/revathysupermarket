@@ -24,6 +24,7 @@ interface OrderSummaryProps {
   canSubmit: boolean;
   isSubmitting: boolean;
   message: string;
+  addressNotCovered?: boolean;
 }
 
 export function OrderSummary({
@@ -38,6 +39,7 @@ export function OrderSummary({
   canSubmit,
   isSubmitting,
   message,
+  addressNotCovered = false,
 }: OrderSummaryProps) {
   return (
     <motion.div
@@ -93,6 +95,11 @@ export function OrderSummary({
         {message && (
           <p className="mt-4 rounded-xl bg-neutral-50 dark:bg-neutral-800 p-3 text-caption font-medium text-neutral-600 dark:text-neutral-300">
             {message}
+          </p>
+        )}
+        {addressNotCovered && (
+          <p className="mt-4 rounded-xl bg-red-50 dark:bg-red-950/30 p-3 text-caption font-medium text-red-600 dark:text-red-400">
+            Sorry, we are unable to deliver to your address. Please contact us for assistance.
           </p>
         )}
         <motion.button

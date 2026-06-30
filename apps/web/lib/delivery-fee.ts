@@ -6,6 +6,8 @@ export interface DeliveryFeeResult {
   slabApplied: { id: string; minKm: number; maxKm: number; fee: number } | null;
   freeDelivery: boolean;
   freeDeliveryThreshold: number;
+  /** True when the distance fell outside all configured slabs and the base fee was used as fallback. */
+  slabFallback?: boolean;
 }
 
 export function findDeliveryFeeSlab<T extends { minKm: number | { toString(): string }; maxKm: number | { toString(): string } }>(slabs: T[], distanceKm: number) {
@@ -23,22 +25,26 @@ export function findDeliveryFeeSlab<T extends { minKm: number | { toString(): st
  * Rules:
  * 1. Find the active slab that covers the distance
  * 2. If order subtotal >= freeDeliveryThreshold, fee is 0
- * 3. If distance exceeds all slabs, order is out of range
+ * 3. If distance exceeds all slabs but is within the delivery radius,
+ *    fall back to the base delivery fee rather than blocking the order.
+ *    This handles slab config gaps without penalising the customer.
  */
 export async function calculateDeliveryFee(
   distanceKm: number,
   subtotal: number
 ): Promise<DeliveryFeeResult> {
-  // Fetch active slabs and free delivery threshold
-  const [slabs, freeThresholdSetting] = await Promise.all([
+  // Fetch active slabs, free delivery threshold, and base fee setting
+  const [slabs, freeThresholdSetting, baseFeeSetting] = await Promise.all([
     prisma.deliveryFeeSlab.findMany({
       where: { isActive: true },
       orderBy: { minKm: "asc" },
     }),
     prisma.setting.findUnique({ where: { key: "freeDeliveryThreshold" } }),
+    prisma.setting.findUnique({ where: { key: "deliveryFee" } }),
   ]);
 
   const freeDeliveryThreshold = Number(freeThresholdSetting?.value || "500");
+  const baseFee = Number(baseFeeSetting?.value || "40");
 
   // Check free delivery first
   if (freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold) {
@@ -55,13 +61,20 @@ export async function calculateDeliveryFee(
   const slab = findDeliveryFeeSlab(slabs, distanceKm);
 
   if (!slab) {
-    // No slab covers this distance — out of delivery range
+    // No slab covers this distance — the address passed the radius check but
+    // the slab table has a gap. Fall back to the flat base fee so the order
+    // can still be placed. Log a warning so the admin knows to fix the slabs.
+    console.warn(
+      `[delivery-fee] No slab covers distanceKm=${distanceKm.toFixed(2)}. ` +
+      `Falling back to base fee ₹${baseFee}. Fix delivery slabs at /admin/pricing.`
+    );
     return {
-      fee: -1, // Indicates out of range
+      fee: baseFee,
       distanceKm,
       slabApplied: null,
       freeDelivery: false,
       freeDeliveryThreshold,
+      slabFallback: true,
     };
   }
 

@@ -399,214 +399,162 @@ export function AdminOrdersClient({
 
             {/* Expandable details */}
             {expandedOrderIds.has(order.id) && (
-            <div className="px-4 pb-4 border-t border-slate-100 pt-3 sm:px-5">
-              <p className="text-sm text-muted-foreground">{order.address}</p>
-            <div className="mt-4 grid grid-cols-2 gap-2 sm:flex">
-              <a href={`tel:${order.phone}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-sm font-black">
-                <Phone className="h-4 w-4 text-primary" />
-                Call
-              </a>
-              <a href={`https://wa.me/${order.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-lime-fresh text-sm font-black text-slate-950">
-                <Send className="h-4 w-4" />
-                WhatsApp
-              </a>
-              <a href={manualWhatsAppLink(order)} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-sm font-black">
-                <Send className="h-4 w-4 text-primary" />
-                Manual send
-              </a>
-              <a
-                href={`/admin/orders/${order.id}/invoice`}
-                className={cn(
-                  "col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl text-sm font-black sm:col-span-1",
-                  order.printedAt
-                    ? "bg-green-100 text-green-800 border border-green-200"
-                    : "border border-border bg-background/70"
-                )}
-              >
-                <FileText className="h-4 w-4" />
-                {order.printedAt ? "Printed ✓" : "Print invoice"}
-              </a>
-              {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt ? (
-                <button
-                  type="button"
-                  disabled={ackLoading === order.id}
-                  onClick={() => acknowledgeOrder(order.id)}
-                  className="col-span-2 inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-red-600 text-sm font-black text-white disabled:opacity-60 sm:col-span-1"
-                >
-                  <BellRing className="h-4 w-4" />
-                  {ackLoading === order.id ? "Acknowledging" : "Acknowledge"}
-                </button>
-              ) : null}
-            </div>
-            {/* Items — clearly colour-coded */}
-            <ul className="mt-4 grid gap-1.5 text-sm">
-              {order.items.map((item, idx) => {
-                const itemTotal = item.price * item.quantity;
-                const gstRate = item.gstRate ?? 0;
-                const gstAmt = gstRate > 0 ? itemTotal - itemTotal / (1 + gstRate / 100) : 0;
-                return (
-                  <li key={item.id} className={cn(
-                    "flex items-center justify-between px-3 py-2.5 rounded-xl",
-                    idx % 2 === 0
-                      ? "bg-slate-50 dark:bg-slate-800/60"
-                      : "bg-white dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800"
-                  )}>
-                    <div className="flex items-center gap-2.5 min-w-0">
-                      <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary text-white text-xs font-black">
-                        {item.quantity}
-                      </span>
-                      <div className="min-w-0">
-                        <span className="block text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</span>
-                        {gstRate > 0 && <span className="text-[11px] text-slate-400">GST {gstRate}%: {formatCurrency(gstAmt)}</span>}
-                      </div>
-                    </div>
-                    <span className="ml-3 shrink-0 text-sm font-black text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
-                  </li>
-                );
-              })}
-              {(() => {
-                const totalGst = order.items.reduce((sum, item) => {
-                  const itemTotal = item.price * item.quantity;
-                  const rate = item.gstRate ?? 0;
-                  return sum + (rate > 0 ? itemTotal - itemTotal / (1 + rate / 100) : 0);
-                }, 0);
-                return totalGst > 0 ? (
-                  <li className="flex items-center justify-between px-3 py-1.5 text-caption text-slate-500">
-                    <span>GST (inclusive)</span>
-                    <span>{formatCurrency(totalGst)}</span>
-                  </li>
-                ) : null;
-              })()}
-              <li className="flex items-center justify-between px-3 py-2 border-t border-border mt-1">
-                <span className="text-body font-bold text-slate-900 dark:text-white">Total</span>
-                <span className="text-body font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</span>
-              </li>
-            </ul>
-            {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
-              <details className="mt-3 rounded-xl border border-border overflow-hidden">
-                <summary className="px-3 py-2.5 text-caption font-bold text-primary cursor-pointer hover:bg-primary/5 transition-colors">
-                  Edit Items (qty / substitute / remove)
-                </summary>
-                <div className="px-3 pb-3 pt-1 space-y-2 border-t border-border">
-                  {order.items.map((item) => (
-                    <div key={item.id} className="rounded-xl bg-muted/40 p-2.5">
-                      <p className="text-caption font-semibold text-slate-800 dark:text-slate-200 mb-2">{item.name}</p>
-                      <div className="grid gap-2 sm:grid-cols-[80px_1fr_1fr]">
-                        <input
-                          value={editDrafts[item.id]?.quantity ?? item.quantity.toString()}
-                          onChange={(event) => updateDraft(item.id, { quantity: event.target.value.replace(/\D/g, "") })}
-                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-caption font-bold outline-none focus:ring-1 focus:ring-primary"
-                          placeholder="Qty"
-                        />
-                        <select
-                          value={editDrafts[item.id]?.productId ?? ""}
-                          onChange={(event) => updateDraft(item.id, { productId: event.target.value })}
-                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-caption font-semibold outline-none focus:ring-1 focus:ring-primary"
-                        >
-                          <option value="">Substitute...</option>
-                          {products.map((product) => (
-                            <option key={product.id} value={product.id}>{product.name} - {formatCurrency(product.price)}</option>
-                          ))}
-                        </select>
-                        <input
-                          value={editDrafts[item.id]?.reason ?? ""}
-                          onChange={(event) => updateDraft(item.id, { reason: event.target.value })}
-                          className="h-9 rounded-lg border border-border bg-background px-2.5 text-caption font-bold outline-none focus:ring-1 focus:ring-primary"
-                          placeholder="Reason"
-                        />
-                      </div>
-                      <div className="grid grid-cols-3 gap-1.5 mt-2">
-                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "quantity-change")} className="h-8 rounded-lg bg-primary text-micro font-bold text-white disabled:opacity-50">Qty</button>
-                        <button type="button" disabled={editLoading === item.id || !(editDrafts[item.id]?.productId)} onClick={() => editItem(order.id, item.id, "substitute")} className="h-8 rounded-lg bg-slate-200 dark:bg-slate-700 text-micro font-bold text-slate-700 dark:text-slate-200 disabled:opacity-50">Swap</button>
-                        <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "remove")} className="h-8 rounded-lg bg-red-500 text-micro font-bold text-white disabled:opacity-50">Remove</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </details>
-            )}
-            <OrderStatusForm orderId={order.id} currentStatus={order.status} onStatusChange={(status) => updateOrderStatus(order.id, status)} />
-            {order.deliveryOtp ? (
-              <div className="mt-4 grid gap-3 rounded-2xl bg-primary/10 p-3 text-primary sm:grid-cols-[1fr_auto]">
-                <div>
-                  <p className="text-xs font-black uppercase">Delivery OTP</p>
-                  <p className="mt-1 text-2xl font-black tracking-[0.18em]">{order.deliveryOtp}</p>
-                  <p className="mt-1 text-xs font-bold">
-                    Attempts {order.deliveryOtpAttempts}/3
-                    {order.deliveryOtpExpiresAt ? ` - expires ${new Date(order.deliveryOtpExpiresAt).toLocaleTimeString("en-IN")}` : ""}
-                  </p>
-                </div>
-                <button type="button" onClick={() => regenerateOtp(order.id)} disabled={otpLoading === order.id} className="h-11 rounded-2xl bg-primary px-4 text-xs font-black text-white disabled:opacity-60">
-                  {otpLoading === order.id ? "Regenerating" : "Regenerate OTP"}
-                </button>
+            <div className="border-t border-slate-100 dark:border-slate-800">
+              {/* Address bar */}
+              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 sm:px-5">
+                <span className="mt-0.5 text-slate-400 shrink-0">📍</span>
+                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">{order.address}</p>
               </div>
-            ) : null}
-            <div className="mt-4 rounded-2xl bg-muted p-3">
-              <label className="text-xs font-black uppercase text-muted-foreground">Internal staff note</label>
-              <textarea
-                value={staffNotes[order.id] ?? ""}
-                onChange={(event) => setStaffNotes((current) => ({ ...current, [order.id]: event.target.value }))}
-                className="mt-2 min-h-20 w-full rounded-2xl border border-border bg-background p-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary"
-                placeholder="Packing note, payment note, customer preference..."
-              />
-              <button type="button" onClick={() => saveStaffNote(order)} className="mt-2 h-10 rounded-2xl bg-primary px-4 text-xs font-black text-white">Save note</button>
-            </div>
-            {order.whatsappLogs.length > 0 ? (
-              <div className="mt-4 rounded-2xl bg-muted p-3">
-                <p className="text-xs font-black uppercase text-muted-foreground">WhatsApp timeline</p>
-                <div className="mt-2 grid gap-2">
-                  {order.whatsappLogs.slice(0, 5).map((log) => (
-                    <div key={log.id} className="flex flex-wrap justify-between gap-2 rounded-xl bg-background/70 px-3 py-2 text-xs font-bold">
-                      <span>{log.template}</span>
-                      <span className="text-primary">{log.status}</span>
-                      <span className="text-muted-foreground">{new Date(log.createdAt).toLocaleString("en-IN")}</span>
-                    </div>
-                  ))}
+              <div className="px-4 pb-5 pt-4 sm:px-5 space-y-4">
+              {/* Action buttons */}
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <a href={`tel:${order.phone}`} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">
+                  <Phone className="h-3.5 w-3.5 text-blue-500" /> Call
+                </a>
+                <a href={`https://wa.me/${order.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#25D366] text-xs font-black text-white hover:bg-[#1ebe5d] transition-colors">
+                  <Send className="h-3.5 w-3.5" /> WhatsApp
+                </a>
+                <a href={manualWhatsAppLink(order)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">
+                  <Send className="h-3.5 w-3.5 text-primary" /> Manual WA
+                </a>
+                <a href={`/admin/orders/${order.id}/invoice`} className={cn("inline-flex h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-black transition-colors", order.printedAt ? "bg-emerald-500 text-white hover:bg-emerald-600" : "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50")}>
+                  <FileText className="h-3.5 w-3.5" />{order.printedAt ? "Printed ✓" : "Print"}
+                </a>
+              </div>
+              {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt && (
+                <button type="button" disabled={ackLoading === order.id} onClick={() => acknowledgeOrder(order.id)} className="w-full h-11 flex items-center justify-center gap-2 rounded-xl bg-red-600 text-sm font-black text-white hover:bg-red-700 disabled:opacity-60 transition-colors">
+                  <BellRing className="h-4 w-4" />{ackLoading === order.id ? "Acknowledging…" : "Acknowledge New Order"}
+                </button>
+              )}
+              {/* Items */}
+              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+                <div className="flex items-center justify-between bg-slate-800 dark:bg-slate-900 px-4 py-2.5">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-200">🛒 Items ({order.items.length})</span>
+                  <span className="text-xs font-black text-slate-300">{formatCurrency(order.total)}</span>
+                </div>
+                <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {order.items.map((item, idx) => {
+                    const itemTotal = item.price * item.quantity;
+                    const gstRate = item.gstRate ?? 0;
+                    const gstAmt = gstRate > 0 ? itemTotal - itemTotal / (1 + gstRate / 100) : 0;
+                    const rowBg = ["bg-white dark:bg-slate-800","bg-blue-50/50 dark:bg-blue-950/20","bg-emerald-50/50 dark:bg-emerald-950/20","bg-amber-50/50 dark:bg-amber-950/20","bg-purple-50/50 dark:bg-purple-950/20"][idx % 5];
+                    return (
+                      <li key={item.id} className={cn("flex items-center gap-3 px-4 py-3", rowBg)}>
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 dark:bg-slate-600 text-sm font-black text-white">{item.quantity}</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</p>
+                          {gstRate > 0 && <p className="text-[11px] text-slate-400">GST {gstRate}% · {formatCurrency(gstAmt)}</p>}
+                        </div>
+                        <span className="shrink-0 text-sm font-black text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+                <div className="bg-slate-50 dark:bg-slate-800/60 px-4 py-2.5 space-y-1">
+                  {(() => { const g = order.items.reduce((s,i) => { const t=i.price*i.quantity,r=i.gstRate??0; return s+(r>0?t-t/(1+r/100):0); },0); return g>0?<div className="flex justify-between text-xs text-slate-500"><span>GST (incl.)</span><span>{formatCurrency(g)}</span></div>:null; })()}
+                  <div className="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-700">
+                    <span>Order Total</span><span>{formatCurrency(order.total)}</span>
+                  </div>
                 </div>
               </div>
-            ) : null}
-            <div className="mt-4">
-              <label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
-                Bill number
-                {billNumberSaving === order.id ? <span className="text-primary">Saving</span> : null}
-              </label>
-              {order.billNumber ? (
-                <p className="mt-1 text-sm font-bold text-foreground">{order.billNumber}</p>
-              ) : (
-                <div className="mt-2 flex gap-2">
-                  <input
-                    type="text"
-                    value={billNumberDrafts[order.id] ?? ""}
-                    onChange={(event) => setBillNumberDrafts((prev) => ({ ...prev, [order.id]: event.target.value }))}
-                    placeholder="Enter bill number"
-                    className="h-11 flex-1 rounded-2xl border border-border bg-background/70 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => saveBillNumber(order.id)}
-                    disabled={billNumberSaving === order.id}
-                    className="h-11 rounded-2xl bg-primary px-4 text-sm font-black text-white disabled:opacity-50"
-                  >
-                    Save
+              {/* Edit items */}
+              {order.status !== "DELIVERED" && order.status !== "CANCELLED" && (
+                <details className="rounded-2xl border border-amber-200 dark:border-amber-800 overflow-hidden">
+                  <summary className="flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-950/30 text-xs font-black text-amber-800 dark:text-amber-300 cursor-pointer hover:bg-amber-100 transition-colors">
+                    ✏️ Edit Items (qty / substitute / remove)
+                  </summary>
+                  <div className="px-4 pb-4 pt-3 space-y-3 bg-white dark:bg-slate-900 border-t border-amber-100 dark:border-amber-900">
+                    {order.items.map((item) => (
+                      <div key={item.id} className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3">
+                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 mb-2">{item.name}</p>
+                        <div className="grid gap-2 sm:grid-cols-[72px_1fr_1fr]">
+                          <input value={editDrafts[item.id]?.quantity ?? item.quantity.toString()} onChange={(e) => updateDraft(item.id, { quantity: e.target.value.replace(/\D/g, "") })} className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary" placeholder="Qty" />
+                          <select value={editDrafts[item.id]?.productId ?? ""} onChange={(e) => updateDraft(item.id, { productId: e.target.value })} className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold outline-none focus:ring-1 focus:ring-primary">
+                            <option value="">Substitute…</option>
+                            {products.map((p) => <option key={p.id} value={p.id}>{p.name} — {formatCurrency(p.price)}</option>)}
+                          </select>
+                          <input value={editDrafts[item.id]?.reason ?? ""} onChange={(e) => updateDraft(item.id, { reason: e.target.value })} className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary" placeholder="Reason" />
+                        </div>
+                        <div className="grid grid-cols-3 gap-1.5 mt-2">
+                          <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "quantity-change")} className="h-8 rounded-lg bg-blue-600 text-[11px] font-black text-white disabled:opacity-50">Qty</button>
+                          <button type="button" disabled={editLoading === item.id || !(editDrafts[item.id]?.productId)} onClick={() => editItem(order.id, item.id, "substitute")} className="h-8 rounded-lg bg-amber-500 text-[11px] font-black text-white disabled:opacity-50">Swap</button>
+                          <button type="button" disabled={editLoading === item.id} onClick={() => editItem(order.id, item.id, "remove")} className="h-8 rounded-lg bg-red-500 text-[11px] font-black text-white disabled:opacity-50">Remove</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+              {/* Status */}
+              <div className="rounded-2xl border border-primary/20 bg-primary/5 dark:bg-primary/10 overflow-hidden">
+                <div className="px-4 py-2 border-b border-primary/10">
+                  <span className="text-[10px] font-black uppercase tracking-wider text-primary">Update Status</span>
+                </div>
+                <div className="p-3">
+                  <OrderStatusForm orderId={order.id} currentStatus={order.status} onStatusChange={(status) => updateOrderStatus(order.id, status)} />
+                </div>
+              </div>
+              {/* OTP */}
+              {order.deliveryOtp && (
+                <div className="rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/30 p-4 flex items-center justify-between gap-4">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-wider text-indigo-500">Delivery OTP</p>
+                    <p className="mt-1 text-3xl font-black tracking-[0.22em] text-indigo-700 dark:text-indigo-300">{order.deliveryOtp}</p>
+                    <p className="mt-0.5 text-[11px] text-indigo-500">{order.deliveryOtpAttempts}/3 attempts{order.deliveryOtpExpiresAt ? ` · expires ${new Date(order.deliveryOtpExpiresAt).toLocaleTimeString("en-IN")}` : ""}</p>
+                  </div>
+                  <button type="button" onClick={() => regenerateOtp(order.id)} disabled={otpLoading === order.id} className="h-10 rounded-xl bg-indigo-600 px-4 text-xs font-black text-white hover:bg-indigo-700 disabled:opacity-60 shrink-0">
+                    {otpLoading === order.id ? "…" : "Regenerate"}
                   </button>
                 </div>
               )}
-            </div>
-            <div className="mt-4">
-              <label className="flex items-center gap-2 text-xs font-black uppercase text-muted-foreground">
-                Delivery partner
-                {assignLoading === order.id ? <span className="text-primary">Saving</span> : null}
-              </label>
-              <select
-                value={order.deliveryPartnerId ?? ""}
-                onChange={(event) => assignDelivery(order.id, event.target.value)}
-                disabled={!order.billNumber}
-                className="mt-2 h-11 w-full rounded-2xl border border-border bg-background/70 px-4 text-sm font-bold outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <option value="">{order.billNumber ? "Unassigned" : "Enter bill number first"}</option>
-                {deliveryPartners.map((partner) => <option key={partner.id} value={partner.id}>{partner.name}</option>)}
-              </select>
-            </div>
+              {/* Staff note */}
+              <div className="rounded-2xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20 p-4">
+                <label className="text-[10px] font-black uppercase tracking-wider text-yellow-700 dark:text-yellow-400">📝 Staff Note</label>
+                <textarea value={staffNotes[order.id] ?? ""} onChange={(e) => setStaffNotes((c) => ({ ...c, [order.id]: e.target.value }))} className="mt-2 min-h-16 w-full rounded-xl border border-yellow-200 dark:border-yellow-700 bg-white dark:bg-slate-900 p-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-yellow-400 resize-none" placeholder="Packing note, payment note, customer preference…" />
+                <button type="button" onClick={() => saveStaffNote(order)} className="mt-2 h-9 rounded-xl bg-yellow-500 px-4 text-xs font-black text-white hover:bg-yellow-600">Save note</button>
+              </div>
+              {/* Bill number */}
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  🧾 Bill Number{billNumberSaving === order.id && <span className="text-primary font-bold normal-case">Saving…</span>}
+                </label>
+                {order.billNumber ? (
+                  <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">{order.billNumber}</p>
+                ) : (
+                  <div className="mt-2 flex gap-2">
+                    <input type="text" value={billNumberDrafts[order.id] ?? ""} onChange={(e) => setBillNumberDrafts((p) => ({ ...p, [order.id]: e.target.value }))} placeholder="Enter bill number" className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" />
+                    <button type="button" onClick={() => saveBillNumber(order.id)} disabled={billNumberSaving === order.id} className="h-10 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 px-4 text-sm font-black text-white disabled:opacity-50">Save</button>
+                  </div>
+                )}
+              </div>
+              {/* Delivery partner */}
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                  🚴 Delivery Partner{assignLoading === order.id && <span className="text-primary font-bold normal-case">Saving…</span>}
+                </label>
+                <select value={order.deliveryPartnerId ?? ""} onChange={(e) => assignDelivery(order.id, e.target.value)} disabled={!order.billNumber} className="mt-2 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50">
+                  <option value="">{order.billNumber ? "Unassigned — tap to assign" : "Enter bill number first"}</option>
+                  {deliveryPartners.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+              {/* WhatsApp logs */}
+              {order.whatsappLogs.length > 0 && (
+                <details className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+                  <summary className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors">
+                    💬 WhatsApp timeline ({order.whatsappLogs.length})
+                  </summary>
+                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {order.whatsappLogs.slice(0, 5).map((log) => (
+                      <div key={log.id} className="flex flex-wrap justify-between gap-2 px-4 py-2.5 text-xs">
+                        <span className="font-bold text-slate-700 dark:text-slate-300">{log.template}</span>
+                        <span className={cn("font-black", log.status === "delivered" ? "text-green-600" : log.status === "failed" ? "text-red-500" : "text-primary")}>{log.status}</span>
+                        <span className="text-slate-400">{new Date(log.createdAt).toLocaleString("en-IN")}</span>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+              </div>
             </div>
             )}
           </article>

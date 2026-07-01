@@ -1,13 +1,14 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { AnimatedTabIcon } from "@/components/AnimatedTabIcon";
+import { ACTIVE_TINT, INACTIVE_TINT } from "@/config/theme";
 
 export default function PackingLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#7c3aed",
-        tabBarInactiveTintColor: "#94a3b8",
+        tabBarActiveTintColor: ACTIVE_TINT,
+        tabBarInactiveTintColor: INACTIVE_TINT,
         tabBarStyle: {
           borderTopWidth: 0,
           elevation: 0,
@@ -21,14 +22,18 @@ export default function PackingLayout() {
         name="index"
         options={{
           title: "Queue",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📋</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon icon="📋" color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>👤</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon icon="👤" color={color} focused={focused} />
+          ),
         }}
       />
       {/* Hide order sub-screens from tab bar */}

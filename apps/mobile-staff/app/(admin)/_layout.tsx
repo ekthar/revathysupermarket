@@ -1,13 +1,14 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { AnimatedTabIcon } from "@/components/AnimatedTabIcon";
+import { ACTIVE_TINT, INACTIVE_TINT } from "@/config/theme";
 
 export default function AdminLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: "#059669",
-        tabBarInactiveTintColor: "#94a3b8",
+        tabBarActiveTintColor: ACTIVE_TINT,
+        tabBarInactiveTintColor: INACTIVE_TINT,
         tabBarStyle: {
           borderTopWidth: 0,
           elevation: 0,
@@ -21,28 +22,36 @@ export default function AdminLayout() {
         name="index"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📊</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon icon="📊" color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="orders"
         options={{
           title: "Orders",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📦</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon icon="📦" color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="reports"
         options={{
           title: "Reports",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📈</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon icon="📈" color={color} focused={focused} />
+          ),
         }}
       />
       <Tabs.Screen
         name="settings"
         options={{
           title: "Settings",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>⚙️</Text>,
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon icon="⚙️" color={color} focused={focused} />
+          ),
         }}
       />
     </Tabs>

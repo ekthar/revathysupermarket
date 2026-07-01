@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Staff app (apps/mobile-staff): build the shared animation/UI foundation that gives the app a polished, web-app-quality feel. This feature creates/upgrades reusable animated primitives and wires app-wide motion using the already-installed libraries (react-native-reanimated 4.1, react-native-gesture-handler 2.28, react-native-worklets). It fixes the missing GestureHandlerRootView root wrapper and standardizes navigation/tab transitions. No new dependencies. This is a prerequisite for FEAT-003.",
-  "status": "pending",
+  "status": "completed",
   "steps": [
     "Fix root gesture setup: in app/_layout.tsx wrap the returned tree in `GestureHandlerRootView` (from react-native-gesture-handler) with style flex:1. Currently SlideToConfirm uses GestureDetector but no root wrapper exists, so gestures can silently fail on Android. Keep existing OfflineBanner, StatusBar, Stack.",
     "Add consistent stack transitions in app/_layout.tsx Stack screenOptions: set a default `animation` (e.g. 'slide_from_right') and keep the alert screens on 'slide_from_bottom'/fullScreenModal. Ensure `animation` values are valid for expo-router/react-native-screens.",
@@ -26,5 +26,17 @@
     "cd apps/mobile-staff && npm run lint"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": {
+    "summary": "Built the shared animation/UI foundation for apps/mobile-staff using only already-installed libs (react-native-reanimated 4.1, react-native-gesture-handler 2.28, react-native-svg 15.12.1 which is a declared staff dependency). No new dependencies added; React stays 19.1.0.",
+    "root_layout": "app/_layout.tsx now wraps the tree in GestureHandlerRootView (style flex:1) replacing the plain View, fixing the missing root gesture wrapper that SlideToConfirm's GestureDetector relies on (Android). Added a default Stack screen animation 'slide_from_right' while keeping both alert screens on presentation:'fullScreenModal' + animation:'slide_from_bottom'. StatusBar and OfflineBanner preserved.",
+    "animated_pressable": "New src/components/AnimatedPressable.tsx: Animated.createAnimatedComponent(Pressable) with press-scale 0.96 spring on pressIn/out, preserves onPress/accessibility/children, keeps Vibration.vibrate(8) haptic (toggleable via haptic prop), and skips scaling when useReducedMotion() is true. forwardRef supported.",
+    "button": "src/components/Button.tsx upgraded: wrapped its existing NativeWind Pressable in an Animated.View that scales to 0.96 on press (spring), so all className styling / variants / sizes / API are unchanged. Respects reduced motion. Kept Vibration.vibrate(8).",
+    "animated_screen": "New src/components/AnimatedScreen.tsx: subtle mount entrance (fade + translateY 12px, Easing.out cubic 350ms) on a plain Animated.View (className 'flex-1' default) so ScrollView/FlatList children are safe. Renders instantly with no transform under reduced motion.",
+    "animated_fade_in": "src/components/AnimatedFadeIn.tsx already supports the `index` prop for FadeInDown stagger; left as-is (works). No top-level src/components barrel exists (imports are direct '@/components/X'), so no new barrel created to avoid changing import conventions.",
+    "shimmer": "src/components/ui/Shimmer.tsx rebuilt: moving gradient sweep via a translateX loop (withRepeat linear 1200ms) over an SVG LinearGradient (transparent->highlight->transparent) instead of opacity pulse. Light/dark-friendly base+highlight colors chosen via useColorScheme. Measures width with onLayout; falls back to static base fill before measure or under reduced motion. All four skeleton exports (ProductCardSkeleton, OrderRowSkeleton, StatCardSkeleton, ListItemSkeleton) preserved and given dark: border/bg variants.",
+    "tab_bars": "New src/components/AnimatedTabIcon.tsx animates active tab emoji (scale 1.15 spring + opacity fade), reduced-motion aware. Wired into app/(admin), app/(delivery), app/(packing) _layout.tsx. All three now use ACTIVE_TINT (#10b981 primary-500) and INACTIVE_TINT (#94a3b8); the packing layout's old purple #7c3aed active tint was standardized to emerald. No new icon libraries.",
+    "accent_standardization": "New src/config/theme.ts centralizes accent hexes (primary #10b981, primaryDark #059669, primaryLight #34d399, muted #94a3b8) and exports ACTIVE_TINT/INACTIVE_TINT used by the tab layouts, so active tint is consistently emerald primary-500 rather than mixing #059669/#10b981/#7c3aed.",
+    "verification": "cd apps/mobile-staff && npx tsc --noEmit => exit 2 with EXACTLY the one pre-existing baseline error src/services/notifications.ts(7,35) TS2322. No new tsc errors introduced by this feature. Staff `npm run lint` intentionally skipped: per FEAT-001 baseline apps/mobile-staff has no ESLint flat config and doesn't depend on eslint, so lint is not runnable (pre-existing setup gap, not a regression). No device/EAS build available in sandbox (static verification only).",
+    "deviations": "Used react-native-svg (already installed + declared in apps/mobile-staff/package.json at 15.12.1) for the true gradient sweep since expo-linear-gradient is not installed; this adds no new dependency. Button press-scale implemented by wrapping the existing Pressable in an Animated.View (rather than swapping to AnimatedPressable) to guarantee NativeWind className interop and an unchanged public API."
+  }
 }

@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Remove the SkipToContent component from the app. Delete the component file and remove all imports/usages from layout.tsx.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Delete the file apps/web/components/ui/skip-to-content.tsx",
     "In apps/web/app/layout.tsx, remove the import line: import { SkipToContent } from '@/components/ui/skip-to-content';",
@@ -18,5 +18,5 @@
     "Run cd apps/web && npx tsc --noEmit to confirm TypeScript compilation succeeds"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Pre-existing TypeScript errors exist throughout the codebase (implicit any types, missing Prisma members). These are not related to this change. The tsc --noEmit check fails identically on the base branch."
 }

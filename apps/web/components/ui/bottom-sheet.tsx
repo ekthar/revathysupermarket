@@ -14,8 +14,8 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
   return (
     <Drawer.Root open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[70] bg-black/40 backdrop-blur-sm" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-[91] max-h-[85dvh] rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl outline-none">
+        <Drawer.Overlay className="fixed inset-0 z-[91] bg-black/40 backdrop-blur-sm" />
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-[92] max-h-[85dvh] rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl outline-none">
           {/* Drag handle */}
           <div className="flex justify-center pt-3 pb-2">
             <div className="h-1 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
@@ -40,8 +40,8 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
             <Drawer.Title className="sr-only">Dialog</Drawer.Title>
           )}
 
-          {/* Scrollable content */}
-          <div className="overflow-y-auto px-5 py-4 pb-safe">
+          {/* Scrollable content — extra bottom padding to clear the fixed mobile nav bar */}
+          <div className="overflow-y-auto px-5 py-4 pb-[calc(5rem+var(--safe-bottom,0px))] md:pb-6">
             {children}
           </div>
         </Drawer.Content>

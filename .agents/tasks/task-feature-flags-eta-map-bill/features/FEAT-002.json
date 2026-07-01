@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Implement improved distance-aware ETA algorithm with eta_display_mode feature flag. Default behavior: ETA only shows after delivery boy is assigned (after_assignment mode). Add customer bill/invoice generation as a React component on the tracking page.",
+  "status": "pending",
+  "steps": [
+    "1. Rewrite apps/web/lib/live-order.ts: Replace the static estimateOrderEta function with a distance-aware version that accepts options: {distanceKm?, avgPackingMinutes?, avgDeliverySpeed?, rushHourMultiplier?}. The new function calculates: deliveryMinutes = ceil((distanceKm / avgDeliverySpeed) * 60 * rushHourMultiplier). Status-based estimates: ORDER_RECEIVED = avgPackingMinutes + deliveryMinutes + 5, ACCEPTED = avgPackingMinutes + deliveryMinutes, PACKING = ceil(avgPackingMinutes * 0.7) + deliveryMinutes, READY_FOR_DELIVERY = deliveryMinutes + 2, OUT_FOR_DELIVERY = deliveryMinutes, ARRIVING = min(3, deliveryMinutes). Keep the function backward compatible (defaults: distanceKm=3, avgPackingMinutes=8, avgDeliverySpeed=18, rushHourMultiplier=1.0).",
+    "2. Add a helper function getEtaDisplayMode() in apps/web/lib/live-order.ts that fetches the eta_display_mode feature flag from the database (or accepts a cached value). Export a type EtaDisplayMode = 'always' | 'after_assignment'.",
+    "3. Update apps/web/components/tracking/live-order-tracking.tsx: Modify the calculateEta callback to use the new improved estimateOrderEta with distanceKm computed from store to customer (before rider assigned) or rider to customer (after rider assigned). Add a prop etaDisplayMode: 'always' | 'after_assignment' defaulting to 'after_assignment'. When mode is 'after_assignment', only show ETA when status is OUT_FOR_DELIVERY or ARRIVING (current behavior). When mode is 'always', show ETA for all non-delivered statuses.",
+    "4. Update apps/web/app/track/[id]/page.tsx: Fetch the eta_display_mode feature flag from the DB and pass its mode config value as a prop to LiveOrderTracking. Also pass distanceKm from the order record.",
+    "5. Update apps/web/components/tracking/live-order-banner.tsx: Pass distanceKm to estimateOrderEta when available (the banner fetches from /api/orders/live which should include distanceKm).",
+    "6. Create apps/web/components/tracking/order-bill.tsx: A client component that renders the customer's order bill/invoice. Accept props: storeName, orderNumber, orderDate, items (array of {name, quantity, price}), subtotal, deliveryFee, tipAmount, total, paymentMethod. Style it as a card with Tailwind matching the tracking page design. Include a 'Download PDF' button that uses window.print() with a print-optimized stylesheet as a simple approach (no external PDF library needed).",
+    "7. Update apps/web/app/track/[id]/page.tsx to also fetch order items and pass them to a new section in LiveOrderTracking (or render OrderBill directly on the page below LiveOrderTracking).",
+    "8. Add a 'View Bill' button/section in the tracking page that shows the OrderBill component. Show it for all statuses (users should be able to see what they ordered anytime)."
+  ],
+  "acceptance_criteria": [
+    "estimateOrderEta now accepts optional distance parameters and produces distance-aware estimates",
+    "ETA is only shown after delivery partner is assigned by default (eta_display_mode = after_assignment)",
+    "The tracking page renders an order bill/invoice with item list, totals, and a download/print button",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd apps/web && npx tsc --noEmit --pretty to confirm no type errors",
+    "Run: cd apps/web && npx next lint to confirm no lint errors"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

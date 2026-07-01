@@ -1,0 +1,7 @@
+{
+  "task_id": "task-feature-flags-eta-map-bill",
+  "task_description": "Implement all 25+1 feature flags with admin UI, distance-aware ETA algorithm with eta_display_mode feature flag (default: only show after rider assigned), customer bill/invoice on tracking page, and map marker redesign with colored differentiated markers.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

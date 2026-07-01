@@ -24,21 +24,57 @@ on:
       app:
         description: "Which app to build"
         required: true
-        default: "customer"
+        default: "staff"
         type: choice
         options:
           - customer
           - delivery
-          - both
+          - staff
+          - all
   push:
     tags:
       - "v*"
 
 jobs:
+  build-staff:
+    name: Build Staff App
+    runs-on: ubuntu-latest
+    if: inputs.app == 'staff' || inputs.app == 'all' || startsWith(github.ref, 'refs/tags/v')
+    defaults:
+      run:
+        working-directory: apps/mobile-staff
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: .
+
+      - uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Decode google-services.json
+        run: echo "${{ secrets.GOOGLE_SERVICES_JSON }}" | base64 -d > google-services.json
+
+      - name: Build Android
+        if: inputs.platform == 'android' || inputs.platform == 'all' || startsWith(github.ref, 'refs/tags/v')
+        run: eas build --platform android --profile ${{ inputs.profile || 'preview' }} --non-interactive
+
+      - name: Build iOS
+        if: inputs.platform == 'ios' || inputs.platform == 'all'
+        run: eas build --platform ios --profile ${{ inputs.profile || 'preview' }} --non-interactive
+
   build-customer:
     name: Build Customer App
     runs-on: ubuntu-latest
-    if: inputs.app == 'customer' || inputs.app == 'both' || startsWith(github.ref, 'refs/tags/v')
+    if: inputs.app == 'customer' || inputs.app == 'all' || startsWith(github.ref, 'refs/tags/v')
     defaults:
       run:
         working-directory: apps/mobile-customer
@@ -50,7 +86,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
         working-directory: .
 
       - uses: expo/expo-github-action@v8
@@ -69,7 +106,7 @@ jobs:
   build-delivery:
     name: Build Delivery App
     runs-on: ubuntu-latest
-    if: inputs.app == 'delivery' || inputs.app == 'both' || startsWith(github.ref, 'refs/tags/v')
+    if: inputs.app == 'delivery' || inputs.app == 'all' || startsWith(github.ref, 'refs/tags/v')
     defaults:
       run:
         working-directory: apps/mobile-delivery
@@ -81,7 +118,8 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      - name: Install dependencies
+        run: npm ci
         working-directory: .
 
       - uses: expo/expo-github-action@v8

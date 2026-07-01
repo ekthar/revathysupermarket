@@ -267,6 +267,8 @@ model Product {
   image         String
   price         Decimal     @db.Decimal(10, 2)
   discountPrice Decimal?    @db.Decimal(10, 2)
+  costPrice     Decimal?    @db.Decimal(10, 2)
+  brand         String?
   stock         Int         @default(0)
   popularity    Int         @default(0)
   unit          String
@@ -342,6 +344,7 @@ model Order {
   customerUnavailableTimeout Int?
   billNumber              String?
   staffNote               String?
+  printCount              Int                     @default(0)
   printedAt               DateTime?
   printedById             String?
   deliveryMode            DeliveryMode            @default(ASAP)
@@ -845,6 +848,7 @@ model DeviceToken {
   id             String   @id @default(cuid())
   userId         String
   platform       String
+  role           String   @default("customer")
   installationId String   @unique
   token          String
   lastSeenAt     DateTime
@@ -853,6 +857,7 @@ model DeviceToken {
 
   @@unique([userId, installationId])
   @@index([token])
+  @@index([role])
 }
 
 model AssignmentEvent {
@@ -869,4 +874,13 @@ model AssignmentEvent {
 
   @@index([partnerId, acknowledgedAt])
   @@index([orderId])
+}
+
+model FeatureFlag {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  enabled   Boolean  @default(false)
+  config    Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

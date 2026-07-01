@@ -6,6 +6,7 @@ import { z } from "zod";
 const registerSchema = z.object({
   token: z.string().min(10).max(500),
   platform: z.enum(["web", "android", "ios"]).default("web"),
+  role: z.enum(["customer", "staff", "admin"]).default("customer"),
 });
 
 const deleteSchema = z.object({
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid token" }, { status: 400 });
   }
 
-  const { token, platform } = parsed.data;
+  const { token, platform, role } = parsed.data;
   const installationId = `web-${token.slice(-16)}`;
 
   await prisma.deviceToken.upsert({
@@ -41,12 +42,14 @@ export async function POST(request: Request) {
       userId: session.user.id,
       installationId,
       platform,
+      role,
       token,
       lastSeenAt: new Date(),
     },
     update: {
       token,
       platform,
+      role,
       lastSeenAt: new Date(),
     },
   });

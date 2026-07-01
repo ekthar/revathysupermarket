@@ -53,10 +53,12 @@ export function ThemeToggleIcon() {
         animate={{ rotate: mounted && isDark ? 180 : 0, scale: mounted && isDark ? 0.8 : 1 }}
         transition={{ type: "spring", stiffness: 300, damping: 20 }}
       >
+        {/* Show the target state you'd switch TO, matching ThemeToggle:
+            in dark mode show the Sun (switch to light), in light mode the Moon. */}
         {mounted && isDark ? (
-          <Moon className="h-4 w-4 text-yellow-400" />
+          <Sun className="h-4 w-4 text-yellow-400" />
         ) : (
-          <Sun className="h-4 w-4 text-slate-600 dark:text-slate-300" />
+          <Moon className="h-4 w-4 text-slate-600 dark:text-slate-300" />
         )}
       </motion.div>
     </button>

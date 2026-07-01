@@ -125,13 +125,17 @@ export default function PackingAlertScreen() {
         entering={SlideInDown.springify().damping(15)}
         className="bg-white rounded-3xl p-6 w-full max-w-sm items-center"
       >
-        {/* Pulsing indicator */}
-        <Animated.View
-          entering={FadeIn.delay(200)}
-          style={pulseStyle}
-          className="w-16 h-16 bg-violet-100 rounded-full items-center justify-center mb-4"
-        >
-          <Text className="text-3xl">{"\u{1F4E6}"}</Text>
+        {/* Pulsing indicator. The entrance layout animation and the repeating
+            scale pulse are split onto separate views: combining a Reanimated
+            `entering` animation and an inline useAnimatedStyle transform on the
+            SAME view can suppress the pulse on some Reanimated versions. */}
+        <Animated.View entering={FadeIn.delay(200)} className="mb-4">
+          <Animated.View
+            style={pulseStyle}
+            className="w-16 h-16 bg-violet-100 rounded-full items-center justify-center"
+          >
+            <Text className="text-3xl">{"\u{1F4E6}"}</Text>
+          </Animated.View>
         </Animated.View>
 
         <Text className="text-xl font-bold text-slate-900 text-center">

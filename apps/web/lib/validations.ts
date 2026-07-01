@@ -21,6 +21,8 @@ export const checkoutSchema = z.object({
   deliverySlotId: z.string().optional(),
   promoCode: z.string().trim().max(40).optional(),
   loyaltyPoints: z.coerce.number().int().min(0).default(0),
+  tipAmount: z.coerce.number().min(0).optional(),
+  deliveryInstructions: z.string().max(200).optional(),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   items: z
@@ -49,6 +51,11 @@ export const productSchema = z.object({
   isFeatured: z.boolean().optional(),
   costPrice: z.coerce.number().positive().optional(),
   brand: z.string().trim().max(100).optional()
+});
+
+export const reviewSchema = z.object({
+  rating: z.coerce.number().int().min(1).max(5),
+  comment: z.string().max(500).optional()
 });
 
 export const orderStatusSchema = z.object({

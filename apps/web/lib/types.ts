@@ -9,6 +9,23 @@ export type Category =
   | "Frozen Foods"
   | "Grocery Essentials";
 
+export type SubCategory = {
+  id: string;
+  name: string;
+  slug: string;
+  categoryId: string;
+  sortOrder: number;
+};
+
+export type Review = {
+  id: string;
+  userId: string;
+  productId: string;
+  rating: number;
+  comment?: string;
+  createdAt: string;
+};
+
 export type Product = {
   id: string;
   slug: string;
@@ -23,6 +40,9 @@ export type Product = {
   unit: string;
   isFeatured?: boolean;
   createdAt?: string;
+  subcategory?: SubCategory;
+  avgRating?: number;
+  reviewCount?: number;
 };
 
 export type CartItem = Product & {

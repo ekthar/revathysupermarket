@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Schema additions and core infrastructure for all 14 missing features. Add Review, SubCategory, DeliveryTip, DeliveryInstruction models. Add tip/deliveryInstructions/language fields to Order. Extend UserSettings with granular notification preferences. Add i18n infrastructure with next-intl for English and Malayalam.",
+  "status": "in_progress",
+  "steps": [
+    "Update apps/web/prisma/schema.prisma: Add SubCategory model (id, name, slug, categoryId -> Category, sortOrder) with relation from Category. Add Review model (id, userId -> User, productId -> Product, rating Int 1-5, comment String?, createdAt). Add tipAmount Decimal field to Order model. Add deliveryInstructions String? field to Order model. Add preferredLanguage String field to User model (default 'en'). Extend UserSettings with new Boolean fields: priceDropAlerts, weeklyDeals, deliveryAlerts (all default true).",
+    "Update apps/web/lib/validations.ts: Extend checkoutSchema to include tipAmount (optional number min 0), deliveryInstructions (optional string max 200). Add reviewSchema (rating 1-5, comment optional max 500).",
+    "Update apps/web/lib/types.ts: Add SubCategory type. Add Review type. Extend Product type to add optional subcategory and avgRating/reviewCount fields.",
+    "Install next-intl package: cd apps/web && npm install next-intl",
+    "Create apps/web/i18n directory structure: apps/web/i18n/config.ts (locales: en, ml; defaultLocale: en), apps/web/i18n/messages/en.json (all customer-facing strings: home page titles, button labels, cart, checkout, tracking, common phrases), apps/web/i18n/messages/ml.json (Malayalam translations of all strings).",
+    "Create apps/web/i18n/request.ts for server-side locale detection (check cookie 'locale' or Accept-Language header, default 'en').",
+    "Create apps/web/components/language-switcher.tsx: A dropdown/toggle that switches between English and Malayalam, saves preference to cookie and (if logged in) updates user's preferredLanguage via API.",
+    "Run npx prisma generate to validate schema changes compile correctly."
+  ],
+  "acceptance_criteria": [
+    "prisma generate succeeds with new schema models and fields",
+    "New models: SubCategory, Review are defined with proper relations",
+    "Order model has tipAmount and deliveryInstructions fields",
+    "UserSettings has priceDropAlerts, weeklyDeals, deliveryAlerts boolean fields",
+    "next-intl is installed and i18n config exists with en.json and ml.json message files",
+    "Language switcher component exists",
+    "checkoutSchema accepts tipAmount and deliveryInstructions"
+  ],
+  "verification": [
+    "cd apps/web && npx prisma generate",
+    "cd apps/web && npx tsc --noEmit --pretty 2>&1 | head -50"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

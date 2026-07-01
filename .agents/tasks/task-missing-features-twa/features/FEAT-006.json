@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-006",
+  "type": "feat",
+  "description": "Fix all confusing sections from Parts 2, 3, 4 of the gap analysis. Improve homepage section clarity, product page hierarchy, checkout flow UX, and admin panel navigation confusion.",
+  "status": "pending",
+  "steps": [
+    "Update apps/web/app/page.tsx: Remove 'Most Selling Products' section (duplicate of Weekly Best Selling). Rename 'Just for you' to 'On Sale Today'. Rename 'Today's Fresh Picks' to 'Explore More'. Add brief subtitle/description under each section title explaining why items are grouped. Alternate layouts between horizontal scroll and grid for visual variety.",
+    "Update apps/web/app/products/page.tsx: Add a contextual subtitle below 'Browse' heading explaining what the page offers (e.g., 'Find everything you need from our fresh collection'). Add active filter indicators showing which category/sort is active. Add a results count that updates with filters.",
+    "Update apps/web/components/checkout-form.tsx: Improve step progression clarity. Add numbered steps or progress indicator (Address > Delivery > Payment > Review). Group related fields visually. Make the order button text more descriptive ('Place Order - Rs X' instead of just 'Place Order').",
+    "Update apps/web/components/cart/cart-page-client.tsx: Add empty cart state with illustration and 'Start Shopping' CTA. Add clear item count in header. Show per-item savings inline. Add 'Continue Shopping' button that goes back to products.",
+    "Update apps/web/app/dashboard/page.tsx: Improve order status clarity with better visual hierarchy. Add empty state for users with no orders. Make active vs completed orders visually distinct with tabs or sections.",
+    "Ensure all customer-facing pages have consistent navigation breadcrumbs or back buttons. Check apps/web/app/account/page.tsx, apps/web/app/checkout/page.tsx, apps/web/app/products/[slug]/page.tsx for navigation clarity."
+  ],
+  "acceptance_criteria": [
+    "Homepage has no duplicate product sections",
+    "Section titles are descriptive and differentiated",
+    "Products page shows contextual info and active filters",
+    "Checkout has clear step progression",
+    "Cart has proper empty state and savings info",
+    "Dashboard distinguishes active vs completed orders clearly"
+  ],
+  "verification": [
+    "cd apps/web && npx tsc --noEmit --pretty 2>&1 | head -50",
+    "cd apps/web && npx next build 2>&1 | tail -20"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

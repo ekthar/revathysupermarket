@@ -132,6 +132,7 @@ model User {
   currentLongitude       Decimal?                @db.Decimal(9, 6)
   locationUpdatedAt      DateTime?
   authVersion            Int                     @default(0)
+  preferredLanguage      String                  @default("en")
   accounts               Account[]
   sessions               Session[]
   addresses              Address[]
@@ -162,6 +163,7 @@ model User {
   deliveryCollections    DeliveryCollection[]    @relation("CollectionPartner")
   reconciledCollections  DeliveryCollection[]    @relation("CollectionReconciler")
   deliveryAdjustments    DeliveryAdjustment[]
+  reviews                Review[]
   referralCode           String?                 @unique
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
@@ -246,45 +248,65 @@ model VerificationToken {
 }
 
 model Category {
-  id          String    @id @default(cuid())
-  name        String    @unique
-  slug        String    @unique
-  description String?
-  image       String?
-  sortOrder   Int       @default(0)
-  products    Product[]
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id            String        @id @default(cuid())
+  name          String        @unique
+  slug          String        @unique
+  description   String?
+  image         String?
+  sortOrder     Int           @default(0)
+  products      Product[]
+  subCategories SubCategory[]
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   @@index([sortOrder])
 }
 
+model SubCategory {
+  id         String   @id @default(cuid())
+  name       String
+  slug       String   @unique
+  categoryId String
+  sortOrder  Int      @default(0)
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  products   Product[] @relation("ProductSubCategory")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([sortOrder])
+}
+
 model Product {
-  id            String      @id @default(cuid())
+  id            String       @id @default(cuid())
   name          String
-  slug          String      @unique
+  slug          String       @unique
   description   String
   image         String
-  price         Decimal     @db.Decimal(10, 2)
-  discountPrice Decimal?    @db.Decimal(10, 2)
-  costPrice     Decimal?    @db.Decimal(10, 2)
+  price         Decimal      @db.Decimal(10, 2)
+  discountPrice Decimal?     @db.Decimal(10, 2)
+  costPrice     Decimal?     @db.Decimal(10, 2)
   brand         String?
-  stock         Int         @default(0)
-  popularity    Int         @default(0)
+  stock         Int          @default(0)
+  popularity    Int          @default(0)
   unit          String
-  isActive      Boolean     @default(true)
-  isFeatured    Boolean     @default(false)
-  gstRate       Decimal?    @db.Decimal(5, 2)
+  isActive      Boolean      @default(true)
+  isFeatured    Boolean      @default(false)
+  gstRate       Decimal?     @db.Decimal(5, 2)
   categoryId    String
-  category      Category    @relation(fields: [categoryId], references: [id])
+  subCategoryId String?
+  category      Category     @relation(fields: [categoryId], references: [id])
+  subCategory   SubCategory? @relation("ProductSubCategory", fields: [subCategoryId], references: [id], onDelete: SetNull)
   orderItems    OrderItem[]
   favorites     Favorite[]
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  reviews       Review[]
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
 
   @@index([isActive])
   @@index([isFeatured])
   @@index([categoryId])
+  @@index([subCategoryId])
   @@index([popularity])
   @@index([createdAt])
 }
@@ -350,6 +372,8 @@ model Order {
   deliveryMode            DeliveryMode            @default(ASAP)
   deliverySlotId          String?
   estimatedDeliveryAt     DateTime?
+  tipAmount               Decimal                 @default(0) @db.Decimal(10, 2)
+  deliveryInstructions    String?
   loyaltyPointsRedeemed   Int                     @default(0)
   loyaltyPointsEarned     Int                     @default(0)
   user                    User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
@@ -556,6 +580,9 @@ model UserSettings {
   orderUpdates          Boolean  @default(true)
   promotionalMessages   Boolean  @default(false)
   whatsappNotifications Boolean  @default(true)
+  priceDropAlerts       Boolean  @default(true)
+  weeklyDeals           Boolean  @default(true)
+  deliveryAlerts        Boolean  @default(true)
   user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt             DateTime @default(now())
   updatedAt             DateTime @updatedAt
@@ -883,4 +910,20 @@ model FeatureFlag {
   config    Json?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  userId    String
+  productId String
+  rating    Int
+  comment   String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@index([productId])
+  @@index([userId])
+  @@index([rating])
 }

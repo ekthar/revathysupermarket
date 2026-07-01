@@ -18,7 +18,18 @@ export default async function DeliveryPage() {
       where: { deliveryPartnerId: userId, status: { in: ["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING", "CUSTOMER_UNAVAILABLE"] } },
       include: { items: true, deliveryCollection: true },
       orderBy: { createdAt: "desc" }
-    }),
+    }).then((rows) =>
+      rows.map((o) => ({
+        ...o,
+        // Surface the wait-timer deadline so a page refresh doesn't lose the
+        // countdown (previously it silently reset to 0, permanently blocking
+        // "Return to Store" until the rider re-triggered the unavailable flow).
+        customerUnavailableWaitUntil:
+          o.customerUnavailableAt && o.status === "CUSTOMER_UNAVAILABLE"
+            ? new Date(o.customerUnavailableAt.getTime() + (o.customerUnavailableTimeout ?? 300) * 1000).toISOString()
+            : null
+      }))
+    ),
     prisma.order.count({ where: { deliveryPartnerId: userId, status: "DELIVERED", updatedAt: { gte: today } } }),
     prisma.deliveryCollection.aggregate({
       where: { partnerId: userId, createdAt: { gte: today } },
@@ -48,6 +59,7 @@ export default async function DeliveryPage() {
           latitude: o.latitude != null ? Number(o.latitude) : null,
           longitude: o.longitude != null ? Number(o.longitude) : null,
           status: o.status,
+          customerUnavailableWaitUntil: o.customerUnavailableWaitUntil,
           total: Number(o.total),
           paymentMethod: o.paymentMethod,
           items: o.items.map((i) => ({ id: i.id, name: i.name, quantity: i.quantity, price: Number(i.price) })),

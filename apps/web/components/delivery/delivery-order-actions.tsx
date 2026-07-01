@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  CheckCircle2, IndianRupee, Phone, UserX,
+  CheckCircle2, IndianRupee, MapPinCheck, Phone, UserX,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
@@ -34,6 +34,7 @@ interface DeliveryOrderActionsProps {
   loading: string | null;
   unavailableOrders: Map<string, number>;
   onPickup: (order: DeliveryOrder) => void;
+  onMarkArrived: (order: DeliveryOrder) => void;
   onMarkUnavailable: (order: DeliveryOrder) => void;
   onReturnToStore: (order: DeliveryOrder) => void;
   onOpenDamage: (order: DeliveryOrder) => void;
@@ -46,6 +47,7 @@ export function DeliveryOrderActions({
   loading,
   unavailableOrders,
   onPickup,
+  onMarkArrived,
   onMarkUnavailable,
   onReturnToStore,
   onOpenDamage,
@@ -70,6 +72,18 @@ export function DeliveryOrderActions({
           disabled={loading === order.id}
           onConfirm={() => onPickup(order)}
         />
+      )}
+
+      {/* Mark Arrived (GPS-verified, must be within 100m) - OUT_FOR_DELIVERY */}
+      {order.status === "OUT_FOR_DELIVERY" && (
+        <button
+          disabled={loading === order.id}
+          onClick={() => onMarkArrived(order)}
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 font-black text-white disabled:opacity-40"
+        >
+          <MapPinCheck className="h-4 w-4" />
+          {loading === order.id ? "Checking your location…" : "I've Arrived"}
+        </button>
       )}
 
       {/* Report Issue + Collect Payment - ARRIVING */}

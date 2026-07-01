@@ -1,0 +1,7 @@
+{
+  "task_id": "task-swiggy-analysis-skip-removal",
+  "task_description": "Remove SkipToContent component from the web app and create a comprehensive analysis of missing Swiggy/Zepto features plus confusing UX sections for customers, admin, and staff.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002"],
+  "blocked_reason": null
+}

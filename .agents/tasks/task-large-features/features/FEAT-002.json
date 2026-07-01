@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Cost price + brand fields on admin product form - The Prisma schema already has costPrice (Decimal?) and brand (String?) on the Product model. Add these fields to the product validation schema, product creation API, product update API, the add-product form, and the edit-product modal.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In apps/web/lib/validations.ts: Add 'costPrice: z.coerce.number().positive().optional()' and 'brand: z.string().trim().max(100).optional()' to the productSchema object.",
     "In apps/web/app/api/admin/products/route.ts POST handler: Include costPrice and brand in the prisma.product.create() data object from parsed.data (costPrice: parsed.data.costPrice ?? null, brand: parsed.data.brand?.trim() || null).",
@@ -23,5 +23,5 @@
     "Read the modified files to confirm the fields are properly integrated"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "PATCH handler already spreads ...productData into Prisma update, so costPrice and brand flow through automatically with no code changes needed in [id]/route.ts. Pre-existing TS errors exist in many admin pages (implicit any types) but none in modified files. tsconfig.tsbuildinfo was updated by tsc but not committed as it is a build artifact."
 }

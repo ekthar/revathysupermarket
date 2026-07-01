@@ -40,7 +40,7 @@ export default async function OffersPage() {
   const catMap = new Map(categories.map((c) => [c.id, c.name]));
 
   return (
-    <main className="max-w-5xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
+    <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
       <section className="rounded-xl bg-[linear-gradient(135deg,rgba(255,140,0,0.12),rgba(255,200,0,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-orange-600">Save more</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight text-foreground">Offers & Deals</h1>

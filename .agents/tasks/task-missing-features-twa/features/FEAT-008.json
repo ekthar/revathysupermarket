@@ -2,7 +2,7 @@
   "id": "FEAT-008",
   "type": "docs",
   "description": "Gap analysis between web app and React Native mobile-staff app. Identify all features in the web app that are missing in the mobile staff app, and create a detailed plan to close the gap.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Analyze the web app's full feature set across all roles (admin, staff, delivery partner, packing staff, customer). Catalog every page, API endpoint, and capability.",
     "Analyze the mobile-staff app's current capabilities: auth (phone OTP + email), admin (dashboard, orders, reports, settings), delivery (order detail, navigate, collect, complete), packing (order detail). Catalog every screen and feature.",

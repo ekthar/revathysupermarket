@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Staff app (apps/mobile-staff): apply the FEAT-002 animation/UI foundation across every screen and option so the whole app feels fluid and web-app-quality, and fix the screens whose dark mode is currently broken. Depends on FEAT-002. This is the bulk of the staff-app polish: entrance animations, list stagger, press feedback on all tappable cards/buttons, animated headers, and consistent light/dark styling on all routes.",
+  "status": "pending",
+  "steps": [
+    "Wrap each screen's root in AnimatedScreen (or apply an entrance animation) for a consistent mount transition across: app/dashboard/index.tsx, app/(admin)/index.tsx|orders.tsx|reports.tsx|settings.tsx, app/(delivery)/index.tsx and order/[id]/index.tsx|navigate.tsx|collect.tsx|complete.tsx and profile.tsx, app/(packing)/index.tsx|order/[id].tsx|profile.tsx, app/(auth)/login.tsx|otp.tsx, app/alert/[eventId].tsx and alert/packing/[eventId].tsx, app/orders/[id]/index.tsx|pickup.tsx|collection.tsx|complete.tsx|damage.tsx.",
+    "Replace bare Pressable cards/buttons with AnimatedPressable (press-scale) across all list rows and action buttons (e.g. delivery order cards, packing queue cards, admin order rows, order-detail action buttons in (delivery)/order/[id]/index.tsx and orders/[id]/index.tsx). Preserve existing onPress, accessibility labels, and Vibration.",
+    "Add staggered entrance for list items: wrap FlatList renderItem content in AnimatedFadeIn with an incrementing index (delivery index, packing index, admin orders, reports lists). Use the item index for stagger.",
+    "Animate metric/stat cards on the admin dashboard (app/(admin)/index.tsx MetricCard) and the reports screen with a subtle staggered entrance and use the upgraded Shimmer skeletons for loading states where an ActivityIndicator is currently used.",
+    "Fix broken dark mode on screens that hardcode light-only colors: app/(delivery)/order/[id]/index.tsx and app/(admin)/settings.tsx currently use bg-white / text-slate-* / bg-slate-50 with NO dark: variants. Add dark: variants consistent with the patterns already used in app/(delivery)/index.tsx and app/(packing)/index.tsx (e.g. dark:bg-slate-900, dark:bg-slate-950, dark:text-white, dark:border-slate-800). Audit ALL staff screens for missing dark: variants and bring them in line.",
+    "Polish the login/otp screens (app/(auth)/login.tsx, otp.tsx): add entrance animation to the logo/card, animate the phone/email mode toggle, and add press feedback to the submit button and toggle. Add dark: variants (login currently uses bg-white with no dark).",
+    "Polish the full-screen alert screens (app/alert/*) which are the most attention-critical: ensure the entrance (slide_from_bottom) is paired with an in-content entrance/pulse animation and animated accept/dismiss buttons; reuse AssignmentAlert styling patterns.",
+    "Ensure animations respect reduced-motion / never block interaction, and that FlatList performance is not degraded (avoid heavy per-item animations that break virtualization; keep entrance animations lightweight).",
+    "Run `npx tsc --noEmit` and `npm run lint` in apps/mobile-staff and fix any errors."
+  ],
+  "acceptance_criteria": [
+    "Every route under apps/mobile-staff/app has a consistent entrance animation and every tappable card/primary button uses animated press feedback.",
+    "List screens (delivery, packing, admin orders/reports) show staggered item entrance animations and use the upgraded Shimmer skeletons for loading (no bare full-screen ActivityIndicator where a skeleton is appropriate).",
+    "app/(delivery)/order/[id]/index.tsx and app/(admin)/settings.tsx (and any other previously light-only screens) render correctly in dark mode with appropriate dark: variants; no screen is left with hardcoded light-only backgrounds/text.",
+    "`npx tsc --noEmit` and `npm run lint` pass in apps/mobile-staff with no new errors vs baseline."
+  ],
+  "verification": [
+    "cd apps/mobile-staff && npx tsc --noEmit",
+    "cd apps/mobile-staff && npm run lint",
+    "grep -rL \"dark:\" apps/mobile-staff/app --include=*.tsx | xargs -r grep -l \"bg-white\\|bg-slate-50\" ; confirm the list is empty or only files that legitimately need no dark handling"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

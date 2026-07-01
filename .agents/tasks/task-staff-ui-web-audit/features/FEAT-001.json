@@ -1,0 +1,37 @@
+{
+  "id": "FEAT-001",
+  "type": "chore",
+  "description": "Establish and document a green baseline for both target apps before any UI changes. Install monorepo dependencies and record the current typecheck/lint/test results for apps/mobile-staff and apps/web so later features can be judged against a known starting point.",
+  "status": "completed",
+  "steps": [
+    "From the repo root (/projects/sandbox/revathysupermarket) run `npm install`. The npm registry is reachable. Do not change React from 19.1.0 (pinned via root overrides).",
+    "Staff baseline (apps/mobile-staff): run `npx tsc --noEmit` and `npm run lint`. Capture pass/fail and any pre-existing errors verbatim.",
+    "Web baseline (apps/web): run `npx tsc --noEmit`, `npm run lint`, and `npm test`. Capture pass/fail and pre-existing errors verbatim.",
+    "Optionally attempt `npm run build:web` from repo root with placeholder env: UPSTASH_REDIS_REST_URL=https://example.com UPSTASH_REDIS_REST_TOKEN=dummy DATABASE_URL=postgresql://user:pass@localhost:5432/db . If it fails, note whether the failure is environmental (missing services/env) vs a code error.",
+    "Record all results in this feature's `findings` field: which commands pass, which fail, and any pre-existing errors that are NOT in scope to fix. This becomes the reference baseline for FEAT-002..005."
+  ],
+  "acceptance_criteria": [
+    "`npm install` completes at the repo root without fatal errors.",
+    "tsc, lint (and web `npm test`) have been run for both apps and their exact pass/fail status is recorded in findings.",
+    "Any pre-existing (baseline) failures are documented so they are not mistaken for regressions introduced by later features."
+  ],
+  "verification": [
+    "npm install (repo root) exits 0",
+    "cd apps/mobile-staff && npx tsc --noEmit ; npm run lint",
+    "cd apps/web && npx tsc --noEmit ; npm run lint ; npm test"
+  ],
+  "blocked_reason": null,
+  "findings": {
+    "env": "Node v22.22.3, npm 11.4.2. npm registry reachable. Network install OK.",
+    "npm_install": "PASS (exit 0). Added 1952 packages. Only deprecation warnings + npm audit advisories (33 vulns: 2 low, 30 moderate, 1 high) - informational, not fatal. React stays pinned at 19.1.0.",
+    "staff_tsc": "FAIL (exit 2) - 1 PRE-EXISTING error. src/services/notifications.ts(7,35): TS2322 - setNotificationHandler return object is missing NotificationBehavior props 'shouldShowBanner' and 'shouldShowList' (expo-notifications type API change). This is a baseline error unrelated to UI/animation work; NOT introduced by later features. Treat as pre-existing unless a later feature touches notifications.ts.",
+    "staff_lint": "FAIL (config, PRE-EXISTING) - `npm run lint` (eslint . --ext .ts,.tsx) errors: 'ESLint couldn't find an eslint.config.(js|mjs|cjs) file.' ESLint 9.39.4 (resolved from hoisted root node_modules) requires flat config. apps/mobile-staff has NO eslint config file at all and does NOT list eslint in its devDependencies. So staff lint has never been runnable in this repo state. This is a pre-existing setup gap, NOT a regression. Staff verification for later features should rely on `npx tsc --noEmit` (baseline = the single notifications.ts error above). Do not treat missing-config lint failure as a regression.",
+    "web_prisma_generate_required": "IMPORTANT: web tsc/build depend on a generated Prisma client. Fresh checkout after npm install has NO generated client, so `npx tsc --noEmit` reports 329 errors (Prisma namespace missing InputJsonValue/JsonNull, untyped query results). After running `npx prisma generate` (which `npm run build` does automatically via 'prisma generate && next build'), tsc is clean. Always run `npx prisma generate` in apps/web before typechecking.",
+    "web_tsc": "PASS (0 errors) AFTER `npx prisma generate`. Clean baseline.",
+    "web_lint": "PASS (0 errors, 3 warnings). Pre-existing warnings (NOT errors, not gating): components/dashboard/customer-orders-client.tsx:235 @next/next/no-img-element; components/product-grid.tsx:212 react-hooks/exhaustive-deps (missing 'allItems'); lib/hooks/use-order-tracking-socket.ts:290 react-hooks/exhaustive-deps (missing 'fallbackToSSE').",
+    "web_test": "FAIL overall (exit 1): 63 tests, 61 pass, 2 fail. Both failures are PRE-EXISTING (no source changed in this feature): (1) not ok 47 'checkoutErrorResponse returns 400 for DELIVERY_OUT_OF_RANGE' at tests/order-checkout.test.ts:58 - assert.ok(result.error.includes(\"delivery-fee range\")) is falsy. (2) not ok 54 'root elements allow native scrolling' at tests/scroll-preservation.test.ts - globals.css body contains 'touch-action: pan-x pan-y;' which the test asserts should NOT match /touch-action\\s*:/. NOTE for FEAT-002..005: test #54 inspects app/globals.css; dark-theme/CSS edits to globals.css could affect it - re-run `npm test` after globals.css changes and compare against this 2-fail baseline. These 2 failures existed before any UI work and must not be counted as regressions.",
+    "web_build": "PASS (exit 0, optional). `npm run build:web` from repo root with placeholder env (UPSTASH_REDIS_REST_URL=https://example.com UPSTASH_REDIS_REST_TOKEN=dummy DATABASE_URL=postgresql://user:pass@localhost:5432/db) => 2 tasks successful. next build + prisma generate completed. Without the UPSTASH placeholder env, prebuild (scripts/verify-production-env.mjs) fails under NODE_ENV=production; that is an environmental gate, not a code error.",
+    "no_source_changes": "This feature changed no application source. Only regenerated apps/web/tsconfig.tsbuildinfo (reverted) and node_modules (.prisma client, untracked). Baseline documentation only.",
+    "baseline_gates_for_later_features": "Staff: `npx tsc --noEmit` baseline = exactly 1 error in src/services/notifications.ts (lint not runnable - no config). Web: `npx prisma generate` then `npx tsc --noEmit` = 0 errors; `npm run lint` = 0 errors/3 warnings; `npm test` = 61 pass / 2 fail (#47 order-checkout, #54 scroll-preservation)."
+  }
+}

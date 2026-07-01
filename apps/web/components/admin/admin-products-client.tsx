@@ -19,6 +19,8 @@ export type AdminProduct = {
   category: string;
   price: number;
   discountPrice?: number;
+  costPrice?: number;
+  brand?: string;
   stock: number;
   image?: string | null;
   description: string;
@@ -284,7 +286,9 @@ function EditProductModal({
     description: product.description,
     unit: product.unit ?? "1 pc",
     isActive: product.isActive,
-    isFeatured: product.isFeatured
+    isFeatured: product.isFeatured,
+    brand: product.brand ?? "",
+    costPrice: product.costPrice ? String(product.costPrice) : ""
   });
   const [saving, setSaving] = useState(false);
 
@@ -300,7 +304,9 @@ function EditProductModal({
       price: Number(form.price),
       discountPrice: form.discountPrice ? Number(form.discountPrice) : undefined,
       stock: Number(form.stock),
-      image: form.image.trim() || undefined
+      image: form.image.trim() || undefined,
+      brand: form.brand.trim() || undefined,
+      costPrice: form.costPrice ? Number(form.costPrice) : undefined
     };
     const response = await fetch(`/api/admin/products/${product.id}`, {
       method: "PATCH",
@@ -322,6 +328,8 @@ function EditProductModal({
       category: payload.category,
       price: payload.price,
       discountPrice: payload.discountPrice,
+      costPrice: payload.costPrice,
+      brand: payload.brand,
       stock: payload.stock,
       image: payload.image,
       description: payload.description,
@@ -383,6 +391,16 @@ function EditProductModal({
             <label>
               <span className="text-sm font-bold">Unit</span>
               <Input value={form.unit} onChange={(event) => update("unit", event.target.value)} className="mt-2 h-12 rounded-2xl" />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label>
+              <span className="text-sm font-bold">Brand</span>
+              <Input value={form.brand} onChange={(event) => update("brand", event.target.value)} maxLength={100} placeholder="Brand (optional)" className="mt-2 h-12 rounded-2xl" />
+            </label>
+            <label>
+              <span className="text-sm font-bold">Cost price</span>
+              <Input type="number" min="1" step="0.01" value={form.costPrice} onChange={(event) => update("costPrice", event.target.value)} placeholder="Cost price (optional)" className="mt-2 h-12 rounded-2xl" />
             </label>
           </div>
           <label>

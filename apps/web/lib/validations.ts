@@ -46,7 +46,9 @@ export const productSchema = z.object({
   image: z.string().trim().optional(),
   unit: z.string().trim().min(1).optional(),
   isActive: z.boolean().optional(),
-  isFeatured: z.boolean().optional()
+  isFeatured: z.boolean().optional(),
+  costPrice: z.coerce.number().positive().optional(),
+  brand: z.string().trim().max(100).optional()
 });
 
 export const orderStatusSchema = z.object({

@@ -57,6 +57,7 @@ export function ProductManagementForm() {
     const formData = new FormData(form);
     const discountPrice = String(formData.get("discountPrice") ?? "").trim();
     const gstRate = String(formData.get("gstRate") ?? "").trim();
+    const costPriceValue = String(formData.get("costPrice") ?? "").trim();
     const payload = {
       name: String(formData.get("name") ?? ""),
       category: String(formData.get("category") ?? ""),
@@ -66,7 +67,9 @@ export function ProductManagementForm() {
       stock: Number(formData.get("stock")),
       image: String(formData.get("image") ?? "").trim() || undefined,
       description: String(formData.get("description") ?? ""),
-      isFeatured: formData.get("isFeatured") === "on"
+      isFeatured: formData.get("isFeatured") === "on",
+      brand: String(formData.get("brand") ?? "").trim() || undefined,
+      costPrice: costPriceValue ? Number(costPriceValue) : undefined
     };
 
     const response = await fetch("/api/admin/products", {
@@ -107,6 +110,8 @@ export function ProductManagementForm() {
       <Input name="discountPrice" placeholder="Discount price" type="number" min="1" step="1" className="h-12 rounded-2xl" />
       <Input name="stock" placeholder="Stock" type="number" min="0" step="1" required className="h-12 rounded-2xl" />
       <Input name="gstRate" placeholder="GST % (optional, overrides store)" type="number" min="0" max="28" step="0.01" className="h-12 rounded-2xl" />
+      <Input name="brand" placeholder="Brand (optional)" maxLength={100} className="h-12 rounded-2xl" />
+      <Input name="costPrice" placeholder="Cost price (optional)" type="number" min="1" step="0.01" className="h-12 rounded-2xl" />
       <Input name="image" value={imageUrl} onChange={(event) => setImageUrl(event.target.value)} placeholder="Any image URL (unsplash, imgur, etc.) or upload below" type="url" className="h-12 rounded-2xl" />
       <label className="flex min-h-12 items-center justify-between rounded-2xl border border-lime-fresh/40 bg-lime-fresh/10 px-4 md:col-span-3">
         <span className="text-sm font-black text-primary">Feature this product on homepage</span>

@@ -152,7 +152,7 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0 z-[95] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm"
         onClick={(e) => {
           if (e.target === e.currentTarget && getSavedLocation()) handleClose();
         }}
@@ -162,7 +162,7 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 30 }}
-          className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl md:rounded-3xl p-6 relative max-h-[85vh] overflow-y-auto"
+          className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl md:rounded-3xl p-6 pb-[calc(1.5rem+5rem)] md:pb-6 relative max-h-[85vh] overflow-y-auto"
         >
           {/* Close button (only if location already saved) */}
           {getSavedLocation() && (

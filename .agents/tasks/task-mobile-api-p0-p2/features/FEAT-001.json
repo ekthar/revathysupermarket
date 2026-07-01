@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Create all missing delivery-related mobile API routes that the mobile app calls but currently get 404: /delivery/dashboard, /delivery/orders/[id], /delivery/collect, /delivery/complete, /delivery/acknowledge, /delivery/location, /delivery/orders/[id]/collection, /delivery/orders/[id]/complete, /delivery/orders/[id]/damage, /delivery/orders/[id]/pickup, /delivery/assignments/pending",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create apps/web/app/api/mobile/v1/delivery/dashboard/route.ts - GET endpoint returning delivery partner's assigned orders with earnings summary. Use authenticateMobileRequest, check role is DELIVERY_PARTNER. Query orders assigned to the user with status in [READY_FOR_DELIVERY, OUT_FOR_DELIVERY, ARRIVING]. Return {orders: [{id, orderNumber, customerName, address, total, status, itemCount, createdAt}], deliveriesToday, cashCollected, upiCollected}. Follow the DeliveryDashboardData type from packages/shared.",
     "Create apps/web/app/api/mobile/v1/delivery/orders/[id]/route.ts - GET endpoint returning full order detail for delivery partner. Use authenticateMobileRequest, check role DELIVERY_PARTNER and order.deliveryPartnerId === auth.userId. Return full order detail matching OrderDetail type: items, customer info, address, payment info, status.",
@@ -27,5 +27,5 @@
     "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 11 delivery routes created successfully. TypeScript compilation (tsc --noEmit) and Next.js build both pass with zero errors. Used simplified business logic per orchestrator guidance - no imports from delivery-money, rate-limit, realtime, loyalty, push, or whatsapp-business. The collect route calculates collection balance directly. The complete route does OTP verification inline. Prisma generate needed DATABASE_URL stub to work."
 }

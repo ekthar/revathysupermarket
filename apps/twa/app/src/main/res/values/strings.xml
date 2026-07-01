@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MSM Supermarket</string>
+    <string name="host_name">msmsupermarket.in</string>
+    <string name="start_url">https://msmsupermarket.in/?source=twa</string>
+</resources>

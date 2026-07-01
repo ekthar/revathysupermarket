@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Live tracking map with rider GPS (Feature 10), Product ratings & reviews (Feature 12), and Smart suggestions / frequently bought together (Feature 14).",
+  "status": "completed",
+  "steps": [
+    "Update apps/web/components/tracking/delivery-map.tsx: Ensure the existing DeliveryMap component shows the rider's live GPS position with a marker that updates in real-time via SSE. Add route line from rider to customer destination. Add store marker. Show distance remaining text overlay. Use maplibre-gl (already installed) for the map rendering.",
+    "Update apps/web/components/tracking/live-order-tracking.tsx: The component already has DeliveryMap integration. Verify it correctly passes deliveryPartnerLocation to the map when status is OUT_FOR_DELIVERY or ARRIVING. Add auto-refresh of rider position every 10 seconds via the existing useOrderTracking hook (already using SSE). Ensure the map shows prominently during delivery phase.",
+    "Create apps/web/app/api/products/[slug]/reviews/route.ts: GET endpoint to fetch reviews for a product (paginated). POST endpoint to create a review (authenticated, must have purchased the product in a delivered order). Return average rating and review count.",
+    "Create apps/web/components/product-reviews.tsx: Client component showing star rating display, review list with user name/date/comment, and a 'Write Review' form (only visible if user has ordered this product). Show average rating prominently. Paginated review list.",
+    "Update apps/web/app/products/[slug]/page.tsx: Add the ProductReviews component below the product details. Fetch and display average rating and review count in the product info section.",
+    "Update apps/web/components/product-card.tsx: Show a small star rating indicator (avg rating + review count) below the product name if reviews exist.",
+    "Create apps/web/app/api/products/[slug]/suggestions/route.ts: GET endpoint that returns 'frequently bought together' products. Logic: find other products that appear in orders containing this product. Sort by co-occurrence frequency. Return top 6 suggestions.",
+    "Create apps/web/components/product-suggestions.tsx: 'Frequently Bought Together' horizontal scroll section. Shows suggested products with add-to-cart buttons. Displayed on product detail page and optionally in cart.",
+    "Create apps/web/app/api/cart/suggestions/route.ts: GET endpoint that accepts current cart product IDs and returns suggestions based on co-purchase patterns across all cart items. Deduplicates items already in cart."
+  ],
+  "acceptance_criteria": [
+    "Delivery map shows rider's live GPS with route line and auto-refresh",
+    "Product reviews API allows creating and fetching reviews",
+    "Product detail page shows reviews section with star ratings",
+    "Product cards show average rating when reviews exist",
+    "Frequently bought together suggestions appear on product pages",
+    "Cart suggestions API returns relevant co-purchased products"
+  ],
+  "verification": [
+    "cd apps/web && npx tsc --noEmit --pretty 2>&1 | head -50",
+    "cd apps/web && npx next build 2>&1 | tail -20"
+  ],
+  "blocked_reason": null,
+  "findings": "All steps implemented and verified. TypeScript compilation and Next.js build pass cleanly. DeliveryMap now has route line + distance overlay. Product reviews API has purchase verification via delivered order check. ProductSuggestions uses co-purchase frequency for recommendations. Cart suggestions API deduplicates items already in cart."
+}

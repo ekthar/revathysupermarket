@@ -20,6 +20,7 @@ interface OrderSummaryProps {
   freeDeliveryThreshold: number;
   gstRatePercent: number;
   gstAmount: number;
+  tipAmount?: number;
   totalAmount: number;
   canSubmit: boolean;
   isSubmitting: boolean;
@@ -35,6 +36,7 @@ export function OrderSummary({
   freeDeliveryThreshold,
   gstRatePercent,
   gstAmount,
+  tipAmount = 0,
   totalAmount,
   canSubmit,
   isSubmitting,
@@ -85,6 +87,28 @@ export function OrderSummary({
             </span>
             <span className="font-semibold text-neutral-700">{formatCurrency(gstAmount)}</span>
           </div>
+          {tipAmount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Delivery tip</span>
+              <span className="font-semibold text-neutral-700">{formatCurrency(tipAmount)}</span>
+            </div>
+          )}
+          {/* Savings line */}
+          {(() => {
+            const totalDiscount = items.reduce((sum, item) => {
+              if (item.discountPrice != null && item.discountPrice < item.price) {
+                return sum + (item.price - item.discountPrice) * item.quantity;
+              }
+              return sum;
+            }, 0);
+            if (totalDiscount <= 0) return null;
+            return (
+              <div className="flex justify-between">
+                <span className="text-secondary-600 font-medium">Total Savings</span>
+                <span className="font-semibold text-secondary-600">-{formatCurrency(totalDiscount)}</span>
+              </div>
+            );
+          })()}
           <div className="border-t border-dashed border-neutral-200 dark:border-neutral-700 pt-3 flex justify-between">
             <span className="font-black text-neutral-900 dark:text-white">Total Amount</span>
             <span className="font-black text-neutral-900 dark:text-white text-title">
@@ -109,7 +133,7 @@ export function OrderSummary({
           whileHover={{ scale: canSubmit ? 1.01 : 1 }}
           className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-body font-black text-white shadow-premium transition-opacity disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
         >
-          {isSubmitting ? "Placing order..." : "Place Order"}
+          {isSubmitting ? "Placing order..." : `Place Order - ${formatCurrency(totalAmount)}`}
         </motion.button>
         {!canSubmit && (
           <p className="mt-3 text-center text-caption font-medium text-neutral-400">

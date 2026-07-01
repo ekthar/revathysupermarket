@@ -10,6 +10,7 @@ import { SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
+import { useTranslations } from "next-intl";
 import type { StoreSettings } from "@/lib/store-settings";
 import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
@@ -18,6 +19,8 @@ import { PaymentMethodSelector } from "@/components/checkout/payment-method-sele
 import { AddressSelector } from "@/components/checkout/address-selector";
 import { DeliveryModeSelector } from "@/components/checkout/delivery-mode-selector";
 import { OrderSummary } from "@/components/checkout/order-summary";
+import { TipSelector } from "@/components/checkout/tip-selector";
+import { DeliveryInstructions } from "@/components/checkout/delivery-instructions";
 
 
 type CheckoutState = {
@@ -112,6 +115,7 @@ export function CheckoutForm({
   const slotsEnabled = process.env.NEXT_PUBLIC_ENABLE_DELIVERY_SLOTS !== "false";
   const { items, subtotal, clearCart } = useCart();
   const { showToast } = useToast();
+  const t = useTranslations("checkout");
   const [form, setForm] = useState(initialState);
   const [message, setMessage] = useState("");
   const [placedOrderId, setPlacedOrderId] = useState("");
@@ -131,11 +135,13 @@ export function CheckoutForm({
   const [quotedDeliveryFee, setQuotedDeliveryFee] = useState<number | null>(null);
   const [feeQuoteLoading, setFeeQuoteLoading] = useState(false);
   const [addressNotCovered, setAddressNotCovered] = useState(false);
+  const [tipAmount, setTipAmount] = useState(0);
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
 
   const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
   const gstAmount = gstRatePercent > 0 ? Math.round(subtotal - subtotal / (1 + gstRatePercent / 100)) : 0;
-  const totalAmount = subtotal + deliveryFee;
+  const totalAmount = subtotal + deliveryFee + tipAmount;
 
   // Fetch wallet balance on mount
   useEffect(() => {
@@ -258,7 +264,9 @@ export function CheckoutForm({
           deliveryMode,
           deliverySlotId: deliveryMode === "SCHEDULED" ? deliverySlotId : undefined,
           promoCode: promoCode.trim() || undefined,
-          loyaltyPoints
+          loyaltyPoints,
+          tipAmount: tipAmount > 0 ? tipAmount : undefined,
+          deliveryInstructions: deliveryInstructions.trim() || undefined
         })
       });
 
@@ -348,9 +356,36 @@ export function CheckoutForm({
           <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
             <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
           </Link>
-          <h1 className="text-lg font-black text-neutral-900 dark:text-white">Checkout</h1>
+          <h1 className="text-lg font-black text-neutral-900 dark:text-white">{t("title")}</h1>
         </div>
       </motion.div>
+
+      {/* Step Progression Indicator */}
+      <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-elevation-2">
+        <div className="flex items-center justify-between">
+          {[
+            { label: "Address", step: 1 },
+            { label: "Delivery", step: 2 },
+            { label: "Payment", step: 3 },
+            { label: "Review", step: 4 },
+          ].map((item, idx) => (
+            <div key={item.label} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white text-micro font-bold">
+                  {item.step}
+                </div>
+                <span className="mt-1 text-micro font-semibold text-neutral-600 dark:text-neutral-400">{item.label}</span>
+              </div>
+              {idx < 3 && (
+                <div className="mx-1.5 h-[2px] w-6 sm:w-10 bg-neutral-200 dark:bg-neutral-700" />
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-center text-micro text-neutral-500 dark:text-neutral-400">
+          Fill in all sections below to place your order
+        </p>
+      </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_min(380px,35vw)] lg:gap-8">
         {/* Left column - Forms */}
@@ -386,6 +421,15 @@ export function CheckoutForm({
             deliverySlotId={deliverySlotId}
             onSlotChange={setDeliverySlotId}
             slotsEnabled={slotsEnabled}
+          />
+
+          {/* Tip for delivery partner */}
+          <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />
+
+          {/* Delivery instructions */}
+          <DeliveryInstructions
+            instructions={deliveryInstructions}
+            onInstructionsChange={setDeliveryInstructions}
           />
 
           {rewardsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
@@ -429,6 +473,7 @@ export function CheckoutForm({
           freeDeliveryThreshold={freeDeliveryThreshold}
           gstRatePercent={gstRatePercent}
           gstAmount={gstAmount}
+          tipAmount={tipAmount}
           totalAmount={totalAmount}
           canSubmit={canSubmit}
           isSubmitting={isSubmitting}

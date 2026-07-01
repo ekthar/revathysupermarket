@@ -43,7 +43,10 @@ export default async function AccountSettingsPage() {
           pushNotifications: settings.pushNotifications,
           orderUpdates: settings.orderUpdates,
           promotionalMessages: settings.promotionalMessages,
-          whatsappNotifications: settings.whatsappNotifications
+          whatsappNotifications: settings.whatsappNotifications,
+          priceDropAlerts: settings.priceDropAlerts,
+          weeklyDeals: settings.weeklyDeals,
+          deliveryAlerts: settings.deliveryAlerts
         }}
       />
     </main>

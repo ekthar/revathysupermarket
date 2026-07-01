@@ -11,6 +11,7 @@ import { OrderTrackingMap } from "@/components/dashboard/order-tracking-map";
 import { useCart } from "@/components/cart/cart-provider";
 import Link from "next/link";
 import type { Product } from "@/lib/types";
+import { ReorderButton } from "@/components/dashboard/reorder-button";
 
 const enableSseTracking = process.env.NEXT_PUBLIC_ENABLE_SSE_TRACKING !== "false";
 
@@ -149,12 +150,6 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
     window.alert(data.error ?? "Approval update failed.");
   }
 
-  function reorder(order: CustomerOrder) {
-    const products = order.items.filter((item) => item.product && item.quantity > 0 && item.product.stock > 0).map((item) => ({ ...item.product!, quantity: item.quantity }));
-    if (products.length === 0) { window.alert("Products from this order are no longer available."); return; }
-    addItems(products);
-    window.location.href = "/cart";
-  }
 
   async function submitFeedback() {
     if (!ratingOrderId) return;
@@ -178,17 +173,78 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   if (orders.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-dashed border-border p-10 text-center">
-        <Package className="h-12 w-12 mx-auto text-neutral-300" />
-        <h2 className="mt-4 font-display text-xl font-bold">No orders yet</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Your grocery orders will appear here.</p>
+        <div className="mx-auto h-16 w-16 rounded-full bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
+          <Package className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+        </div>
+        <h2 className="mt-4 font-display text-xl font-bold text-neutral-900 dark:text-white">No orders yet</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Your grocery orders will appear here once you place your first order.</p>
+        <Link href="/products" className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-black px-6 text-sm font-bold text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity press">
+          Start Shopping
+        </Link>
       </motion.div>
     );
   }
+
+  // Build "Buy Again" items from delivered orders
+  const buyAgainProducts = (() => {
+    const productCounts = new Map<string, { product: Product; count: number }>();
+    for (const order of orders) {
+      if (order.status !== "DELIVERED") continue;
+      for (const item of order.items) {
+        if (!item.product || item.product.stock <= 0) continue;
+        const existing = productCounts.get(item.product.id);
+        if (existing) {
+          existing.count += item.quantity;
+        } else {
+          productCounts.set(item.product.id, { product: item.product, count: item.quantity });
+        }
+      }
+    }
+    return Array.from(productCounts.values())
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8)
+      .map((entry) => entry.product);
+  })();
 
   return (
     <div className="space-y-3">
       {returnOrder && <ReturnRequestSheet order={returnOrder} onClose={() => setReturnOrder(null)} />}
       {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-neutral-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-neutral-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
+
+      {/* Buy Again section */}
+      {buyAgainProducts.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <RefreshCcw className="h-4 w-4 text-secondary-600" />
+            <h2 className="text-sm font-black text-neutral-900 dark:text-white">Buy Again</h2>
+          </div>
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+            {buyAgainProducts.map((product) => (
+              <motion.button
+                key={product.id}
+                type="button"
+                onClick={() => { addItems([{ ...product, quantity: 1 }]); }}
+                whileTap={{ scale: 0.94 }}
+                className="flex shrink-0 items-center gap-2 rounded-xl border border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+              >
+                {product.image && (
+                  <img src={product.image} alt="" className="h-8 w-8 rounded-lg object-cover" />
+                )}
+                <div className="min-w-0">
+                  <p className="text-micro font-bold text-neutral-800 dark:text-neutral-200 truncate max-w-[100px]">{product.name}</p>
+                  <p className="text-micro text-neutral-500">{"\u20B9"}{product.discountPrice ?? product.price}</p>
+                </div>
+                <span className="ml-1 flex h-6 w-6 items-center justify-center rounded-full bg-black text-white text-micro font-bold">+</span>
+              </motion.button>
+            ))}
+          </div>
+        </motion.section>
+      )}
+
       {/* Status bar */}
       <div className="flex items-center justify-between rounded-2xl bg-white dark:bg-neutral-900 px-3 py-2 text-caption font-semibold text-neutral-500 dark:text-neutral-400 shadow-elevation-2 dark:shadow-none">
         <span>{lastUpdated ? "Updated just now" : streamUnavailable ? "Fallback updates active" : "Live updates connected"}</span>
@@ -342,9 +398,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                       {delivered && (
                         <div className="mt-3">
                           <div className="grid grid-cols-3 gap-2">
-                            <button onClick={() => reorder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl bg-black text-caption font-bold text-white">
-                              <RotateCcw className="h-3.5 w-3.5" /> Reorder
-                            </button>
+                            <ReorderButton orderId={order.id} items={order.items} className="flex-1 h-9" />
                             <button onClick={() => setReturnOrder(order)} className="flex-1 h-9 flex items-center justify-center gap-1.5 rounded-xl border border-neutral-200 dark:border-neutral-700 text-caption font-bold text-neutral-700 dark:text-neutral-300">
                               <RotateCcw className="h-3.5 w-3.5" /> Return
                             </button>

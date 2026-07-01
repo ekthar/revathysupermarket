@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, MessageCircle, Megaphone, Package, Moon, Sun, Monitor } from "lucide-react";
+import { Bell, MessageCircle, Megaphone, Package, Moon, Sun, Monitor, TrendingDown, Gift, Truck } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
@@ -12,6 +12,9 @@ interface SettingsProps {
     orderUpdates: boolean;
     promotionalMessages: boolean;
     whatsappNotifications: boolean;
+    priceDropAlerts: boolean;
+    weeklyDeals: boolean;
+    deliveryAlerts: boolean;
   };
 }
 
@@ -78,6 +81,27 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
           description="Deals, offers & new arrivals"
           enabled={settings.promotionalMessages}
           onToggle={() => toggleSetting("promotionalMessages")}
+        />
+        <SettingToggle
+          icon={TrendingDown}
+          label="Price Drop Alerts"
+          description="Get notified when prices drop on your favorites"
+          enabled={settings.priceDropAlerts}
+          onToggle={() => toggleSetting("priceDropAlerts")}
+        />
+        <SettingToggle
+          icon={Gift}
+          label="Weekly Deals"
+          description="Weekly curated deals and offers"
+          enabled={settings.weeklyDeals}
+          onToggle={() => toggleSetting("weeklyDeals")}
+        />
+        <SettingToggle
+          icon={Truck}
+          label="Delivery Status Alerts"
+          description="Real-time delivery tracking updates"
+          enabled={settings.deliveryAlerts}
+          onToggle={() => toggleSetting("deliveryAlerts")}
         />
       </div>
 

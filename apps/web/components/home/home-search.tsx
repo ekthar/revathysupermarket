@@ -1,14 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import Image from "next/image";
+import { Minus, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { useCartActions, useCartItem } from "@/components/cart/cart-provider";
+import { formatCurrency } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/types";
 
 export function HomeSearch({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const t = useTranslations("home");
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -28,7 +33,7 @@ export function HomeSearch({ products }: { products: Product[] }) {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
-            placeholder="Search for groceries..."
+            placeholder={t("searchPlaceholder")}
             className="w-full h-11 rounded-full bg-neutral-50 border border-neutral-100 pl-10 pr-8 text-body outline-none placeholder:text-neutral-400 focus:border-primary/40 focus:bg-white focus:shadow-sm transition-all"
           />
           {query && (
@@ -50,15 +55,113 @@ export function HomeSearch({ products }: { products: Product[] }) {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 right-12 top-full mt-2 rounded-2xl bg-white border border-neutral-100 shadow-lg overflow-hidden z-50"
+              className="absolute left-0 right-12 top-full mt-2 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 shadow-lg overflow-hidden z-50"
             >
               {results.map((p) => (
-                <Link key={p.id} href={`/products/${p.slug}`} className="flex items-center justify-between px-4 py-3 text-body hover:bg-neutral-50 border-b border-neutral-50 last:border-0 transition-colors">
-                  <span className="font-semibold text-neutral-700">{p.name}</span>
-                  <span className="text-caption text-neutral-400 font-medium">{p.unit}</span>
-                </Link>
+                <SearchResultItem key={p.id} product={p} />
               ))}
             </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+// Individual search result item with cart controls
+function SearchResultItem({ product }: { product: Product }) {
+  const cartItem = useCartItem(product.id);
+  const { addItem, updateQuantity } = useCartActions();
+
+  const handleAdd = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product);
+  }, [addItem, product]);
+
+  const handleIncrement = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cartItem) updateQuantity(product.id, cartItem.quantity + 1);
+  }, [cartItem, updateQuantity, product.id]);
+
+  const handleDecrement = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (cartItem) updateQuantity(product.id, cartItem.quantity - 1);
+  }, [cartItem, updateQuantity, product.id]);
+
+  const price = product.discountPrice ?? product.price;
+
+  return (
+    <div className="flex items-center gap-3 px-3 py-2.5 hover:bg-neutral-50 dark:hover:bg-neutral-800 border-b border-neutral-50 dark:border-neutral-800 last:border-0 transition-colors">
+      {/* Product image thumbnail */}
+      <Link href={`/products/${product.slug}`} className="shrink-0">
+        <div className="h-10 w-10 rounded-lg overflow-hidden bg-neutral-100 dark:bg-neutral-800 relative">
+          <Image
+            src={product.image}
+            alt={product.name}
+            fill
+            sizes="40px"
+            className="object-cover"
+            unoptimized
+          />
+        </div>
+      </Link>
+
+      {/* Product info */}
+      <Link href={`/products/${product.slug}`} className="flex-1 min-w-0">
+        <p className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 truncate">{product.name}</p>
+        <div className="flex items-center gap-2 mt-0.5">
+          <span className="text-xs font-bold text-neutral-900 dark:text-white">{formatCurrency(price)}</span>
+          <span className="text-micro text-neutral-400 font-medium">{product.unit}</span>
+        </div>
+      </Link>
+
+      {/* Cart controls */}
+      <div className="shrink-0" onMouseDown={(e) => e.preventDefault()}>
+        <AnimatePresence mode="wait" initial={false}>
+          {cartItem ? (
+            <motion.div
+              key="qty"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              className="flex h-8 items-center overflow-hidden rounded-full bg-black"
+            >
+              <button
+                type="button"
+                onClick={handleDecrement}
+                className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                aria-label="Decrease quantity"
+              >
+                <Minus className="h-3 w-3" />
+              </button>
+              <span className="w-5 text-center text-xs font-bold text-white">{cartItem.quantity}</span>
+              <button
+                type="button"
+                onClick={handleIncrement}
+                className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+                aria-label="Increase quantity"
+              >
+                <Plus className="h-3 w-3" />
+              </button>
+            </motion.div>
+          ) : (
+            <motion.button
+              key="add"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.8, opacity: 0 }}
+              type="button"
+              onClick={handleAdd}
+              disabled={product.stock <= 0}
+              className="flex h-8 items-center gap-1 px-3 rounded-full bg-black text-white text-xs font-bold hover:bg-neutral-800 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label={`Add ${product.name} to cart`}
+            >
+              <Plus className="h-3 w-3" />
+              Add
+            </motion.button>
           )}
         </AnimatePresence>
       </div>

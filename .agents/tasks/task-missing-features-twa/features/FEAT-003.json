@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "One-tap reorder (Feature 5), Order scheduling customer UI (Feature 8), Delivery tip (Feature 9), and Structured delivery instructions (Feature 16). These are all checkout/order flow improvements.",
+  "status": "completed",
+  "steps": [
+    "Create apps/web/components/dashboard/reorder-button.tsx: A 'Reorder' button component that takes order items array, validates stock availability via API call, and adds all available items to cart using the cart provider's addItems method. Shows a toast for any out-of-stock items that were skipped. Use Framer Motion for button press animation.",
+    "Update the CustomerOrdersClient component (apps/web/components/dashboard/customer-orders-client.tsx): Add the ReorderButton to each DELIVERED order card. Also add a 'Buy Again' section at the top showing frequently ordered products (from completed orders).",
+    "Create apps/web/app/api/orders/reorder/route.ts: POST endpoint that accepts an orderId, looks up the order items, checks current stock for each product, and returns { available: Product[], unavailable: string[] }.",
+    "Update apps/web/components/checkout/delivery-mode-selector.tsx: Enhance the existing component to show slot selection in a more Swiggy-like UI with date tabs (Today, Tomorrow) and time slot cards. Fetch slots from /api/delivery-slots. Show remaining capacity per slot. Add visual calendar-like presentation.",
+    "Create apps/web/components/checkout/tip-selector.tsx: Quick-select tip amounts (Rs 20, 30, 50, Custom) with tap-to-select UI. Shows rider emoji and 'Thank your rider' text. Selected tip adds to order total. Custom tip uses a number input. Framer Motion for selection animation.",
+    "Create apps/web/components/checkout/delivery-instructions.tsx: Quick-select chips for common delivery instructions ('Ring bell', 'Leave at door', 'Call before delivery', 'Do not ring bell - baby sleeping'). Plus a free-text field below for custom instructions. Saves structured data.",
+    "Update apps/web/components/checkout-form.tsx: Integrate TipSelector and DeliveryInstructions components into the checkout flow. Add tip to order total calculation. Pass deliveryInstructions to the order creation API.",
+    "Update apps/web/app/api/orders/route.ts: Handle tipAmount and deliveryInstructions fields from the checkout payload. Store them in the Order record."
+  ],
+  "acceptance_criteria": [
+    "Reorder button on delivered orders adds items to cart",
+    "Reorder API checks stock availability and returns results",
+    "Delivery slot selection shows date tabs and time slot cards",
+    "Tip selector shows quick amounts with visual feedback",
+    "Delivery instructions shows chips and free text",
+    "Checkout form integrates tip and instructions",
+    "Order API stores tip and delivery instructions"
+  ],
+  "verification": [
+    "cd apps/web && npx tsc --noEmit --pretty 2>&1 | head -50",
+    "cd apps/web && npx next build 2>&1 | tail -20"
+  ],
+  "blocked_reason": null,
+  "findings": "All 8 steps implemented successfully. TypeScript compiles cleanly, Next.js build passes. The order-checkout.ts now includes tipAmount in the total calculation and stores both tipAmount and deliveryInstructions. The reorder API handles nullable productId correctly. Buy Again section computed from delivered order history."
+}

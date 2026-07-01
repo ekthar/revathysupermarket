@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -11,6 +11,21 @@ interface DeliveryMapProps {
   customerLocation: LatLng;
   storeLocation: LatLng;
   className?: string;
+}
+
+function haversineDistanceKm(
+  a: { latitude: number; longitude: number },
+  b: { latitude: number; longitude: number }
+): number {
+  const R = 6371;
+  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
+  const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;
+  const lat1 = (a.latitude * Math.PI) / 180;
+  const lat2 = (b.latitude * Math.PI) / 180;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
 }
 
 function lerp(a: number, b: number, t: number): number {
@@ -115,6 +130,7 @@ export function DeliveryMap({
   const storeMarkerRef = useRef<maplibregl.Marker | null>(null);
   const prevRiderPosRef = useRef<{ lng: number; lat: number } | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const [distanceRemaining, setDistanceRemaining] = useState<number | null>(null);
 
   // Initialize map
   useEffect(() => {
@@ -150,6 +166,32 @@ export function DeliveryMap({
     bounds.extend([customerLocation.longitude, customerLocation.latitude]);
     bounds.extend([storeLocation.longitude, storeLocation.latitude]);
     map.fitBounds(bounds, { padding: 60, maxZoom: 15 });
+
+    // Add route line source after style loads
+    map.on("load", () => {
+      if (!map.getSource("route-line")) {
+        map.addSource("route-line", {
+          type: "geojson",
+          data: {
+            type: "Feature",
+            properties: {},
+            geometry: { type: "LineString", coordinates: [] },
+          },
+        });
+        map.addLayer({
+          id: "route-line-layer",
+          type: "line",
+          source: "route-line",
+          layout: { "line-cap": "round", "line-join": "round" },
+          paint: {
+            "line-color": "#111111",
+            "line-width": 4,
+            "line-dasharray": [2, 2],
+            "line-opacity": 0.6,
+          },
+        });
+      }
+    });
 
     // Add keyframe animations
     const style = document.createElement("style");
@@ -231,6 +273,12 @@ export function DeliveryMap({
         riderMarkerRef.current = null;
         prevRiderPosRef.current = null;
       }
+      // Remove route line
+      if (mapRef.current.getSource("route-line")) {
+        mapRef.current.removeLayer("route-line-layer");
+        mapRef.current.removeSource("route-line");
+      }
+      setDistanceRemaining(null);
       return;
     }
 
@@ -238,6 +286,45 @@ export function DeliveryMap({
       lng: deliveryPartnerLocation.longitude,
       lat: deliveryPartnerLocation.latitude,
     };
+
+    // Calculate distance remaining
+    const dist = haversineDistanceKm(deliveryPartnerLocation, customerLocation);
+    setDistanceRemaining(dist);
+
+    // Update route line from rider to customer
+    const routeCoords: [number, number][] = [
+      [newPos.lng, newPos.lat],
+      [customerLocation.longitude, customerLocation.latitude],
+    ];
+
+    if (mapRef.current.getSource("route-line")) {
+      (mapRef.current.getSource("route-line") as maplibregl.GeoJSONSource).setData({
+        type: "Feature",
+        properties: {},
+        geometry: { type: "LineString", coordinates: routeCoords },
+      });
+    } else if (mapRef.current.isStyleLoaded()) {
+      mapRef.current.addSource("route-line", {
+        type: "geojson",
+        data: {
+          type: "Feature",
+          properties: {},
+          geometry: { type: "LineString", coordinates: routeCoords },
+        },
+      });
+      mapRef.current.addLayer({
+        id: "route-line-layer",
+        type: "line",
+        source: "route-line",
+        layout: { "line-cap": "round", "line-join": "round" },
+        paint: {
+          "line-color": "#111111",
+          "line-width": 4,
+          "line-dasharray": [2, 2],
+          "line-opacity": 0.6,
+        },
+      });
+    }
 
     if (!riderMarkerRef.current) {
       // Create rider marker for the first time
@@ -279,6 +366,17 @@ export function DeliveryMap({
   return (
     <div className={`relative overflow-hidden rounded-2xl ${className ?? ""}`}>
       <div ref={containerRef} className="h-[320px] w-full" />
+      {/* Distance remaining overlay */}
+      {distanceRemaining !== null && (
+        <div className="absolute top-3 left-3 rounded-xl bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-sm dark:bg-neutral-900/95">
+          <p className="text-micro font-bold uppercase tracking-wide text-neutral-500">Distance</p>
+          <p className="text-body font-black text-neutral-900 dark:text-white">
+            {distanceRemaining < 1
+              ? `${Math.round(distanceRemaining * 1000)} m`
+              : `${distanceRemaining.toFixed(1)} km`}
+          </p>
+        </div>
+      )}
       {/* Subtle gradient overlay at bottom for depth */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black/10 to-transparent rounded-b-2xl" />
       {/* Custom zoom controls */}

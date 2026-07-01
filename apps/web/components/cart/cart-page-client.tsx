@@ -7,6 +7,8 @@ import { useEffect, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { springPresets } from "@/lib/motion";
+import { ExpressCheckout } from "@/components/cart/express-checkout";
+import { useTranslations } from "next-intl";
 
 type StoreConfig = {
   gstRatePercent: number;
@@ -19,6 +21,7 @@ type StoreConfig = {
 
 export function CartPageClient() {
   const { items, subtotal, removeItem, updateQuantity } = useCart();
+  const t = useTranslations("cart");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(0);
@@ -130,10 +133,10 @@ export function CartPageClient() {
         <div className="h-20 w-20 rounded-full bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
           <ShoppingBag className="h-9 w-9 text-neutral-300 dark:text-neutral-600" />
         </div>
-        <h1 className="mt-5 text-xl font-bold text-neutral-900 dark:text-white">Your cart is empty</h1>
+        <h1 className="mt-5 text-xl font-bold text-neutral-900 dark:text-white">{t("empty")}</h1>
         <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Add items from the store to get started</p>
         <Link href="/products" className="mt-6 h-12 px-8 inline-flex items-center justify-center rounded-full bg-neutral-900 dark:bg-white dark:text-neutral-900 text-sm font-bold text-white hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-[0.98] transition-all press shadow-lg">
-          Browse Products
+          {t("continueShopping")}
         </Link>
       </main>
     );
@@ -149,12 +152,20 @@ export function CartPageClient() {
               <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
             </Link>
             <div>
-              <p className="text-caption font-black uppercase tracking-[0.28em] text-neutral-400">{items.length} item{items.length > 1 ? "s" : ""}</p>
-              <h1 className="text-title font-black text-neutral-900 dark:text-white">Your cart</h1>
+              <p className="text-caption font-black uppercase tracking-[0.28em] text-neutral-400">{items.length} item{items.length > 1 ? "s" : ""} in cart</p>
+              <h1 className="text-title font-black text-neutral-900 dark:text-white">{t("title")}</h1>
             </div>
           </div>
           <span className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(subtotal)}</span>
         </div>
+      </div>
+
+      {/* Continue Shopping Link */}
+      <div className="mt-2 mb-1">
+        <Link href="/products" className="inline-flex items-center gap-1.5 text-caption font-semibold text-primary hover:underline press">
+          <ArrowLeft className="h-3 w-3" />
+          Continue Shopping
+        </Link>
       </div>
 
       {/* Minimum order warning */}
@@ -165,6 +176,27 @@ export function CartPageClient() {
             Minimum order value is {formatCurrency(config.minimumOrderValue)}. Add {formatCurrency(config.minimumOrderValue - subtotal)} more to place order.
           </p>
         </div>
+      )}
+
+      {/* Express Checkout */}
+      <div className="mt-3">
+        <ExpressCheckout />
+      </div>
+
+      {/* Savings Summary Banner */}
+      {totalSavings > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="mt-3 rounded-2xl bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-200 dark:border-secondary-800 p-3 flex items-center gap-2.5"
+        >
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 shrink-0">
+            <Tag className="h-4 w-4 text-secondary-600" />
+          </div>
+          <p className="text-caption font-bold text-secondary-700 dark:text-secondary-300">
+            You are saving {formatCurrency(totalSavings)} on this order!
+          </p>
+        </motion.div>
       )}
 
       {/* Cart Items */}
@@ -325,7 +357,7 @@ export function CartPageClient() {
             className={`mx-auto flex h-[54px] max-w-md items-center justify-between rounded-2xl px-5 shadow-premium press ${belowMinimum ? "bg-neutral-300 dark:bg-neutral-700 cursor-not-allowed" : "bg-black text-white"}`}
           >
             <div>
-              <p className="text-body font-bold">{belowMinimum ? "Add more items" : "Proceed to Checkout"}</p>
+              <p className="text-body font-bold">{belowMinimum ? "Add more items" : t("checkout")}</p>
               <p className="text-micro text-white/70">{items.length} item{items.length > 1 ? "s" : ""}</p>
             </div>
             <span className="text-title font-bold">{formatCurrency(totalAmount)}</span>

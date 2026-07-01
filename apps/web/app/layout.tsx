@@ -12,6 +12,8 @@ import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-sett
 import { Inter_Tight, Manrope } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { ViewportStability } from "@/components/ui/viewport-stability";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
@@ -81,9 +83,11 @@ export const viewport: Viewport = {
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const [session, shell] = await Promise.all([
+  const [session, shell, locale, messages] = await Promise.all([
     withFallback(auth(), null),
     getPublicShellSettings(),
+    getLocale(),
+    getMessages(),
   ]);
   const { settings, logoUrl } = shell;
   const user = session?.user?.id ? {
@@ -94,25 +98,27 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   } : null;
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${interTight.variable} ${manrope.variable}`}>
+    <html lang={locale} suppressHydrationWarning className={`${interTight.variable} ${manrope.variable}`}>
       <head>
         {/* Preconnect to image CDN for faster LCP */}
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body className="pt-safe">
-        <Providers session={session}>
-          <ViewportStability />
-          <ScrollProgress />
-          <OnboardingTour />
-          <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
-          <Suspense>
-            <div id="main-content" className="pb-safe route-scroll-container" tabIndex={-1}>{children}</div>
-          </Suspense>
-          <Footer storeName={settings.storeName} address={settings.address} />
-          <ScrollToTop />
-          <MobileBottomNav user={user} />
-        </Providers>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers session={session}>
+            <ViewportStability />
+            <ScrollProgress />
+            <OnboardingTour />
+            <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
+            <Suspense>
+              <div id="main-content" className="pb-safe route-scroll-container" tabIndex={-1}>{children}</div>
+            </Suspense>
+            <Footer storeName={settings.storeName} address={settings.address} />
+            <ScrollToTop />
+            <MobileBottomNav user={user} />
+          </Providers>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

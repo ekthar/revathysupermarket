@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ProductDetailClient } from "@/components/product-detail-client";
 import { ProductCard } from "@/components/product-card";
+import { ProductReviews } from "@/components/product-reviews";
+import { ProductSuggestions } from "@/components/product-suggestions";
 import { getProductBySlug, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import type { Product } from "@/lib/types";
@@ -79,6 +81,16 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
       />
 
       <ProductDetailClient product={product} />
+
+      {/* Product Suggestions (Frequently Bought Together) */}
+      <ProductSuggestions productSlug={slug} />
+
+      {/* Product Reviews */}
+      <ProductReviews
+        productSlug={slug}
+        initialAvgRating={product.avgRating}
+        initialReviewCount={product.reviewCount}
+      />
 
       {/* Related products */}
       {related.length > 0 && (

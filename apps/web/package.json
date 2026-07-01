@@ -14,6 +14,7 @@
     "test:lighthouse": "lhci autorun",
     "db:migrate": "prisma migrate deploy",
     "seed": "tsx -r dotenv/config prisma/seed.ts",
+    "seed:flags": "tsx -r dotenv/config prisma/seed-flags.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev"
   },

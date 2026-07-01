@@ -9,8 +9,13 @@ export function ScrollToTop() {
   const [show, setShow] = useState(false);
   const pathname = usePathname();
 
-  // Hide on admin/login/staff pages
-  const hidden = pathname.startsWith("/admin") || pathname.startsWith("/staff") || pathname === "/login" || pathname === "/welcome";
+  // Hide on admin/login/staff/delivery pages (they have their own layouts)
+  const hidden =
+    pathname.startsWith("/admin") ||
+    pathname.startsWith("/staff") ||
+    pathname.startsWith("/delivery") ||
+    pathname === "/login" ||
+    pathname === "/welcome";
 
   useEffect(() => {
     let ticking = false;

@@ -35,10 +35,22 @@ export default auth((request) => {
   const isCheckoutRoute = request.nextUrl.pathname.startsWith("/checkout");
   const isDeliveryRoute = request.nextUrl.pathname.startsWith("/delivery");
   const isDeliveryLoginRoute = request.nextUrl.pathname === "/delivery/login";
+  // Customer shopping surface — a delivery partner should never end up here.
+  // Their app is exactly one screen: their assigned orders (/delivery).
+  const isCustomerShoppingRoute =
+    request.nextUrl.pathname === "/" ||
+    request.nextUrl.pathname.startsWith("/products") ||
+    request.nextUrl.pathname.startsWith("/cart") ||
+    request.nextUrl.pathname.startsWith("/account") ||
+    request.nextUrl.pathname.startsWith("/offers");
   const user = request.auth?.user;
   const role = String(user?.role ?? "");
 
   if (isAdminRoute && !isAdminLoginRoute && role === "DELIVERY_PARTNER") {
+    return Response.redirect(new URL("/delivery", request.nextUrl));
+  }
+
+  if (isCustomerShoppingRoute && role === "DELIVERY_PARTNER") {
     return Response.redirect(new URL("/delivery", request.nextUrl));
   }
 
@@ -71,5 +83,16 @@ export default auth((request) => {
 });
 
 export const config = {
-  matcher: ["/admin/:path*", "/dashboard/:path*", "/checkout/:path*", "/delivery/:path*", "/api/:path*"]
+  matcher: [
+    "/",
+    "/admin/:path*",
+    "/dashboard/:path*",
+    "/checkout/:path*",
+    "/delivery/:path*",
+    "/products/:path*",
+    "/cart/:path*",
+    "/account/:path*",
+    "/offers/:path*",
+    "/api/:path*"
+  ]
 };

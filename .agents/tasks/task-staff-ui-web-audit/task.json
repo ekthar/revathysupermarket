@@ -1,0 +1,7 @@
+{
+  "task_id": "task-staff-ui-web-audit",
+  "task_description": "Two-app UI initiative in the revathysupermarket monorepo. (1) Raise apps/mobile-staff (Expo/React Native) to a polished, web-app-quality UI with fluid animations/transitions across all screens and options, using the already-installed Reanimated/Gesture Handler stack, and verify it typechecks/lints cleanly. (2) Analyse apps/web (Next.js) for UI/UX issues and produce a grounded audit plus high-priority fixes. (3) Identify and fix the web app's 'black theme' (dark mode) defects (broken System option, fragile blanket .dark overrides, missing selection contrast, duplicate theme toggles, light-only components). Publishing (push/PR) is handled by the orchestrator.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005"],
+  "blocked_reason": null
+}

@@ -53,25 +53,25 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
 
   return (
     <div className="space-y-5">
-      <h1 className="text-xl font-black text-slate-900">Collections</h1>
+      <h1 className="text-xl font-black text-slate-900 dark:text-white">Collections</h1>
 
       {/* Summary cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl bg-white border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">Pending Cash</p>
-          <p className="text-lg font-black text-yellow-600">₹{totals.pendingCash.toLocaleString()}</p>
+        <div className="rounded-xl bg-card border border-border p-4">
+          <p className="text-xs text-slate-500 dark:text-neutral-400">Pending Cash</p>
+          <p className="text-lg font-black text-yellow-600 dark:text-yellow-500">₹{totals.pendingCash.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl bg-white border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">UPI Awaiting</p>
-          <p className="text-lg font-black text-blue-600">₹{totals.pendingUpi.toLocaleString()}</p>
+        <div className="rounded-xl bg-card border border-border p-4">
+          <p className="text-xs text-slate-500 dark:text-neutral-400">UPI Awaiting</p>
+          <p className="text-lg font-black text-blue-600 dark:text-blue-400">₹{totals.pendingUpi.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl bg-white border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">Settled Total</p>
-          <p className="text-lg font-black text-green-600">₹{totals.settledTotal.toLocaleString()}</p>
+        <div className="rounded-xl bg-card border border-border p-4">
+          <p className="text-xs text-slate-500 dark:text-neutral-400">Settled Total</p>
+          <p className="text-lg font-black text-green-600 dark:text-green-400">₹{totals.settledTotal.toLocaleString()}</p>
         </div>
-        <div className="rounded-xl bg-white border border-slate-200 p-4">
-          <p className="text-xs text-slate-500">Discrepancies</p>
-          <p className="text-lg font-black text-red-600">{totals.discrepancyCount}</p>
+        <div className="rounded-xl bg-card border border-border p-4">
+          <p className="text-xs text-slate-500 dark:text-neutral-400">Discrepancies</p>
+          <p className="text-lg font-black text-red-600 dark:text-red-400">{totals.discrepancyCount}</p>
         </div>
       </div>
 
@@ -83,7 +83,7 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
             onClick={() => setTab(t.key)}
             className={cn(
               "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
-              tab === t.key ? "bg-primary text-white" : "bg-white border border-slate-200 text-slate-600"
+              tab === t.key ? "bg-primary text-white" : "bg-card border border-border text-slate-600 dark:text-neutral-300"
             )}
           >
             <t.icon className="h-3.5 w-3.5" />
@@ -94,27 +94,27 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
 
       {/* List */}
       {currentList.length === 0 ? (
-        <div className="rounded-2xl bg-white border border-slate-200 p-10 text-center">
-          <p className="text-sm text-slate-400">No collections in this category</p>
+        <div className="rounded-2xl bg-card border border-border p-10 text-center">
+          <p className="text-sm text-slate-400 dark:text-neutral-500">No collections in this category</p>
         </div>
       ) : (
         <div className="space-y-2">
           {currentList.filter((c) => !hidden.has(c.id)).map((c) => (
-            <div key={c.id} className="rounded-xl bg-white border border-slate-200 p-4">
+            <div key={c.id} className="rounded-xl bg-card border border-border p-4">
               <div className="flex items-center justify-between mb-2">
                 <div>
-                  <span className="text-sm font-bold text-slate-900">#{c.order.orderNumber}</span>
-                  <span className="text-xs text-slate-500 ml-2">{c.order.customerName}</span>
+                  <span className="text-sm font-bold text-slate-900 dark:text-white">#{c.order.orderNumber}</span>
+                  <span className="text-xs text-slate-500 dark:text-neutral-400 ml-2">{c.order.customerName}</span>
                 </div>
-                <span className="text-xs font-semibold text-slate-500">{c.partner.name}</span>
+                <span className="text-xs font-semibold text-slate-500 dark:text-neutral-400">{c.partner.name}</span>
               </div>
               <div className="grid grid-cols-4 gap-2 text-xs">
-                <div><p className="text-slate-400">Expected</p><p className="font-bold">₹{Number(c.expectedAmount).toFixed(0)}</p></div>
-                <div><p className="text-slate-400">Cash</p><p className="font-bold">₹{Number(c.cashCollected).toFixed(0)}</p></div>
-                <div><p className="text-slate-400">UPI</p><p className="font-bold">₹{Number(c.upiCollected).toFixed(0)}</p></div>
-                <div><p className="text-slate-400">Wallet</p><p className="font-bold">₹{Number(c.walletApplied).toFixed(0)}</p></div>
+                <div><p className="text-slate-400 dark:text-neutral-500">Expected</p><p className="font-bold">₹{Number(c.expectedAmount).toFixed(0)}</p></div>
+                <div><p className="text-slate-400 dark:text-neutral-500">Cash</p><p className="font-bold">₹{Number(c.cashCollected).toFixed(0)}</p></div>
+                <div><p className="text-slate-400 dark:text-neutral-500">UPI</p><p className="font-bold">₹{Number(c.upiCollected).toFixed(0)}</p></div>
+                <div><p className="text-slate-400 dark:text-neutral-500">Wallet</p><p className="font-bold">₹{Number(c.walletApplied).toFixed(0)}</p></div>
               </div>
-              {c.discrepancyReason && <p className="mt-2 text-xs text-red-600 bg-red-50 rounded-lg px-2 py-1">{c.discrepancyReason}</p>}
+              {c.discrepancyReason && <p className="mt-2 text-xs text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-500/10 rounded-lg px-2 py-1">{c.discrepancyReason}</p>}
               {c.status !== "SETTLED" && <button onClick={() => reconcile(c)} className="mt-3 h-10 rounded-xl bg-primary px-4 text-xs font-black text-white">{c.status === "SHORT" || c.status === "EXCESS" ? "Resolve discrepancy" : c.upiCollected > 0 ? "Verify UPI & settle" : "Confirm cash handover"}</button>}
             </div>
           ))}

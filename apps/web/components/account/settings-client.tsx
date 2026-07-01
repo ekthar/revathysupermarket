@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, MessageCircle, Megaphone, Package, Moon, Sun, Monitor, TrendingDown, Gift, Truck } from "lucide-react";
+import { Bell, MessageCircle, Megaphone, Package, Moon, Sun, TrendingDown, Gift, Truck } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
@@ -22,7 +22,7 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
   const [settings, setSettings] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const { theme, setTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
 
   async function toggleSetting(key: keyof typeof settings) {
     const newValue = !settings[key];
@@ -111,24 +111,18 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
 
         <div className="px-4 py-4">
           <p className="text-body font-medium text-neutral-800 dark:text-white mb-3">Theme</p>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-2 gap-2">
             <ThemeOption
               icon={Sun}
               label="Light"
-              active={theme === "light"}
+              active={resolvedTheme === "light"}
               onClick={() => setTheme("light")}
             />
             <ThemeOption
               icon={Moon}
               label="Dark"
-              active={theme === "dark"}
+              active={resolvedTheme === "dark"}
               onClick={() => setTheme("dark")}
-            />
-            <ThemeOption
-              icon={Monitor}
-              label="System"
-              active={theme === "system"}
-              onClick={() => setTheme("system")}
             />
           </div>
         </div>
@@ -209,7 +203,7 @@ function SettingToggle({
         <motion.span
           animate={{ x: enabled ? 20 : 0 }}
           transition={{ type: "spring", stiffness: 500, damping: 30 }}
-          className="absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm"
+          className="stay-light absolute top-1 left-1 h-5 w-5 rounded-full bg-white shadow-sm"
         />
       </button>
     </div>

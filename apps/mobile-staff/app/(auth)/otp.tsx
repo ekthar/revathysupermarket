@@ -3,13 +3,15 @@ import {
   View,
   Text,
   TextInput,
-  Pressable,
   KeyboardAvoidingView,
   Platform,
   ActivityIndicator,
 } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useAuthStore } from "@/stores/auth";
+import { AnimatedScreen } from "@/components/AnimatedScreen";
+import { AnimatedPressable } from "@/components/AnimatedPressable";
+import { AnimatedFadeIn } from "@/components/AnimatedFadeIn";
 
 export default function OtpScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -41,46 +43,52 @@ export default function OtpScreen() {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       className="flex-1"
     >
-      <View className="flex-1 bg-white px-6 justify-center">
-        <View className="mb-10">
-          <Text className="text-3xl font-bold text-slate-900 mb-2">
-            Verify OTP
-          </Text>
-          <Text className="text-base text-slate-500">
-            Enter the 6-digit code sent to +91 {phone}
-          </Text>
-        </View>
+      <AnimatedScreen className="flex-1 bg-white dark:bg-slate-950 px-6 justify-center">
+        <AnimatedFadeIn index={0}>
+          <View className="mb-10">
+            <Text className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+              Verify OTP
+            </Text>
+            <Text className="text-base text-slate-500 dark:text-slate-400">
+              Enter the 6-digit code sent to +91 {phone}
+            </Text>
+          </View>
+        </AnimatedFadeIn>
 
-        <View className="mb-6">
-          <TextInput
-            ref={inputRef}
-            className="border border-slate-200 rounded-2xl h-16 bg-slate-50 text-center text-2xl font-bold text-slate-900 tracking-[8px]"
-            value={otp}
-            onChangeText={(text) => setOtp(text.replace(/\D/g, "").slice(0, 6))}
-            keyboardType="number-pad"
-            maxLength={6}
-            autoFocus
-          />
-        </View>
+        <AnimatedFadeIn index={1}>
+          <View className="mb-6">
+            <TextInput
+              ref={inputRef}
+              className="border border-slate-200 dark:border-slate-700 rounded-2xl h-16 bg-slate-50 dark:bg-slate-900 text-center text-2xl font-bold text-slate-900 dark:text-white tracking-[8px]"
+              value={otp}
+              onChangeText={(text) => setOtp(text.replace(/\D/g, "").slice(0, 6))}
+              keyboardType="number-pad"
+              maxLength={6}
+              autoFocus
+            />
+          </View>
 
-        {error && (
-          <Text className="text-sm text-red-500 mb-4">{error}</Text>
-        )}
-
-        <Pressable
-          onPress={handleVerify}
-          disabled={isLoading || otp.length !== 6}
-          className={`h-14 rounded-xl items-center justify-center ${
-            isLoading || otp.length !== 6 ? "bg-emerald-400" : "bg-emerald-600"
-          }`}
-        >
-          {isLoading ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white text-base font-bold">Verify & Login</Text>
+          {error && (
+            <Text className="text-sm text-red-500 mb-4">{error}</Text>
           )}
-        </Pressable>
-      </View>
+
+          <AnimatedPressable
+            onPress={handleVerify}
+            disabled={isLoading || otp.length !== 6}
+            className={`h-14 rounded-xl items-center justify-center ${
+              isLoading || otp.length !== 6 ? "bg-emerald-400" : "bg-emerald-600"
+            }`}
+            accessibilityRole="button"
+            accessibilityLabel="Verify and login"
+          >
+            {isLoading ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white text-base font-bold">Verify & Login</Text>
+            )}
+          </AnimatedPressable>
+        </AnimatedFadeIn>
+      </AnimatedScreen>
     </KeyboardAvoidingView>
   );
 }

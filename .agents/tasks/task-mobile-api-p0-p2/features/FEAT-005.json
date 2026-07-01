@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "P2 Admin API routes: Advanced reporting (cancelled orders, returns reports, collections reports), audit log, subcategory management, customer feedback/reviews, WhatsApp log, delivery pricing slabs, rewards config.",
+  "status": "in_progress",
+  "steps": [
+    "Create apps/web/app/api/mobile/v1/reports/cancelled/route.ts - GET returns cancelled orders report with date range. Count cancelled orders, aggregate by reason, total refund amounts.",
+    "Create apps/web/app/api/mobile/v1/reports/returns/route.ts - GET returns return requests report. Aggregate by status, calculate total refund amounts, items returned count.",
+    "Create apps/web/app/api/mobile/v1/reports/collections/route.ts - GET returns delivery collections report. Aggregate by partner, date range, show cash/UPI breakdown, reconciliation status.",
+    "Create apps/web/app/api/mobile/v1/admin/audit-log/route.ts - GET returns paginated audit log entries. Support filters: actorId, action, targetType, date range. Use authenticateMobileRequest with ADMIN/OWNER roles.",
+    "Create apps/web/app/api/mobile/v1/admin/subcategories/route.ts - GET returns subcategories (optionally filtered by categoryId). POST creates a new subcategory.",
+    "Create apps/web/app/api/mobile/v1/admin/subcategories/[id]/route.ts - PATCH updates subcategory. DELETE removes subcategory.",
+    "Create apps/web/app/api/mobile/v1/admin/reviews/route.ts - GET returns all product reviews, paginated. Support filters by rating, productId. Include user name and product name.",
+    "Create apps/web/app/api/mobile/v1/admin/reviews/[id]/route.ts - DELETE removes a review (moderation).",
+    "Create apps/web/app/api/mobile/v1/admin/whatsapp-log/route.ts - GET returns WhatsApp message log, paginated. Show phone, template, status, orderId, createdAt.",
+    "Create apps/web/app/api/mobile/v1/admin/delivery-slabs/route.ts - GET returns delivery fee slabs. POST creates a slab. PATCH updates a slab. Follow DeliveryFeeSlab model.",
+    "Create apps/web/app/api/mobile/v1/admin/delivery-slabs/[id]/route.ts - PATCH updates a delivery fee slab. DELETE removes it.",
+    "Create apps/web/app/api/mobile/v1/admin/rewards/route.ts - GET returns loyalty configuration (from constants or settings). PATCH updates loyalty config if stored in settings.",
+    "Create apps/web/app/api/mobile/v1/admin/feedback/route.ts - GET returns order feedback entries with ratings and comments. Supports pagination."
+  ],
+  "acceptance_criteria": [
+    "All P2 routes exist and use authenticateMobileRequest",
+    "Reports endpoints return aggregated data with proper date filtering",
+    "Audit log supports pagination and filtering",
+    "All CRUD endpoints follow consistent patterns",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -300,7 +300,7 @@ export function CheckoutForm({
 
 
   return (
-    <form onSubmit={submit} className="mx-auto min-h-screen max-w-5xl bg-background px-4 pb-20 pt-4 md:pb-8">
+    <form onSubmit={submit} className="pb-20 pt-4 md:pb-8">
       {/* First order celebration */}
       <FirstOrderCelebration show={showCelebration} onDismiss={dismissCelebration} />
       <AnimatePresence>
@@ -398,6 +398,20 @@ export function CheckoutForm({
             )}
           </div>
 
+          {/* Delivery Address (step 1) */}
+          <AddressSelector
+            form={form}
+            onUpdate={(name, value) => update(name as keyof CheckoutState, value)}
+            onFormPatch={handleFormPatch}
+            savedAddresses={savedAddresses}
+            locationState={locationState}
+            onLocationStateChange={setLocationState}
+            locationOk={locationOk}
+            isOutsideRadius={isOutsideRadius}
+            distance={distance}
+            deliveryRadiusKm={deliveryRadiusKm}
+          />
+
           {/* Delivery Mode Selector */}
           <DeliveryModeSelector
             deliveryMode={deliveryMode}
@@ -430,20 +444,6 @@ export function CheckoutForm({
             walletBalance={walletBalance}
             walletLoading={walletLoading}
             totalAmount={totalAmount}
-          />
-
-          {/* Delivery Address */}
-          <AddressSelector
-            form={form}
-            onUpdate={(name, value) => update(name as keyof CheckoutState, value)}
-            onFormPatch={handleFormPatch}
-            savedAddresses={savedAddresses}
-            locationState={locationState}
-            onLocationStateChange={setLocationState}
-            locationOk={locationOk}
-            isOutsideRadius={isOutsideRadius}
-            distance={distance}
-            deliveryRadiusKm={deliveryRadiusKm}
           />
         </div>
 

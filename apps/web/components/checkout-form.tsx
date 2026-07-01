@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { calculateDistanceKm } from "@/lib/distance";
@@ -300,11 +300,9 @@ export function CheckoutForm({
 
 
   return (
-    <form onSubmit={submit} className="mx-auto min-h-screen max-w-5xl bg-background px-4 pb-32 pt-4 md:pb-8">
+    <form onSubmit={submit} className="mx-auto min-h-screen max-w-5xl bg-background px-4 pb-20 pt-4 md:pb-8">
       {/* First order celebration */}
       <FirstOrderCelebration show={showCelebration} onDismiss={dismissCelebration} />
-
-      {/* Order Success Modal with animated checkmark */}
       <AnimatePresence>
         {placedOrderId && (
           <motion.div
@@ -346,20 +344,6 @@ export function CheckoutForm({
       </AnimatePresence>
 
 
-      {/* Mobile Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between py-3 md:hidden"
-      >
-        <div className="flex items-center gap-3">
-          <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
-            <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
-          </Link>
-          <h1 className="text-lg font-black text-neutral-900 dark:text-white">{t("title")}</h1>
-        </div>
-      </motion.div>
-
       {/* Step Progression Indicator */}
       <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-elevation-2">
         <div className="flex items-center justify-between">
@@ -387,7 +371,7 @@ export function CheckoutForm({
         </p>
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[1fr_min(380px,35vw)] lg:gap-8">
+      <div className="grid gap-5 lg:grid-cols-[1fr_min(420px,40vw)] lg:gap-8">
         {/* Left column - Forms */}
         <div className="space-y-5">
           {/* Delivery ETA + Minimum Order Info */}

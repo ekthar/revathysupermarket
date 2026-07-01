@@ -52,7 +52,7 @@ export function OrderSummary({
     >
       <section className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900">
         <h2 className="text-title font-black text-neutral-900 dark:text-white">Order Summary</h2>
-        <div className="mt-4 space-y-2 max-h-[200px] overflow-y-auto">
+        <div className="mt-4 space-y-2 max-h-[280px] overflow-y-auto">
           {items.map((item) => (
             <div key={item.id} className="flex items-center justify-between text-caption">
               <span className="text-neutral-600 dark:text-neutral-400 truncate flex-1 mr-2">

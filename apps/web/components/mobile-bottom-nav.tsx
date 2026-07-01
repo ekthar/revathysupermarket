@@ -13,7 +13,7 @@ export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: S
   const pathname = usePathname();
   const router = useRouter();
 
-  if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin")) return null;
+  if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/checkout")) return null;
 
   const isCartFlow = pathname.startsWith("/cart") || pathname.startsWith("/checkout");
 

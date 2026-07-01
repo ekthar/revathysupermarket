@@ -21,7 +21,7 @@ export const checkoutSchema = z.object({
   deliverySlotId: z.string().optional(),
   promoCode: z.string().trim().max(40).optional(),
   loyaltyPoints: z.coerce.number().int().min(0).default(0),
-  tipAmount: z.coerce.number().min(0).optional(),
+  tipAmount: z.coerce.number().min(0).max(500).optional(),
   deliveryInstructions: z.string().max(200).optional(),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),

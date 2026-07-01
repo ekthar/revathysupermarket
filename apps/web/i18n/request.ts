@@ -27,8 +27,16 @@ export default getRequestConfig(async () => {
     }
   }
 
-  return {
-    locale,
-    messages: (await import(`./messages/${locale}.json`)).default
-  };
+  try {
+    const messages = (await import(`./messages/${locale}.json`)).default;
+    return { locale, messages };
+  } catch (error) {
+    console.error(`[i18n] Failed to load messages for locale "${locale}":`, error);
+    // Fall back to default locale if the requested locale file fails to load
+    if (locale !== defaultLocale) {
+      const fallbackMessages = (await import(`./messages/${defaultLocale}.json`)).default;
+      return { locale: defaultLocale, messages: fallbackMessages };
+    }
+    return { locale, messages: {} };
+  }
 });

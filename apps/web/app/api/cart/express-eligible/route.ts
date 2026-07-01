@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
+import { isWithinDeliveryRadius } from "@/lib/distance";
+import { SITE } from "@/lib/constants";
 
 // GET /api/cart/express-eligible
 // Checks if the current user is eligible for express/one-tap checkout:
@@ -44,6 +46,16 @@ export async function GET() {
     });
 
     if (!defaultAddress || !defaultAddress.latitude || !defaultAddress.longitude) {
+      return NextResponse.json({ eligible: false });
+    }
+
+    // Validate that the default address is within delivery radius
+    const withinRadius = isWithinDeliveryRadius(
+      { lat: Number(defaultAddress.latitude), lng: Number(defaultAddress.longitude) },
+      SITE.deliveryRadiusKm
+    );
+
+    if (!withinRadius) {
       return NextResponse.json({ eligible: false });
     }
 

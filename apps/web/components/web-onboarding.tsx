@@ -78,7 +78,7 @@ export function WebOnboarding() {
               </button>
               <div className="absolute -bottom-16 -right-10 h-44 w-44 rounded-full bg-secondary-100 blur-3xl" />
               <div className="relative">
-                <span className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-primary shadow-lg">
+                <span className="stay-light flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-primary shadow-lg">
                   <Icon className="h-7 w-7" />
                 </span>
           <p className="mt-5 text-xs font-black uppercase tracking-wide text-secondary-500">Welcome to {SITE.name.split(" ")[0]}</p>

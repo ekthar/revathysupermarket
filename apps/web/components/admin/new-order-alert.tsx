@@ -111,22 +111,22 @@ export function NewOrderAlert() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
-            className="pointer-events-auto w-full max-w-md bg-white rounded-2xl shadow-elevation-2 border border-slate-200/80 overflow-hidden"
+            className="pointer-events-auto w-full max-w-md bg-white dark:bg-neutral-900 rounded-2xl shadow-elevation-2 border border-slate-200/80 dark:border-neutral-800 overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 border-b border-orange-100">
-              <div className="h-8 w-8 rounded-full bg-orange-100 flex items-center justify-center pulse-ring">
-                <Bell className="h-4 w-4 text-orange-600" />
+            <div className="flex items-center gap-3 px-4 py-3 bg-orange-50 dark:bg-orange-500/10 border-b border-orange-100 dark:border-orange-500/20">
+              <div className="h-8 w-8 rounded-full bg-orange-100 dark:bg-orange-500/20 flex items-center justify-center pulse-ring">
+                <Bell className="h-4 w-4 text-orange-600 dark:text-orange-400" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-body font-semibold text-orange-900">New Order #{order.orderNumber}</p>
-                <p className="text-caption text-orange-600">{new Date(order.createdAt).toLocaleTimeString()}</p>
+                <p className="text-body font-semibold text-orange-900 dark:text-orange-200">New Order #{order.orderNumber}</p>
+                <p className="text-caption text-orange-600 dark:text-orange-400">{new Date(order.createdAt).toLocaleTimeString()}</p>
               </div>
               <button
                 type="button"
                 aria-label={`Dismiss alert for order ${order.orderNumber}`}
                 onClick={() => setDismissed((s) => new Set([...s, order.id]))}
-                className="h-7 w-7 rounded-full bg-white/80 flex items-center justify-center text-slate-400 hover:text-slate-600"
+                className="h-7 w-7 rounded-full bg-white/80 dark:bg-white/10 flex items-center justify-center text-slate-400 hover:text-slate-600 dark:text-neutral-400 dark:hover:text-neutral-200"
               >
                 <X className="h-3.5 w-3.5" />
               </button>
@@ -136,14 +136,14 @@ export function NewOrderAlert() {
             <div className="px-4 py-3">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-body font-semibold text-slate-900">{order.customerName}</p>
-                  <p className="text-caption text-slate-500 flex items-center gap-1 mt-0.5">
+                  <p className="text-body font-semibold text-slate-900 dark:text-white">{order.customerName}</p>
+                  <p className="text-caption text-slate-500 dark:text-neutral-400 flex items-center gap-1 mt-0.5">
                     <Phone className="h-3 w-3" /> {order.phone}
                   </p>
                 </div>
                 <div className="text-right">
-                  <p className="text-title font-bold text-slate-900">{formatCurrency(order.total)}</p>
-                  <p className="text-caption text-slate-400 flex items-center gap-1 justify-end">
+                  <p className="text-title font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</p>
+                  <p className="text-caption text-slate-400 dark:text-neutral-500 flex items-center gap-1 justify-end">
                     <ShoppingBag className="h-3 w-3" /> {order.itemCount} items
                   </p>
                 </div>

@@ -34,7 +34,7 @@ export default async function CheckoutPage() {
     orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }]
   }).catch(() => []);
   return (
-    <main className="mx-auto max-w-5xl overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
+    <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <nav className="mb-3 flex items-center gap-2 text-xs font-medium text-neutral-500">
           <Link href="/cart" className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">Cart</Link>

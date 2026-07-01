@@ -20,6 +20,7 @@ type AdminOrder = {
   billNumber?: string | null;
   acknowledgedAt: string | null;
   printedAt: string | null;
+  printCount: number;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
   whatsappLogs: Array<{ id: string; template: string; status: string; createdAt: string }>;
@@ -50,6 +51,7 @@ function normalizeOrder(order: RawApiOrder): AdminOrder {
     billNumber: order.billNumber ?? null,
     acknowledgedAt: order.acknowledgedAt ?? null,
     printedAt: order.printedAt ?? null,
+    printCount: order.printCount ?? 0,
     createdAt: order.createdAt,
     items: order.items.map((item) => ({
       id: item.id,

@@ -86,7 +86,7 @@ export function InstallAppPrompt() {
     };
   }, []);
 
-  if (!visible || ["/login", "/welcome", "/checkout"].some((route) => pathname.startsWith(route))) return null;
+  if (!visible || ["/login", "/welcome", "/checkout", "/delivery", "/admin", "/staff"].some((route) => pathname.startsWith(route))) return null;
 
   const role = session?.user?.role;
   const copy = role === "DELIVERY_PARTNER"

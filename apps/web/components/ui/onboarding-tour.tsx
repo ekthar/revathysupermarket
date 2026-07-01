@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Search, ShoppingBag, Sparkles, X } from "lucide-react";
 import { lockDocumentScroll } from "@/lib/document-scroll-lock";
@@ -47,10 +48,22 @@ const tourSteps: TourStep[] = [
 ];
 
 export function OnboardingTour() {
+  const pathname = usePathname();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
 
+  // This tour walks through customer shopping flows (browse/cart/checkout).
+  // It has no business appearing for staff/admin/delivery roles or on their
+  // routes — a delivery partner should never see a "Browse Products" tour.
+  const isCustomerRoute =
+    !pathname.startsWith("/admin") &&
+    !pathname.startsWith("/staff") &&
+    !pathname.startsWith("/delivery") &&
+    pathname !== "/login" &&
+    pathname !== "/welcome";
+
   useEffect(() => {
+    if (!isCustomerRoute) return;
     // Only show for new users who haven't seen the tour
     const done = localStorage.getItem(STORAGE_KEY);
     if (!done) {
@@ -58,12 +71,14 @@ export function OnboardingTour() {
       const timer = setTimeout(() => setShow(true), 1500);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [isCustomerRoute]);
 
   useEffect(() => {
     if (!show) return;
     return lockDocumentScroll();
   }, [show]);
+
+  if (!isCustomerRoute) return null;
 
   function next() {
     if (step < tourSteps.length - 1) {

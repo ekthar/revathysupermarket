@@ -87,6 +87,14 @@ class FcmService {
         });
         break;
 
+      case "packing_assignment":
+        await notifeeService.showPackingAlert({
+          eventId: message.data?.eventId as string,
+          orderId: message.data?.orderId as string,
+          orderNumber: message.data?.orderNumber as string,
+        });
+        break;
+
       case "order_rejected":
         await notifeeService.showAdminRejectAlert({
           orderId: message.data?.orderId as string,
@@ -119,3 +127,47 @@ class FcmService {
 }
 
 export const fcmService = new FcmService();
+
+/**
+ * Background message handler.
+ * Handles FCM messages when the app is in background or killed state.
+ */
+messaging().setBackgroundMessageHandler(async (message) => {
+  const type = message.data?.type as string | undefined;
+
+  switch (type) {
+    case "delivery_assignment":
+      await notifeeService.showDeliveryAlert({
+        eventId: message.data?.eventId as string,
+        orderId: message.data?.orderId as string,
+        orderNumber: message.data?.orderNumber as string,
+        deepLink: message.data?.deepLink as string,
+      });
+      break;
+
+    case "packing_assignment":
+      await notifeeService.showPackingAlert({
+        eventId: message.data?.eventId as string,
+        orderId: message.data?.orderId as string,
+        orderNumber: message.data?.orderNumber as string,
+      });
+      break;
+
+    case "order_rejected":
+      await notifeeService.showAdminRejectAlert({
+        orderId: message.data?.orderId as string,
+        orderNumber: message.data?.orderNumber as string,
+        reason: message.data?.reason as string,
+      });
+      break;
+
+    default:
+      if (message.notification) {
+        await notifeeService.showGenericNotification(
+          message.notification.title ?? "MSM Staff",
+          message.notification.body ?? ""
+        );
+      }
+      break;
+  }
+});

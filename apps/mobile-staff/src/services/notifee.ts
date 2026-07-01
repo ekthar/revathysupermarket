@@ -17,6 +17,12 @@ export interface DeliveryAlertPayload {
   deepLink?: string;
 }
 
+export interface PackingAlertPayload {
+  eventId: string;
+  orderId: string;
+  orderNumber: string;
+}
+
 export interface AdminRejectPayload {
   orderId: string;
   orderNumber: string;
@@ -55,6 +61,19 @@ class NotifeeService {
       sound: "emergency_bell",
       vibration: true,
       vibrationPattern: [0, 500, 200, 500],
+      bypassDnd: true,
+      visibility: AndroidVisibility.PUBLIC,
+    });
+
+    // Packing alert channel — high importance, vibration, bypasses DND
+    await notifee.createChannel({
+      id: "packing_alert",
+      name: "Packing Alerts",
+      description: "Incoming packing order assignment alerts",
+      importance: AndroidImportance.HIGH,
+      sound: "delivery_alarm",
+      vibration: true,
+      vibrationPattern: [0, 300, 100, 300, 100, 300],
       bypassDnd: true,
       visibility: AndroidVisibility.PUBLIC,
     });
@@ -144,6 +163,52 @@ class NotifeeService {
       },
       data: {
         type: "order_rejected",
+        orderId: payload.orderId,
+        orderNumber: payload.orderNumber,
+      },
+    });
+  }
+
+  /**
+   * Display a full-screen packing assignment alert.
+   * Rings loudly, wakes screen, shows accept/reject even when phone is locked.
+   */
+  async showPackingAlert(payload: PackingAlertPayload): Promise<void> {
+    await this.createChannels();
+
+    await notifee.displayNotification({
+      id: `packing-${payload.eventId}`,
+      title: `📦 New Packing Order #${payload.orderNumber}`,
+      body: "New order assigned for packing. Tap to start.",
+      android: {
+        channelId: "packing_alert",
+        category: AndroidCategory.CALL,
+        importance: AndroidImportance.HIGH,
+        fullScreenAction: {
+          id: "accept_packing",
+          launchActivity: "default",
+        },
+        sound: "delivery_alarm",
+        ongoing: true,
+        autoCancel: false,
+        pressAction: {
+          id: "view_packing",
+          launchActivity: "default",
+        },
+        actions: [
+          {
+            title: "\u2713 Accept",
+            pressAction: { id: "accept", launchActivity: "default" },
+          },
+          {
+            title: "\u2715 Reject",
+            pressAction: { id: "reject", launchActivity: "default" },
+          },
+        ],
+      },
+      data: {
+        type: "packing_assignment",
+        eventId: payload.eventId,
         orderId: payload.orderId,
         orderNumber: payload.orderNumber,
       },

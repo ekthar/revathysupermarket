@@ -57,6 +57,14 @@ export default function RootLayout() {
             animation: "slide_from_bottom",
           }}
         />
+        <Stack.Screen
+          name="alert/packing/[eventId]"
+          options={{
+            presentation: "fullScreenModal",
+            headerShown: false,
+            animation: "slide_from_bottom",
+          }}
+        />
       </Stack>
     </View>
   );

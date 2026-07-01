@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import {
-  CheckCircle2, IndianRupee, Phone,
+  CheckCircle2, IndianRupee, Phone, UserX,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
@@ -95,9 +95,18 @@ export function DeliveryOrderActions({
       {order.status === "ARRIVING" && (
         <button
           disabled={loading === order.id}
-          onClick={() => onMarkUnavailable(order)}
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-xl border border-amber-500 font-bold text-amber-700 disabled:opacity-40 dark:border-amber-600 dark:text-amber-400"
+          onClick={() => {
+            if (
+              window.confirm(
+                "Mark this customer as unavailable? This starts a wait timer before you can return the order to the store."
+              )
+            ) {
+              onMarkUnavailable(order);
+            }
+          }}
+          className="flex h-12 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-amber-500 font-bold text-amber-700 disabled:opacity-40 dark:border-amber-600 dark:text-amber-400"
         >
+          <UserX className="h-4 w-4 shrink-0" />
           Customer Unavailable
         </button>
       )}

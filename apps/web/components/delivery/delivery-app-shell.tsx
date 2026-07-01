@@ -21,6 +21,8 @@ type DeliveryOrder = {
   customerName: string;
   phone: string;
   address: string;
+  latitude?: number | null;
+  longitude?: number | null;
   status: string;
   total: number;
   paymentMethod: string;
@@ -66,6 +68,21 @@ function statusColor(status: string): string {
     case "CANCELLED": return "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300";
     default: return "bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-300";
   }
+}
+
+function navUrl(order: { latitude?: number | null; longitude?: number | null; address: string }): string {
+  const { latitude, longitude, address } = order;
+  const hasCoords =
+    typeof latitude === "number" &&
+    typeof longitude === "number" &&
+    Number.isFinite(latitude) &&
+    Number.isFinite(longitude) &&
+    !(latitude === 0 && longitude === 0);
+  // Prefer turn-by-turn directions to the exact captured GPS point; only fall
+  // back to a free-text address search when coordinates are missing/invalid.
+  return hasCoords
+    ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
 
 function paymentBadge(method: string): { label: string; className: string } {
@@ -162,7 +179,7 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
       {/* GPS location publisher */}
       <DeliveryMapView />
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-gradient-to-br from-emerald-600 to-emerald-700 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1rem)]">
+      <header className="sticky top-0 z-40 bg-gradient-to-br from-emerald-600 to-emerald-700 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1rem)] shadow-lg shadow-emerald-900/20">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
             <Bike className="h-5 w-5 text-white" />
@@ -258,12 +275,7 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
                     {/* Address */}
                     <div className="px-4">
                       <button
-                        onClick={() =>
-                          window.open(
-                            `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.address)}`,
-                            "_blank"
-                          )
-                        }
+                        onClick={() => window.open(navUrl(order), "_blank")}
                         className="flex w-full items-start gap-2 rounded-xl bg-slate-50 p-3 text-left dark:bg-slate-800"
                       >
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" />
@@ -545,12 +557,35 @@ function CollectionDialog({
   onClose: () => void;
   onSaved: (collection: NonNullable<DeliveryOrder["collection"]>) => void;
 }) {
+  const expectedAmount = order.collection?.expectedAmount ?? order.total;
   const [cash, setCash] = useState("");
   const [upi, setUpi] = useState("");
   const [card, setCard] = useState("");
   const [reference, setReference] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const totalEntered = Number(cash || 0) + Number(upi || 0) + Number(card || 0);
+  const difference = Number((totalEntered - expectedAmount).toFixed(2));
+  const hasEntry = Boolean(cash || upi || card);
+
+  // Natural-language guidance so the rider always knows what to do next.
+  const balance: { text: string; className: string } | null = !hasEntry
+    ? null
+    : Math.abs(difference) < 0.01
+      ? {
+          text: "Perfect — exact amount, no change needed.",
+          className: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300",
+        }
+      : difference > 0
+        ? {
+            text: `Return ${formatCurrency(difference)} change to the customer.`,
+            className: "bg-amber-50 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+          }
+        : {
+            text: `Collect ${formatCurrency(Math.abs(difference))} more from the customer.`,
+            className: "bg-blue-50 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
+          };
 
   async function submit() {
     setLoading(true);
@@ -567,7 +602,12 @@ function CollectionDialog({
     const data = await response.json();
     setLoading(false);
     if (!response.ok || !data.balanced) {
-      return setError(data.error ?? `Collection differs by ${formatCurrency(Math.abs(data.delta ?? 0))}`);
+      const delta = Math.abs(Number(data.delta ?? difference));
+      const natural =
+        (data.delta ?? difference) < 0
+          ? `Still ${formatCurrency(delta)} short — collect the full ${formatCurrency(expectedAmount)}.`
+          : `That's ${formatCurrency(delta)} over — the total should be ${formatCurrency(expectedAmount)}.`;
+      return setError(data.error ?? natural);
     }
     onSaved({
       ...data.collection,
@@ -577,62 +617,70 @@ function CollectionDialog({
     });
   }
 
+  const inputClass =
+    "mt-2 h-14 w-full rounded-xl border border-slate-200 px-3 text-lg dark:border-slate-700 dark:bg-slate-800";
 
   return (
     <BottomSheet title="Record Collection" onClose={onClose}>
-      <p className="text-sm text-slate-500 dark:text-slate-400">
-        Enter the actual amounts received. Total must match the payable amount.
+      {/* Amount to collect — the rider's headline number */}
+      <div className="rounded-2xl bg-slate-900 p-4 text-center dark:bg-white">
+        <p className="text-micro font-bold uppercase tracking-wide text-white/60 dark:text-slate-500">
+          Amount to collect
+        </p>
+        <p className="mt-1 text-4xl font-black text-white dark:text-slate-900">
+          {formatCurrency(expectedAmount)}
+        </p>
+        <p className="mt-1 text-xs font-bold text-white/60 dark:text-slate-500">
+          #{order.orderNumber} · {(order.paymentMethod || "COD").toUpperCase()}
+        </p>
+      </div>
+
+      <p className="mt-4 text-sm text-slate-500 dark:text-slate-400">
+        Enter what you actually received. It should add up to the amount above.
       </p>
+
+      {/* Quick fill: most COD orders are paid fully in cash */}
+      <button
+        type="button"
+        onClick={() => { setCash(String(expectedAmount)); setUpi(""); setCard(""); }}
+        className="mt-3 h-10 w-full rounded-xl border border-emerald-200 bg-emerald-50 text-sm font-bold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300"
+      >
+        Received full {formatCurrency(expectedAmount)} in cash
+      </button>
 
       <div className="mt-4 space-y-3">
         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">
           Cash ₹
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={cash}
-            onChange={(e) => setCash(e.target.value)}
-            placeholder="0"
-            className="mt-2 h-14 w-full rounded-xl border border-slate-200 px-3 text-lg dark:border-slate-700 dark:bg-slate-800"
-          />
+          <input type="number" min="0" step="0.01" value={cash} onChange={(e) => setCash(e.target.value)} placeholder="0" className={inputClass} />
         </label>
         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">
           UPI ₹
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={upi}
-            onChange={(e) => setUpi(e.target.value)}
-            placeholder="0"
-            className="mt-2 h-14 w-full rounded-xl border border-slate-200 px-3 text-lg dark:border-slate-700 dark:bg-slate-800"
-          />
+          <input type="number" min="0" step="0.01" value={upi} onChange={(e) => setUpi(e.target.value)} placeholder="0" className={inputClass} />
         </label>
         <label className="block text-sm font-bold text-slate-700 dark:text-slate-300">
           Card ₹
-          <input
-            type="number"
-            min="0"
-            step="0.01"
-            value={card}
-            onChange={(e) => setCard(e.target.value)}
-            placeholder="0"
-            className="mt-2 h-14 w-full rounded-xl border border-slate-200 px-3 text-lg dark:border-slate-700 dark:bg-slate-800"
-          />
+          <input type="number" min="0" step="0.01" value={card} onChange={(e) => setCard(e.target.value)} placeholder="0" className={inputClass} />
         </label>
+      </div>
+
+      {/* Running total entered so far */}
+      <div className="mt-3 flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2.5 text-sm dark:bg-slate-800">
+        <span className="font-bold text-slate-500 dark:text-slate-400">Entered so far</span>
+        <span className="font-black text-slate-900 dark:text-white">{formatCurrency(totalEntered)}</span>
       </div>
 
       {(Number(upi) > 0 || Number(card) > 0) && (
         <label className="mt-3 block text-sm font-bold text-slate-700 dark:text-slate-300">
           Reference ID
-          <input
-            value={reference}
-            onChange={(e) => setReference(e.target.value)}
-            placeholder="Transaction reference"
-            className="mt-2 h-14 w-full rounded-xl border border-slate-200 px-3 text-lg dark:border-slate-700 dark:bg-slate-800"
-          />
+          <input value={reference} onChange={(e) => setReference(e.target.value)} placeholder="Transaction reference" className={inputClass} />
         </label>
+      )}
+
+      {/* Live natural-language guidance */}
+      {balance && (
+        <div className={`mt-3 rounded-xl px-3 py-3 text-center text-sm font-bold ${balance.className}`}>
+          {balance.text}
+        </div>
       )}
 
       {error && <p className="mt-3 text-sm font-bold text-red-600">{error}</p>}

@@ -45,6 +45,8 @@ export default async function DeliveryPage() {
           customerName: o.customerName,
           phone: o.phone,
           address: `${o.houseName}, ${o.street}, ${o.landmark}, ${o.pincode}`,
+          latitude: o.latitude != null ? Number(o.latitude) : null,
+          longitude: o.longitude != null ? Number(o.longitude) : null,
           status: o.status,
           total: Number(o.total),
           paymentMethod: o.paymentMethod,

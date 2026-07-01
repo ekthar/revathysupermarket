@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "feat",
   "description": "P2 Admin API routes: Advanced reporting (cancelled orders, returns reports, collections reports), audit log, subcategory management, customer feedback/reviews, WhatsApp log, delivery pricing slabs, rewards config.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create apps/web/app/api/mobile/v1/reports/cancelled/route.ts - GET returns cancelled orders report with date range. Count cancelled orders, aggregate by reason, total refund amounts.",
     "Create apps/web/app/api/mobile/v1/reports/returns/route.ts - GET returns return requests report. Aggregate by status, calculate total refund amounts, items returned count.",
@@ -29,5 +29,5 @@
     "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 13 P2 routes created and compiling. Had to handle nullable User.name in collections report (partner name). All routes follow the same auth pattern with authenticateMobileRequest. Audit-log restricted to ADMIN/OWNER only. Rewards PATCH restricted to ADMIN/OWNER."
 }

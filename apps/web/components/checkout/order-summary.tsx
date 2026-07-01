@@ -133,7 +133,7 @@ export function OrderSummary({
           whileHover={{ scale: canSubmit ? 1.01 : 1 }}
           className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-body font-black text-white shadow-premium transition-opacity disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
         >
-          {isSubmitting ? "Placing order..." : "Place Order"}
+          {isSubmitting ? "Placing order..." : `Place Order - ${formatCurrency(totalAmount)}`}
         </motion.button>
         {!canSubmit && (
           <p className="mt-3 text-center text-caption font-medium text-neutral-400">

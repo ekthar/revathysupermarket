@@ -31,6 +31,7 @@ const itemVariants = {
 
 interface AnimatedProductSectionProps {
   title: string;
+  subtitle?: string;
   icon?: React.ReactNode;
   products: Product[];
   showCategoryPills?: boolean;
@@ -43,6 +44,7 @@ interface AnimatedProductSectionProps {
 
 export const AnimatedProductSection = memo(function AnimatedProductSection({
   title,
+  subtitle,
   icon,
   products,
   showCategoryPills = false,
@@ -66,22 +68,26 @@ export const AnimatedProductSection = memo(function AnimatedProductSection({
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-            className="flex items-center justify-between"
           >
-            <div className="flex items-center gap-2">
-              {icon}
-              <h2 className="section-title text-lg md:text-2xl">{title}</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {icon}
+                <h2 className="section-title text-lg md:text-2xl">{title}</h2>
+              </div>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={isInView ? { opacity: 1, scale: 1 } : {}}
+                transition={{ duration: 0.25, ease: "easeOut", delay: 0.15 }}
+              >
+                <Link href="/products" className="show-all-pill text-xs md:text-sm">
+                  Show All
+                  <ChevronUp className="h-3 w-3 md:h-3.5 md:w-3.5" />
+                </Link>
+              </motion.div>
             </div>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={isInView ? { opacity: 1, scale: 1 } : {}}
-              transition={{ duration: 0.25, ease: "easeOut", delay: 0.15 }}
-            >
-              <Link href="/products" className="show-all-pill text-xs md:text-sm">
-                Show All
-                <ChevronUp className="h-3 w-3 md:h-3.5 md:w-3.5" />
-              </Link>
-            </motion.div>
+            {subtitle && (
+              <p className="mt-1 text-xs md:text-sm text-neutral-500 dark:text-neutral-400">{subtitle}</p>
+            )}
           </motion.div>
 
           {/* Category filter pills */}

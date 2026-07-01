@@ -36,6 +36,11 @@ export default async function CheckoutPage() {
   return (
     <main className="mx-auto max-w-5xl overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
+        <nav className="mb-3 flex items-center gap-2 text-xs font-medium text-neutral-500">
+          <Link href="/cart" className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">Cart</Link>
+          <span>/</span>
+          <span className="text-neutral-900 dark:text-white">Checkout</span>
+        </nav>
         <p className="text-xs font-black uppercase text-primary">Secure local order</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">Checkout</h1>
         <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">

@@ -152,12 +152,20 @@ export function CartPageClient() {
               <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
             </Link>
             <div>
-              <p className="text-caption font-black uppercase tracking-[0.28em] text-neutral-400">{items.length} item{items.length > 1 ? "s" : ""}</p>
+              <p className="text-caption font-black uppercase tracking-[0.28em] text-neutral-400">{items.length} item{items.length > 1 ? "s" : ""} in cart</p>
               <h1 className="text-title font-black text-neutral-900 dark:text-white">{t("title")}</h1>
             </div>
           </div>
           <span className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(subtotal)}</span>
         </div>
+      </div>
+
+      {/* Continue Shopping Link */}
+      <div className="mt-2 mb-1">
+        <Link href="/products" className="inline-flex items-center gap-1.5 text-caption font-semibold text-primary hover:underline press">
+          <ArrowLeft className="h-3 w-3" />
+          Continue Shopping
+        </Link>
       </div>
 
       {/* Minimum order warning */}

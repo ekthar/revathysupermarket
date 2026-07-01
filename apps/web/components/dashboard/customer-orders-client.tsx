@@ -173,9 +173,14 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   if (orders.length === 0) {
     return (
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-dashed border-border p-10 text-center">
-        <Package className="h-12 w-12 mx-auto text-neutral-300" />
-        <h2 className="mt-4 font-display text-xl font-bold">No orders yet</h2>
-        <p className="mt-1 text-sm text-muted-foreground">Your grocery orders will appear here.</p>
+        <div className="mx-auto h-16 w-16 rounded-full bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
+          <Package className="h-8 w-8 text-neutral-300 dark:text-neutral-600" />
+        </div>
+        <h2 className="mt-4 font-display text-xl font-bold text-neutral-900 dark:text-white">No orders yet</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Your grocery orders will appear here once you place your first order.</p>
+        <Link href="/products" className="mt-5 inline-flex h-11 items-center justify-center rounded-full bg-black px-6 text-sm font-bold text-white dark:bg-white dark:text-black hover:opacity-90 transition-opacity press">
+          Start Shopping
+        </Link>
       </motion.div>
     );
   }

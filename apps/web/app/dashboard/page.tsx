@@ -80,6 +80,16 @@ export default async function DashboardPage() {
         <p className="text-xs font-black uppercase tracking-[0.22em] text-secondary-400">Order tracking</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight tracking-tighter">My orders</h1>
         <p className="mt-2 text-sm font-medium text-white/65">Follow every order from received to delivered.</p>
+        <div className="mt-4 flex gap-3">
+          <div className="rounded-lg bg-white/10 px-3 py-2">
+            <p className="text-micro text-white/60">Active</p>
+            <p className="text-lg font-black">{activeOrders.length}</p>
+          </div>
+          <div className="rounded-lg bg-white/10 px-3 py-2">
+            <p className="text-micro text-white/60">Completed</p>
+            <p className="text-lg font-black">{completedOrders.length}</p>
+          </div>
+        </div>
       </section>
       <div className="mt-6">
         <LiveOrderBanner initialOrder={activeOrders[0] ? {

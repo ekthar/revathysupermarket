@@ -360,6 +360,33 @@ export function CheckoutForm({
         </div>
       </motion.div>
 
+      {/* Step Progression Indicator */}
+      <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-elevation-2">
+        <div className="flex items-center justify-between">
+          {[
+            { label: "Address", step: 1 },
+            { label: "Delivery", step: 2 },
+            { label: "Payment", step: 3 },
+            { label: "Review", step: 4 },
+          ].map((item, idx) => (
+            <div key={item.label} className="flex items-center">
+              <div className="flex flex-col items-center">
+                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white text-micro font-bold">
+                  {item.step}
+                </div>
+                <span className="mt-1 text-micro font-semibold text-neutral-600 dark:text-neutral-400">{item.label}</span>
+              </div>
+              {idx < 3 && (
+                <div className="mx-1.5 h-[2px] w-6 sm:w-10 bg-neutral-200 dark:bg-neutral-700" />
+              )}
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-center text-micro text-neutral-500 dark:text-neutral-400">
+          Fill in all sections below to place your order
+        </p>
+      </div>
+
       <div className="grid gap-5 lg:grid-cols-[1fr_min(380px,35vw)] lg:gap-8">
         {/* Left column - Forms */}
         <div className="space-y-5">

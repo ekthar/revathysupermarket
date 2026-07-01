@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { unstable_cache } from "next/cache";
-import { ChevronRight, ChevronUp, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { ChevronRight, ChevronUp, Sparkles, Zap } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
@@ -145,6 +145,7 @@ export default async function HomePage() {
       <div className="cv-auto">
         <AnimatedProductSection
           title="Weekly Best Selling Items"
+          subtitle="Top picks loved by customers this week"
           products={trending.slice(0, 8)}
           showCategoryPills
           categoryPills={["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Bakery", "Meat & Fish", "Beverages"]}
@@ -152,32 +153,24 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* Just for you / Today's Offers */}
+      {/* On Sale Today - items with active discounts */}
       {offers.length > 0 && (
         <div className="cv-auto">
           <AnimatedProductSection
-            title="Just for you"
+            title="On Sale Today"
+            subtitle="Limited-time discounts you do not want to miss"
             icon={<Zap className="h-5 w-5 text-orange-500" />}
             products={offers}
+            layout="grid"
           />
         </div>
       )}
 
-      {/* Most Selling Products - Desktop grid */}
-      <div className="cv-auto-lg">
-        <AnimatedProductSection
-          title="Most Selling Products"
-          icon={<TrendingUp className="h-5 w-5 text-primary" />}
-          products={trending.slice(0, 10)}
-          layout="grid"
-          desktopOnly
-        />
-      </div>
-
-      {/* Today's Fresh Picks */}
+      {/* Explore More - discover new products */}
       <div className="cv-auto">
         <AnimatedProductSection
-          title="Today's Fresh Picks"
+          title="Explore More"
+          subtitle="Discover something new from our collection"
           icon={<Sparkles className="h-5 w-5 text-yellow-500" />}
           products={freshPicks}
           layout="mixed"

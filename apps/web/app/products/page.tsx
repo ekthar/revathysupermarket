@@ -135,7 +135,27 @@ export default async function ProductsPage({
       <section className="overflow-hidden px-4 pb-1 pt-8 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="font-display text-display font-black leading-none tracking-tighter sm:text-5xl">Browse</h1>
-          <p className="mt-2 text-sm font-semibold text-neutral-400">{total} products available</p>
+          <p className="mt-2 text-sm font-medium text-neutral-500 dark:text-neutral-400">
+            Find everything you need from our fresh collection
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="text-sm font-semibold text-neutral-400">{total} products available</span>
+            {category && category !== "All" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-xs font-bold text-primary">
+                Category: {category}
+              </span>
+            )}
+            {q && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-secondary-100 dark:bg-secondary-900/30 px-3 py-1 text-xs font-bold text-secondary-700 dark:text-secondary-300">
+                Search: &ldquo;{q}&rdquo;
+              </span>
+            )}
+            {sort && sort !== "popularity" && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1 text-xs font-bold text-neutral-600 dark:text-neutral-300">
+                Sort: {sort === "low" ? "Price: Low to High" : sort === "high" ? "Price: High to Low" : sort === "newest" ? "Newest First" : sort}
+              </span>
+            )}
+          </div>
         </div>
       </section>
       {/* Sub-category pills when a category is selected */}

@@ -2,7 +2,7 @@
   "id": "FEAT-006",
   "type": "feat",
   "description": "Fix all confusing sections from Parts 2, 3, 4 of the gap analysis. Improve homepage section clarity, product page hierarchy, checkout flow UX, and admin panel navigation confusion.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Update apps/web/app/page.tsx: Remove 'Most Selling Products' section (duplicate of Weekly Best Selling). Rename 'Just for you' to 'On Sale Today'. Rename 'Today's Fresh Picks' to 'Explore More'. Add brief subtitle/description under each section title explaining why items are grouped. Alternate layouts between horizontal scroll and grid for visual variety.",
     "Update apps/web/app/products/page.tsx: Add a contextual subtitle below 'Browse' heading explaining what the page offers (e.g., 'Find everything you need from our fresh collection'). Add active filter indicators showing which category/sort is active. Add a results count that updates with filters.",

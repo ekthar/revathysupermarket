@@ -1,9 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { AlertCircle, CheckCircle2, ChevronDown, Navigation } from "lucide-react";
+import { AlertCircle, CheckCircle2, ChevronDown, MapPinned, Navigation } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useToast } from "@/components/toast-provider";
+import { STORE_COORDINATES } from "@/lib/constants";
+import { PinOnMapPicker } from "@/components/checkout/pin-on-map-picker";
 
 type SavedAddress = {
   id: string;
@@ -56,6 +58,31 @@ export function AddressSelector({
 }: AddressSelectorProps) {
   const { showToast } = useToast();
   const [showManualLocation, setShowManualLocation] = useState(false);
+  const [showPinPicker, setShowPinPicker] = useState(false);
+
+  /** Reverse-geocodes and patches the form. Shared by GPS-detect and the pin-on-map picker. */
+  async function applyPickedLocation(lat: number, lng: number, source: "GPS" | "pinned location" = "pinned location") {
+    onUpdate("latitude", lat.toString());
+    onUpdate("longitude", lng.toString());
+    onLocationStateChange("success");
+    try {
+      const res = await fetch(`/api/geocode/reverse?latitude=${lat}&longitude=${lng}`);
+      if (res.ok) {
+        const geo = await res.json();
+        const patch: Record<string, string> = { latitude: lat.toString(), longitude: lng.toString() };
+        if (geo.street) patch.street = geo.street;
+        if (geo.landmark) patch.landmark = geo.landmark;
+        if (geo.pincode) patch.pincode = geo.pincode;
+        if (geo.houseName) patch.houseName = geo.houseName;
+        onFormPatch(patch);
+        showToast(`Address auto-filled from ${source}`, "success");
+      } else {
+        showToast(`${source === "GPS" ? "GPS location" : "Location"} set — enter address manually`, "success");
+      }
+    } catch {
+      showToast(`${source === "GPS" ? "GPS location" : "Location"} set — enter address manually`, "success");
+    }
+  }
 
   function applySavedAddress(addressId: string) {
     const address = savedAddresses.find((entry) => entry.id === addressId);
@@ -80,33 +107,9 @@ export function AddressSelector({
     }
     onLocationStateChange("loading");
     navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = position.coords.latitude.toString();
-        const lng = position.coords.longitude.toString();
-        onUpdate("latitude", lat);
-        onUpdate("longitude", lng);
-        onLocationStateChange("success");
+      (position) => {
         showToast("Location detected - fetching address...", "success");
-
-        // Auto-fill address via reverse geocoding — always overwrite all fields
-        // (the user explicitly tapped Detect, so they want fresh address data)
-        try {
-          const res = await fetch(`/api/geocode/reverse?latitude=${lat}&longitude=${lng}`);
-          if (res.ok) {
-            const geo = await res.json();
-            const patch: Record<string, string> = { latitude: lat, longitude: lng };
-            if (geo.street) patch.street = geo.street;
-            if (geo.landmark) patch.landmark = geo.landmark;
-            if (geo.pincode) patch.pincode = geo.pincode;
-            if (geo.houseName) patch.houseName = geo.houseName;
-            onFormPatch(patch);
-            showToast("Address auto-filled from GPS", "success");
-          } else {
-            showToast("GPS location set — enter address manually", "success");
-          }
-        } catch {
-          showToast("GPS location set — enter address manually", "success");
-        }
+        void applyPickedLocation(position.coords.latitude, position.coords.longitude, "GPS");
       },
       () => {
         onLocationStateChange("denied");
@@ -177,6 +180,16 @@ export function AddressSelector({
             Outside delivery radius ({distance?.toFixed(1)} KM)
           </p>
         )}
+        {/* Swiggy-style precise pin drop — lets the user place the exact
+            house/gate on a map instead of relying only on GPS accuracy. */}
+        <button
+          type="button"
+          onClick={() => setShowPinPicker(true)}
+          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 py-2 text-caption font-bold text-neutral-700 dark:text-neutral-300 press"
+        >
+          <MapPinned className="h-3.5 w-3.5" />
+          Pin exact location on map
+        </button>
       </div>
 
       {/* Address fields */}
@@ -239,6 +252,22 @@ export function AddressSelector({
               <CheckoutField label="Longitude" value={form.longitude} onChange={(v) => onUpdate("longitude", v)} />
             </div>
           </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPinPicker && (
+          <PinOnMapPicker
+            initial={{
+              latitude: Number(form.latitude) || STORE_COORDINATES.lat,
+              longitude: Number(form.longitude) || STORE_COORDINATES.lng,
+            }}
+            onClose={() => setShowPinPicker(false)}
+            onConfirm={(location) => {
+              setShowPinPicker(false);
+              void applyPickedLocation(location.latitude, location.longitude);
+            }}
+          />
         )}
       </AnimatePresence>
     </motion.section>

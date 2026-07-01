@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import * as Notifications from "expo-notifications";
 import * as Location from "expo-location";
+import { AnimatedScreen } from "@/components/AnimatedScreen";
+import { AnimatedPressable } from "@/components/AnimatedPressable";
+import { AnimatedFadeIn } from "@/components/AnimatedFadeIn";
 
 export default function AlertSetupScreen() {
   const [notifGranted, setNotifGranted] = useState(false);
@@ -32,54 +35,58 @@ export default function AlertSetupScreen() {
   };
 
   return (
-    <View className="flex-1 bg-white px-5 pt-6">
-      <Text className="text-lg font-heading text-slate-900 mb-6">Alert Permissions</Text>
-      <Text className="text-sm text-slate-500 mb-6">These permissions are needed to receive delivery alerts and track your location during deliveries.</Text>
+    <AnimatedScreen className="flex-1 bg-white dark:bg-slate-950 px-5 pt-6">
+      <Text className="text-lg font-heading text-slate-900 dark:text-white mb-6">Alert Permissions</Text>
+      <Text className="text-sm text-slate-500 dark:text-slate-400 mb-6">These permissions are needed to receive delivery alerts and track your location during deliveries.</Text>
 
       {/* Notification */}
-      <View className="flex-row items-center p-4 border border-slate-200 rounded-xl mb-4">
-        <View className={`w-3 h-3 rounded-full mr-3 ${notifGranted ? "bg-green-500" : "bg-red-400"}`} />
-        <View className="flex-1">
-          <Text className="text-sm font-sans-semibold text-slate-800">Push Notifications</Text>
-          <Text className="text-xs text-slate-400">Receive new order alerts</Text>
+      <AnimatedFadeIn index={0}>
+        <View className="flex-row items-center p-4 border border-slate-200 dark:border-slate-800 rounded-xl mb-4">
+          <View className={`w-3 h-3 rounded-full mr-3 ${notifGranted ? "bg-green-500" : "bg-red-400"}`} />
+          <View className="flex-1">
+            <Text className="text-sm font-sans-semibold text-slate-800 dark:text-slate-100">Push Notifications</Text>
+            <Text className="text-xs text-slate-400 dark:text-slate-500">Receive new order alerts</Text>
+          </View>
+          {!notifGranted && (
+            <AnimatedPressable onPress={requestNotif} className="bg-primary-100 dark:bg-primary-900/30 px-3 py-1.5 rounded-lg" accessibilityRole="button" accessibilityLabel="Grant notification permission">
+              <Text className="text-xs font-sans-bold text-primary-700 dark:text-primary-300">Grant</Text>
+            </AnimatedPressable>
+          )}
         </View>
-        {!notifGranted && (
-          <Pressable onPress={requestNotif} className="bg-primary-100 px-3 py-1.5 rounded-lg">
-            <Text className="text-xs font-sans-bold text-primary-700">Grant</Text>
-          </Pressable>
-        )}
-      </View>
+      </AnimatedFadeIn>
 
       {/* Location */}
-      <View className="flex-row items-center p-4 border border-slate-200 rounded-xl mb-4">
-        <View className={`w-3 h-3 rounded-full mr-3 ${locationGranted ? "bg-green-500" : "bg-red-400"}`} />
-        <View className="flex-1">
-          <Text className="text-sm font-sans-semibold text-slate-800">Location Access</Text>
-          <Text className="text-xs text-slate-400">Share location during deliveries</Text>
+      <AnimatedFadeIn index={1}>
+        <View className="flex-row items-center p-4 border border-slate-200 dark:border-slate-800 rounded-xl mb-4">
+          <View className={`w-3 h-3 rounded-full mr-3 ${locationGranted ? "bg-green-500" : "bg-red-400"}`} />
+          <View className="flex-1">
+            <Text className="text-sm font-sans-semibold text-slate-800 dark:text-slate-100">Location Access</Text>
+            <Text className="text-xs text-slate-400 dark:text-slate-500">Share location during deliveries</Text>
+          </View>
+          {!locationGranted && (
+            <AnimatedPressable onPress={requestLocation} className="bg-primary-100 dark:bg-primary-900/30 px-3 py-1.5 rounded-lg" accessibilityRole="button" accessibilityLabel="Grant location permission">
+              <Text className="text-xs font-sans-bold text-primary-700 dark:text-primary-300">Grant</Text>
+            </AnimatedPressable>
+          )}
         </View>
-        {!locationGranted && (
-          <Pressable onPress={requestLocation} className="bg-primary-100 px-3 py-1.5 rounded-lg">
-            <Text className="text-xs font-sans-bold text-primary-700">Grant</Text>
-          </Pressable>
-        )}
-      </View>
+      </AnimatedFadeIn>
 
       {/* Status */}
       <View className="mt-8 items-center">
         {notifGranted && locationGranted ? (
           <>
             <Text className="text-4xl mb-3">✅</Text>
-            <Text className="text-base font-heading text-green-700">All Set!</Text>
-            <Text className="text-sm text-slate-500 mt-1 text-center">You'll receive alerts for new delivery assignments.</Text>
+            <Text className="text-base font-heading text-green-700 dark:text-green-400">All Set!</Text>
+            <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1 text-center">You'll receive alerts for new delivery assignments.</Text>
           </>
         ) : (
           <>
             <Text className="text-4xl mb-3">⚠️</Text>
-            <Text className="text-base font-heading text-amber-700">Permissions Needed</Text>
-            <Text className="text-sm text-slate-500 mt-1 text-center">Grant all permissions above to receive delivery alerts reliably.</Text>
+            <Text className="text-base font-heading text-amber-700 dark:text-amber-400">Permissions Needed</Text>
+            <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1 text-center">Grant all permissions above to receive delivery alerts reliably.</Text>
           </>
         )}
       </View>
-    </View>
+    </AnimatedScreen>
   );
 }

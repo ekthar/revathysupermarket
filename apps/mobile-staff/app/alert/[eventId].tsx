@@ -1,10 +1,21 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, Vibration, Alert } from "react-native";
+import { View, Text, Vibration, Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
-import Animated, { SlideInDown, FadeIn } from "react-native-reanimated";
+import Animated, {
+  SlideInDown,
+  FadeIn,
+  useSharedValue,
+  useAnimatedStyle,
+  withRepeat,
+  withTiming,
+  withSequence,
+  Easing,
+  useReducedMotion,
+} from "react-native-reanimated";
 import { api } from "@/services/api";
 import { alarmService } from "@/services/alarm";
 import { notifeeService } from "@/services/notifee";
+import { AnimatedPressable } from "@/components/AnimatedPressable";
 
 export default function DeliveryAlertScreen() {
   const { eventId, orderId, orderNumber } = useLocalSearchParams<{
@@ -14,6 +25,9 @@ export default function DeliveryAlertScreen() {
   }>();
   const [countdown, setCountdown] = useState(30);
   const [processing, setProcessing] = useState(false);
+
+  const reducedMotion = useReducedMotion();
+  const pulse = useSharedValue(1);
 
   useEffect(() => {
     // Start alarm sound
@@ -36,6 +50,22 @@ export default function DeliveryAlertScreen() {
       alarmService.stopAlarm();
     };
   }, []);
+
+  useEffect(() => {
+    if (reducedMotion) return;
+    pulse.value = withRepeat(
+      withSequence(
+        withTiming(1.12, { duration: 600, easing: Easing.out(Easing.ease) }),
+        withTiming(1, { duration: 600, easing: Easing.in(Easing.ease) })
+      ),
+      -1,
+      false
+    );
+  }, [reducedMotion]);
+
+  const pulseStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: pulse.value }],
+  }));
 
   async function handleAccept() {
     setProcessing(true);
@@ -80,7 +110,11 @@ export default function DeliveryAlertScreen() {
         className="bg-white rounded-3xl p-6 w-full max-w-sm items-center"
       >
         {/* Pulsing indicator */}
-        <Animated.View entering={FadeIn.delay(200)} className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4">
+        <Animated.View
+          entering={FadeIn.delay(200)}
+          style={pulseStyle}
+          className="w-16 h-16 bg-emerald-100 rounded-full items-center justify-center mb-4"
+        >
           <Text className="text-3xl">🛵</Text>
         </Animated.View>
 
@@ -100,20 +134,24 @@ export default function DeliveryAlertScreen() {
 
         {/* Action buttons */}
         <View className="flex-row gap-3 mt-8 w-full">
-          <Pressable
+          <AnimatedPressable
             onPress={handleReject}
             disabled={processing}
             className="flex-1 h-14 bg-red-500 rounded-xl items-center justify-center"
+            accessibilityRole="button"
+            accessibilityLabel="Reject order"
           >
             <Text className="text-white font-bold">✕ Reject</Text>
-          </Pressable>
-          <Pressable
+          </AnimatedPressable>
+          <AnimatedPressable
             onPress={handleAccept}
             disabled={processing}
             className="flex-1 h-14 bg-emerald-500 rounded-xl items-center justify-center"
+            accessibilityRole="button"
+            accessibilityLabel="Accept order"
           >
             <Text className="text-white font-bold">✓ Accept</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       </Animated.View>
     </View>

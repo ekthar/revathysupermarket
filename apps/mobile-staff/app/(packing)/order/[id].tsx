@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, Alert, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, Alert, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { api } from "@/services/api";
+import { AnimatedScreen } from "@/components/AnimatedScreen";
+import { AnimatedPressable } from "@/components/AnimatedPressable";
+import { AnimatedFadeIn } from "@/components/AnimatedFadeIn";
 
 interface OrderItem {
   id: string;
@@ -79,7 +82,7 @@ export default function PackOrderScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
         <ActivityIndicator size="large" color="#7c3aed" />
       </View>
     );
@@ -87,8 +90,8 @@ export default function PackOrderScreen() {
 
   if (!order) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-slate-500">Order not found</Text>
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
+        <Text className="text-slate-500 dark:text-slate-400">Order not found</Text>
       </View>
     );
   }
@@ -96,67 +99,79 @@ export default function PackOrderScreen() {
   const allPacked = order.items.length > 0 && packedItems.size === order.items.length;
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20 }}>
-      <Text className="text-2xl font-bold text-slate-900">Pack #{order.orderNumber}</Text>
-      <Text className="text-sm text-slate-500 mt-1">{order.customerName} • ₹{Number(order.total).toFixed(2)}</Text>
+    <AnimatedScreen className="flex-1 bg-white dark:bg-slate-950">
+      <ScrollView className="flex-1 bg-white dark:bg-slate-950" contentContainerStyle={{ padding: 20 }}>
+        <Text className="text-2xl font-bold text-slate-900 dark:text-white">Pack #{order.orderNumber}</Text>
+        <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">{order.customerName} • ₹{Number(order.total).toFixed(2)}</Text>
 
-      {/* Item Checklist */}
-      <View className="mt-6 gap-2">
-        <Text className="text-xs font-bold text-slate-500 uppercase mb-2">
-          Items ({packedItems.size}/{order.items.length} packed)
-        </Text>
-        {order.items.map((item) => {
-          const isPacked = packedItems.has(item.id);
-          return (
-            <Pressable
-              key={item.id}
-              onPress={() => togglePacked(item.id)}
-              className={`flex-row items-center p-4 rounded-xl border ${
-                isPacked ? "bg-emerald-50 border-emerald-200" : "bg-white border-slate-200"
-              }`}
-            >
-              <View className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3 ${
-                isPacked ? "bg-emerald-500 border-emerald-500" : "border-slate-300"
-              }`}>
-                {isPacked && <Text className="text-white text-xs font-bold">✓</Text>}
-              </View>
-              <View className="flex-1">
-                <Text className={`text-sm font-semibold ${isPacked ? "text-emerald-800 line-through" : "text-slate-900"}`}>
-                  {item.name}
-                </Text>
-                <Text className="text-xs text-slate-500">Qty: {item.quantity}</Text>
-              </View>
-              <Text className="text-sm font-bold text-slate-700">₹{(item.price * item.quantity).toFixed(2)}</Text>
-            </Pressable>
-          );
-        })}
-      </View>
+        {/* Item Checklist */}
+        <View className="mt-6 gap-2">
+          <Text className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
+            Items ({packedItems.size}/{order.items.length} packed)
+          </Text>
+          {order.items.map((item, i) => {
+            const isPacked = packedItems.has(item.id);
+            return (
+              <AnimatedFadeIn key={item.id} index={Math.min(i, 8)}>
+                <AnimatedPressable
+                  onPress={() => togglePacked(item.id)}
+                  className={`flex-row items-center p-4 rounded-xl border ${
+                    isPacked
+                      ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800"
+                      : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+                  }`}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: isPacked }}
+                  accessibilityLabel={`${item.name}, quantity ${item.quantity}`}
+                >
+                  <View className={`w-6 h-6 rounded-full border-2 items-center justify-center mr-3 ${
+                    isPacked ? "bg-emerald-500 border-emerald-500" : "border-slate-300 dark:border-slate-600"
+                  }`}>
+                    {isPacked && <Text className="text-white text-xs font-bold">✓</Text>}
+                  </View>
+                  <View className="flex-1">
+                    <Text className={`text-sm font-semibold ${isPacked ? "text-emerald-800 dark:text-emerald-300 line-through" : "text-slate-900 dark:text-white"}`}>
+                      {item.name}
+                    </Text>
+                    <Text className="text-xs text-slate-500 dark:text-slate-400">Qty: {item.quantity}</Text>
+                  </View>
+                  <Text className="text-sm font-bold text-slate-700 dark:text-slate-200">₹{(item.price * item.quantity).toFixed(2)}</Text>
+                </AnimatedPressable>
+              </AnimatedFadeIn>
+            );
+          })}
+        </View>
 
-      {/* Actions */}
-      <View className="mt-8 gap-3">
-        <Pressable
-          onPress={printInvoice}
-          className="h-12 border border-slate-200 rounded-xl items-center justify-center"
-        >
-          <Text className="text-slate-700 font-bold">🖨️ Print Invoice</Text>
-        </Pressable>
+        {/* Actions */}
+        <View className="mt-8 gap-3">
+          <AnimatedPressable
+            onPress={printInvoice}
+            className="h-12 border border-slate-200 dark:border-slate-700 rounded-xl items-center justify-center"
+            accessibilityRole="button"
+            accessibilityLabel="Print invoice"
+          >
+            <Text className="text-slate-700 dark:text-slate-200 font-bold">🖨️ Print Invoice</Text>
+          </AnimatedPressable>
 
-        <Pressable
-          onPress={markReady}
-          disabled={!allPacked || marking}
-          className={`h-14 rounded-xl items-center justify-center ${
-            allPacked && !marking ? "bg-purple-600" : "bg-slate-300"
-          }`}
-        >
-          {marking ? (
-            <ActivityIndicator color="white" />
-          ) : (
-            <Text className="text-white font-bold">
-              {allPacked ? "✓ Mark Ready for Delivery" : "Pack all items first"}
-            </Text>
-          )}
-        </Pressable>
-      </View>
-    </ScrollView>
+          <AnimatedPressable
+            onPress={markReady}
+            disabled={!allPacked || marking}
+            className={`h-14 rounded-xl items-center justify-center ${
+              allPacked && !marking ? "bg-purple-600" : "bg-slate-300 dark:bg-slate-700"
+            }`}
+            accessibilityRole="button"
+            accessibilityLabel={allPacked ? "Mark ready for delivery" : "Pack all items first"}
+          >
+            {marking ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text className="text-white font-bold">
+                {allPacked ? "✓ Mark Ready for Delivery" : "Pack all items first"}
+              </Text>
+            )}
+          </AnimatedPressable>
+        </View>
+      </ScrollView>
+    </AnimatedScreen>
   );
 }

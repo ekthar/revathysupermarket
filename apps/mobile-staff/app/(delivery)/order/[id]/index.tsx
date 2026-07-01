@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { api } from "@/services/api";
+import { AnimatedScreen } from "@/components/AnimatedScreen";
+import { AnimatedPressable } from "@/components/AnimatedPressable";
 
 interface OrderDetail {
   id: string;
@@ -27,7 +29,7 @@ export default function DeliveryOrderDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
         <ActivityIndicator size="large" color="#059669" />
       </View>
     );
@@ -35,60 +37,68 @@ export default function DeliveryOrderDetailScreen() {
 
   if (!order) {
     return (
-      <View className="flex-1 items-center justify-center bg-white">
-        <Text className="text-slate-500">Order not found</Text>
+      <View className="flex-1 items-center justify-center bg-white dark:bg-slate-950">
+        <Text className="text-slate-500 dark:text-slate-400">Order not found</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView className="flex-1 bg-white" contentContainerStyle={{ padding: 20 }}>
-      <Text className="text-2xl font-bold text-slate-900">#{order.orderNumber}</Text>
-      <Text className="text-sm text-slate-500 mt-1">{order.customerName} • {order.phone}</Text>
-      <Text className="text-xs text-slate-400 mt-2">📍 {order.address}</Text>
+    <AnimatedScreen className="flex-1 bg-white dark:bg-slate-950">
+      <ScrollView className="flex-1 bg-white dark:bg-slate-950" contentContainerStyle={{ padding: 20 }}>
+        <Text className="text-2xl font-bold text-slate-900 dark:text-white">#{order.orderNumber}</Text>
+        <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">{order.customerName} • {order.phone}</Text>
+        <Text className="text-xs text-slate-400 dark:text-slate-500 mt-2">📍 {order.address}</Text>
 
-      {/* Items */}
-      <View className="mt-6 bg-slate-50 rounded-2xl p-4">
-        <Text className="text-xs font-bold text-slate-500 uppercase mb-3">Items</Text>
-        {order.items.map((item, i) => (
-          <View key={i} className="flex-row justify-between py-2 border-b border-slate-100">
-            <Text className="text-sm text-slate-700 flex-1">{item.name} × {item.quantity}</Text>
-            <Text className="text-sm font-bold text-slate-900">₹{(item.price * item.quantity).toFixed(2)}</Text>
+        {/* Items */}
+        <View className="mt-6 bg-slate-50 dark:bg-slate-900 rounded-2xl p-4">
+          <Text className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-3">Items</Text>
+          {order.items.map((item, i) => (
+            <View key={i} className="flex-row justify-between py-2 border-b border-slate-100 dark:border-slate-800">
+              <Text className="text-sm text-slate-700 dark:text-slate-300 flex-1">{item.name} × {item.quantity}</Text>
+              <Text className="text-sm font-bold text-slate-900 dark:text-white">₹{(item.price * item.quantity).toFixed(2)}</Text>
+            </View>
+          ))}
+          <View className="flex-row justify-between pt-3">
+            <Text className="text-base font-bold text-slate-900 dark:text-white">Total</Text>
+            <Text className="text-base font-bold text-emerald-700 dark:text-emerald-400">₹{Number(order.total).toFixed(2)}</Text>
           </View>
-        ))}
-        <View className="flex-row justify-between pt-3">
-          <Text className="text-base font-bold text-slate-900">Total</Text>
-          <Text className="text-base font-bold text-emerald-700">₹{Number(order.total).toFixed(2)}</Text>
         </View>
-      </View>
 
-      {/* Action Buttons */}
-      <View className="mt-6 gap-3">
-        <Pressable
-          onPress={() => router.push(`/(delivery)/order/${id}/navigate` as any)}
-          className="h-14 bg-blue-600 rounded-xl items-center justify-center"
-        >
-          <Text className="text-white font-bold">🗺️ Navigate to Customer</Text>
-        </Pressable>
-
-        {["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status) && (
-          <Pressable
-            onPress={() => router.push(`/(delivery)/order/${id}/collect` as any)}
-            className="h-14 bg-amber-500 rounded-xl items-center justify-center"
+        {/* Action Buttons */}
+        <View className="mt-6 gap-3">
+          <AnimatedPressable
+            onPress={() => router.push(`/(delivery)/order/${id}/navigate` as any)}
+            className="h-14 bg-blue-600 rounded-xl items-center justify-center"
+            accessibilityRole="button"
+            accessibilityLabel="Navigate to customer"
           >
-            <Text className="text-white font-bold">💰 Collect Payment</Text>
-          </Pressable>
-        )}
+            <Text className="text-white font-bold">🗺️ Navigate to Customer</Text>
+          </AnimatedPressable>
 
-        {["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status) && (
-          <Pressable
-            onPress={() => router.push(`/(delivery)/order/${id}/complete` as any)}
-            className="h-14 bg-emerald-600 rounded-xl items-center justify-center"
-          >
-            <Text className="text-white font-bold">✓ Complete Delivery</Text>
-          </Pressable>
-        )}
-      </View>
-    </ScrollView>
+          {["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status) && (
+            <AnimatedPressable
+              onPress={() => router.push(`/(delivery)/order/${id}/collect` as any)}
+              className="h-14 bg-amber-500 rounded-xl items-center justify-center"
+              accessibilityRole="button"
+              accessibilityLabel="Collect payment"
+            >
+              <Text className="text-white font-bold">💰 Collect Payment</Text>
+            </AnimatedPressable>
+          )}
+
+          {["OUT_FOR_DELIVERY", "ARRIVING"].includes(order.status) && (
+            <AnimatedPressable
+              onPress={() => router.push(`/(delivery)/order/${id}/complete` as any)}
+              className="h-14 bg-emerald-600 rounded-xl items-center justify-center"
+              accessibilityRole="button"
+              accessibilityLabel="Complete delivery"
+            >
+              <Text className="text-white font-bold">✓ Complete Delivery</Text>
+            </AnimatedPressable>
+          )}
+        </View>
+      </ScrollView>
+    </AnimatedScreen>
   );
 }

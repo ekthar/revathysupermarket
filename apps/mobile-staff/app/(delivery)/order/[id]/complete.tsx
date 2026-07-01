@@ -3,6 +3,7 @@ import { View, Text, TextInput, Alert, ActivityIndicator } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { api } from "@/services/api";
 import { SlideToConfirm } from "@/components/SlideToConfirm";
+import { AnimatedScreen } from "@/components/AnimatedScreen";
 
 export default function CompleteDeliveryScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,17 +30,17 @@ export default function CompleteDeliveryScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white px-5 pt-14 justify-center">
-      <Text className="text-2xl font-bold text-slate-900 mb-2">Complete Delivery</Text>
-      <Text className="text-sm text-slate-500 mb-8">
+    <AnimatedScreen className="flex-1 bg-white dark:bg-slate-950 px-5 pt-14 justify-center">
+      <Text className="text-2xl font-bold text-slate-900 dark:text-white mb-2">Complete Delivery</Text>
+      <Text className="text-sm text-slate-500 dark:text-slate-400 mb-8">
         Enter the OTP shared by the customer, then slide to confirm.
       </Text>
 
       {/* OTP Input */}
       <View className="mb-8">
-        <Text className="text-sm font-semibold text-slate-700 mb-2">Customer OTP</Text>
+        <Text className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">Customer OTP</Text>
         <TextInput
-          className="border border-slate-200 rounded-2xl h-16 bg-slate-50 text-center text-2xl font-bold text-slate-900 tracking-[8px]"
+          className="border border-slate-200 dark:border-slate-700 rounded-2xl h-16 bg-slate-50 dark:bg-slate-900 text-center text-2xl font-bold text-slate-900 dark:text-white tracking-[8px]"
           value={otp}
           onChangeText={(text) => setOtp(text.replace(/\D/g, "").slice(0, 6))}
           keyboardType="number-pad"
@@ -58,7 +59,7 @@ export default function CompleteDeliveryScreen() {
       {loading && (
         <View className="items-center mb-4">
           <ActivityIndicator size="small" color="#059669" />
-          <Text className="text-xs text-slate-500 mt-2">Completing delivery...</Text>
+          <Text className="text-xs text-slate-500 dark:text-slate-400 mt-2">Completing delivery...</Text>
         </View>
       )}
 
@@ -68,6 +69,6 @@ export default function CompleteDeliveryScreen() {
         onConfirm={handleComplete}
         disabled={loading || otp.length !== 6}
       />
-    </View>
+    </AnimatedScreen>
   );
 }

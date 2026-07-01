@@ -1,6 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { View, Text, ScrollView, Pressable, ActivityIndicator, Vibration } from "react-native";
+import { View, Text, ScrollView, ActivityIndicator, Vibration } from "react-native";
 import { api } from "@/services/api";
+import { AnimatedScreen } from "@/components/AnimatedScreen";
+import { AnimatedPressable } from "@/components/AnimatedPressable";
+import { AnimatedFadeIn } from "@/components/AnimatedFadeIn";
 
 type Period = "week" | "month" | "quarter";
 
@@ -63,15 +66,17 @@ export default function AdminReportsScreen() {
   }, [fetchReport]);
 
   return (
+    <AnimatedScreen className="flex-1 bg-white dark:bg-slate-900">
     <ScrollView className="flex-1 bg-white dark:bg-slate-900" contentContainerStyle={{ padding: 20 }}>
       <Text className="text-2xl font-bold text-slate-900 dark:text-white pt-10 mb-4">Reports</Text>
 
       {/* Tab selector */}
       <View className="flex-row gap-2 mb-4" accessibilityRole="tablist">
         {(["sales", "profit", "fast"] as const).map((t) => (
-          <Pressable
+          <AnimatedPressable
             key={t}
             onPress={() => { setActiveTab(t); Vibration.vibrate(5); }}
+            haptic={false}
             className={`px-4 min-h-[44px] justify-center rounded-xl ${activeTab === t ? "bg-emerald-600" : "bg-slate-100 dark:bg-slate-800"}`}
             accessibilityRole="tab"
             accessibilityState={{ selected: activeTab === t }}
@@ -80,7 +85,7 @@ export default function AdminReportsScreen() {
             <Text className={`text-sm font-bold capitalize ${activeTab === t ? "text-white" : "text-slate-600 dark:text-slate-300"}`}>
               {t === "fast" ? "Fast Moving" : t}
             </Text>
-          </Pressable>
+          </AnimatedPressable>
         ))}
       </View>
 
@@ -88,16 +93,17 @@ export default function AdminReportsScreen() {
       {activeTab !== "fast" && (
         <View className="flex-row gap-2 mb-4">
           {(["week", "month", "quarter"] as Period[]).map((p) => (
-            <Pressable
+            <AnimatedPressable
               key={p}
               onPress={() => { setPeriod(p); Vibration.vibrate(5); }}
+              haptic={false}
               className={`px-4 min-h-[44px] justify-center rounded-full border ${period === p ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" : "border-slate-200 dark:border-slate-700"}`}
               accessibilityRole="button"
               accessibilityState={{ selected: period === p }}
               accessibilityLabel={`Period: ${p}`}
             >
               <Text className={`text-xs font-bold capitalize ${period === p ? "text-emerald-700 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}>{p}</Text>
-            </Pressable>
+            </AnimatedPressable>
           ))}
         </View>
       )}
@@ -114,46 +120,52 @@ export default function AdminReportsScreen() {
       {error && !loading && (
         <View className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-xl p-4 mb-4" accessibilityRole="alert">
           <Text className="text-sm font-semibold text-red-700 dark:text-red-300">{error}</Text>
-          <Pressable onPress={fetchReport} className="mt-2" accessibilityRole="button" accessibilityLabel="Retry loading report">
+          <AnimatedPressable onPress={fetchReport} haptic={false} className="mt-2" accessibilityRole="button" accessibilityLabel="Retry loading report">
             <Text className="text-sm font-bold text-emerald-600">Tap to retry</Text>
-          </Pressable>
+          </AnimatedPressable>
         </View>
       )}
 
       {/* Sales Results */}
       {activeTab === "sales" && sales && !loading && (
-        <View className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 gap-3">
-          <Row label="Total Orders" value={String(sales.totalOrders)} />
-          <Row label="Total Revenue" value={`₹${sales.totalRevenue}`} />
-          <Row label="Avg Order Value" value={`₹${sales.avgOrderValue}`} />
-          <Row label="Period" value={`${sales.periodStart} — ${sales.periodEnd}`} />
-        </View>
+        <AnimatedFadeIn>
+          <View className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 gap-3">
+            <Row label="Total Orders" value={String(sales.totalOrders)} />
+            <Row label="Total Revenue" value={`₹${sales.totalRevenue}`} />
+            <Row label="Avg Order Value" value={`₹${sales.avgOrderValue}`} />
+            <Row label="Period" value={`${sales.periodStart} — ${sales.periodEnd}`} />
+          </View>
+        </AnimatedFadeIn>
       )}
 
       {/* Profit Results */}
       {activeTab === "profit" && profit && !loading && (
-        <View className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 gap-3">
-          <Row label="Revenue" value={`₹${profit.totalRevenue}`} />
-          <Row label="Cost" value={`₹${profit.totalCost}`} />
-          <Row label="Gross Profit" value={`₹${profit.grossProfit}`} />
-          <Row label="Margin" value={`${profit.profitMarginPercent}%`} />
-        </View>
+        <AnimatedFadeIn>
+          <View className="bg-slate-50 dark:bg-slate-800 rounded-2xl p-4 gap-3">
+            <Row label="Revenue" value={`₹${profit.totalRevenue}`} />
+            <Row label="Cost" value={`₹${profit.totalCost}`} />
+            <Row label="Gross Profit" value={`₹${profit.grossProfit}`} />
+            <Row label="Margin" value={`${profit.profitMarginPercent}%`} />
+          </View>
+        </AnimatedFadeIn>
       )}
 
       {/* Fast Moving Items */}
       {activeTab === "fast" && fastItems.length > 0 && !loading && (
         <View className="gap-2">
           {fastItems.map((item, i) => (
-            <View key={item.productId} className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 flex-row justify-between" accessibilityLabel={`${item.name}, sold ${item.totalQuantity} units, revenue ${item.totalRevenue} rupees`}>
-              <View className="flex-1">
-                <Text className="text-sm font-bold text-slate-900 dark:text-white">{i + 1}. {item.name}</Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400">{item.category}</Text>
+            <AnimatedFadeIn key={item.productId} index={Math.min(i, 8)}>
+              <View className="bg-slate-50 dark:bg-slate-800 rounded-xl p-3 flex-row justify-between" accessibilityLabel={`${item.name}, sold ${item.totalQuantity} units, revenue ${item.totalRevenue} rupees`}>
+                <View className="flex-1">
+                  <Text className="text-sm font-bold text-slate-900 dark:text-white">{i + 1}. {item.name}</Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400">{item.category}</Text>
+                </View>
+                <View className="items-end">
+                  <Text className="text-sm font-bold text-slate-900 dark:text-white">×{item.totalQuantity}</Text>
+                  <Text className="text-xs text-slate-500 dark:text-slate-400">₹{item.totalRevenue}</Text>
+                </View>
               </View>
-              <View className="items-end">
-                <Text className="text-sm font-bold text-slate-900 dark:text-white">×{item.totalQuantity}</Text>
-                <Text className="text-xs text-slate-500 dark:text-slate-400">₹{item.totalRevenue}</Text>
-              </View>
-            </View>
+            </AnimatedFadeIn>
           ))}
         </View>
       )}
@@ -167,6 +179,7 @@ export default function AdminReportsScreen() {
         </View>
       )}
     </ScrollView>
+    </AnimatedScreen>
   );
 }
 

@@ -68,37 +68,64 @@ export function AdminSidebar({ nav }: { nav: NavItem[] }) {
         })}
       </nav>
 
-      {/* Mobile nav - larger touch targets, better dark mode */}
+      {/* Mobile nav - grouped collapsible menu with touch-friendly targets */}
       <details className="lg:hidden mb-4 rounded-2xl border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-900">
         <summary className="flex min-h-11 cursor-pointer items-center px-3 text-sm font-black">Admin menu</summary>
-        <div className="grid grid-cols-2 gap-2 pt-2">
-          {nav.map((item) => {
-            const Icon = iconMap[item.icon] || LayoutDashboard;
-            const active = isActive(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-2 px-3 py-2.5 rounded-xl text-caption font-semibold transition-all press min-h-[44px]",
-                  active
-                    ? "bg-primary text-white shadow-md shadow-primary/20"
-                    : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
-                )}
+        <div className="flex flex-col gap-2 pt-2">
+          {(() => {
+            const groups = nav.reduce<Record<string, NavItem[]>>((acc, item) => {
+              (acc[item.group] ??= []).push(item);
+              return acc;
+            }, {});
+
+            const activeGroup = Object.entries(groups).find(([, items]) =>
+              items.some((item) => isActive(item.href))
+            )?.[0];
+
+            return Object.entries(groups).map(([groupName, items]) => (
+              <details
+                key={groupName}
+                open={groupName === activeGroup || undefined}
+                className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden"
               >
-                <Icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-slate-400 dark:text-slate-500")} />
-                <span className="truncate">{item.label}</span>
-                {item.badge > 0 && (
-                  <span className={cn(
-                    "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-micro font-bold",
-                    active ? "bg-white/25 text-white" : "bg-red-500 text-white"
-                  )}>
-                    {item.badge}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+                <summary className="flex min-h-[44px] cursor-pointer items-center justify-between px-3 py-2 font-bold text-sm text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/50">
+                  <span>{groupName}</span>
+                  <svg className="h-4 w-4 shrink-0 text-slate-400 transition-transform [[open]>&]:rotate-180" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <polyline points="6 9 12 15 18 9" />
+                  </svg>
+                </summary>
+                <div className="grid grid-cols-1 gap-1 p-1">
+                  {items.map((item) => {
+                    const Icon = iconMap[item.icon] || LayoutDashboard;
+                    const active = isActive(item.href);
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className={cn(
+                          "flex items-center gap-2 px-3 py-2.5 rounded-xl text-caption font-semibold transition-all press min-h-[44px]",
+                          active
+                            ? "bg-primary text-white shadow-md shadow-primary/20"
+                            : "bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                        )}
+                      >
+                        <Icon className={cn("h-4 w-4 shrink-0", active ? "text-white" : "text-slate-400 dark:text-slate-500")} />
+                        <span className="truncate">{item.label}</span>
+                        {item.badge > 0 && (
+                          <span className={cn(
+                            "flex h-5 min-w-5 items-center justify-center rounded-full px-1 text-micro font-bold",
+                            active ? "bg-white/25 text-white" : "bg-red-500 text-white"
+                          )}>
+                            {item.badge}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </details>
+            ));
+          })()}
         </div>
       </details>
     </>

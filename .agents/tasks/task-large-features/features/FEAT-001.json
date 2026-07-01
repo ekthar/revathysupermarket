@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Packing staff incoming order alert - Handle FCM push type 'packing_assignment' in mobile-staff, add a notifee channel for packing alerts, show a full-screen alert for packing staff when a new order is assigned to them.",
+  "status": "completed",
+  "steps": [
+    "In apps/mobile-staff/src/services/notifee.ts: Add a PackingAlertPayload interface (eventId, orderId, orderNumber), create a 'packing_alert' channel in createChannels() with high importance and vibration, and add a showPackingAlert() method that displays a full-screen notification similar to showDeliveryAlert() but with packing-specific content (emoji: 📦, title: 'New Packing Order #XXX', body: 'New order assigned for packing. Tap to start.').",
+    "In apps/mobile-staff/src/services/fcm.ts: Add a case 'packing_assignment' in the handleForegroundMessage switch that calls notifeeService.showPackingAlert() with the incoming message data (eventId, orderId, orderNumber).",
+    "Create apps/mobile-staff/app/alert/packing/[eventId].tsx: A full-screen alert screen similar to alert/[eventId].tsx but for packing staff. It should accept eventId, orderId, orderNumber params. Show a 📦 emoji, 'New Packing Order' title, order number, 30s countdown with auto-reject. Accept button navigates to /(packing)/order/[orderId]. Reject button calls api.post('/packing/reject', { eventId, orderId }) then goes back. Use alarmService and notifeeService.cancel(). Use the same animation pattern (SlideInDown, FadeIn) from the delivery alert.",
+    "In apps/mobile-staff/app/_layout.tsx: Add a Stack.Screen entry for 'alert/packing/[eventId]' with presentation: 'fullScreenModal', headerShown: false, animation: 'slide_from_bottom' - matching the existing delivery alert screen config.",
+    "In apps/mobile-staff/src/services/notifee.ts: In the showPackingAlert() notification data, set type: 'packing_assignment' so the notification press handler can route to the correct alert screen.",
+    "In apps/mobile-staff/src/services/fcm.ts: Set up background message handling - add a setBackgroundMessageHandler registration that calls notifeeService.showPackingAlert() for type 'packing_assignment' (follow the same pattern as foreground). Use messaging().setBackgroundMessageHandler() with the same switch logic."
+  ],
+  "acceptance_criteria": [
+    "notifee.ts exports PackingAlertPayload and showPackingAlert method",
+    "fcm.ts handles 'packing_assignment' type in foreground message handler",
+    "New packing alert screen exists at app/alert/packing/[eventId].tsx with accept/reject functionality",
+    "_layout.tsx registers the new packing alert screen route",
+    "Packing alert channel is created in createChannels()"
+  ],
+  "verification": [
+    "Verify the files exist and have no obvious syntax errors by reading them"
+  ],
+  "blocked_reason": null,
+  "findings": "TypeScript compilation passes cleanly for all modified files. Pre-existing TS error in src/services/notifications.ts (missing properties in NotificationBehavior) unrelated to this change. The tsconfig.tsbuildinfo and package-lock.json were updated by build/install process and included in the commit."
+}

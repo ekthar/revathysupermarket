@@ -10,5 +10,6 @@
     "test_quality": "skipped",
     "docker_build": "skipped",
     "summary": "TypeScript compilation (tsc --noEmit) passes with zero errors. Next.js build (next build) completes successfully with all 78 mobile API routes compiled. No runtime database available for integration tests."
-  }
+  },
+  "pr_url": "https://github.com/ekthar/revathysupermarket/pull/115"
 }

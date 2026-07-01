@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Create missing packing, orders, reports, and feature-flags mobile API routes: /packing/acknowledge, /packing/reject, /orders/[id]/reject, /orders/[id]/print, /reports/sales, /reports/profit, /reports/fast-moving-items, /feature-flags",
+  "status": "completed",
+  "steps": [
+    "Create apps/web/app/api/mobile/v1/packing/acknowledge/route.ts - POST endpoint to acknowledge a packing assignment. Accept {eventId, orderId}. Update AssignmentEvent acknowledgedAt for packing staff. Use authenticateMobileRequest, check role is PACKING_STAFF/ADMIN/OWNER/MANAGER/STAFF.",
+    "Create apps/web/app/api/mobile/v1/packing/reject/route.ts - POST endpoint to reject a packing assignment. Accept {eventId, orderId, reason?}. Update AssignmentEvent or mark order as unassigned. Use authenticateMobileRequest, check role is PACKING_STAFF/ADMIN/OWNER/MANAGER/STAFF.",
+    "Create apps/web/app/api/mobile/v1/orders/[id]/reject/route.ts - POST endpoint for delivery partner to reject an assigned order. Accept {reason?}. Follow the exact logic from apps/web/app/api/orders/[id]/reject/route.ts but use authenticateMobileRequest. Unassign delivery partner, reset status to READY_FOR_DELIVERY, create OrderEvent and AuditLog.",
+    "Create apps/web/app/api/mobile/v1/orders/[id]/print/route.ts - POST endpoint to record a print action. Increment printCount, set printedAt and printedById. Follow logic from apps/web/app/api/orders/[id]/print/route.ts but use authenticateMobileRequest with roles ADMIN/OWNER/STAFF/PACKING_STAFF.",
+    "Create apps/web/app/api/mobile/v1/reports/sales/route.ts - GET endpoint returning sales report with period query param. Follow exact logic from apps/web/app/api/reports/sales/route.ts but use authenticateMobileRequest with roles ADMIN/OWNER/MANAGER.",
+    "Create apps/web/app/api/mobile/v1/reports/profit/route.ts - GET endpoint returning profit report with period query param. Follow exact logic from apps/web/app/api/reports/profit/route.ts but use authenticateMobileRequest.",
+    "Create apps/web/app/api/mobile/v1/reports/fast-moving-items/route.ts - GET endpoint returning top 20 fast-moving items. Follow exact logic from apps/web/app/api/reports/fast-moving-items/route.ts but use authenticateMobileRequest.",
+    "Create apps/web/app/api/mobile/v1/feature-flags/route.ts - GET endpoint returning all feature flags, PUT endpoint to update a flag. Follow exact logic from apps/web/app/api/feature-flags/route.ts but use authenticateMobileRequest with roles ADMIN/OWNER."
+  ],
+  "acceptance_criteria": [
+    "All 8 route files exist under apps/web/app/api/mobile/v1/",
+    "Each route uses authenticateMobileRequest for authentication",
+    "Role checks match the patterns used in existing mobile routes",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
+  ],
+  "blocked_reason": null,
+  "findings": "All 8 route files created successfully. TypeScript compilation (tsc --noEmit) and Next.js build both pass with zero errors. Used simplified business logic per orchestrator guidance - packing/reject acknowledges the event with a rejected flag, reports omit dailyBreakdown and warnings for mobile simplicity, feature-flags is a direct mirror. The orders/[id]/reject route omits the FCM admin notification (sendFcmToAdmins) since the mobile version should not import that dependency."
+}

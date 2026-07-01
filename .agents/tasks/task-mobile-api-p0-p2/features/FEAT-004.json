@@ -1,0 +1,38 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "P1 Admin API routes: Product CRUD, category management, staff management, customer list, marketing tools (offers, promos, push notifications), delivery slots config, store settings, billing dashboard.",
+  "status": "completed",
+  "steps": [
+    "Create apps/web/app/api/mobile/v1/admin/products/route.ts - GET returns paginated product list with search/category filters. POST creates a new product. Include all product fields (name, slug, description, image, price, discountPrice, costPrice, stock, unit, categoryId, isActive, isFeatured, gstRate).",
+    "Create apps/web/app/api/mobile/v1/admin/products/[id]/route.ts - GET returns single product detail. PATCH updates product fields. DELETE soft-deletes (sets isActive=false) or hard-deletes product.",
+    "Create apps/web/app/api/mobile/v1/admin/categories/route.ts - GET returns all categories with product counts. POST creates a new category (name, slug, description, image, sortOrder).",
+    "Create apps/web/app/api/mobile/v1/admin/categories/[id]/route.ts - GET returns single category. PATCH updates category. DELETE removes category (with check for associated products).",
+    "Create apps/web/app/api/mobile/v1/admin/staff/route.ts - GET returns all staff members (users with role in STAFF/PACKING_STAFF/DELIVERY_PARTNER/MANAGER) with their permissions. POST creates a new staff member.",
+    "Create apps/web/app/api/mobile/v1/admin/staff/[id]/route.ts - GET returns staff detail with permissions. PATCH updates staff (name, phone, role, isActive). DELETE deactivates staff.",
+    "Create apps/web/app/api/mobile/v1/admin/staff/[id]/permissions/route.ts - GET returns permissions for staff member. PUT sets permissions (array of permission strings).",
+    "Create apps/web/app/api/mobile/v1/admin/customers/route.ts - GET returns customer list (users with role CUSTOMER) with order count and total spent. Supports search by name/phone.",
+    "Create apps/web/app/api/mobile/v1/admin/customers/[id]/route.ts - GET returns customer detail with recent orders.",
+    "Create apps/web/app/api/mobile/v1/admin/offers/route.ts - GET returns all offers. POST creates a new offer (title, description, discountType, discountValue, categoryId, productId, minQuantity, maxDiscount, isActive, startsAt, expiresAt).",
+    "Create apps/web/app/api/mobile/v1/admin/offers/[id]/route.ts - PATCH updates offer. DELETE removes offer.",
+    "Create apps/web/app/api/mobile/v1/admin/promos/route.ts - GET returns all promo codes. POST creates a new promo code (code, description, discountType, discountValue, minimumOrder, maxDiscount, usageLimit, isActive, startsAt, expiresAt).",
+    "Create apps/web/app/api/mobile/v1/admin/promos/[id]/route.ts - PATCH updates promo. DELETE removes promo.",
+    "Create apps/web/app/api/mobile/v1/admin/push/route.ts - POST sends a push notification broadcast. Accept {title, body, segment?, data?}. Create notifications and send via FCM.",
+    "Create apps/web/app/api/mobile/v1/admin/delivery-slots/route.ts - GET returns delivery slots. POST creates a new slot. PATCH updates slot. DELETE removes slot.",
+    "Create apps/web/app/api/mobile/v1/admin/settings/route.ts - GET returns all store settings (from Setting model). PATCH updates settings (accepts key-value pairs).",
+    "Create apps/web/app/api/mobile/v1/admin/billing/route.ts - GET returns billing dashboard data: total revenue, pending payments, collection summary, recent transactions."
+  ],
+  "acceptance_criteria": [
+    "All P1 admin routes exist and follow the authenticateMobileRequest pattern",
+    "Product CRUD supports all fields from the Product model",
+    "Category CRUD supports create/edit/delete with product count info",
+    "Staff management supports CRUD with permissions",
+    "Marketing routes (offers, promos, push) support full lifecycle",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
+  ],
+  "blocked_reason": null,
+  "findings": "All 17 admin route files created and compiled successfully. TypeScript passes with zero errors. Next.js build succeeds. DeliveryCollection model uses cashCollected/upiCollected (not amount) and completedAt (not collectedAt) - corrected billing route accordingly."
+}

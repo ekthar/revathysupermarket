@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Create missing packing, orders, reports, and feature-flags mobile API routes: /packing/acknowledge, /packing/reject, /orders/[id]/reject, /orders/[id]/print, /reports/sales, /reports/profit, /reports/fast-moving-items, /feature-flags",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create apps/web/app/api/mobile/v1/packing/acknowledge/route.ts - POST endpoint to acknowledge a packing assignment. Accept {eventId, orderId}. Update AssignmentEvent acknowledgedAt for packing staff. Use authenticateMobileRequest, check role is PACKING_STAFF/ADMIN/OWNER/MANAGER/STAFF.",
     "Create apps/web/app/api/mobile/v1/packing/reject/route.ts - POST endpoint to reject a packing assignment. Accept {eventId, orderId, reason?}. Update AssignmentEvent or mark order as unassigned. Use authenticateMobileRequest, check role is PACKING_STAFF/ADMIN/OWNER/MANAGER/STAFF.",
@@ -23,5 +23,5 @@
     "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 8 route files created successfully. TypeScript compilation (tsc --noEmit) and Next.js build both pass with zero errors. Used simplified business logic per orchestrator guidance - packing/reject acknowledges the event with a rejected flag, reports omit dailyBreakdown and warnings for mobile simplicity, feature-flags is a direct mirror. The orders/[id]/reject route omits the FCM admin notification (sendFcmToAdmins) since the mobile version should not import that dependency."
 }

@@ -11,6 +11,7 @@ interface DeliveryMapProps {
   customerLocation: LatLng;
   storeLocation: LatLng;
   className?: string;
+  etaMinutes?: number | null;
 }
 
 function haversineDistanceKm(
@@ -32,7 +33,7 @@ function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
 }
 
-function createRiderMarkerEl(): HTMLDivElement {
+function createRiderMarkerEl(etaMinutes?: number | null): HTMLDivElement {
   const el = document.createElement("div");
   el.className = "delivery-rider-marker";
   el.style.width = "48px";
@@ -40,10 +41,20 @@ function createRiderMarkerEl(): HTMLDivElement {
   el.style.cursor = "pointer";
   el.style.position = "relative";
 
-  // Pulsing green ring (Uber-style moving indicator)
+  // ETA badge above the marker
+  if (etaMinutes != null && etaMinutes > 0) {
+    const badge = document.createElement("div");
+    badge.className = "rider-eta-badge";
+    badge.style.cssText =
+      "position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:#ffffff;color:#059669;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:10;";
+    badge.textContent = `${etaMinutes} min`;
+    el.appendChild(badge);
+  }
+
+  // Pulsing emerald ring
   const pulse = document.createElement("div");
   pulse.style.cssText =
-    "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;border:3px solid #00c853;animation:rider-pulse 2s ease-out infinite;pointer-events:none;z-index:0;";
+    "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;border:3px solid #059669;animation:rider-pulse 2s ease-out infinite;pointer-events:none;z-index:0;";
   el.appendChild(pulse);
 
   // Rotation wrapper for heading
@@ -60,8 +71,8 @@ function createRiderMarkerEl(): HTMLDivElement {
         <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
       </filter>
     </defs>
-    <circle cx="24" cy="24" r="22" fill="#111111" filter="url(#rider-shadow)"/>
-    <circle cx="24" cy="24" r="20" fill="#1a1a1a"/>
+    <circle cx="24" cy="24" r="22" fill="#059669" filter="url(#rider-shadow)"/>
+    <circle cx="24" cy="24" r="20" fill="#047857"/>
     <path d="M24 12 L30 30 L24 26 L18 30 Z" fill="#ffffff" stroke="none"/>
   </svg>`;
   el.appendChild(rotationWrapper);
@@ -76,22 +87,29 @@ function createCustomerMarkerEl(lat: number, lng: number): HTMLDivElement {
   el.style.cursor = "pointer";
   el.style.position = "relative";
 
-  // Bold black circle with white dot (Uber destination style)
+  // Blue rounded-square with home icon
   el.innerHTML = `<svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="dest-shadow" x="-20%" y="-20%" width="140%" height="140%">
         <feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.3"/>
       </filter>
     </defs>
-    <rect x="4" y="4" width="36" height="36" rx="8" fill="#111111" filter="url(#dest-shadow)"/>
-    <circle cx="22" cy="22" r="6" fill="#ffffff"/>
+    <rect x="4" y="4" width="36" height="36" rx="10" fill="#3B82F6" filter="url(#dest-shadow)"/>
+    <path d="M22 13 L30 19 V29 H26 V23 H18 V29 H14 V19 Z" fill="#ffffff"/>
   </svg>`;
 
-  // Pulse ring
+  // Blue pulse ring
   const pulse = document.createElement("div");
   pulse.style.cssText =
-    "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(17,17,17,0.15);animation:map-pulse 2s ease-out infinite;pointer-events:none;z-index:-1;";
+    "position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:rgba(59,130,246,0.15);animation:map-pulse 2s ease-out infinite;pointer-events:none;z-index:-1;";
   el.appendChild(pulse);
+
+  // "Your Home" label below
+  const label = document.createElement("div");
+  label.style.cssText =
+    "position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#ffffff;color:#3B82F6;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.12);";
+  label.textContent = "Your Home";
+  el.appendChild(label);
 
   // Click handler opens Google Maps navigation
   el.addEventListener("click", () => {
@@ -110,10 +128,20 @@ function createStoreMarkerEl(): HTMLDivElement {
   el.style.width = "24px";
   el.style.height = "24px";
   el.style.cursor = "pointer";
+  el.style.position = "relative";
   el.innerHTML = `<svg viewBox="0 0 24 24" width="24" height="24" xmlns="http://www.w3.org/2000/svg">
-    <circle cx="12" cy="12" r="11" fill="#4a4a4a"/>
-    <circle cx="12" cy="12" r="4" fill="#ffffff"/>
+    <circle cx="12" cy="12" r="11" fill="#6B7280"/>
+    <path d="M6 10 L8 7 H16 L18 10 Z M6 10 V17 H18 V10" fill="none" stroke="#ffffff" stroke-width="1.5" stroke-linejoin="round"/>
+    <rect x="10" y="13" width="4" height="4" fill="#ffffff" rx="0.5"/>
   </svg>`;
+
+  // "Store" label below
+  const label = document.createElement("div");
+  label.style.cssText =
+    "position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);background:#ffffff;color:#6B7280;font-size:9px;font-weight:700;padding:1px 5px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.1);";
+  label.textContent = "Store";
+  el.appendChild(label);
+
   return el;
 }
 
@@ -122,6 +150,7 @@ export function DeliveryMap({
   customerLocation,
   storeLocation,
   className,
+  etaMinutes: etaMinutesProp,
 }: DeliveryMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -138,7 +167,7 @@ export function DeliveryMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      style: "https://tiles.openfreemap.org/styles/positron",
       center: [customerLocation.longitude, customerLocation.latitude],
       zoom: 14,
       attributionControl: false,
@@ -184,10 +213,9 @@ export function DeliveryMap({
           source: "route-line",
           layout: { "line-cap": "round", "line-join": "round" },
           paint: {
-            "line-color": "#111111",
+            "line-color": "#059669",
             "line-width": 4,
-            "line-dasharray": [2, 2],
-            "line-opacity": 0.6,
+            "line-opacity": 0.8,
           },
         });
       }
@@ -201,8 +229,8 @@ export function DeliveryMap({
         100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
       }
       @keyframes rider-pulse {
-        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; border-color: #00c853; }
-        100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; border-color: #00c853; }
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; border-color: #059669; }
+        100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; border-color: #059669; }
       }
     `;
     document.head.appendChild(style);
@@ -218,6 +246,30 @@ export function DeliveryMap({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Update ETA badge on rider marker when etaMinutes changes
+  useEffect(() => {
+    if (!riderMarkerRef.current) return;
+    const el = riderMarkerRef.current.getElement();
+    const existingBadge = el.querySelector(".rider-eta-badge") as HTMLElement | null;
+
+    if (etaMinutesProp != null && etaMinutesProp > 0) {
+      if (existingBadge) {
+        existingBadge.textContent = `${etaMinutesProp} min`;
+      } else {
+        const badge = document.createElement("div");
+        badge.className = "rider-eta-badge";
+        badge.style.cssText =
+          "position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:#ffffff;color:#059669;font-size:11px;font-weight:700;padding:2px 8px;border-radius:10px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.15);z-index:10;";
+        badge.textContent = `${etaMinutesProp} min`;
+        el.appendChild(badge);
+      }
+    } else {
+      if (existingBadge) {
+        existingBadge.remove();
+      }
+    }
+  }, [etaMinutesProp]);
 
   // Animate delivery partner marker
   const animateRider = useCallback(
@@ -318,17 +370,16 @@ export function DeliveryMap({
         source: "route-line",
         layout: { "line-cap": "round", "line-join": "round" },
         paint: {
-          "line-color": "#111111",
+          "line-color": "#059669",
           "line-width": 4,
-          "line-dasharray": [2, 2],
-          "line-opacity": 0.6,
+          "line-opacity": 0.8,
         },
       });
     }
 
     if (!riderMarkerRef.current) {
-      // Create rider marker for the first time
-      const riderEl = createRiderMarkerEl();
+      // Create rider marker for the first time with ETA
+      const riderEl = createRiderMarkerEl(etaMinutesProp);
       riderMarkerRef.current = new maplibregl.Marker({ element: riderEl })
         .setLngLat([newPos.lng, newPos.lat])
         .addTo(mapRef.current);

@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Redesign map markers in the delivery map component with colored, differentiated markers (green rider, blue customer home, grey store) with labels, and improve the route line styling.",
+  "status": "completed",
+  "steps": [
+    "1. Update apps/web/components/tracking/delivery-map.tsx - Replace createRiderMarkerEl(): Change from black circle to emerald green (#059669) circle with white delivery bike/scooter icon. Keep the pulsing ring but make it green. Keep the heading rotation arrow. Add an ETA badge above the marker (a small pill showing estimated minutes, passed as prop).",
+    "2. Update createCustomerMarkerEl(): Change from black square to blue (#3B82F6) rounded-square with a white home icon (house SVG). Keep the pulse ring but make it blue. Add a 'Your Home' label below the marker using a div with white background and small text.",
+    "3. Update createStoreMarkerEl(): Keep it small (24px) grey (#6B7280) circle with a white store/shop icon. Add a 'Store' label below.",
+    "4. Update the route line style: Change from black dashed line to a solid emerald-to-blue gradient line (or solid emerald #059669 with higher opacity). Line width 4, line-cap round, no dash.",
+    "5. Add an etaMinutes prop to DeliveryMap component that gets displayed on the rider marker badge.",
+    "6. Update the map tile style URL from 'liberty' to 'positron' for a cleaner, lighter base map: https://tiles.openfreemap.org/styles/positron",
+    "7. Update the keyframe animations: rider-pulse should use emerald green (#059669), map-pulse for customer should use blue (#3B82F6)."
+  ],
+  "acceptance_criteria": [
+    "Rider marker is emerald green with white icon and green pulsing ring",
+    "Customer marker is blue rounded-square with home icon and 'Your Home' label",
+    "Store marker is small grey with 'Store' label",
+    "Route line is solid (not dashed) emerald green",
+    "Map base style uses positron (lighter tiles)",
+    "TypeScript compiles without errors"
+  ],
+  "verification": [
+    "Run: cd apps/web && npx tsc --noEmit --pretty to confirm no type errors",
+    "Run: cd apps/web && npx next lint to confirm no lint errors"
+  ],
+  "blocked_reason": null,
+  "findings": "TypeScript compiles cleanly. Lint passes with only pre-existing warnings. All 7 steps implemented: rider marker green with ETA badge, customer marker blue with home icon and label, store marker grey with store icon and label, route line solid emerald green, positron tile style, keyframe animations updated. Also updated live-order-tracking.tsx to pass etaMinutes prop to DeliveryMap and added ETA badge update mechanism via useEffect."
+}

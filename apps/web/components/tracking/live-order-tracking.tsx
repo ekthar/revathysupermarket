@@ -16,6 +16,8 @@ import {
 } from "lucide-react";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
 import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
+import { estimateOrderEta, type EtaDisplayMode } from "@/lib/live-order";
+import { OrderBill } from "./order-bill";
 
 const DeliveryMap = dynamic(
   () => import("./delivery-map").then((m) => ({ default: m.DeliveryMap })),
@@ -49,6 +51,16 @@ type TrackingData = {
     note: string | null;
     createdAt: string;
   }>;
+  // Distance-aware ETA fields
+  distanceKm?: number;
+  etaDisplayMode?: EtaDisplayMode;
+  // Order bill fields
+  orderItems?: Array<{ name: string; quantity: number; price: number }>;
+  subtotal?: number;
+  deliveryFee?: number;
+  tipAmount?: number;
+  total?: number;
+  paymentMethod?: string;
 };
 
 const TRACKING_STEPS = [
@@ -121,29 +133,44 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
   const [data, setData] = useState<TrackingData>(initialData);
   const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
 
+  const etaDisplayMode: EtaDisplayMode = data.etaDisplayMode ?? "after_assignment";
+
   const calculateEta = useCallback(
     (riderLoc: { latitude: number; longitude: number } | null) => {
-      // Only show ETA after rider has accepted and is en route
       const riderEnRoute = ["OUT_FOR_DELIVERY", "ARRIVING"].includes(data.status);
-      if (!riderEnRoute) return null;
 
-      if (!riderLoc) {
-        // Rider accepted but no location yet — show a reasonable estimate
-        return 8;
+      // When mode is "after_assignment", only show ETA when rider is en route
+      if (etaDisplayMode === "after_assignment" && !riderEnRoute) {
+        return null;
       }
-      const dist = distanceKm(riderLoc, data.destination);
-      return Math.max(2, Math.ceil((dist / 18) * 60));
+
+      // When mode is "always", show ETA for all non-delivered/non-cancelled statuses
+      if (data.status === "DELIVERED" || data.status === "CANCELLED") {
+        return null;
+      }
+
+      // If rider is en route and we have their location, calculate from rider position
+      if (riderEnRoute && riderLoc) {
+        const dist = distanceKm(riderLoc, data.destination);
+        return Math.max(2, Math.ceil((dist / 18) * 60));
+      }
+
+      // If rider is en route but no location yet
+      if (riderEnRoute && !riderLoc) {
+        return estimateOrderEta(data.status, { distanceKm: data.distanceKm });
+      }
+
+      // For other statuses (when mode is "always"), use distance-aware estimation
+      return estimateOrderEta(data.status, { distanceKm: data.distanceKm });
     },
-    [data.destination, data.status]
+    [data.destination, data.status, data.distanceKm, etaDisplayMode]
   );
 
   useEffect(() => {
     setEtaMinutes(calculateEta(data.deliveryPartnerLocation));
   }, [data.deliveryPartnerLocation, calculateEta]);
 
-  // ─── REAL-TIME UPDATES via Event-Driven SSE Gateway ───
-  // Connects to /api/realtime/orders/{id} which reads from Redis Streams.
-  // Zero database queries in the real-time loop.
+  // Real-time updates via Event-Driven SSE Gateway
   const isDelivered = data.status === "DELIVERED";
   const { connectionState } = useOrderTracking({
     orderId: data.id,
@@ -161,6 +188,9 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
 
   const currentStep = getStepIndex(data.status);
   const phoneNumber = data.riderPhone || SITE.phone;
+
+  // Order bill data
+  const hasBillData = data.orderItems && data.orderItems.length > 0 && data.total != null;
 
   return (
     <motion.main
@@ -265,6 +295,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
               customerLocation={data.destination}
               storeLocation={{ latitude: STORE_COORDINATES.lat, longitude: STORE_COORDINATES.lng }}
               className="shadow-md"
+              etaMinutes={etaMinutes}
             />
           ) : (
             <div className="relative ios-map-placeholder flex items-center justify-center">
@@ -458,6 +489,21 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
             })}
           </div>
         </motion.div>
+
+        {/* Order Bill section */}
+        {hasBillData && (
+          <OrderBill
+            storeName={SITE.name}
+            orderNumber={data.orderNumber}
+            orderDate={data.createdAt}
+            items={data.orderItems!}
+            subtotal={data.subtotal ?? 0}
+            deliveryFee={data.deliveryFee ?? 0}
+            tipAmount={data.tipAmount ?? 0}
+            total={data.total ?? 0}
+            paymentMethod={data.paymentMethod ?? "COD"}
+          />
+        )}
 
         {/* OTP section */}
         {data.deliveryOtp && !isDelivered && (

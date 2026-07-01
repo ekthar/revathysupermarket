@@ -1,0 +1,14 @@
+{
+  "task_id": "task-feature-flags-eta-map-bill",
+  "task_description": "Implement all 25+1 feature flags with admin UI, distance-aware ETA algorithm with eta_display_mode feature flag (default: only show after rider assigned), customer bill/invoice on tracking page, and map marker redesign with colored differentiated markers.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "TypeScript compiles cleanly (tsc --noEmit). Lint passes (only pre-existing warnings). 61/63 unit tests pass - 2 failures are pre-existing and unrelated to changes (DELIVERY_OUT_OF_RANGE error message format and scroll CSS touch-action)."
+  }
+}

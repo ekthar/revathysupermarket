@@ -17,16 +17,40 @@ export type ActiveOrderSummary = {
   eta: number;
 };
 
-export function estimateOrderEta(status: string) {
+export type EtaDisplayMode = "always" | "after_assignment";
+
+export type EtaOptions = {
+  distanceKm?: number;
+  avgPackingMinutes?: number;
+  avgDeliverySpeed?: number;
+  rushHourMultiplier?: number;
+};
+
+/**
+ * Distance-aware ETA estimation.
+ * Calculates delivery time based on the distance from store to customer (or rider to customer),
+ * average packing time, delivery speed, and an optional rush-hour multiplier.
+ *
+ * Defaults: distanceKm=3, avgPackingMinutes=8, avgDeliverySpeed=18 km/h, rushHourMultiplier=1.0
+ */
+export function estimateOrderEta(status: string, options?: EtaOptions): number {
+  const distanceKm = options?.distanceKm ?? 3;
+  const avgPackingMinutes = options?.avgPackingMinutes ?? 8;
+  const avgDeliverySpeed = options?.avgDeliverySpeed ?? 18;
+  const rushHourMultiplier = options?.rushHourMultiplier ?? 1.0;
+
+  const deliveryMinutes = Math.ceil((distanceKm / avgDeliverySpeed) * 60 * rushHourMultiplier);
+
   const minutes: Record<string, number> = {
-    ORDER_RECEIVED: 20,
-    AWAITING_CUSTOMER_APPROVAL: 18,
-    ACCEPTED: 16,
-    PACKING: 14,
-    READY_FOR_DELIVERY: 10,
-    OUT_FOR_DELIVERY: 8,
-    ARRIVING: 3
+    ORDER_RECEIVED: avgPackingMinutes + deliveryMinutes + 5,
+    AWAITING_CUSTOMER_APPROVAL: avgPackingMinutes + deliveryMinutes + 3,
+    ACCEPTED: avgPackingMinutes + deliveryMinutes,
+    PACKING: Math.ceil(avgPackingMinutes * 0.7) + deliveryMinutes,
+    READY_FOR_DELIVERY: deliveryMinutes + 2,
+    OUT_FOR_DELIVERY: deliveryMinutes,
+    ARRIVING: Math.min(3, deliveryMinutes),
   };
+
   return minutes[status] ?? 15;
 }
 

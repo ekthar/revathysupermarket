@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "fix",
   "description": "Address semantic review issues: (1) Add notifee event handler to navigate to alert screens on notification tap, (2) Fix stale closure in packing alert countdown with handledRef guard, (3) Extract shared routeIncomingMessage function to eliminate duplicated FCM switch-case logic.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In apps/mobile-staff/src/services/fcm.ts: Extract a shared async function routeIncomingMessage(message) that contains the switch-case logic. Call it from both handleForegroundMessage and setBackgroundMessageHandler.",
     "In apps/mobile-staff/app/alert/packing/[eventId].tsx: Add a handledRef = useRef(false) and guard both handleAccept and handleReject with early return if handledRef.current is true, setting it true before proceeding.",
@@ -17,5 +17,5 @@
     "TypeScript compilation passes for modified files"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All three review issues addressed. TypeScript compilation passes for mobile-staff (only pre-existing notifications.ts error remains). The handleReject onPress needed wrapping in an arrow function to avoid type mismatch with GestureResponderEvent after adding the autoReject parameter."
 }

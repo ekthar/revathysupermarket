@@ -181,7 +181,7 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
                 <div className="flex items-center gap-4">
                   <div className={`relative h-11 w-11 rounded-xl flex items-center justify-center shrink-0 ${offer.isActive ? "bg-primary/10" : "bg-muted"}`}>
                     {offer.image ? (
-                      <Image src={offer.image} alt="" fill className="rounded-xl object-cover" unoptimized />
+                      <Image src={offer.image} alt={offer.title || "Offer image"} fill className="rounded-xl object-cover" unoptimized />
                     ) : (
                       <Tag className={`h-5 w-5 ${offer.isActive ? "text-primary" : "text-muted-foreground"}`} />
                     )}

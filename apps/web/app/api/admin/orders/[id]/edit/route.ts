@@ -64,7 +64,8 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     : { price: Number(entry.price), quantity: entry.quantity });
   const nextTotal = calculateOrderSubtotal(nextItems);
   const priceDelta = nextTotal - previousTotal;
-  const requiresCustomerApproval = Math.abs(priceDelta) > AUTO_APPROVE_DELTA;
+  // Substitutions ALWAYS require customer approval regardless of price delta
+  const requiresCustomerApproval = parsed.data.action === "substitute" ? true : Math.abs(priceDelta) > AUTO_APPROVE_DELTA;
 
   await prisma.$transaction(async (tx) => {
     await tx.orderItem.update({

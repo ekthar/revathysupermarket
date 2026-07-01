@@ -11,6 +11,7 @@ import { SkipToContent } from "@/components/ui/skip-to-content";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
 import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
+import { Footer } from "@/components/footer";
 import { ViewportStability } from "@/components/ui/viewport-stability";
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
@@ -110,6 +111,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Suspense>
             <div id="main-content" className="pb-safe route-scroll-container" tabIndex={-1}>{children}</div>
           </Suspense>
+          <Footer storeName={settings.storeName} address={settings.address} />
           <ScrollToTop />
           <MobileBottomNav user={user} />
         </Providers>

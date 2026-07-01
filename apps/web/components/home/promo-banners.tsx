@@ -72,7 +72,7 @@ export function PromoBanners({ banners }: { banners?: Banner[] }) {
                 <div className="relative w-24 h-24 shrink-0 self-center">
                   <Image
                     src={banner.image}
-                    alt=""
+                    alt={banner.title || "Promotional banner"}
                     fill
                     sizes="96px"
                     className="rounded-2xl object-cover"

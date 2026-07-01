@@ -42,6 +42,19 @@ export default function PackOrderScreen() {
   }
 
   async function markReady() {
+    // Confirmation before irreversible status change
+    const confirmed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        "Mark as ready?",
+        "Ensure all items are packed correctly. This will notify the delivery partner.",
+        [
+          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+          { text: "Mark Ready", onPress: () => resolve(true) },
+        ]
+      );
+    });
+    if (!confirmed) return;
+
     setMarking(true);
     try {
       await api.patch(`/packing/orders/${id}/ready`);

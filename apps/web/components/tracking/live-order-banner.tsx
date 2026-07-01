@@ -80,7 +80,7 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
                   <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
                 </div>
                 <div>
-                  <p className="text-micro font-bold uppercase tracking-wider text-white/80">
+                  <p className="text-micro font-bold uppercase tracking-wider text-white/90">
                     Live Order
                   </p>
                   <p className="text-body font-bold text-white">
@@ -90,16 +90,21 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
               </div>
               <div className="flex items-center gap-2">
                 {activeOrder.eta && (
-                  <p className="text-lg font-black text-white">
-                    {activeOrder.eta} min
-                  </p>
+                  <div className="text-right">
+                    <p className="text-lg font-black text-white">
+                      ~{activeOrder.eta} min
+                    </p>
+                    <p className="text-micro font-medium text-white/80">
+                      {["OUT_FOR_DELIVERY", "ARRIVING"].includes(activeOrder.status) ? "delivery" : "est. total"}
+                    </p>
+                  </div>
                 )}
                 <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
                   <Truck className="h-4 w-4 text-white" />
                 </div>
               </div>
             </div>
-            <p className="mt-1.5 text-micro font-semibold uppercase tracking-widest text-white/60">
+            <p className="mt-1.5 text-micro font-semibold uppercase tracking-widest text-white/80">
               Tap to track
             </p>
             {/* Decorative */}

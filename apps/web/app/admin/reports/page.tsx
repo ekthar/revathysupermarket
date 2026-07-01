@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
+import { ReportsTimeSelector } from "@/components/admin/reports-time-selector";
 
 export const dynamic = "force-dynamic";
 
@@ -40,42 +41,37 @@ export default async function AdminReportsPage() {
       <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
         <p className="text-xs font-black uppercase text-primary">Local reports</p>
         <h1 className="mt-2 font-display text-4xl font-black leading-tight">Reports</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Sales, collections, delivery performance, and product popularity without external tools.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Sales, collections, delivery performance, and product popularity. Select a time range to compare.</p>
       </section>
-      <div className="grid gap-3 md:grid-cols-4">
-        {[
-          ["Today orders", orders.length],
-          ["COD collection", formatCurrency(cod)],
-          ["UPI collection", formatCurrency(upi)],
-          ["Paid total", formatCurrency(paid)]
-        ].map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
-            <p className="text-xs font-black uppercase text-muted-foreground">{label}</p>
-            <p className="mt-2 text-2xl font-black">{value}</p>
-          </div>
-        ))}
-      </div>
+
+      {/* Time-range aware metrics */}
+      <ReportsTimeSelector todayData={{ orders: orders.length, cod, upi, paid }} />
+
       <div className="grid gap-5 lg:grid-cols-2">
         <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
           <h2 className="font-display text-2xl font-black">Product popularity</h2>
           <div className="mt-4 grid gap-2">
-            {popularItems.map((item) => (
+            {popularItems.length > 0 ? popularItems.map((item) => (
               <div key={item.name} className="flex justify-between rounded-2xl bg-muted p-3 text-sm font-bold">
                 <span>{item.name}</span>
                 <span>{item._sum.quantity ?? 0} sold</span>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">No sales data yet.</p>
+            )}
           </div>
         </section>
         <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
           <h2 className="font-display text-2xl font-black">Delivery partner performance</h2>
           <div className="mt-4 grid gap-2">
-            {deliveryPartners.map((partner) => (
+            {deliveryPartners.length > 0 ? deliveryPartners.map((partner) => (
               <div key={partner.id} className="flex justify-between rounded-2xl bg-muted p-3 text-sm font-bold">
                 <span>{partner.name ?? partner.phone ?? "Delivery partner"}</span>
                 <span>{partner.assignedOrders.length} delivered</span>
               </div>
-            ))}
+            )) : (
+              <p className="text-sm text-muted-foreground py-4 text-center">No delivery partners found.</p>
+            )}
           </div>
         </section>
       </div>

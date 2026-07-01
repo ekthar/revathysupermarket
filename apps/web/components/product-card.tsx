@@ -255,23 +255,23 @@ const QuantityStepper = memo(function QuantityStepper({
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
-      className="flex h-[30px] items-center overflow-hidden rounded-full bg-black shadow-sm"
+      className="flex h-[36px] items-center overflow-hidden rounded-full bg-black shadow-sm"
     >
       <motion.button
         type="button"
         onClick={onDecrement}
         whileTap={{ scale: 1.4 }}
         aria-label="Decrease quantity"
-        className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+        className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
-        <Minus className="h-3 w-3" />
+        <Minus className="h-3.5 w-3.5" />
       </motion.button>
       <motion.span
         key={quantity}
         initial={{ scale: 1.5, opacity: 0, y: -5 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 500, damping: 15 }}
-        className="w-5 text-center text-caption font-bold text-white"
+        className="w-6 text-center text-caption font-bold text-white"
         aria-label={`Quantity: ${quantity}`}
       >
         {quantity}
@@ -281,9 +281,9 @@ const QuantityStepper = memo(function QuantityStepper({
         onClick={onIncrement}
         whileTap={{ scale: 1.4 }}
         aria-label="Increase quantity"
-        className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+        className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
-        <Plus className="h-3 w-3" />
+        <Plus className="h-3.5 w-3.5" />
       </motion.button>
     </motion.div>
   );

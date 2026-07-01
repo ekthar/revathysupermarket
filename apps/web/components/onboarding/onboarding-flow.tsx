@@ -81,7 +81,7 @@ export function OnboardingFlow({ callbackUrl = "/", logoUrl = null }: { callback
                 className="flex h-20 w-20 items-center justify-center rounded-xl bg-primary text-white shadow-lg overflow-hidden"
               >
                 {logoUrl ? (
-                  <Image src={logoUrl} alt="" width={80} height={80} className="h-full w-full object-contain p-2" unoptimized />
+                  <Image src={logoUrl} alt="Store logo" width={80} height={80} className="h-full w-full object-contain p-2" unoptimized />
                 ) : (
                   <ShoppingBasket className="h-10 w-10" />
                 )}

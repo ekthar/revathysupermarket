@@ -127,13 +127,13 @@ export default async function AdminPage() {
   const revenueChange = lastWeekRevenue > 0 ? Math.round(((totalRevenue * 7 - lastWeekRevenue) / lastWeekRevenue) * 100) : 0;
   const customerChange = lastWeekCustomers > 0 ? Math.round(((totalCustomers - lastWeekCustomers) / lastWeekCustomers) * 100) : 0;
 
-  // GST collection calculation (inclusive GST from delivered orders today)
+  // GST: Revenue displayed on dashboard should be NET of GST (GST is hidden from dashboard per policy)
   const gstRate = settings.gstRatePercent;
-  const todayGstCollection = gstRate > 0 ? totalRevenue - totalRevenue / (1 + gstRate / 100) : 0;
-  const monthGstCollection = gstRate > 0 ? monthRevenue - monthRevenue / (1 + gstRate / 100) : 0;
+  const netTodayRevenue = gstRate > 0 ? Math.round(totalRevenue / (1 + gstRate / 100)) : totalRevenue;
+  const netMonthRevenue = gstRate > 0 ? Math.round(monthRevenue / (1 + gstRate / 100)) : monthRevenue;
 
-  // Average order value
-  const avgOrderValue = todayDeliveredOrders > 0 ? Math.round(totalRevenue / todayDeliveredOrders) : 0;
+  // Average order value (net of GST)
+  const avgOrderValue = todayDeliveredOrders > 0 ? Math.round(netTodayRevenue / todayDeliveredOrders) : 0;
 
   return (
     <AdminDashboardClient
@@ -142,7 +142,7 @@ export default async function AdminPage() {
       canSeeFinancials={canSeeFinancials}
       canManageCatalogue={canManageCatalogue}
       databaseHealthy={databaseHealthy}
-      totalRevenue={totalRevenue}
+      totalRevenue={netTodayRevenue}
       todayOrders={todayOrders}
       pendingOrders={pendingOrders}
       packingOrders={packingOrders}
@@ -166,11 +166,8 @@ export default async function AdminPage() {
       }))}
       monthlyRevenue={monthlyRevenue}
       lowStockProducts={lowStockProducts}
-      // Enhanced metrics
-      gstRatePercent={gstRate}
-      todayGstCollection={todayGstCollection}
-      monthGstCollection={monthGstCollection}
-      monthRevenue={monthRevenue}
+      // Enhanced metrics — GST hidden from dashboard views per policy
+      monthRevenue={netMonthRevenue}
       avgOrderValue={avgOrderValue}
       categorySales={categorySales}
       peakHours={peakHoursData}

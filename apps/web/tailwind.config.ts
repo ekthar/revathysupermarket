@@ -117,7 +117,7 @@ const config: Config = {
         title: ["20px", { lineHeight: "1.25", letterSpacing: "-0.015em", fontWeight: "700" }],
         body: ["14px", { lineHeight: "1.5", letterSpacing: "0", fontWeight: "500" }],
         caption: ["12px", { lineHeight: "1.4", letterSpacing: "0", fontWeight: "500" }],
-        micro: ["10px", { lineHeight: "1.3", letterSpacing: "0", fontWeight: "500" }]
+        micro: ["10px", { lineHeight: "1.3", letterSpacing: "0.01em", fontWeight: "600" }]
       },
       fontFamily: {
         sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "system-ui", "sans-serif"],

@@ -84,7 +84,7 @@ export function AdminDashboardClient({
   readyOrders, outForDeliveryOrders, totalCustomers,
   orderChange, revenueChange, customerChange,
   recentOrders, monthlyRevenue, lowStockProducts,
-  gstRatePercent = 0, todayGstCollection = 0, monthGstCollection = 0,
+  gstRatePercent = 0,
   monthRevenue = 0, avgOrderValue = 0, categorySales = [],
   peakHours = [], repeatCustomers = 0, inventoryValuation = 0, stockValueVisible = false, totalProducts = 0
 }: Props) {
@@ -461,7 +461,7 @@ export function AdminDashboardClient({
             {lowStockProducts.slice(0, 5).map((product) => (
               <div key={product.id} className="flex items-center gap-3 px-4 py-2.5">
                 <div className="relative h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 overflow-hidden shrink-0">
-                  {product.image && <Image src={product.image} alt="" fill sizes="32px" className="object-cover" />}
+                  {product.image && <Image src={product.image} alt={product.name} fill sizes="32px" className="object-cover" />}
                 </div>
                 <span className="text-caption font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{product.name}</span>
                 <span className={`text-caption font-bold px-2 py-0.5 rounded-full ${

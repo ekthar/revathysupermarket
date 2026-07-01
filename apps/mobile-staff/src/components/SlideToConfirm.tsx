@@ -1,10 +1,16 @@
 /**
  * Swipe-to-confirm gesture component using Reanimated + GestureHandler.
  * Works reliably on Android (primary target) and iOS.
+ *
+ * BUG FIX: Previously used useState(300) as initial trackWidth, causing
+ * maxX to be incorrect before onLayout fired. The thumb would snap back
+ * because the threshold was computed against a stale width. Now we guard
+ * gesture rendering until layout is measured, and use useSharedValue for
+ * maxX so the gesture worklet always references the true track width.
  */
 
-import { useState } from "react";
-import { View, Text, StyleSheet, Vibration } from "react-native";
+import { useCallback, useState } from "react";
+import { View, Text, StyleSheet, Vibration, ActivityIndicator } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
   useSharedValue,
@@ -34,10 +40,18 @@ export function SlideToConfirm({
   confirmColor = "#10b981",
   trackColor = "#1e293b",
 }: SlideToConfirmProps) {
-  const [trackWidth, setTrackWidth] = useState(300);
+  const [layoutReady, setLayoutReady] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
   const translateX = useSharedValue(0);
-  const maxX = trackWidth - THUMB_SIZE - TRACK_PADDING * 2;
+  // Use a shared value so the gesture worklet always has the correct max
+  const maxXShared = useSharedValue(0);
+
+  const handleLayout = useCallback((e: { nativeEvent: { layout: { width: number } } }) => {
+    const width = e.nativeEvent.layout.width;
+    const computedMax = width - THUMB_SIZE - TRACK_PADDING * 2;
+    maxXShared.value = computedMax;
+    if (!layoutReady) setLayoutReady(true);
+  }, [layoutReady, maxXShared]);
 
   function handleConfirm() {
     setConfirmed(true);
@@ -50,13 +64,21 @@ export function SlideToConfirm({
   }
 
   const panGesture = Gesture.Pan()
-    .enabled(!disabled && !confirmed)
+    .enabled(!disabled && !confirmed && layoutReady)
     .onUpdate((event) => {
-      translateX.value = Math.max(0, Math.min(event.translationX, maxX));
+      "worklet";
+      const max = maxXShared.value;
+      translateX.value = Math.max(0, Math.min(event.translationX, max));
     })
     .onEnd(() => {
-      if (translateX.value >= maxX * CONFIRM_THRESHOLD) {
-        translateX.value = withSpring(maxX, { damping: 20, stiffness: 200 });
+      "worklet";
+      const max = maxXShared.value;
+      if (max <= 0) {
+        translateX.value = withSpring(0, { damping: 15, stiffness: 300 });
+        return;
+      }
+      if (translateX.value >= max * CONFIRM_THRESHOLD) {
+        translateX.value = withSpring(max, { damping: 20, stiffness: 200 });
         runOnJS(handleConfirm)();
       } else {
         translateX.value = withSpring(0, { damping: 15, stiffness: 300 });
@@ -68,29 +90,33 @@ export function SlideToConfirm({
     transform: [{ translateX: translateX.value }],
   }));
 
-  const labelStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      translateX.value,
-      [0, maxX * 0.3],
-      [1, 0],
-      Extrapolation.CLAMP
-    ),
-  }));
+  const labelStyle = useAnimatedStyle(() => {
+    "worklet";
+    const max = maxXShared.value;
+    return {
+      opacity: max > 0
+        ? interpolate(translateX.value, [0, max * 0.3], [1, 0], Extrapolation.CLAMP)
+        : 1,
+    };
+  });
 
-  const progressStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(
-      translateX.value,
-      [0, maxX],
-      [0.1, 0.6],
-      Extrapolation.CLAMP
-    ),
-  }));
+  const progressStyle = useAnimatedStyle(() => {
+    "worklet";
+    const max = maxXShared.value;
+    return {
+      opacity: max > 0
+        ? interpolate(translateX.value, [0, max], [0.1, 0.6], Extrapolation.CLAMP)
+        : 0.1,
+    };
+  });
 
   if (confirmed) {
     return (
       <View
         style={[styles.track, { backgroundColor: confirmColor }]}
         className="items-center justify-center"
+        accessibilityRole="button"
+        accessibilityLabel="Confirmed"
       >
         <Text className="text-white font-bold text-base">✓ Confirmed!</Text>
       </View>
@@ -100,7 +126,10 @@ export function SlideToConfirm({
   return (
     <View
       style={[styles.track, { backgroundColor: disabled ? "#e2e8f0" : trackColor }]}
-      onLayout={(e) => setTrackWidth(e.nativeEvent.layout.width)}
+      onLayout={handleLayout}
+      accessibilityRole="adjustable"
+      accessibilityLabel={label}
+      accessibilityHint="Slide right to confirm"
     >
       {/* Progress fill */}
       <Animated.View
@@ -121,18 +150,26 @@ export function SlideToConfirm({
         </Text>
       </Animated.View>
 
-      {/* Thumb */}
-      <GestureDetector gesture={panGesture}>
-        <Animated.View
-          style={[
-            styles.thumb,
-            { backgroundColor: disabled ? "#cbd5e1" : confirmColor },
-            thumbStyle,
-          ]}
-        >
-          <Text className="text-white text-lg font-bold">›› </Text>
-        </Animated.View>
-      </GestureDetector>
+      {/* Thumb — only render gesture after layout is measured */}
+      {layoutReady ? (
+        <GestureDetector gesture={panGesture}>
+          <Animated.View
+            style={[
+              styles.thumb,
+              { backgroundColor: disabled ? "#cbd5e1" : confirmColor },
+              thumbStyle,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel="Slide thumb"
+          >
+            <Text className="text-white text-lg font-bold">›› </Text>
+          </Animated.View>
+        </GestureDetector>
+      ) : (
+        <View style={[styles.thumb, { backgroundColor: disabled ? "#cbd5e1" : confirmColor }]}>
+          <ActivityIndicator size="small" color="white" />
+        </View>
+      )}
     </View>
   );
 }

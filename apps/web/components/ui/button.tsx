@@ -12,7 +12,8 @@ const buttonVariants = cva(
         secondary: "bg-lime-fresh text-slate-950 shadow-elevation-2 hover:bg-lime-fresh/85",
         outline: "border border-border bg-background/90 shadow-sm hover:bg-muted",
         ghost: "hover:bg-muted",
-        dark: "bg-slate-950 text-white hover:bg-slate-800"
+        dark: "bg-slate-950 text-white hover:bg-slate-800",
+        destructive: "bg-red-600 text-white shadow-elevation-2 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800"
       },
       size: {
         default: "h-11 px-5",

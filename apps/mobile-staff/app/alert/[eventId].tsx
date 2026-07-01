@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { View, Text, Pressable, Vibration } from "react-native";
+import { View, Text, Pressable, Vibration, Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Animated, { SlideInDown, FadeIn } from "react-native-reanimated";
 import { api } from "@/services/api";
@@ -50,6 +50,19 @@ export default function DeliveryAlertScreen() {
   }
 
   async function handleReject() {
+    // Confirmation dialog before irreversible rejection
+    const confirmed = await new Promise<boolean>((resolve) => {
+      Alert.alert(
+        "Reject this order?",
+        "This cannot be undone. The order will be reassigned to another delivery partner.",
+        [
+          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+          { text: "Reject", style: "destructive", onPress: () => resolve(true) },
+        ]
+      );
+    });
+    if (!confirmed) return;
+
     setProcessing(true);
     await alarmService.stopAlarm();
     await notifeeService.cancel(`delivery-${eventId}`);

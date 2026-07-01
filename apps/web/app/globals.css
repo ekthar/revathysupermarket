@@ -80,6 +80,21 @@ a, button, input, select, textarea, [role="button"] {
   touch-action: manipulation;
 }
 
+/* Prevent auto-zoom on input focus (iOS zooms when font-size < 16px) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="password"],
+  input[type="search"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
 button, a, [role="button"], summary, input[type="button"], input[type="submit"] {
   -webkit-user-select: none;
   user-select: none;

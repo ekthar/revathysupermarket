@@ -295,6 +295,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
               customerLocation={data.destination}
               storeLocation={{ latitude: STORE_COORDINATES.lat, longitude: STORE_COORDINATES.lng }}
               className="shadow-md"
+              etaMinutes={etaMinutes}
             />
           ) : (
             <div className="relative ios-map-placeholder flex items-center justify-center">

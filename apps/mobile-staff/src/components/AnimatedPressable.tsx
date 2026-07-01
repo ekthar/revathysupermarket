@@ -1,17 +1,31 @@
 /**
  * AnimatedPressable
  *
- * A drop-in replacement for React Native's Pressable that adds a subtle
- * press-scale (~0.96) spring animation powered by Reanimated. It preserves the
- * standard Pressable API (onPress, accessibility props, children, etc.) and
- * keeps the app's light haptic feedback pattern.
+ * A Pressable wrapper that adds a subtle press-scale (~0.96) spring animation
+ * powered by Reanimated. It accepts the standard Pressable props (onPress,
+ * accessibility props, static children/style, etc.) and keeps the app's light
+ * haptic feedback pattern.
+ *
+ * NOTE: this is not a full drop-in Pressable. It intentionally narrows two
+ * props: `children` and `style` accept only their static (non-function) forms.
+ * Pressable's render-prop `children={({ pressed }) => ...}` and functional
+ * `style={({ pressed }) => ...}` forms are NOT supported, because the press
+ * state is expressed through the animated scale rather than passed down. No
+ * caller currently relies on those forms.
  *
  * Respects the OS "reduce motion" setting: when enabled, the scale animation is
  * skipped so the control never feels sluggish for users who opt out of motion.
  */
 
-import { forwardRef } from "react";
-import { Pressable, Vibration, type PressableProps, type View } from "react-native";
+import { forwardRef, type ReactNode } from "react";
+import {
+  Pressable,
+  Vibration,
+  type PressableProps,
+  type StyleProp,
+  type View,
+  type ViewStyle,
+} from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -24,7 +38,12 @@ const AnimatedPressableBase = Animated.createAnimatedComponent(Pressable);
 const PRESS_SCALE = 0.96;
 const SPRING_CONFIG = { damping: 15, stiffness: 320, mass: 0.4 };
 
-export interface AnimatedPressableProps extends PressableProps {
+export interface AnimatedPressableProps
+  extends Omit<PressableProps, "children" | "style"> {
+  /** Static content to render. The Pressable render-prop form is not supported. */
+  children?: ReactNode;
+  /** Static style. The Pressable function-style form is not supported. */
+  style?: StyleProp<ViewStyle>;
   /** Target scale on press. Defaults to 0.96. */
   pressScale?: number;
   /** Enable light haptic feedback on press. Defaults to true. */
@@ -74,10 +93,10 @@ export const AnimatedPressable = forwardRef<View, AnimatedPressableProps>(
           if (haptic) Vibration.vibrate(8);
           onPress?.(e);
         }}
-        style={[animatedStyle, style as object]}
+        style={[animatedStyle, style]}
         {...props}
       >
-        {children as React.ReactNode}
+        {children}
       </AnimatedPressableBase>
     );
   }

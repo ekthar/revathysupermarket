@@ -1,0 +1,22 @@
+{
+  "id": "FEAT-001",
+  "type": "fix",
+  "description": "Remove the SkipToContent component from the app. Delete the component file and remove all imports/usages from layout.tsx.",
+  "status": "in_progress",
+  "steps": [
+    "Delete the file apps/web/components/ui/skip-to-content.tsx",
+    "In apps/web/app/layout.tsx, remove the import line: import { SkipToContent } from '@/components/ui/skip-to-content';",
+    "In apps/web/app/layout.tsx, remove the <SkipToContent /> JSX usage from the body/Providers section"
+  ],
+  "acceptance_criteria": [
+    "The file apps/web/components/ui/skip-to-content.tsx no longer exists",
+    "No references to SkipToContent remain in the codebase (excluding tsconfig.tsbuildinfo)",
+    "The layout.tsx compiles without errors"
+  ],
+  "verification": [
+    "Run grep -r 'SkipToContent\\|skip-to-content' apps/web/ --include='*.tsx' --include='*.ts' to confirm zero matches",
+    "Run cd apps/web && npx tsc --noEmit to confirm TypeScript compilation succeeds"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

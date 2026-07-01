@@ -7,7 +7,6 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Providers } from "@/components/providers";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
-import { SkipToContent } from "@/components/ui/skip-to-content";
 import { OnboardingTour } from "@/components/ui/onboarding-tour";
 import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
@@ -103,7 +102,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="pt-safe">
         <Providers session={session}>
-          <SkipToContent />
           <ViewportStability />
           <ScrollProgress />
           <OnboardingTour />

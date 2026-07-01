@@ -12,8 +12,9 @@ import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/toast-provider";
 import { InstallAppButton } from "@/components/install-app-button";
 import { SlideToConfirm } from "@/components/delivery/slide-to-confirm";
-import { DeliveryMapView } from "@/components/delivery/delivery-map-view";
 import { DeliveryOrderActions } from "@/components/delivery/delivery-order-actions";
+import { LocationGate } from "@/components/delivery/location-gate";
+import type { UseDeliveryLocation } from "@/components/delivery/use-delivery-location";
 
 type DeliveryOrder = {
   id: string;
@@ -26,6 +27,7 @@ type DeliveryOrder = {
   status: string;
   total: number;
   paymentMethod: string;
+  customerUnavailableWaitUntil?: string | null;
   items: Array<{ id: string; name: string; quantity: number; price: number }>;
   collection?: {
     expectedAmount: number;
@@ -96,18 +98,42 @@ function paymentBadge(method: string): { label: string; className: string } {
 
 
 export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShellProps) {
-  const { showToast } = useToast();
-  const [entries, setEntries] = useState<DeliveryOrder[]>(() =>
-    orders.map((o) => (o.status === "OUT_FOR_DELIVERY" ? { ...o, status: "ARRIVING" } : o))
+  return (
+    <LocationGate>
+      {(location) => (
+        <DeliveryAppShellInner partnerName={partnerName} stats={stats} orders={orders} location={location} />
+      )}
+    </LocationGate>
   );
+}
+
+function DeliveryAppShellInner({
+  partnerName,
+  stats,
+  orders,
+  location,
+}: DeliveryAppShellProps & { location: UseDeliveryLocation }) {
+  const { showToast } = useToast();
+  // No more client-side relabeling of OUT_FOR_DELIVERY -> ARRIVING. Arrival is
+  // now a real, GPS-verified server transition (see markArrived below) — the
+  // status shown here always reflects the database.
+  const [entries, setEntries] = useState<DeliveryOrder[]>(orders);
   const [loading, setLoading] = useState<string | null>(null);
   const [damageOrder, setDamageOrder] = useState<DeliveryOrder | null>(null);
   const [collectOrder, setCollectOrder] = useState<DeliveryOrder | null>(null);
   const [completeOrder, setCompleteOrder] = useState<DeliveryOrder | null>(null);
-  const [unavailableOrders, setUnavailableOrders] = useState<Map<string, number>>(new Map());
+  // Seed countdowns from the server so a page refresh doesn't lose the
+  // "Return to Store" wait timer for orders already CUSTOMER_UNAVAILABLE.
+  const [unavailableOrders, setUnavailableOrders] = useState<Map<string, number>>(() => {
+    const seeded = new Map<string, number>();
+    for (const order of orders) {
+      if (order.status === "CUSTOMER_UNAVAILABLE" && order.customerUnavailableWaitUntil) {
+        seeded.set(order.id, new Date(order.customerUnavailableWaitUntil).getTime());
+      }
+    }
+    return seeded;
+  });
   const [tick, setTick] = useState(0);
-
-  // GPS Publishing handled by DeliveryMapView component
 
   // Countdown tick for customer unavailable timers
   useEffect(() => {
@@ -119,6 +145,38 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
   // tick is used implicitly to re-render countdown displays
   void tick;
 
+  /**
+   * "Mark Arrived" — the real, GPS-verified transition to ARRIVING.
+   * Replaces the old fake client-only relabel that caused the DB status to
+   * stay OUT_FOR_DELIVERY forever, which in turn made "Customer Unavailable"
+   * silently fail (its API requires status=ARRIVING in the database).
+   */
+  async function markArrived(order: DeliveryOrder) {
+    setLoading(order.id);
+    let coords;
+    try {
+      coords = await location.getFreshCoords();
+    } catch {
+      setLoading(null);
+      return showToast("Turn on location to confirm you've arrived", "error");
+    }
+    const response = await fetch("/api/delivery/arrive", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orderId: order.id, latitude: coords.latitude, longitude: coords.longitude }),
+    });
+    const data = await readApiResponse<{ error?: string; distance?: number }>(response);
+    setLoading(null);
+    if (!response.ok) {
+      const natural =
+        data.error?.includes("Too far") && data.distance
+          ? `You're still ${Math.round(data.distance)}m away — get closer to the customer's location to mark arrival.`
+          : data.error ?? "Could not confirm arrival";
+      return showToast(natural, "error");
+    }
+    setEntries((current) => current.map((entry) => (entry.id === order.id ? { ...entry, status: "ARRIVING" } : entry)));
+    showToast("Arrival confirmed", "success");
+  }
 
   async function markUnavailable(order: DeliveryOrder) {
     setLoading(order.id);
@@ -168,16 +226,16 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
     const data = await readApiResponse<{ error?: string }>(response);
     setLoading(null);
     if (!response.ok) return showToast(data.error ?? "Pickup update failed", "error");
+    // Backend sets OUT_FOR_DELIVERY, not ARRIVING — "Arriving" now only
+    // happens once markArrived() GPS-verifies the rider is within 100m.
     setEntries((current) =>
-      current.map((entry) => (entry.id === order.id ? { ...entry, status: "ARRIVING" } : entry))
+      current.map((entry) => (entry.id === order.id ? { ...entry, status: "OUT_FOR_DELIVERY" } : entry))
     );
-    showToast("Order picked up!", "success");
+    showToast("Order picked up — on the way!", "success");
   }
 
   return (
     <div className="mx-auto max-w-lg pb-24">
-      {/* GPS location publisher */}
-      <DeliveryMapView />
       {/* Header */}
       <header className="sticky top-0 z-40 bg-gradient-to-br from-emerald-600 to-emerald-700 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1rem)] shadow-lg shadow-emerald-900/20">
         <div className="flex items-center gap-3">
@@ -310,6 +368,7 @@ export function DeliveryAppShell({ partnerName, stats, orders }: DeliveryAppShel
                       loading={loading}
                       unavailableOrders={unavailableOrders}
                       onPickup={handlePickup}
+                      onMarkArrived={markArrived}
                       onMarkUnavailable={markUnavailable}
                       onReturnToStore={returnToStore}
                       onOpenDamage={setDamageOrder}

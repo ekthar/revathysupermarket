@@ -1,0 +1,31 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Create all missing delivery-related mobile API routes that the mobile app calls but currently get 404: /delivery/dashboard, /delivery/orders/[id], /delivery/collect, /delivery/complete, /delivery/acknowledge, /delivery/location, /delivery/orders/[id]/collection, /delivery/orders/[id]/complete, /delivery/orders/[id]/damage, /delivery/orders/[id]/pickup, /delivery/assignments/pending",
+  "status": "in_progress",
+  "steps": [
+    "Create apps/web/app/api/mobile/v1/delivery/dashboard/route.ts - GET endpoint returning delivery partner's assigned orders with earnings summary. Use authenticateMobileRequest, check role is DELIVERY_PARTNER. Query orders assigned to the user with status in [READY_FOR_DELIVERY, OUT_FOR_DELIVERY, ARRIVING]. Return {orders: [{id, orderNumber, customerName, address, total, status, itemCount, createdAt}], deliveriesToday, cashCollected, upiCollected}. Follow the DeliveryDashboardData type from packages/shared.",
+    "Create apps/web/app/api/mobile/v1/delivery/orders/[id]/route.ts - GET endpoint returning full order detail for delivery partner. Use authenticateMobileRequest, check role DELIVERY_PARTNER and order.deliveryPartnerId === auth.userId. Return full order detail matching OrderDetail type: items, customer info, address, payment info, status.",
+    "Create apps/web/app/api/mobile/v1/delivery/collect/route.ts - POST endpoint to record payment collection. Accept {orderId, cashCollected, upiCollected, upiReference?}. Reuse the business logic pattern from apps/web/app/api/delivery/collect/route.ts but use authenticateMobileRequest instead of authenticateDeliveryPartnerRequest. Use prisma directly with the same collectionBalance logic (import from @/lib/delivery-money).",
+    "Create apps/web/app/api/mobile/v1/delivery/complete/route.ts - POST endpoint to mark delivery complete with OTP. Accept {orderId, otp}. Reuse the business logic pattern from apps/web/app/api/delivery/complete/route.ts but use authenticateMobileRequest.",
+    "Create apps/web/app/api/mobile/v1/delivery/acknowledge/route.ts - POST endpoint to acknowledge a delivery assignment. Accept {eventId, orderId}. Update the AssignmentEvent with acknowledgedAt and update order deliveryAlertAckAt. Follow pattern from apps/web/app/api/mobile/v1/assignments/route.ts POST handler.",
+    "Create apps/web/app/api/mobile/v1/delivery/location/route.ts - POST endpoint to update delivery partner GPS. Accept {latitude, longitude, heading?}. Reuse logic from apps/web/app/api/delivery/location/route.ts but with authenticateMobileRequest.",
+    "Create apps/web/app/api/mobile/v1/delivery/orders/[id]/collection/route.ts - GET returns collection status for the order, POST records a collection. For GET: query DeliveryCollection for the orderId. For POST: accept {amount, method} and create/update collection.",
+    "Create apps/web/app/api/mobile/v1/delivery/orders/[id]/complete/route.ts - POST endpoint to mark specific order as delivered (simpler variant without OTP for the /orders/[id]/complete pattern used in app/orders/[id]/complete.tsx). Update order status to DELIVERED, create OrderEvent.",
+    "Create apps/web/app/api/mobile/v1/delivery/orders/[id]/damage/route.ts - POST endpoint to report damage. Accept {items: [{productId, name, quantity, reason}]}. Create DeliveryAdjustment records. Follow pattern from apps/web/app/api/delivery/damage/route.ts but simplified for mobile.",
+    "Create apps/web/app/api/mobile/v1/delivery/orders/[id]/pickup/route.ts - POST endpoint to confirm pickup from store. Update order status from READY_FOR_DELIVERY to OUT_FOR_DELIVERY, create OrderEvent.",
+    "Create apps/web/app/api/mobile/v1/delivery/assignments/pending/route.ts - GET endpoint returning pending (unacknowledged) assignment events for the current delivery partner. Query AssignmentEvent where partnerId = auth.userId and acknowledgedAt is null."
+  ],
+  "acceptance_criteria": [
+    "All 11 route files exist under apps/web/app/api/mobile/v1/delivery/",
+    "Each route uses authenticateMobileRequest from @/lib/mobile-auth for authentication",
+    "Each route validates the user role is DELIVERY_PARTNER",
+    "TypeScript compiles without errors (npx tsc --noEmit in apps/web)",
+    "The response shapes match what the mobile app expects based on how it uses the data"
+  ],
+  "verification": [
+    "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -2,7 +2,7 @@
   "id": "FEAT-007",
   "type": "feat",
   "description": "TWA (Trusted Web Activity) GitHub Actions workflow to build Android APK/AAB wrapping the web app as a native Android app. Includes assetlinks.json for Digital Asset Links verification.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create apps/web/public/.well-known/assetlinks.json with Digital Asset Links for TWA verification. Content: [{\"relation\":[\"delegate_permission/common.handle_all_urls\"],\"target\":{\"namespace\":\"android_app\",\"package_name\":\"in.msmsupermarket.app\",\"sha256_cert_fingerprints\":[\"__SIGNING_KEY_SHA256__\"]}}]. The placeholder fingerprint will be replaced with the actual signing key.",
     "Create a TWA Android project structure under apps/twa/: Include app/build.gradle.kts, build.gradle.kts (root), settings.gradle.kts, gradle.properties, app/src/main/AndroidManifest.xml, app/src/main/res/values/strings.xml, app/src/main/res/values/colors.xml. The TWA uses the standard Android Browser Helper library (com.google.androidbrowserhelper:androidbrowserhelper:2.5.0) to launch the PWA in a Custom Tab with TWA mode. Configure: host=msmsupermarket.in, startUrl=/?source=twa, package=in.msmsupermarket.app, themeColor=#050505, backgroundColor=#F7F7FA, icons from /icons/icon-512.png.",
@@ -24,5 +24,5 @@
     "test -f apps/twa/app/build.gradle.kts && echo 'TWA project exists'"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Existing assetlinks.json had a web namespace entry - preserved it and added the android_app entry alongside it. The TWA project references @mipmap/ic_launcher which will need actual icon files added later (or during CI). The gradle-wrapper.jar is not included as noted in the plan - it will be generated during CI. Web app build (next build) passes successfully with the new public/.well-known/assetlinks.json file."
 }

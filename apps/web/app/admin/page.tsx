@@ -13,6 +13,10 @@ export default async function AdminPage() {
   const canManageCatalogue = canManageProducts(session?.user?.role);
   const userName = session?.user?.name?.split(" ")[0] || "Admin";
 
+  // Check stock_value_visible feature flag
+  const stockValueFlag = await prisma.featureFlag.findUnique({ where: { key: "stock_value_visible" } }).catch(() => null);
+  const stockValueVisible = stockValueFlag?.enabled ?? false;
+
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -100,8 +104,8 @@ export default async function AdminPage() {
     getPeakHours(today),
     // Repeat customers (customers with > 1 order)
     prisma.order.groupBy({ by: ["userId"], where: { userId: { not: null } }, having: { userId: { _count: { gt: 1 } } }, _count: true }).then((r) => r.length).catch(() => 0),
-    // Inventory valuation
-    canSeeFinancials
+    // Inventory valuation (gated by stock_value_visible feature flag)
+    canSeeFinancials && stockValueVisible
       ? prisma.product.aggregate({ _sum: { stock: true }, where: { isActive: true } }).then((r) => {
           // Rough valuation: sum of (price * stock) for each product
           return prisma.product.findMany({
@@ -172,6 +176,7 @@ export default async function AdminPage() {
       peakHours={peakHoursData}
       repeatCustomers={repeatCustomerCount}
       inventoryValuation={inventoryValuation}
+      stockValueVisible={stockValueVisible}
       totalProducts={totalProducts}
     />
   );

@@ -81,9 +81,11 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       data: {
         subtotal: nextTotal,
         total: nextTotal,
+        // Always reset approval status when a new edit requires approval,
+        // ensuring EVERY substitution triggers its own approval cycle
         status: requiresCustomerApproval ? "AWAITING_CUSTOMER_APPROVAL" : order.status,
-        editApprovalStatus: requiresCustomerApproval ? "pending" : "not_required",
-        editApprovalRequestedAt: requiresCustomerApproval ? new Date() : null
+        editApprovalStatus: requiresCustomerApproval ? "pending" : (order.editApprovalStatus === "pending" ? "pending" : "not_required"),
+        editApprovalRequestedAt: requiresCustomerApproval ? new Date() : order.editApprovalRequestedAt
       }
     });
     await tx.orderEditLog.create({

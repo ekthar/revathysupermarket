@@ -24,6 +24,7 @@ export default async function AdminOrdersPage() {
       billNumber: true,
       acknowledgedAt: true,
       printedAt: true,
+      printCount: true,
       createdAt: true,
       items: {
         select: {
@@ -67,6 +68,11 @@ export default async function AdminOrdersPage() {
     ]);
   }
 
+  // Fetch print_required_alert threshold for unprinted order warnings
+  const printAlertFlag = await prisma.featureFlag.findUnique({ where: { key: "print_required_alert" } }).catch(() => null);
+  const printAlertEnabled = printAlertFlag?.enabled ?? false;
+  const printAlertThresholdMinutes = (printAlertFlag?.config as { thresholdMinutes?: number } | null)?.thresholdMinutes ?? 10;
+
   return (
     <AdminOrdersClient
       deliveryPartners={deliveryPartners.map((partner) => ({
@@ -78,6 +84,8 @@ export default async function AdminOrdersPage() {
         name: product.name,
         price: Number(product.discountPrice ?? product.price)
       }))}
+      printAlertEnabled={printAlertEnabled}
+      printAlertThresholdMinutes={printAlertThresholdMinutes}
       orders={orders.map((order) => ({
         id: order.id,
         orderNumber: order.orderNumber,
@@ -94,6 +102,7 @@ export default async function AdminOrdersPage() {
         billNumber: order.billNumber ?? null,
         acknowledgedAt: order.acknowledgedAt?.toISOString() ?? null,
         printedAt: order.printedAt?.toISOString() ?? null,
+        printCount: order.printCount ?? 0,
         createdAt: order.createdAt.toISOString(),
         items: order.items.map((item) => ({
           id: item.id,

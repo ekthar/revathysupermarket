@@ -54,6 +54,7 @@ interface Props {
   peakHours?: { hour: string; orders: number }[];
   repeatCustomers?: number;
   inventoryValuation?: number;
+  stockValueVisible?: boolean;
   totalProducts?: number;
 }
 
@@ -85,7 +86,7 @@ export function AdminDashboardClient({
   recentOrders, monthlyRevenue, lowStockProducts,
   gstRatePercent = 0, todayGstCollection = 0, monthGstCollection = 0,
   monthRevenue = 0, avgOrderValue = 0, categorySales = [],
-  peakHours = [], repeatCustomers = 0, inventoryValuation = 0, totalProducts = 0
+  peakHours = [], repeatCustomers = 0, inventoryValuation = 0, stockValueVisible = false, totalProducts = 0
 }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const todayDate = new Date().toLocaleDateString("en-IN", {
@@ -247,16 +248,6 @@ export function AdminDashboardClient({
       {/* Enhanced Metrics Row */}
       {canSeeFinancials && (
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          {gstRatePercent > 0 && (
-            <MetricCard
-              icon={IndianRupee}
-              iconBg="bg-teal-50 dark:bg-teal-950"
-              iconColor="text-teal-600"
-              value={todayGstCollection}
-              prefix="₹"
-              label={`GST (${gstRatePercent}%) Today`}
-            />
-          )}
           <MetricCard
             icon={TrendingUp}
             iconBg="bg-indigo-50 dark:bg-indigo-950"
@@ -272,14 +263,16 @@ export function AdminDashboardClient({
             value={repeatCustomers}
             label="Repeat Customers"
           />
-          <MetricCard
-            icon={Package}
-            iconBg="bg-amber-50 dark:bg-amber-950"
-            iconColor="text-amber-600"
-            value={inventoryValuation}
-            prefix="₹"
-            label="Inventory Value"
-          />
+          {stockValueVisible && (
+            <MetricCard
+              icon={Package}
+              iconBg="bg-amber-50 dark:bg-amber-950"
+              iconColor="text-amber-600"
+              value={inventoryValuation}
+              prefix="₹"
+              label="Inventory Value"
+            />
+          )}
         </div>
       )}
 
@@ -347,12 +340,6 @@ export function AdminDashboardClient({
               <p className="text-title font-bold text-slate-900 dark:text-white">{formatCurrency(monthRevenue)}</p>
               <p className="text-micro text-slate-500">Revenue</p>
             </div>
-            {gstRatePercent > 0 && (
-              <div>
-                <p className="text-title font-bold text-slate-900 dark:text-white">{formatCurrency(monthGstCollection)}</p>
-                <p className="text-micro text-slate-500">GST Collected</p>
-              </div>
-            )}
             <div>
               <p className="text-title font-bold text-slate-900 dark:text-white">{totalProducts}</p>
               <p className="text-micro text-slate-500">Active Products</p>

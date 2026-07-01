@@ -111,7 +111,8 @@ export function SlideToConfirm({ label = "Slide to confirm", onConfirm, disabled
         }`}
         style={{
           transform: `translateX(${offsetX}px)`,
-          transition: dragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)"
+          transition: dragging ? "none" : "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+          touchAction: "none",
         }}
       >
         <ChevronRight className={`h-6 w-6 ${disabled ? "text-slate-500" : "text-white"}`} />

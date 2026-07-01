@@ -30,6 +30,7 @@ type AdminOrder = {
   billNumber?: string | null;
   acknowledgedAt: string | null;
   printedAt: string | null;
+  printCount: number;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
   whatsappLogs: Array<{ id: string; template: string; status: string; createdAt: string }>;
@@ -49,11 +50,15 @@ function timeSince(value: string, now: number) {
 export function AdminOrdersClient({
   orders,
   products,
-  deliveryPartners
+  deliveryPartners,
+  printAlertEnabled = false,
+  printAlertThresholdMinutes = 10
 }: {
   orders: AdminOrder[];
   products: AdminProduct[];
   deliveryPartners: DeliveryPartner[];
+  printAlertEnabled?: boolean;
+  printAlertThresholdMinutes?: number;
 }) {
   const { showToast } = useToast();
   const queryClient = useQueryClient();
@@ -339,6 +344,29 @@ export function AdminOrdersClient({
         onViewChange={setView}
         counts={counts}
       />
+      {/* Unprinted order alert — high visibility when threshold exceeded */}
+      {printAlertEnabled && (() => {
+        const thresholdMs = printAlertThresholdMinutes * 60 * 1000;
+        const unprintedOverdue = localOrders.filter(
+          (o) => !o.printedAt && !["ORDER_RECEIVED", "CANCELLED"].includes(o.status) && (now - new Date(o.createdAt).getTime()) > thresholdMs
+        );
+        if (unprintedOverdue.length === 0) return null;
+        return (
+          <div className="mt-4 rounded-2xl border-2 border-red-400 bg-red-50 dark:bg-red-950/30 p-4 animate-pulse">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🖨️</span>
+              <div>
+                <p className="text-sm font-black text-red-700 dark:text-red-300">
+                  {unprintedOverdue.length} order{unprintedOverdue.length > 1 ? "s" : ""} unprinted for over {printAlertThresholdMinutes} minutes
+                </p>
+                <p className="text-xs text-red-600 dark:text-red-400 mt-0.5">
+                  Orders: {unprintedOverdue.slice(0, 5).map((o) => `#${o.orderNumber}`).join(", ")}{unprintedOverdue.length > 5 ? ` +${unprintedOverdue.length - 5} more` : ""}
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
       {view === "board" && <OrderListBoard
         orders={localOrders}
         now={now}
@@ -388,7 +416,7 @@ export function AdminOrdersClient({
                   ) : null}
                   <span className={cn("text-micro font-bold px-2 py-0.5 rounded-full", order.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</span>
                   {order.printedAt && (
-                    <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">✓ Printed</span>
+                    <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">{order.printCount > 1 ? `✓ Printed ×${order.printCount}` : "✓ Printed"}</span>
                   )}
                 </div>
                 <p suppressHydrationWarning className="text-caption text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
@@ -417,8 +445,8 @@ export function AdminOrdersClient({
                 <a href={manualWhatsAppLink(order)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">
                   <Send className="h-3.5 w-3.5 text-primary" /> Manual WA
                 </a>
-                <a href={`/admin/orders/${order.id}/invoice`} className={cn("inline-flex h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-black transition-colors", order.printedAt ? "bg-emerald-500 text-white hover:bg-emerald-600" : "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50")}>
-                  <FileText className="h-3.5 w-3.5" />{order.printedAt ? "Printed ✓" : "Print"}
+                <a href={`/admin/orders/${order.id}/invoice`} onClick={async (e) => { e.preventDefault(); await fetch(`/api/orders/${order.id}/print`, { method: "POST" }).catch(() => null); window.open(`/admin/orders/${order.id}/invoice`, "_blank"); }} className={cn("inline-flex h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-black transition-colors", order.printedAt ? "bg-emerald-500 text-white hover:bg-emerald-600" : "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50")}>
+                  <FileText className="h-3.5 w-3.5" />{order.printedAt ? (order.printCount > 1 ? "Duplicate ✓" : "Printed ✓") : "Print"}
                 </a>
               </div>
               {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt && (

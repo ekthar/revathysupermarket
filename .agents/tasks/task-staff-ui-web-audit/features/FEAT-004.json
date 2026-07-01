@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Web app (apps/web): fix the 'black theme' (dark mode) defects. The dark theme is wired via next-themes (class strategy) plus a large hand-written override layer in app/globals.css. There are concrete bugs: a broken 'System' theme option, fragile blanket `.dark .bg-white{...}` overrides that recolor elements meant to stay white (e.g. toggle knobs), missing dark variant for text selection, three inconsistent theme-toggle components, and several components with no dark styling. Independent of the staff-app features.",
+  "status": "pending",
+  "steps": [
+    "Resolve the System-theme inconsistency: apps/web/components/providers.tsx sets ThemeProvider enableSystem={false}, but apps/web/components/account/settings-client.tsx renders a 'System' option calling setTheme('system'). Either (a) enable system support (enableSystem, and use resolvedTheme where the resolved value matters) OR (b) remove the 'System' ThemeOption and make the toggle strictly light/dark. Pick one and make it fully consistent across the settings client and all toggles. Document the choice in findings.",
+    "Fix fragile global overrides in apps/web/app/globals.css: the blanket rules `.dark .bg-white`, `.dark .bg-slate-50`, `.dark .text-slate-900/800/700`, `.dark .border-slate-100/200` recolor EVERY matching element in dark mode, including ones that must stay white/light (e.g. the SettingToggle knob `bg-white shadow-sm`, badges, small dots). Replace this pattern: prefer converting the affected components to semantic tokens (bg-card/bg-background/text-foreground/border-border) or explicit dark: variants, then narrow or remove the blanket overrides so intentional white/light elements are preserved. Verify the settings toggle knob and any status dots still render light-on-dark correctly.",
+    "Add a dark-mode `::selection` rule in globals.css (the current `::selection { background: rgba(0,0,0,0.12) }` is nearly invisible on dark backgrounds); provide a `.dark ::selection` with adequate contrast.",
+    "Consolidate the three duplicate theme toggles (components/theme-toggle.tsx, components/ui/theme-toggle.tsx, components/ui/theme-toggle-inline.tsx) into a single canonical implementation (or clearly-scoped variants sharing one hook usage). Make them consistent about theme vs resolvedTheme, ensure the mounted placeholder is dark-aware (the inline placeholder currently uses bg-slate-100 with no dark variant), and update all import sites.",
+    "Add dark styling to the components/pages flagged as using bg-white (or other light-only colors) with NO dark: variants: components/language-switcher.tsx, components/web-onboarding.tsx, components/admin/new-order-alert.tsx, components/admin/collections-client.tsx, components/admin/customer-requests-client.tsx, app/global-error.tsx, and audit app/dashboard/page.tsx (raw bg-black hero) and app/admin/dispatch/page.tsx / app/admin/orders/[id]/page.tsx for dark correctness. Use semantic tokens or dark: variants consistent with the rest of the app.",
+    "Sanity-check that dark mode reads correctly on the main surfaces: header (already has dark variants), mobile bottom nav, cards (.card-shadow/.card-elevated dark rules), inputs (dark inputs currently only set color, verify background/border contrast), and the customer dashboard.",
+    "Run `npx tsc --noEmit`, `npm run lint`, and `npm test` in apps/web and fix any errors introduced."
+  ],
+  "acceptance_criteria": [
+    "The theme selector is internally consistent: whatever option set (light/dark [+system]) is offered actually works end-to-end via next-themes with no dead 'System' option, and all toggle entry points behave identically.",
+    "The blanket `.dark .bg-white` / `.dark .text-slate-*` overrides no longer recolor elements meant to stay light; specifically the settings toggle knob and status dots remain visible in dark mode. Overrides are narrowed or replaced by token/dark: styling.",
+    "A `.dark ::selection` rule exists with legible contrast, and previously light-only components (language-switcher, web-onboarding, admin new-order-alert, collections-client, customer-requests-client, global-error) render correctly in dark mode.",
+    "Only one canonical theme-toggle implementation remains (or shared variants), with dark-aware mount placeholders; all import sites updated.",
+    "`npx tsc --noEmit`, `npm run lint`, and `npm test` pass in apps/web with no new errors vs baseline."
+  ],
+  "verification": [
+    "cd apps/web && npx tsc --noEmit",
+    "cd apps/web && npm run lint",
+    "cd apps/web && npm test",
+    "grep -rn \"setTheme(\\\"system\\\")\\|enableSystem\" apps/web/components ; confirm consistency between providers and settings-client"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Staff app (apps/mobile-staff): build the shared animation/UI foundation that gives the app a polished, web-app-quality feel. This feature creates/upgrades reusable animated primitives and wires app-wide motion using the already-installed libraries (react-native-reanimated 4.1, react-native-gesture-handler 2.28, react-native-worklets). It fixes the missing GestureHandlerRootView root wrapper and standardizes navigation/tab transitions. No new dependencies. This is a prerequisite for FEAT-003.",
+  "status": "pending",
+  "steps": [
+    "Fix root gesture setup: in app/_layout.tsx wrap the returned tree in `GestureHandlerRootView` (from react-native-gesture-handler) with style flex:1. Currently SlideToConfirm uses GestureDetector but no root wrapper exists, so gestures can silently fail on Android. Keep existing OfflineBanner, StatusBar, Stack.",
+    "Add consistent stack transitions in app/_layout.tsx Stack screenOptions: set a default `animation` (e.g. 'slide_from_right') and keep the alert screens on 'slide_from_bottom'/fullScreenModal. Ensure `animation` values are valid for expo-router/react-native-screens.",
+    "Create src/components/AnimatedPressable.tsx: a Reanimated-powered pressable that scales down (~0.96) with a spring on pressIn and back on pressOut, preserves onPress, accessibility props, and existing Vibration feedback pattern. Export it and respect reduced motion (skip scale when unavailable).",
+    "Upgrade src/components/Button.tsx to use the press-scale animation (either compose AnimatedPressable or add the same Reanimated scale) while keeping its current variants/sizes/API unchanged.",
+    "Create src/components/AnimatedScreen.tsx: a wrapper that plays a subtle entrance (fade + translateY) on mount using Reanimated, for use as the outermost container of screens. Keep it lightweight and safe with ScrollView/FlatList children.",
+    "Generalize src/components/AnimatedFadeIn.tsx usage helper for staggered lists (it already exists) and ensure it is exported from a components index if one is used; confirm FadeInDown stagger works with an `index` prop.",
+    "Upgrade src/components/ui/Shimmer.tsx to a moving gradient sweep (translateX loop) instead of opacity-only, add dark-mode-friendly base colors, and keep the existing skeleton exports (ProductCardSkeleton, OrderRowSkeleton, StatCardSkeleton, ListItemSkeleton) working.",
+    "Add animated tab bars: in app/(admin)/_layout.tsx, app/(delivery)/_layout.tsx, app/(packing)/_layout.tsx give the active tab icon a subtle scale/opacity animation (a small AnimatedTabIcon component is fine) and align active tint with the emerald primary token (#10b981 / primary-500). Keep emoji or swap to a consistent icon approach, but do not add new icon libraries.",
+    "Standardize the accent color: prefer the tailwind `primary` (emerald) tokens and the emerald hex used elsewhere; avoid mixing #059669 and #10b981 arbitrarily. Centralize any hardcoded accent hex into src/config or a small theme constant if practical.",
+    "Run `npx tsc --noEmit` and `npm run lint` in apps/mobile-staff and fix any errors introduced."
+  ],
+  "acceptance_criteria": [
+    "app/_layout.tsx wraps the app in GestureHandlerRootView (flex:1) and defines a default Stack screen animation while keeping alert screens as bottom-sheet/fullScreenModal.",
+    "New primitives exist and compile: src/components/AnimatedPressable.tsx and src/components/AnimatedScreen.tsx; Button.tsx has press-scale feedback; Shimmer.tsx uses a gradient sweep with dark-friendly colors.",
+    "All three tab layouts show an animated active tab indicator/icon and use the emerald primary accent consistently.",
+    "`npx tsc --noEmit` and `npm run lint` pass in apps/mobile-staff (no new errors vs FEAT-001 baseline)."
+  ],
+  "verification": [
+    "cd apps/mobile-staff && npx tsc --noEmit",
+    "cd apps/mobile-staff && npm run lint"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

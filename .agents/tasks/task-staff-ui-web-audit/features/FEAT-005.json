@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Web app (apps/web): produce a concrete UI/UX audit document, then implement the high-priority fixes it identifies. This covers the user's ask to 'analyse the web app project and find ui/ux issues'. The audit is written to the task folder; the fixes are targeted, low-risk UI improvements (navigation/back-button consistency, duplicate-component cleanup coordination with FEAT-004, obvious inconsistencies). Independent of the staff-app features; should run after FEAT-004 so dark-theme findings are not duplicated.",
+  "status": "pending",
+  "steps": [
+    "Write .agents/tasks/task-staff-ui-web-audit/web-ui-ux-audit.md: a grounded audit of apps/web UI/UX. For each finding include the file/location, the problem, user impact, severity (high/med/low), and the recommended fix. Base it on actual code, not generic advice. Known concrete leads to include and verify: (a) back-navigation coverage in components/header.tsx uses a hardcoded `innerPages` list that omits /offers (coupons/deals) and other inner routes, and uses router.push(parentPath) instead of router.back() (loses history/scroll); (b) three duplicate theme-toggle components (cross-reference FEAT-004); (c) admin & delivery routes render no shared header/back affordance on desktop; (d) any inconsistent spacing/typography token usage vs tailwind.config.ts scale.",
+    "Implement the back-navigation fix in components/header.tsx: extend inner-page/back-button coverage to the missing routes (at minimum /offers) so settings/rewards(loyalty)/coupon(offers) pages get a persistent header with a working back control on desktop and mobile. Prefer router.back() with a safe fallback to the parent path when there is no history. Keep existing behavior for pages already covered.",
+    "Apply the other high-severity, low-risk fixes surfaced by the audit that are pure UI/UX and do not change data/auth/API behavior (e.g. token/spacing consistency, obvious missing hover/focus states, duplicate component consolidation coordinated with FEAT-004). Defer anything risky or out-of-scope and list it in the audit's 'Deferred / follow-up' section instead of implementing.",
+    "Do NOT attempt to fix backend/realtime concerns (e.g. SSE delivery-alert listeners) or add features; if the audit surfaces them, record them as follow-ups only.",
+    "Run `npx tsc --noEmit`, `npm run lint`, and `npm test` in apps/web and fix any errors introduced."
+  ],
+  "acceptance_criteria": [
+    "web-ui-ux-audit.md exists in the task folder with specific, file-referenced findings (each with location, problem, impact, severity, recommended fix) rather than generic advice.",
+    "components/header.tsx provides a working back/persistent-header affordance for settings, rewards (loyalty) and coupon (offers) pages on both desktop and mobile, using router.back() with a safe parent-path fallback.",
+    "High-severity, low-risk UI/UX fixes from the audit are implemented; risky/out-of-scope items are explicitly listed as deferred follow-ups.",
+    "`npx tsc --noEmit`, `npm run lint`, and `npm test` pass in apps/web with no new errors vs baseline."
+  ],
+  "verification": [
+    "test -f .agents/tasks/task-staff-ui-web-audit/web-ui-ux-audit.md",
+    "cd apps/web && npx tsc --noEmit",
+    "cd apps/web && npm run lint",
+    "cd apps/web && npm test"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

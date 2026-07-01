@@ -1,5 +1,5 @@
 import bcrypt from "bcryptjs";
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
 import { categories, products } from "../lib/products";
 import { slugify } from "../lib/utils";
 
@@ -89,7 +89,7 @@ async function main() {
       id: "ff_stock_value_visible",
       key: "stock_value_visible",
       enabled: false,
-      config: null,
+      config: Prisma.JsonNull,
     },
     {
       id: "ff_forced_accept_delivery",

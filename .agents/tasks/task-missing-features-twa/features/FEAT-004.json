@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "Live tracking map with rider GPS (Feature 10), Product ratings & reviews (Feature 12), and Smart suggestions / frequently bought together (Feature 14).",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Update apps/web/components/tracking/delivery-map.tsx: Ensure the existing DeliveryMap component shows the rider's live GPS position with a marker that updates in real-time via SSE. Add route line from rider to customer destination. Add store marker. Show distance remaining text overlay. Use maplibre-gl (already installed) for the map rendering.",
     "Update apps/web/components/tracking/live-order-tracking.tsx: The component already has DeliveryMap integration. Verify it correctly passes deliveryPartnerLocation to the map when status is OUT_FOR_DELIVERY or ARRIVING. Add auto-refresh of rider position every 10 seconds via the existing useOrderTracking hook (already using SSE). Ensure the map shows prominently during delivery phase.",

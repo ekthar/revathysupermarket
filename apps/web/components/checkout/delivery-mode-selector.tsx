@@ -1,8 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { Clock, Zap, Calendar } from "lucide-react";
+import { motion } from "framer-motion";
 
-type DeliverySlot = { id: string; startsAt: string; endsAt: string; remaining: number; available: boolean };
+type DeliverySlot = {
+  id: string;
+  startsAt: string;
+  endsAt: string;
+  remaining: number;
+  available: boolean;
+};
 
 interface DeliveryModeSelectorProps {
   deliveryMode: "ASAP" | "SCHEDULED";
@@ -10,6 +18,36 @@ interface DeliveryModeSelectorProps {
   deliverySlotId: string;
   onSlotChange: (slotId: string) => void;
   slotsEnabled: boolean;
+}
+
+function getDateLabel(dateStr: string): string {
+  const date = new Date(dateStr);
+  const today = new Date();
+  const tomorrow = new Date();
+  tomorrow.setDate(today.getDate() + 1);
+
+  if (date.toDateString() === today.toDateString()) return "Today";
+  if (date.toDateString() === tomorrow.toDateString()) return "Tomorrow";
+  return date.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function formatSlotTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleTimeString("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+}
+
+function groupSlotsByDate(slots: DeliverySlot[]): Map<string, DeliverySlot[]> {
+  const grouped = new Map<string, DeliverySlot[]>();
+  for (const slot of slots) {
+    const dateKey = new Date(slot.startsAt).toDateString();
+    const existing = grouped.get(dateKey) ?? [];
+    existing.push(slot);
+    grouped.set(dateKey, existing);
+  }
+  return grouped;
 }
 
 export function DeliveryModeSelector({
@@ -29,64 +67,153 @@ export function DeliveryModeSelector({
       .catch(() => undefined);
   }, [slotsEnabled]);
 
+  const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots]);
+  const dateKeys = useMemo(() => Array.from(groupedSlots.keys()), [groupedSlots]);
+  const [selectedDate, setSelectedDate] = useState<string>("");
+
+  // Auto-select first date when slots load
+  useEffect(() => {
+    if (dateKeys.length > 0 && !selectedDate) {
+      setSelectedDate(dateKeys[0]);
+    }
+  }, [dateKeys, selectedDate]);
+
   if (!slotsEnabled) return null;
+
+  const currentDateSlots = groupedSlots.get(selectedDate) ?? [];
 
   return (
     <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery time</h2>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <button
+        <motion.button
           type="button"
           onClick={() => onModeChange("ASAP")}
-          className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "ASAP" ? "bg-black text-white" : "bg-neutral-100 dark:bg-neutral-800"}`}
+          whileTap={{ scale: 0.96 }}
+          className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
+            deliveryMode === "ASAP"
+              ? "bg-black text-white shadow-md"
+              : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+          }`}
         >
+          <Zap className="h-4 w-4" />
           ASAP
-        </button>
-        <button
+        </motion.button>
+        <motion.button
           type="button"
           onClick={() => onModeChange("SCHEDULED")}
-          className={`h-11 rounded-xl text-sm font-bold ${deliveryMode === "SCHEDULED" ? "bg-black text-white" : "bg-neutral-100 dark:bg-neutral-800"}`}
+          whileTap={{ scale: 0.96 }}
+          className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
+            deliveryMode === "SCHEDULED"
+              ? "bg-black text-white shadow-md"
+              : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+          }`}
         >
-          Choose slot
-        </button>
+          <Calendar className="h-4 w-4" />
+          Schedule
+        </motion.button>
       </div>
+
       {deliveryMode === "SCHEDULED" && (
-        <div className="mt-3 grid gap-2">
+        <motion.div
+          initial={{ opacity: 0, height: 0 }}
+          animate={{ opacity: 1, height: "auto" }}
+          exit={{ opacity: 0, height: 0 }}
+          className="mt-4"
+        >
           {slots.length === 0 ? (
-            <p className="rounded-xl bg-amber-50 p-3 text-sm font-semibold text-amber-700">
+            <p className="rounded-xl bg-amber-50 dark:bg-amber-950/30 p-3 text-sm font-semibold text-amber-700 dark:text-amber-400">
               No scheduled slots are available. Choose ASAP.
             </p>
           ) : (
-            slots.map((slot) => (
-              <label
-                key={slot.id}
-                className="flex min-h-11 items-center gap-3 rounded-xl border border-border px-3 text-sm font-semibold"
-              >
-                <input
-                  type="radio"
-                  name="delivery-slot"
-                  value={slot.id}
-                  checked={deliverySlotId === slot.id}
-                  disabled={!slot.available}
-                  onChange={() => onSlotChange(slot.id)}
-                />
-                <span>
-                  {new Date(slot.startsAt).toLocaleString("en-IN", {
-                    weekday: "short",
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}{" "}
-                  -{" "}
-                  {new Date(slot.endsAt).toLocaleTimeString("en-IN", {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  })}
-                </span>
-                <span className="ml-auto text-xs text-muted-foreground">{slot.remaining} left</span>
-              </label>
-            ))
+            <>
+              {/* Date tabs */}
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                {dateKeys.map((dateKey) => {
+                  const isActive = selectedDate === dateKey;
+                  const sampleSlot = groupedSlots.get(dateKey)?.[0];
+                  const label = sampleSlot ? getDateLabel(sampleSlot.startsAt) : dateKey;
+                  return (
+                    <motion.button
+                      key={dateKey}
+                      type="button"
+                      onClick={() => setSelectedDate(dateKey)}
+                      whileTap={{ scale: 0.95 }}
+                      className={`shrink-0 rounded-xl px-4 py-2 text-xs font-bold transition-colors ${
+                        isActive
+                          ? "bg-black text-white"
+                          : "bg-neutral-100 text-neutral-600 dark:bg-neutral-800 dark:text-neutral-400"
+                      }`}
+                    >
+                      {label}
+                    </motion.button>
+                  );
+                })}
+              </div>
+
+              {/* Time slot cards */}
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {currentDateSlots.map((slot) => {
+                  const isSelected = deliverySlotId === slot.id;
+                  const capacityPercent = Math.max(0, Math.min(100, (slot.remaining / 10) * 100));
+                  const isLow = slot.remaining <= 3;
+
+                  return (
+                    <motion.button
+                      key={slot.id}
+                      type="button"
+                      onClick={() => slot.available && onSlotChange(slot.id)}
+                      disabled={!slot.available}
+                      whileTap={slot.available ? { scale: 0.96 } : undefined}
+                      className={`relative flex flex-col items-start rounded-xl border p-3 text-left transition-all ${
+                        isSelected
+                          ? "border-black bg-black/5 shadow-sm dark:border-white dark:bg-white/5"
+                          : slot.available
+                          ? "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
+                          : "border-neutral-100 bg-neutral-50 opacity-50 dark:border-neutral-800 dark:bg-neutral-850"
+                      }`}
+                    >
+                      <div className="flex w-full items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="h-3.5 w-3.5 text-neutral-500" />
+                          <span className="text-caption font-bold text-neutral-800 dark:text-neutral-200">
+                            {formatSlotTime(slot.startsAt)} - {formatSlotTime(slot.endsAt)}
+                          </span>
+                        </div>
+                        {isSelected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="h-5 w-5 rounded-full bg-black flex items-center justify-center"
+                          >
+                            <span className="text-white text-micro font-bold">&#10003;</span>
+                          </motion.div>
+                        )}
+                      </div>
+
+                      {/* Capacity indicator */}
+                      <div className="mt-2 w-full">
+                        <div className="flex items-center justify-between">
+                          <span className={`text-micro font-semibold ${isLow ? "text-orange-600" : "text-neutral-500"}`}>
+                            {slot.remaining} slot{slot.remaining !== 1 ? "s" : ""} left
+                          </span>
+                        </div>
+                        <div className="mt-1 h-1 w-full rounded-full bg-neutral-200 dark:bg-neutral-700 overflow-hidden">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${capacityPercent}%` }}
+                            transition={{ duration: 0.5, delay: 0.1 }}
+                            className={`h-full rounded-full ${isLow ? "bg-orange-500" : "bg-secondary-500"}`}
+                          />
+                        </div>
+                      </div>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </>
           )}
-        </div>
+        </motion.div>
       )}
     </section>
   );

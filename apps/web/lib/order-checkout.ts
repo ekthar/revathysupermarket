@@ -90,7 +90,8 @@ export async function createAuthoritativeOrder({
     const loyaltyDiscount = pointsRedeemed * loyaltyConfig.pointValueRupees;
     const discount = Math.min(subtotal, promoDiscount + loyaltyDiscount);
     const deliveryFee = feeQuote.fee;
-    const total = Math.max(0, subtotal - discount + deliveryFee);
+    const tip = data.tipAmount ?? 0;
+    const total = Math.max(0, subtotal - discount + deliveryFee + tip);
     let walletDeduction = 0;
     let paymentStatus: "PENDING" | "PAID" = "PENDING";
     if (data.paymentMethod === "WALLET") {
@@ -131,6 +132,8 @@ export async function createAuthoritativeOrder({
         deliverySlotId: data.deliveryMode === "SCHEDULED" ? data.deliverySlotId : null,
         estimatedDeliveryAt,
         loyaltyPointsRedeemed: pointsRedeemed,
+        tipAmount: data.tipAmount ?? 0,
+        deliveryInstructions: data.deliveryInstructions ?? null,
         items: { create: items.map((item) => ({ productId: item.product.id, name: item.product.name, quantity: item.quantity, price: item.unitPrice, gstRate: item.product.gstRate ?? settings.gstRatePercent })) },
         statusEvents: { create: { status: "ORDER_RECEIVED", note: "Order submitted online." } }
       },

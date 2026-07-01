@@ -18,6 +18,8 @@ import { PaymentMethodSelector } from "@/components/checkout/payment-method-sele
 import { AddressSelector } from "@/components/checkout/address-selector";
 import { DeliveryModeSelector } from "@/components/checkout/delivery-mode-selector";
 import { OrderSummary } from "@/components/checkout/order-summary";
+import { TipSelector } from "@/components/checkout/tip-selector";
+import { DeliveryInstructions } from "@/components/checkout/delivery-instructions";
 
 
 type CheckoutState = {
@@ -131,11 +133,13 @@ export function CheckoutForm({
   const [quotedDeliveryFee, setQuotedDeliveryFee] = useState<number | null>(null);
   const [feeQuoteLoading, setFeeQuoteLoading] = useState(false);
   const [addressNotCovered, setAddressNotCovered] = useState(false);
+  const [tipAmount, setTipAmount] = useState(0);
+  const [deliveryInstructions, setDeliveryInstructions] = useState("");
 
   const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
   const gstAmount = gstRatePercent > 0 ? Math.round(subtotal - subtotal / (1 + gstRatePercent / 100)) : 0;
-  const totalAmount = subtotal + deliveryFee;
+  const totalAmount = subtotal + deliveryFee + tipAmount;
 
   // Fetch wallet balance on mount
   useEffect(() => {
@@ -258,7 +262,9 @@ export function CheckoutForm({
           deliveryMode,
           deliverySlotId: deliveryMode === "SCHEDULED" ? deliverySlotId : undefined,
           promoCode: promoCode.trim() || undefined,
-          loyaltyPoints
+          loyaltyPoints,
+          tipAmount: tipAmount > 0 ? tipAmount : undefined,
+          deliveryInstructions: deliveryInstructions.trim() || undefined
         })
       });
 
@@ -388,6 +394,15 @@ export function CheckoutForm({
             slotsEnabled={slotsEnabled}
           />
 
+          {/* Tip for delivery partner */}
+          <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />
+
+          {/* Delivery instructions */}
+          <DeliveryInstructions
+            instructions={deliveryInstructions}
+            onInstructionsChange={setDeliveryInstructions}
+          />
+
           {rewardsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
             <h2 className="text-sm font-black text-neutral-900 dark:text-white">Offers and rewards</h2>
             <label className="mt-3 block text-xs font-bold text-muted-foreground">Promo code<input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" placeholder="Optional promo code" /></label>
@@ -429,6 +444,7 @@ export function CheckoutForm({
           freeDeliveryThreshold={freeDeliveryThreshold}
           gstRatePercent={gstRatePercent}
           gstAmount={gstAmount}
+          tipAmount={tipAmount}
           totalAmount={totalAmount}
           canSubmit={canSubmit}
           isSubmitting={isSubmitting}

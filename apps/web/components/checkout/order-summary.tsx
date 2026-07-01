@@ -20,6 +20,7 @@ interface OrderSummaryProps {
   freeDeliveryThreshold: number;
   gstRatePercent: number;
   gstAmount: number;
+  tipAmount?: number;
   totalAmount: number;
   canSubmit: boolean;
   isSubmitting: boolean;
@@ -35,6 +36,7 @@ export function OrderSummary({
   freeDeliveryThreshold,
   gstRatePercent,
   gstAmount,
+  tipAmount = 0,
   totalAmount,
   canSubmit,
   isSubmitting,
@@ -85,6 +87,12 @@ export function OrderSummary({
             </span>
             <span className="font-semibold text-neutral-700">{formatCurrency(gstAmount)}</span>
           </div>
+          {tipAmount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-neutral-500">Delivery tip</span>
+              <span className="font-semibold text-neutral-700">{formatCurrency(tipAmount)}</span>
+            </div>
+          )}
           <div className="border-t border-dashed border-neutral-200 dark:border-neutral-700 pt-3 flex justify-between">
             <span className="font-black text-neutral-900 dark:text-white">Total Amount</span>
             <span className="font-black text-neutral-900 dark:text-white text-title">

@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "One-tap reorder (Feature 5), Order scheduling customer UI (Feature 8), Delivery tip (Feature 9), and Structured delivery instructions (Feature 16). These are all checkout/order flow improvements.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create apps/web/components/dashboard/reorder-button.tsx: A 'Reorder' button component that takes order items array, validates stock availability via API call, and adds all available items to cart using the cart provider's addItems method. Shows a toast for any out-of-stock items that were skipped. Use Framer Motion for button press animation.",
     "Update the CustomerOrdersClient component (apps/web/components/dashboard/customer-orders-client.tsx): Add the ReorderButton to each DELIVERED order card. Also add a 'Buy Again' section at the top showing frequently ordered products (from completed orders).",

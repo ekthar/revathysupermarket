@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Redesign map markers in the delivery map component with colored, differentiated markers (green rider, blue customer home, grey store) with labels, and improve the route line styling.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "1. Update apps/web/components/tracking/delivery-map.tsx - Replace createRiderMarkerEl(): Change from black circle to emerald green (#059669) circle with white delivery bike/scooter icon. Keep the pulsing ring but make it green. Keep the heading rotation arrow. Add an ETA badge above the marker (a small pill showing estimated minutes, passed as prop).",
     "2. Update createCustomerMarkerEl(): Change from black square to blue (#3B82F6) rounded-square with a white home icon (house SVG). Keep the pulse ring but make it blue. Add a 'Your Home' label below the marker using a div with white background and small text.",
@@ -25,5 +25,5 @@
     "Run: cd apps/web && npx next lint to confirm no lint errors"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "TypeScript compiles cleanly. Lint passes with only pre-existing warnings. All 7 steps implemented: rider marker green with ETA badge, customer marker blue with home icon and label, store marker grey with store icon and label, route line solid emerald green, positron tile style, keyframe animations updated. Also updated live-order-tracking.tsx to pass etaMinutes prop to DeliveryMap and added ETA badge update mechanism via useEffect."
 }

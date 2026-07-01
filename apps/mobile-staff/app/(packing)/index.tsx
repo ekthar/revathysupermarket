@@ -86,7 +86,7 @@ export default function PackingQueueScreen() {
             <RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); fetchQueue(); }} colors={["#059669"]} />
           }
           renderItem={({ item, index }) => (
-            <AnimatedFadeIn index={Math.min(index, 8)} entranceKey={item.id}>
+            <AnimatedFadeIn index={Math.min(index, 8)} entranceKey={`packing:${item.id}`}>
               <AnimatedPressable
                 onPress={() => { Vibration.vibrate(5); router.push(`/(packing)/order/${item.id}` as any); }}
                 haptic={false}

@@ -117,7 +117,7 @@ export default function DeliveryOrdersScreen() {
           renderItem={({ item, index }) => {
             const statusStyle = STATUS_COLORS[item.status] ?? { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-300" };
             return (
-              <AnimatedFadeIn index={Math.min(index, 8)} entranceKey={item.id}>
+              <AnimatedFadeIn index={Math.min(index, 8)} entranceKey={`delivery:${item.id}`}>
                 <AnimatedPressable
                   onPress={() => { Vibration.vibrate(5); router.push(`/(delivery)/order/${item.id}` as any); }}
                   haptic={false}

@@ -123,13 +123,13 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
 
   const calculateEta = useCallback(
     (riderLoc: { latitude: number; longitude: number } | null) => {
+      // Only show ETA after rider has accepted and is en route
+      const riderEnRoute = ["OUT_FOR_DELIVERY", "ARRIVING"].includes(data.status);
+      if (!riderEnRoute) return null;
+
       if (!riderLoc) {
-        // Estimate based on status
-        const step = getStepIndex(data.status);
-        if (step === 0) return 20;
-        if (step === 1) return 14;
-        if (step === 2) return 8;
-        return null;
+        // Rider accepted but no location yet — show a reasonable estimate
+        return 8;
       }
       const dist = distanceKm(riderLoc, data.destination);
       return Math.max(2, Math.ceil((dist / 18) * 60));

@@ -2,24 +2,27 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Bell, Heart, HelpCircle, ShoppingBag, User } from "lucide-react";
+import { ArrowLeft, Bell, Clock, Heart, HelpCircle, MapPin, ShoppingBag, User } from "lucide-react";
 import { motion } from "framer-motion";
-import { memo } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCartItemCount } from "@/components/cart/cart-provider";
 import { SITE } from "@/lib/constants";
+import { getSavedLocation, type DeliveryLocation } from "@/components/location-prompt";
 import type { SessionIdentity } from "@/components/session-identity-card";
 
 export const Header = memo(function Header({
   user,
   storeName = SITE.name,
   storeAddress = SITE.address,
-  logoUrl
+  logoUrl,
+  onOpenLocationPrompt
 }: {
   user: SessionIdentity;
   storeName?: string;
   storeAddress?: string;
   logoUrl?: string | null;
+  onOpenLocationPrompt?: () => void;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -89,6 +92,9 @@ export const Header = memo(function Header({
 
             {/* Right actions */}
             <div className="flex items-center gap-3 ml-6">
+              {/* Location indicator */}
+              <LocationIndicator onOpenLocationPrompt={onOpenLocationPrompt} />
+
               <Link
                 href="/support"
                 className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
@@ -161,6 +167,7 @@ export const Header = memo(function Header({
 
           {/* Right icons */}
           <div className="flex items-center gap-2.5">
+            <LocationIndicator onOpenLocationPrompt={onOpenLocationPrompt} compact />
             <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Notifications">
               <Bell className="h-[17px] w-[17px] text-neutral-600 dark:text-neutral-300" />
             </Link>
@@ -188,5 +195,58 @@ function CartBadgeLink() {
         </motion.span>
       )}
     </Link>
+  );
+}
+
+// Location indicator - shows saved delivery address with ETA
+function LocationIndicator({ onOpenLocationPrompt, compact }: { onOpenLocationPrompt?: () => void; compact?: boolean }) {
+  const [location, setLocation] = useState<DeliveryLocation | null>(null);
+
+  useEffect(() => {
+    setLocation(getSavedLocation());
+
+    const handleUpdate = () => setLocation(getSavedLocation());
+    window.addEventListener("location-updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("location-updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
+  if (!location) return null;
+
+  if (compact) {
+    return (
+      <button
+        onClick={onOpenLocationPrompt}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-secondary-50 dark:bg-secondary-900/30 hover:bg-secondary-100 dark:hover:bg-secondary-900/50 transition-colors press"
+        aria-label="Change delivery location"
+      >
+        <MapPin className="h-3.5 w-3.5 text-secondary-600 dark:text-secondary-400" />
+        {location.eta && (
+          <span className="text-micro font-bold text-secondary-700 dark:text-secondary-300">{location.eta}</span>
+        )}
+      </button>
+    );
+  }
+
+  return (
+    <button
+      onClick={onOpenLocationPrompt}
+      className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-50 dark:bg-secondary-900/30 hover:bg-secondary-100 dark:hover:bg-secondary-900/50 transition-colors press"
+      aria-label="Change delivery location"
+    >
+      <MapPin className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
+      <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 max-w-[120px] truncate">
+        {location.area || location.pincode || "Location set"}
+      </span>
+      {location.eta && (
+        <span className="flex items-center gap-0.5 text-micro font-semibold text-secondary-600 dark:text-secondary-400">
+          <Clock className="h-3 w-3" />
+          {location.eta}
+        </span>
+      )}
+    </button>
   );
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { ProductGrid } from "@/components/product-grid";
+import { SubcategoryPillsServer } from "@/components/subcategory-pills-server";
 import { prisma } from "@/lib/prisma";
 import { products as fallbackProducts } from "@/lib/products";
 import type { Product } from "@/lib/types";
@@ -137,6 +138,10 @@ export default async function ProductsPage({
           <p className="mt-2 text-sm font-semibold text-neutral-400">{total} products available</p>
         </div>
       </section>
+      {/* Sub-category pills when a category is selected */}
+      {category && category !== "All" && (
+        <SubcategoryPillsServer categoryName={category} />
+      )}
       <ProductGrid
         initialItems={items}
         initialTotal={total}

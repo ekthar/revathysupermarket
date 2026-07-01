@@ -10,6 +10,7 @@ import { AnimatedCategories } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
 import { HomeSearch } from "@/components/home/home-search";
 import { LiveOrderBanner } from "@/components/tracking/live-order-banner";
+import { LocationPrompt } from "@/components/location-prompt";
 import { categories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
@@ -109,6 +110,9 @@ export default async function HomePage() {
   return (
     <main className="min-h-screen bg-white dark:bg-neutral-950">
       <HomeSearch products={allProducts} />
+
+      {/* Location Prompt - appears on first visit if no saved location */}
+      <LocationPrompt />
 
       {/* Live Order Tracking Banner - shows when user has an active order */}
       <LiveOrderBanner initialOrder={activeOrder} />

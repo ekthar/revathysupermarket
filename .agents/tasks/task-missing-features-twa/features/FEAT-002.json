@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Address-first flow (Feature 1), Search with instant add-to-cart (Feature 3), and Sub-categories L2 hierarchy (Feature 4). These are all customer browsing experience improvements.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create apps/web/components/location-prompt.tsx: A modal/drawer component that appears on first visit (check localStorage for 'msm-delivery-location'). Shows a map or pincode input. Uses browser geolocation API. If location is outside delivery radius, shows 'We dont deliver here yet' banner. Saves lat/lng/address to localStorage. Shows delivery ETA estimate based on distance.",
     "Update apps/web/components/header.tsx: Add a compact location indicator showing the saved delivery address (area name or pincode). Clicking it opens the location prompt to change address. Show delivery ETA '15-25 min' next to location.",

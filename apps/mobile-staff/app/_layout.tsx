@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
@@ -67,10 +67,15 @@ export default function RootLayout() {
   }, [status, user]);
 
   return (
-    <View className="flex-1">
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <StatusBar style="auto" />
       <OfflineBanner />
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          animation: "slide_from_right",
+        }}
+      >
         <Stack.Screen name="(auth)" />
         <Stack.Screen name="(delivery)" />
         <Stack.Screen name="(packing)" />
@@ -92,6 +97,6 @@ export default function RootLayout() {
           }}
         />
       </Stack>
-    </View>
+    </GestureHandlerRootView>
   );
 }

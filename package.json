@@ -12,9 +12,11 @@
     "dev:web": "turbo dev --filter=@msm/web",
     "dev:customer": "turbo dev --filter=@msm/mobile-customer",
     "dev:delivery": "turbo dev --filter=@msm/mobile-delivery",
+    "dev:staff": "turbo dev --filter=@msm/mobile-staff",
     "build:web": "turbo build --filter=@msm/web",
     "build:customer": "turbo build --filter=@msm/mobile-customer",
-    "build:delivery": "turbo build --filter=@msm/mobile-delivery"
+    "build:delivery": "turbo build --filter=@msm/mobile-delivery",
+    "build:staff": "turbo build --filter=@msm/mobile-staff"
   },
   "devDependencies": {
     "turbo": "^2.5.0"

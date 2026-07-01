@@ -10,6 +10,54 @@ import { api } from "./api";
 import { notifeeService } from "./notifee";
 import { getDeviceTokenRole } from "../stores/auth";
 
+/**
+ * Shared message routing logic.
+ * Routes an incoming FCM message to the appropriate notifee display.
+ * Used by both foreground and background message handlers.
+ */
+async function routeIncomingMessage(
+  message: FirebaseMessagingTypes.RemoteMessage
+): Promise<void> {
+  const type = message.data?.type as string | undefined;
+
+  switch (type) {
+    case "delivery_assignment":
+      await notifeeService.showDeliveryAlert({
+        eventId: message.data?.eventId as string,
+        orderId: message.data?.orderId as string,
+        orderNumber: message.data?.orderNumber as string,
+        deepLink: message.data?.deepLink as string,
+      });
+      break;
+
+    case "packing_assignment":
+      await notifeeService.showPackingAlert({
+        eventId: message.data?.eventId as string,
+        orderId: message.data?.orderId as string,
+        orderNumber: message.data?.orderNumber as string,
+      });
+      break;
+
+    case "order_rejected":
+      await notifeeService.showAdminRejectAlert({
+        orderId: message.data?.orderId as string,
+        orderNumber: message.data?.orderNumber as string,
+        reason: message.data?.reason as string,
+      });
+      break;
+
+    default:
+      // Generic notification
+      if (message.notification) {
+        await notifeeService.showGenericNotification(
+          message.notification.title ?? "MSM Staff",
+          message.notification.body ?? ""
+        );
+      }
+      break;
+  }
+}
+
 class FcmService {
   private token: string | null = null;
   private unsubscribeOnMessage: (() => void) | null = null;
@@ -32,12 +80,12 @@ class FcmService {
     this.token = await messaging().getToken();
 
     // Listen for foreground messages
-    this.unsubscribeOnMessage = messaging().onMessage(this.handleForegroundMessage);
+    this.unsubscribeOnMessage = messaging().onMessage(routeIncomingMessage);
 
     // Listen for token refresh
     messaging().onTokenRefresh((newToken) => {
       this.token = newToken;
-      // Re-register silently — role will be fetched from last known
+      // Re-register silently -- role will be fetched from last known
     });
 
     return this.token;
@@ -69,53 +117,6 @@ class FcmService {
   }
 
   /**
-   * Handle messages received while app is in foreground.
-   * Routes to appropriate notifee display based on message type.
-   */
-  private handleForegroundMessage = async (
-    message: FirebaseMessagingTypes.RemoteMessage
-  ) => {
-    const type = message.data?.type as string | undefined;
-
-    switch (type) {
-      case "delivery_assignment":
-        await notifeeService.showDeliveryAlert({
-          eventId: message.data?.eventId as string,
-          orderId: message.data?.orderId as string,
-          orderNumber: message.data?.orderNumber as string,
-          deepLink: message.data?.deepLink as string,
-        });
-        break;
-
-      case "packing_assignment":
-        await notifeeService.showPackingAlert({
-          eventId: message.data?.eventId as string,
-          orderId: message.data?.orderId as string,
-          orderNumber: message.data?.orderNumber as string,
-        });
-        break;
-
-      case "order_rejected":
-        await notifeeService.showAdminRejectAlert({
-          orderId: message.data?.orderId as string,
-          orderNumber: message.data?.orderNumber as string,
-          reason: message.data?.reason as string,
-        });
-        break;
-
-      default:
-        // Generic notification
-        if (message.notification) {
-          await notifeeService.showGenericNotification(
-            message.notification.title ?? "MSM Staff",
-            message.notification.body ?? ""
-          );
-        }
-        break;
-    }
-  };
-
-  /**
    * Cleanup listeners
    */
   destroy() {
@@ -132,42 +133,4 @@ export const fcmService = new FcmService();
  * Background message handler.
  * Handles FCM messages when the app is in background or killed state.
  */
-messaging().setBackgroundMessageHandler(async (message) => {
-  const type = message.data?.type as string | undefined;
-
-  switch (type) {
-    case "delivery_assignment":
-      await notifeeService.showDeliveryAlert({
-        eventId: message.data?.eventId as string,
-        orderId: message.data?.orderId as string,
-        orderNumber: message.data?.orderNumber as string,
-        deepLink: message.data?.deepLink as string,
-      });
-      break;
-
-    case "packing_assignment":
-      await notifeeService.showPackingAlert({
-        eventId: message.data?.eventId as string,
-        orderId: message.data?.orderId as string,
-        orderNumber: message.data?.orderNumber as string,
-      });
-      break;
-
-    case "order_rejected":
-      await notifeeService.showAdminRejectAlert({
-        orderId: message.data?.orderId as string,
-        orderNumber: message.data?.orderNumber as string,
-        reason: message.data?.reason as string,
-      });
-      break;
-
-    default:
-      if (message.notification) {
-        await notifeeService.showGenericNotification(
-          message.notification.title ?? "MSM Staff",
-          message.notification.body ?? ""
-        );
-      }
-      break;
-  }
-});
+messaging().setBackgroundMessageHandler(routeIncomingMessage);

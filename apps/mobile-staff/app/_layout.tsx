@@ -3,6 +3,7 @@ import { View } from "react-native";
 import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import notifee, { EventType } from "@notifee/react-native";
 import { useAuthStore, getRoleGroup } from "@/stores/auth";
 import { fcmService } from "@/services/fcm";
 import { notifeeService } from "@/services/notifee";
@@ -28,6 +29,31 @@ export default function RootLayout() {
     }
 
     prepare();
+  }, []);
+
+  // Notifee foreground event listener -- navigates to alert screens on notification tap
+  useEffect(() => {
+    const unsubscribe = notifee.onForegroundEvent(({ type, detail }) => {
+      if (
+        type === EventType.PRESS ||
+        type === EventType.ACTION_PRESS
+      ) {
+        const data = detail.notification?.data;
+        if (!data?.type) return;
+
+        if (data.type === "packing_assignment") {
+          router.push(
+            `/alert/packing/${data.eventId}?orderId=${data.orderId}&orderNumber=${data.orderNumber}` as any
+          );
+        } else if (data.type === "delivery_assignment") {
+          router.push(
+            `/alert/${data.eventId}?orderId=${data.orderId}&orderNumber=${data.orderNumber}` as any
+          );
+        }
+      }
+    });
+
+    return unsubscribe;
   }, []);
 
   // Role-based routing after auth resolves

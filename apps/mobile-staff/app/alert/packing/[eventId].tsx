@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { View, Text, Pressable, Alert } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import Animated, { SlideInDown, FadeIn } from "react-native-reanimated";
@@ -14,6 +14,7 @@ export default function PackingAlertScreen() {
   }>();
   const [countdown, setCountdown] = useState(30);
   const [processing, setProcessing] = useState(false);
+  const handledRef = useRef(false);
 
   useEffect(() => {
     // Start alarm sound
@@ -24,7 +25,7 @@ export default function PackingAlertScreen() {
       setCountdown((prev) => {
         if (prev <= 1) {
           clearInterval(interval);
-          handleReject(); // Auto-reject on timeout
+          handleReject(true); // Auto-reject on timeout (skip confirmation)
           return 0;
         }
         return prev - 1;
@@ -38,6 +39,9 @@ export default function PackingAlertScreen() {
   }, []);
 
   async function handleAccept() {
+    if (handledRef.current) return;
+    handledRef.current = true;
+
     setProcessing(true);
     await alarmService.stopAlarm();
     await notifeeService.cancel(`packing-${eventId}`);
@@ -45,23 +49,31 @@ export default function PackingAlertScreen() {
       await api.post("/packing/acknowledge", { eventId, orderId });
       router.replace(`/(packing)/order/${orderId}` as any);
     } catch {
+      handledRef.current = false;
       router.back();
     }
   }
 
-  async function handleReject() {
-    // Confirmation dialog before irreversible rejection
-    const confirmed = await new Promise<boolean>((resolve) => {
-      Alert.alert(
-        "Reject this order?",
-        "This cannot be undone. The order will be reassigned to another packing staff member.",
-        [
-          { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
-          { text: "Reject", style: "destructive", onPress: () => resolve(true) },
-        ]
-      );
-    });
-    if (!confirmed) return;
+  async function handleReject(autoReject = false) {
+    if (handledRef.current) return;
+
+    if (!autoReject) {
+      // Confirmation dialog before irreversible rejection
+      const confirmed = await new Promise<boolean>((resolve) => {
+        Alert.alert(
+          "Reject this order?",
+          "This cannot be undone. The order will be reassigned to another packing staff member.",
+          [
+            { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
+            { text: "Reject", style: "destructive", onPress: () => resolve(true) },
+          ]
+        );
+      });
+      if (!confirmed) return;
+    }
+
+    if (handledRef.current) return;
+    handledRef.current = true;
 
     setProcessing(true);
     await alarmService.stopAlarm();
@@ -70,7 +82,7 @@ export default function PackingAlertScreen() {
       await api.post("/packing/reject", {
         eventId,
         orderId,
-        reason: "Rejected from alert",
+        reason: autoReject ? "Auto-rejected (timeout)" : "Rejected from alert",
       });
     } catch {}
     router.back();
@@ -108,7 +120,7 @@ export default function PackingAlertScreen() {
         {/* Action buttons */}
         <View className="flex-row gap-3 mt-8 w-full">
           <Pressable
-            onPress={handleReject}
+            onPress={() => handleReject()}
             disabled={processing}
             className="flex-1 h-14 bg-red-500 rounded-xl items-center justify-center"
           >

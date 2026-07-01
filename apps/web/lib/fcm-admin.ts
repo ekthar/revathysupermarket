@@ -101,6 +101,88 @@ export async function sendFcmToUser(userId: string, payload: FcmPayload): Promis
 }
 
 /**
+ * Sends a high-priority FCM data message to ALL registered admin device tokens.
+ * Used for critical alerts like order rejections that require immediate attention.
+ * Returns true if at least one message was sent successfully.
+ */
+export async function sendFcmToAdmins(payload: FcmPayload): Promise<boolean> {
+  const projectId = process.env.FIREBASE_PROJECT_ID;
+  const serviceAccountKey = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+
+  if (!projectId || !serviceAccountKey) {
+    console.warn("[FCM] Firebase credentials not configured. Skipping admin push dispatch.");
+    return false;
+  }
+
+  const adminDevices = await prisma.deviceToken.findMany({
+    where: { role: "admin" },
+    select: { token: true, id: true },
+  });
+
+  if (adminDevices.length === 0) {
+    console.warn("[FCM] No registered admin devices found");
+    return false;
+  }
+
+  let anySuccess = false;
+  const staleTokenIds: string[] = [];
+
+  for (const device of adminDevices) {
+    try {
+      await adminMessaging.send({
+        token: device.token,
+        data: {
+          type: payload.type,
+          eventId: payload.eventId,
+          orderId: payload.orderId,
+          orderNumber: payload.orderNumber,
+          deepLink: payload.deepLink || `msmsupermarket://admin/orders/${payload.orderId}`,
+        },
+        android: { priority: "high" },
+        apns: {
+          headers: { "apns-priority": "10" },
+          payload: {
+            aps: {
+              "content-available": 1,
+              "interruption-level": "critical",
+              sound: { name: "emergency.caf", volume: 1.0 },
+            },
+          },
+        },
+        webpush: {
+          headers: { Urgency: "high" },
+          notification: {
+            title: `Order #${payload.orderNumber} Rejected`,
+            body: "A delivery partner rejected this order. Immediate action required.",
+            icon: "/icons/icon-192.png",
+            requireInteraction: true,
+          },
+        },
+      });
+      anySuccess = true;
+    } catch (error: unknown) {
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (
+        errorMsg.includes("messaging/registration-token-not-registered") ||
+        errorMsg.includes("messaging/invalid-registration-token")
+      ) {
+        staleTokenIds.push(device.id);
+      } else {
+        console.error(`[FCM] Admin send failed for device ${device.id}:`, errorMsg);
+      }
+    }
+  }
+
+  if (staleTokenIds.length > 0) {
+    await prisma.deviceToken.deleteMany({
+      where: { id: { in: staleTokenIds } },
+    }).catch(() => null);
+  }
+
+  return anySuccess;
+}
+
+/**
  * Send a notification to a specific topic (e.g., "all-customers", "staff")
  */
 export async function sendFcmToTopic(topic: string, notification: { title: string; body: string }, data?: Record<string, string>): Promise<boolean> {

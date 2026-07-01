@@ -82,6 +82,47 @@ async function main() {
     ],
     skipDuplicates: true
   });
+
+  // Seed feature flags (idempotent upserts)
+  const featureFlags = [
+    {
+      id: "ff_stock_value_visible",
+      key: "stock_value_visible",
+      enabled: false,
+      config: null,
+    },
+    {
+      id: "ff_forced_accept_delivery",
+      key: "forced_accept_delivery",
+      enabled: false,
+      config: { overrides: [] },
+    },
+    {
+      id: "ff_ring_alert_rules",
+      key: "ring_alert_rules",
+      enabled: true,
+      config: {
+        ringtone: "default",
+        durationSeconds: 30,
+        escalationAfterSeconds: 60,
+        escalationTarget: "admin",
+      },
+    },
+    {
+      id: "ff_print_required_alert",
+      key: "print_required_alert",
+      enabled: true,
+      config: { thresholdMinutes: 10 },
+    },
+  ];
+
+  for (const flag of featureFlags) {
+    await prisma.featureFlag.upsert({
+      where: { key: flag.key },
+      update: {},
+      create: flag,
+    });
+  }
 }
 
 main()

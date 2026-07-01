@@ -93,6 +93,22 @@ export function OrderSummary({
               <span className="font-semibold text-neutral-700">{formatCurrency(tipAmount)}</span>
             </div>
           )}
+          {/* Savings line */}
+          {(() => {
+            const totalDiscount = items.reduce((sum, item) => {
+              if (item.discountPrice != null && item.discountPrice < item.price) {
+                return sum + (item.price - item.discountPrice) * item.quantity;
+              }
+              return sum;
+            }, 0);
+            if (totalDiscount <= 0) return null;
+            return (
+              <div className="flex justify-between">
+                <span className="text-secondary-600 font-medium">Total Savings</span>
+                <span className="font-semibold text-secondary-600">-{formatCurrency(totalDiscount)}</span>
+              </div>
+            );
+          })()}
           <div className="border-t border-dashed border-neutral-200 dark:border-neutral-700 pt-3 flex justify-between">
             <span className="font-black text-neutral-900 dark:text-white">Total Amount</span>
             <span className="font-black text-neutral-900 dark:text-white text-title">

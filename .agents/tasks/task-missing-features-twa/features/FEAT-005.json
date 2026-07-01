@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "feat",
   "description": "Express/one-tap checkout (Feature 15), Savings summary in cart/checkout (Feature 18), Notification preferences granularity (Feature 19), and Multi-language integration into UI (Feature 11).",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create apps/web/components/cart/express-checkout.tsx: 'Quick Order' button that appears when user has a default address within delivery radius and has placed at least one order before. Shows the default address, total, and payment method in a compact card. One tap triggers order placement by calling /api/orders with saved preferences. Uses Framer Motion slide-up animation.",
     "Update apps/web/components/cart/cart-page-client.tsx: Add ExpressCheckout component at the top of the cart page for eligible users. Add a 'Savings Summary' section showing total savings: calculate sum of (price - discountPrice) * quantity for all discounted items in cart. Show as a green highlighted banner 'You are saving Rs X on this order!'.",

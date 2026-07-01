@@ -7,11 +7,13 @@ import { Minus, Plus, Search, SlidersHorizontal, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCartActions, useCartItem } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 import type { Product } from "@/lib/types";
 
 export function HomeSearch({ products }: { products: Product[] }) {
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
+  const t = useTranslations("home");
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -31,7 +33,7 @@ export function HomeSearch({ products }: { products: Product[] }) {
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
-            placeholder="Search for groceries..."
+            placeholder={t("searchPlaceholder")}
             className="w-full h-11 rounded-full bg-neutral-50 border border-neutral-100 pl-10 pr-8 text-body outline-none placeholder:text-neutral-400 focus:border-primary/40 focus:bg-white focus:shadow-sm transition-all"
           />
           {query && (

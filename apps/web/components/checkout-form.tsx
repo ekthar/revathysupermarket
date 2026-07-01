@@ -10,6 +10,7 @@ import { SITE } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
+import { useTranslations } from "next-intl";
 import type { StoreSettings } from "@/lib/store-settings";
 import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
@@ -114,6 +115,7 @@ export function CheckoutForm({
   const slotsEnabled = process.env.NEXT_PUBLIC_ENABLE_DELIVERY_SLOTS !== "false";
   const { items, subtotal, clearCart } = useCart();
   const { showToast } = useToast();
+  const t = useTranslations("checkout");
   const [form, setForm] = useState(initialState);
   const [message, setMessage] = useState("");
   const [placedOrderId, setPlacedOrderId] = useState("");
@@ -354,7 +356,7 @@ export function CheckoutForm({
           <Link href="/cart" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press">
             <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
           </Link>
-          <h1 className="text-lg font-black text-neutral-900 dark:text-white">Checkout</h1>
+          <h1 className="text-lg font-black text-neutral-900 dark:text-white">{t("title")}</h1>
         </div>
       </motion.div>
 

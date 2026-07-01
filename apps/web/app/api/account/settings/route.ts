@@ -26,7 +26,10 @@ const settingsSchema = z.object({
   pushNotifications: z.boolean().optional(),
   orderUpdates: z.boolean().optional(),
   promotionalMessages: z.boolean().optional(),
-  whatsappNotifications: z.boolean().optional()
+  whatsappNotifications: z.boolean().optional(),
+  priceDropAlerts: z.boolean().optional(),
+  weeklyDeals: z.boolean().optional(),
+  deliveryAlerts: z.boolean().optional()
 });
 
 // PATCH /api/account/settings

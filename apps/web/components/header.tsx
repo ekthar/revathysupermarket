@@ -10,6 +10,8 @@ import { useCartItemCount } from "@/components/cart/cart-provider";
 import { SITE } from "@/lib/constants";
 import { getSavedLocation, type DeliveryLocation } from "@/components/location-prompt";
 import type { SessionIdentity } from "@/components/session-identity-card";
+import { LanguageSwitcher } from "@/components/language-switcher";
+import { useTranslations } from "next-intl";
 
 export const Header = memo(function Header({
   user,
@@ -26,6 +28,7 @@ export const Header = memo(function Header({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const t = useTranslations("common");
 
   // Hide on login/welcome/staff/admin/delivery
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/delivery")) return null;
@@ -94,6 +97,9 @@ export const Header = memo(function Header({
             <div className="flex items-center gap-3 ml-6">
               {/* Location indicator */}
               <LocationIndicator onOpenLocationPrompt={onOpenLocationPrompt} />
+
+              {/* Language switcher */}
+              <LanguageSwitcher />
 
               <Link
                 href="/support"

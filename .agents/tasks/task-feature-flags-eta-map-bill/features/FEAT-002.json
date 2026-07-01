@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Implement improved distance-aware ETA algorithm with eta_display_mode feature flag. Default behavior: ETA only shows after delivery boy is assigned (after_assignment mode). Add customer bill/invoice generation as a React component on the tracking page.",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "1. Rewrite apps/web/lib/live-order.ts: Replace the static estimateOrderEta function with a distance-aware version that accepts options: {distanceKm?, avgPackingMinutes?, avgDeliverySpeed?, rushHourMultiplier?}. The new function calculates: deliveryMinutes = ceil((distanceKm / avgDeliverySpeed) * 60 * rushHourMultiplier). Status-based estimates: ORDER_RECEIVED = avgPackingMinutes + deliveryMinutes + 5, ACCEPTED = avgPackingMinutes + deliveryMinutes, PACKING = ceil(avgPackingMinutes * 0.7) + deliveryMinutes, READY_FOR_DELIVERY = deliveryMinutes + 2, OUT_FOR_DELIVERY = deliveryMinutes, ARRIVING = min(3, deliveryMinutes). Keep the function backward compatible (defaults: distanceKm=3, avgPackingMinutes=8, avgDeliverySpeed=18, rushHourMultiplier=1.0).",
     "2. Add a helper function getEtaDisplayMode() in apps/web/lib/live-order.ts that fetches the eta_display_mode feature flag from the database (or accepts a cached value). Export a type EtaDisplayMode = 'always' | 'after_assignment'.",

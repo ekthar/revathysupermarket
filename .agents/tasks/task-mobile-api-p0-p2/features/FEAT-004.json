@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "P1 Admin API routes: Product CRUD, category management, staff management, customer list, marketing tools (offers, promos, push notifications), delivery slots config, store settings, billing dashboard.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create apps/web/app/api/mobile/v1/admin/products/route.ts - GET returns paginated product list with search/category filters. POST creates a new product. Include all product fields (name, slug, description, image, price, discountPrice, costPrice, stock, unit, categoryId, isActive, isFeatured, gstRate).",
     "Create apps/web/app/api/mobile/v1/admin/products/[id]/route.ts - GET returns single product detail. PATCH updates product fields. DELETE soft-deletes (sets isActive=false) or hard-deletes product.",
@@ -34,5 +34,5 @@
     "Run: cd /projects/sandbox/revathysupermarket/apps/web && npx tsc --noEmit 2>&1 | head -50"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 17 admin route files created and compiled successfully. TypeScript passes with zero errors. Next.js build succeeds. DeliveryCollection model uses cashCollected/upiCollected (not amount) and completedAt (not collectedAt) - corrected billing route accordingly."
 }

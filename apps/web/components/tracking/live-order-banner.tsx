@@ -76,8 +76,8 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
               <div className="flex items-center gap-3">
                 {/* Pulse dot */}
                 <div className="relative flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+                  <span className="stay-light absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                  <span className="stay-light relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
                 </div>
                 <div>
                   <p className="text-micro font-bold uppercase tracking-wider text-white/90">

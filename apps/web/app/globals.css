@@ -151,6 +151,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 ::selection { background: rgba(0, 0, 0, 0.12); }
+.dark ::selection { background: rgba(255, 255, 255, 0.22); color: hsl(210 40% 98%); }
 
 /* iOS-style scrollbar */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
@@ -739,14 +740,20 @@ html[data-keyboard-open] .pb-safe {
   padding-top: 12px;
 }
 
-/* Dark mode fixes for common patterns */
-.dark .bg-white { background-color: hsl(222 47% 9%); }
-.dark .bg-slate-50 { background-color: hsl(217 33% 12%); }
-.dark .border-slate-100 { border-color: hsl(217 33% 17%); }
-.dark .border-slate-200 { border-color: hsl(217 33% 17%); }
-.dark .text-slate-900 { color: hsl(210 40% 98%); }
-.dark .text-slate-800 { color: hsl(210 40% 93%); }
-.dark .text-slate-700 { color: hsl(215 20% 75%); }
+/* Dark mode fixes for common patterns.
+ * These are a pragmatic safety net for the many components that still use raw
+ * bg-white / slate utilities without explicit dark: variants. They are scoped
+ * with :not(.stay-light) so intentional light-on-dark elements (toggle knobs,
+ * status dots, etc.) can opt out by adding the `stay-light` class and keep
+ * their original color in dark mode. Prefer semantic tokens (bg-card,
+ * text-foreground, border-border) or dark: variants in new/edited components. */
+.dark .bg-white:not(.stay-light) { background-color: hsl(222 47% 9%); }
+.dark .bg-slate-50:not(.stay-light) { background-color: hsl(217 33% 12%); }
+.dark .border-slate-100:not(.stay-light) { border-color: hsl(217 33% 17%); }
+.dark .border-slate-200:not(.stay-light) { border-color: hsl(217 33% 17%); }
+.dark .text-slate-900:not(.stay-light) { color: hsl(210 40% 98%); }
+.dark .text-slate-800:not(.stay-light) { color: hsl(210 40% 93%); }
+.dark .text-slate-700:not(.stay-light) { color: hsl(215 20% 75%); }
 
 /* Ensure card-elevated works in dark */
 .dark .card-elevated {

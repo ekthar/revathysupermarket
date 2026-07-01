@@ -5,7 +5,7 @@ import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 import { ChevronRight, CreditCard, Gift, Heart, HelpCircle, LogOut, MapPin, Package, Pencil, Phone, Settings, User, Wallet } from "lucide-react";
-import { ThemeToggleInline } from "@/components/ui/theme-toggle-inline";
+import { ThemeToggleInline } from "@/components/theme-toggle";
 import { InstallAppButton } from "@/components/install-app-button";
 import { StoreInfoLinks } from "@/components/ui/store-info-links";
 

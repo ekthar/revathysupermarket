@@ -211,8 +211,8 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
             <div className="flex items-center gap-3">
               {/* Pulse dot */}
               <div className="relative flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-white" />
+                <span className="stay-light absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                <span className="stay-light relative inline-flex h-3 w-3 rounded-full bg-white" />
               </div>
               <div>
                 <p className="text-micro font-bold uppercase tracking-wider text-white/80">

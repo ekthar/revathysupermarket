@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Schema additions and core infrastructure for all 14 missing features. Add Review, SubCategory, DeliveryTip, DeliveryInstruction models. Add tip/deliveryInstructions/language fields to Order. Extend UserSettings with granular notification preferences. Add i18n infrastructure with next-intl for English and Malayalam.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Update apps/web/prisma/schema.prisma: Add SubCategory model (id, name, slug, categoryId -> Category, sortOrder) with relation from Category. Add Review model (id, userId -> User, productId -> Product, rating Int 1-5, comment String?, createdAt). Add tipAmount Decimal field to Order model. Add deliveryInstructions String? field to Order model. Add preferredLanguage String field to User model (default 'en'). Extend UserSettings with new Boolean fields: priceDropAlerts, weeklyDeals, deliveryAlerts (all default true).",
     "Update apps/web/lib/validations.ts: Extend checkoutSchema to include tipAmount (optional number min 0), deliveryInstructions (optional string max 200). Add reviewSchema (rating 1-5, comment optional max 500).",
@@ -27,5 +27,5 @@
     "cd apps/web && npx tsc --noEmit --pretty 2>&1 | head -50"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All schema changes validated with prisma generate. TypeScript compilation passes cleanly. next-intl installed successfully. The i18n/request.ts uses getRequestConfig from next-intl/server with async cookies()/headers() for Next.js 15 compatibility."
 }

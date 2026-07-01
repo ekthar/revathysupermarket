@@ -30,13 +30,25 @@ export const Header = memo(function Header({
   const router = useRouter();
   const t = useTranslations("common");
 
+  // Prefer native back navigation (preserves scroll position + history) and
+  // fall back to the parent path when there is no in-app history to return to
+  // (e.g. the user opened this inner page from a direct link or fresh tab).
+  // Defined before any early return so hook order stays stable.
+  const handleBack = useCallback(() => {
+    const parent = pathname.startsWith("/account/") ? "/account" : pathname.startsWith("/checkout") ? "/cart" : "/";
+    if (typeof window !== "undefined" && window.history.length > 1) {
+      router.back();
+    } else {
+      router.push(parent);
+    }
+  }, [router, pathname]);
+
   // Hide on login/welcome/staff/admin/delivery
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/delivery")) return null;
 
   // Determine if we're on an inner page that needs a back button
-  const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/support", "/checkout"];
+  const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/support", "/checkout", "/offers"];
   const isInnerPage = innerPages.some((p) => pathname.startsWith(p)) || (pathname.startsWith("/account/") && pathname !== "/account");
-  const parentPath = pathname.startsWith("/account/") ? "/account" : pathname.startsWith("/checkout") ? "/cart" : "/";
 
   const navLinks = [
     { href: "/products", label: "Shop" },
@@ -56,7 +68,7 @@ export const Header = memo(function Header({
             <div className="flex items-center gap-3">
               {isInnerPage && (
                 <button
-                  onClick={() => router.push(parentPath)}
+                  onClick={handleBack}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors press"
                   aria-label="Go back"
                 >
@@ -103,7 +115,7 @@ export const Header = memo(function Header({
 
               <Link
                 href="/support"
-                className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+                className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white transition-colors"
               >
                 <HelpCircle className="h-4 w-4" />
                 Help & Support
@@ -147,7 +159,7 @@ export const Header = memo(function Header({
         <div className="flex h-14 items-center justify-between px-4">
           {/* Back button on inner pages OR store branding on home */}
           {isInnerPage ? (
-            <button onClick={() => router.push(parentPath)} className="flex items-center gap-2 min-w-0 press group">
+            <button onClick={handleBack} className="flex items-center gap-2 min-w-0 press group">
               <div className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 transition-colors group-hover:bg-neutral-200 dark:group-hover:bg-neutral-700">
                 <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
               </div>

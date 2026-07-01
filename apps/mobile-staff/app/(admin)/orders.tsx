@@ -130,7 +130,7 @@ export default function AdminOrdersScreen() {
           const statusStyle = STATUS_COLORS[item.status] ?? { bg: "bg-slate-100 dark:bg-slate-800", text: "text-slate-600 dark:text-slate-300" };
           const statusLabel = STATUS_LABELS[item.status] ?? item.status;
           return (
-            <AnimatedFadeIn index={Math.min(index, 8)} entranceKey={item.id}>
+            <AnimatedFadeIn index={Math.min(index, 8)} entranceKey={`admin-orders:${item.id}`}>
               <AnimatedPressable
                 className="bg-white dark:bg-slate-950 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm"
                 accessibilityRole="button"

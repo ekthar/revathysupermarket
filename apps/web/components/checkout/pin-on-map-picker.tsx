@@ -151,7 +151,7 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
 
       {/* Map */}
       <div className="relative flex-1" style={{ minHeight: "300px" }}>
-        <div ref={containerRef} className="absolute inset-0" />
+        <div ref={containerRef} className="absolute inset-0 z-0" />
 
         {/* Loading overlay */}
         {!mapLoaded && (

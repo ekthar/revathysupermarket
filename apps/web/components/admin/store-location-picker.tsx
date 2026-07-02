@@ -117,7 +117,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
         {/* Map */}
         <div
           ref={containerRef}
-          className="h-[340px] w-full sm:h-[380px]"
+          className="h-[340px] w-full sm:h-[380px] relative z-0"
           style={{ minHeight: "300px" }}
         />
 

@@ -379,6 +379,8 @@ function FlagCard({
       <label className="relative inline-flex items-center cursor-pointer">
         <input
           type="checkbox"
+          role="switch"
+          aria-label={meta.label}
           checked={flag.enabled}
           onChange={(e) => onToggle(e.target.checked)}
           disabled={saving}
@@ -485,6 +487,8 @@ function SmartConfigFlagCard({
           <div className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
+              role="switch"
+              aria-label={fieldLabel}
               checked={currentValue === true}
               onChange={(e) => { updateFlag(flag.key, { config: { ...config, [cfgKey]: e.target.checked } }); }}
               className="sr-only peer"
@@ -514,6 +518,8 @@ function SmartConfigFlagCard({
         <label className="relative inline-flex items-center cursor-pointer">
           <input
             type="checkbox"
+            role="switch"
+            aria-label={meta.label}
             checked={flag.enabled}
             onChange={(e) => updateFlag(flag.key, { enabled: e.target.checked })}
             disabled={saving}
@@ -582,7 +588,7 @@ function ForcedAcceptCard({
           </div>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" checked={flag.enabled} onChange={(e) => updateFlag("forced_accept_delivery", { enabled: e.target.checked })} disabled={saving} className="sr-only peer" />
+          <input type="checkbox" role="switch" aria-label="Forced Accept Delivery" checked={flag.enabled} onChange={(e) => updateFlag("forced_accept_delivery", { enabled: e.target.checked })} disabled={saving} className="sr-only peer" />
           <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600" />
         </label>
       </div>
@@ -596,7 +602,7 @@ function ForcedAcceptCard({
             <div key={partner.id} className="flex items-center justify-between py-2 px-3 rounded-xl bg-slate-50 dark:bg-slate-800">
               <span className="text-sm font-semibold text-slate-700 dark:text-slate-300">{partner.name}</span>
               <label className="relative inline-flex items-center cursor-pointer">
-                <input type="checkbox" checked={isStaffForced(partner.id)} onChange={(e) => toggleStaffOverride(partner.id, e.target.checked)} disabled={saving} className="sr-only peer" />
+                <input type="checkbox" role="switch" aria-label={`Force accept for ${partner.name}`} checked={isStaffForced(partner.id)} onChange={(e) => toggleStaffOverride(partner.id, e.target.checked)} disabled={saving} className="sr-only peer" />
                 <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-600" />
               </label>
             </div>
@@ -633,7 +639,7 @@ function RingAlertCard({
           </div>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" checked={flag.enabled} onChange={(e) => updateFlag("ring_alert_rules", { enabled: e.target.checked })} disabled={saving} className="sr-only peer" />
+          <input type="checkbox" role="switch" aria-label="Ring Alert Rules" checked={flag.enabled} onChange={(e) => updateFlag("ring_alert_rules", { enabled: e.target.checked })} disabled={saving} className="sr-only peer" />
           <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500" />
         </label>
       </div>
@@ -688,7 +694,7 @@ function PrintAlertCard({
           </div>
         </div>
         <label className="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" checked={flag.enabled} onChange={(e) => updateFlag("print_required_alert", { enabled: e.target.checked })} disabled={saving} className="sr-only peer" />
+          <input type="checkbox" role="switch" aria-label="Print Required Alert" checked={flag.enabled} onChange={(e) => updateFlag("print_required_alert", { enabled: e.target.checked })} disabled={saving} className="sr-only peer" />
           <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-red-500" />
         </label>
       </div>

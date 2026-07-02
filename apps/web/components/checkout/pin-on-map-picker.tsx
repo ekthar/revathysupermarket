@@ -7,26 +7,32 @@ import { LocateFixed, MapPin, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 /**
- * Raster XYZ tile style (OpenStreetMap). Deliberately avoiding vector tile
- * styles here — those require glyph/sprite fetches and worker-driven vector
- * tile requests, which are far more fragile under a locked-down CSP. Raster
- * tiles are plain PNG image requests with no extra dependencies.
+ * Raster XYZ tile style (CartoDB Positron). Raster tiles are plain PNG image
+ * requests with no glyph/sprite/vector-worker dependencies, so they stay
+ * reliable under a locked-down CSP.
+ *
+ * We use CartoDB rather than raw OpenStreetMap tiles: OSM's tile usage policy
+ * throttles/blocks bulk and commercial traffic (a common cause of "map won't
+ * load" in production), whereas the Carto basemap CDN is built for embedding.
+ * It's also the same basemap the live tracking map uses, so the app has one
+ * consistent, minimal map look.
  */
 const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
-    osm: {
+    carto: {
       type: "raster",
       tiles: [
-        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
       ],
       tileSize: 256,
-      attribution: "© OpenStreetMap contributors"
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
     }
   },
-  layers: [{ id: "osm-tiles", type: "raster", source: "osm" }]
+  layers: [{ id: "carto-tiles", type: "raster", source: "carto" }]
 };
 
 type LatLng = { latitude: number; longitude: number };
@@ -141,8 +147,9 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
           </div>
         )}
 
-        {/* Error state */}
-        {mapError && (
+        {/* Error state — only when the map never finished loading. A single
+            transient tile error must not cover an otherwise-working map. */}
+        {mapError && !mapLoaded && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
             <div className="flex flex-col items-center gap-2 px-6 text-center">
               <MapPin className="h-8 w-8 text-neutral-400" />

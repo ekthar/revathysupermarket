@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { createPortal } from "react-dom";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
@@ -62,6 +62,7 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [portalMounted, setPortalMounted] = useState(false);
+  const mapInitialized = useRef(false);
 
   // Gate portal rendering to avoid SSR/hydration mismatch (document.body
   // doesn't exist during SSR). Also lock body scroll while the picker is open.
@@ -74,10 +75,15 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
     };
   }, []);
 
-  useEffect(() => {
-    if (!containerRef.current) return;
+  // Initialize the map once the container DOM node is available.
+  // Uses a callback ref to guarantee the node exists when we init.
+  const initMap = useCallback((node: HTMLDivElement | null) => {
+    if (!node || mapInitialized.current) return;
+    mapInitialized.current = true;
+    containerRef.current = node;
+
     const map = new maplibregl.Map({
-      container: containerRef.current,
+      container: node,
       style: MAP_STYLE,
       center: [initial.longitude, initial.latitude],
       zoom: 17,
@@ -93,38 +99,35 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
     map.on("load", () => {
       syncCenter();
       setMapLoaded(true);
-      // The picker mounts inside an animated full-screen modal, so the
-      // container can still be settling its size when the map initializes.
-      // A resize after load guarantees the GL canvas fills the real box
-      // (otherwise the map renders into a 0-size canvas and shows blank).
+      // Resize after load guarantees the GL canvas fills the real box.
       map.resize();
     });
     map.on("error", () => {
       setMapError(true);
     });
 
-    // Keep the GL canvas in sync with the container box. This is the robust
-    // fix for "blank map in a modal": the observer fires once the flex/anim
-    // layout gives the container its final dimensions, and again on rotation
-    // or keyboard show/hide.
+    // Keep the GL canvas in sync with the container box. The observer fires
+    // once the flex/anim layout gives the container its final dimensions,
+    // and again on rotation or keyboard show/hide.
     let raf = 0;
     const resizeObserver = new ResizeObserver(() => {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => mapRef.current?.resize());
     });
-    resizeObserver.observe(containerRef.current);
-    // Belt-and-suspenders: an explicit resize after the modal entrance anim.
-    const settleTimer = window.setTimeout(() => mapRef.current?.resize(), 350);
-
-    return () => {
-      cancelAnimationFrame(raf);
-      window.clearTimeout(settleTimer);
-      resizeObserver.disconnect();
-      map.off("move", syncCenter);
-      map.remove();
-      mapRef.current = null;
-    };
+    resizeObserver.observe(node);
+    // Explicit resize after the modal entrance animation settles.
+    window.setTimeout(() => mapRef.current?.resize(), 350);
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Cleanup map on unmount
+  useEffect(() => {
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
   }, []);
 
   function useMyLocation() {
@@ -172,7 +175,7 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
 
       {/* Map */}
       <div className="relative flex-1" style={{ minHeight: "300px" }}>
-        <div ref={containerRef} className="absolute inset-0" />
+        <div ref={initMap} className="absolute inset-0" />
 
         {/* Loading overlay */}
         {!mapLoaded && !mapError && (

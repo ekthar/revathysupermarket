@@ -95,6 +95,9 @@ export function validateProductSheetRow(row: ProductSheetRow) {
   if (row.discountPrice !== null && row.discountPrice !== undefined && (!Number.isFinite(row.discountPrice) || row.discountPrice <= 0)) {
     errors.push("Discount price must be greater than 0.");
   }
+  if (row.discountPrice != null && row.price > 0 && row.discountPrice >= row.price) {
+    errors.push("Discount price must be less than selling price.");
+  }
   if (!Number.isInteger(row.stock) || row.stock < 0) errors.push("Stock must be a whole number 0 or above.");
   if (!row.description || row.description.length < 10) errors.push("Description must be at least 10 characters.");
   if (row.image && !isAllowedProductImageUrl(row.image)) errors.push("Image must be a valid HTTPS URL or blank.");
@@ -151,8 +154,8 @@ export async function upsertProductSheetRows(rows: ProductSheetRow[]) {
       slug,
       categoryId: category.id,
       price: row.price,
-      discountPrice: row.discountPrice || undefined,
-      costPrice: row.costPrice || undefined,
+      discountPrice: row.discountPrice != null ? row.discountPrice : undefined,
+      costPrice: row.costPrice != null ? row.costPrice : undefined,
       gstRate: row.gstRate != null ? row.gstRate : undefined,
       brand: row.brand || undefined,
       stock: row.stock,

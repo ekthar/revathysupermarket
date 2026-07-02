@@ -23,7 +23,7 @@ export function ProductImportExport() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isCommitting, setIsCommitting] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isRefreshing, startTransition] = useTransition();
 
   const errorRows = importPreview.filter((r) => r.errors.length > 0);
   const validRows = importPreview.filter((r) => r.errors.length === 0);
@@ -186,10 +186,10 @@ export function ProductImportExport() {
                   type="button"
                   size="sm"
                   onClick={commitImport}
-                  disabled={isCommitting || validRows.length === 0}
+                  disabled={isCommitting || isRefreshing || validRows.length === 0}
                 >
                   <Upload className="h-4 w-4" />
-                  {isCommitting ? "Importing..." : `Import ${validRows.length} products`}
+                  {isCommitting ? "Importing..." : isRefreshing ? "Refreshing..." : `Import ${validRows.length} products`}
                 </Button>
               </div>
             </div>

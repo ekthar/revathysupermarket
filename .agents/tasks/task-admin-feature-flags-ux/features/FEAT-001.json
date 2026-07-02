@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Add missing whatsapp_enabled and sms_enabled flags to the admin panel UI, reorganize categories to include a Notifications & Messaging group, and replace the generic ConfigFlagCard with smart config rendering using a CONFIG_HINTS map that provides dropdowns, number inputs with units, time inputs, and checkboxes based on the flag type.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In apps/web/components/admin/feature-flag-settings.tsx, add 'MessageCircle' and 'Phone' to the lucide-react imports (MessageCircle is already imported in settings-management-client.tsx so confirm it works).",
     "Add two new entries to FLAG_META: whatsapp_enabled with label 'WhatsApp Notifications', description 'Send OTPs and order updates via WhatsApp Business API', icon MessageCircle; and sms_enabled with label 'SMS Notifications', description 'Send OTPs and order updates via SMS', icon Phone.",
@@ -24,5 +24,5 @@
     "Run `cd /projects/sandbox/revathysupermarket/apps/web && npx next lint` and confirm no new errors"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All changes compiled cleanly. No new lint errors introduced. Pre-existing warnings in other files (img elements, hook dependencies) remain unchanged. The SmartConfigFlagCard component replaces ConfigFlagCard and provides hint-based inputs (select, number with prefix/suffix, text, time, checkbox) while falling back to the original generic rendering when no hints are configured for a flag."
 }

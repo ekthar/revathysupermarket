@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { MapPin, Navigation, X, AlertTriangle, Clock } from "lucide-react";
+import { MapPin, MapPinned, Navigation, X, AlertTriangle, Clock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { calculateDistanceKm } from "@/lib/distance";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
+import { PinOnMapPicker } from "@/components/checkout/pin-on-map-picker";
 
 const STORAGE_KEY = "msm-delivery-location";
 
@@ -47,6 +48,11 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
   const [outsideRadius, setOutsideRadius] = useState(false);
   const [pincode, setPincode] = useState("");
   const [resolvedLocation, setResolvedLocation] = useState<DeliveryLocation | null>(null);
+  const [showPinPicker, setShowPinPicker] = useState(false);
+  const [mapInitial, setMapInitial] = useState<{ latitude: number; longitude: number }>({
+    latitude: STORE_COORDINATES.lat,
+    longitude: STORE_COORDINATES.lng,
+  });
 
   useEffect(() => {
     if (forceOpen) {
@@ -86,21 +92,10 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        const { latitude: lat, longitude: lng } = position.coords;
-        const distance = calculateDistanceKm({ lat, lng }, STORE_COORDINATES);
-        const withinRadius = distance <= SITE.deliveryRadiusKm;
-        const eta = estimateETA(distance);
-
-        const location: DeliveryLocation = {
-          lat,
-          lng,
-          address: `${lat.toFixed(4)}, ${lng.toFixed(4)}`,
-          area: withinRadius ? "Near Store" : "Outside Delivery Area",
-          eta,
-        };
-
-        setResolvedLocation(location);
-        setOutsideRadius(!withinRadius);
+        const { latitude, longitude } = position.coords;
+        // Open the map picker centered on GPS coords so user can fine-tune (Swiggy behavior)
+        setMapInitial({ latitude, longitude });
+        setShowPinPicker(true);
         setLoading(false);
       },
       (err) => {
@@ -113,6 +108,48 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 300000 }
     );
+  }, []);
+
+  const handleMapConfirm = useCallback(async (location: { latitude: number; longitude: number }) => {
+    setShowPinPicker(false);
+    setError(null);
+    setOutsideRadius(false);
+
+    const { latitude: lat, longitude: lng } = location;
+    const distance = calculateDistanceKm({ lat, lng }, STORE_COORDINATES);
+    const withinRadius = distance <= SITE.deliveryRadiusKm;
+    const eta = estimateETA(distance);
+
+    // Default location before geocoding
+    let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    let area: string | undefined = withinRadius ? "Near Store" : "Outside Delivery Area";
+    let pincodeValue: string | undefined;
+
+    try {
+      const res = await fetch(`/api/geocode/reverse?latitude=${lat}&longitude=${lng}`);
+      if (res.ok) {
+        const geo = await res.json();
+        // Build a readable address string from the geocode response
+        const parts = [geo.houseName, geo.street, geo.locality].filter(Boolean);
+        if (parts.length > 0) address = parts.join(", ");
+        area = geo.locality || geo.street || area;
+        pincodeValue = geo.pincode || undefined;
+      }
+    } catch {
+      // Geocoding failed, use coordinate-based defaults
+    }
+
+    const deliveryLocation: DeliveryLocation = {
+      lat,
+      lng,
+      address,
+      area,
+      pincode: pincodeValue,
+      eta,
+    };
+
+    setResolvedLocation(deliveryLocation);
+    setOutsideRadius(!withinRadius);
   }, []);
 
   const handlePincodeSubmit = useCallback(() => {
@@ -201,6 +238,23 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
             </div>
           </button>
 
+          {/* Pin on map button */}
+          <button
+            onClick={() => {
+              setMapInitial({ latitude: STORE_COORDINATES.lat, longitude: STORE_COORDINATES.lng });
+              setShowPinPicker(true);
+            }}
+            className="w-full flex items-center gap-3 p-4 mt-3 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
+          >
+            <MapPinned className="h-5 w-5 text-neutral-700 dark:text-neutral-300" />
+            <div className="text-left">
+              <p className="text-sm font-bold text-neutral-900 dark:text-white">
+                Pin exact location on map
+              </p>
+              <p className="text-xs text-neutral-500 dark:text-neutral-400">Drop a pin on your house for precision</p>
+            </div>
+          </button>
+
           {/* Divider */}
           <div className="flex items-center gap-3 my-4">
             <div className="flex-1 h-px bg-neutral-200 dark:bg-neutral-700" />
@@ -286,6 +340,19 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
           )}
         </motion.div>
       </motion.div>
+
+      {/* Pin on map picker overlay */}
+      <AnimatePresence>
+        {showPinPicker && (
+          <PinOnMapPicker
+            initial={mapInitial}
+            onClose={() => setShowPinPicker(false)}
+            onConfirm={(location) => {
+              void handleMapConfirm(location);
+            }}
+          />
+        )}
+      </AnimatePresence>
     </AnimatePresence>
   );
 }

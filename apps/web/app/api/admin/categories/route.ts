@@ -36,10 +36,15 @@ export async function POST(request: Request) {
   const existing = await prisma.category.findUnique({ where: { name: parsed.data.name } });
   if (existing) return NextResponse.json({ error: "Category name already exists." }, { status: 409 });
 
+  // Check if slug would collide (e.g. "Fresh Fruits" vs "fresh fruits" both → "fresh-fruits")
+  const slug = slugify(parsed.data.name);
+  const slugCollision = await prisma.category.findUnique({ where: { slug } });
+  if (slugCollision) return NextResponse.json({ error: "A category with a similar name already exists." }, { status: 409 });
+
   const category = await prisma.category.create({
     data: {
       name: parsed.data.name,
-      slug: slugify(parsed.data.name),
+      slug,
       description: parsed.data.description,
       image: parsed.data.image,
       sortOrder: parsed.data.sortOrder ?? 0

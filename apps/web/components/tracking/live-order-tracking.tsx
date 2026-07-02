@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
+import { springs } from "@/lib/motion";
 import {
   ArrowLeft,
   Phone,
@@ -196,7 +197,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
     <motion.main
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 260, damping: 25 }}
+      transition={springs.enter}
       className="relative min-h-screen bg-background dark:bg-neutral-950 pb-safe"
     >
       {/* Fixed top LIVE ORDER banner */}
@@ -204,7 +205,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, type: "spring", stiffness: 300, damping: 25 }}
+          transition={{ delay: 0.1, ...springs.snappy }}
           className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-secondary-600 via-secondary-500 to-secondary-400 p-3.5 shadow-lg shadow-secondary-500/20 dark:shadow-secondary-900/30"
         >
           <div className="flex items-center justify-between">
@@ -260,7 +261,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, type: "spring", stiffness: 260, damping: 24 }}
+          transition={{ delay: 0.25, ...springs.enter }}
           className="flex items-center gap-3 rounded-2xl bg-white p-4 card-shadow dark:bg-neutral-900"
         >
           {/* Avatar */}
@@ -286,7 +287,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         <motion.div
           initial={{ opacity: 0, scale: 0.97 }}
           animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, type: "spring", stiffness: 240, damping: 22 }}
+          transition={{ delay: 0.3, ...springs.enter }}
         >
           {(data.deliveryPartnerLocation ||
             ["OUT_FOR_DELIVERY", "ARRIVING", "READY_FOR_DELIVERY"].includes(data.status)) ? (
@@ -338,7 +339,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -8 }}
-              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+              transition={springs.layout}
               className="rounded-2xl bg-white p-5 text-center card-shadow dark:bg-neutral-900"
             >
               <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">

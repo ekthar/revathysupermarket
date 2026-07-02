@@ -3,9 +3,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { MapPin, MapPinned, Navigation, X, AlertTriangle, Clock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { calculateDistanceKm } from "@/lib/distance";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
-import { PinOnMapPicker } from "@/components/checkout/pin-on-map-picker";
+
+// Lazy-load the map picker: maplibre-gl (~200KB gzipped) must not sit in the
+// homepage's initial bundle. It only downloads when the user opens the picker.
+const PinOnMapPicker = dynamic(
+  () => import("@/components/checkout/pin-on-map-picker").then((m) => ({ default: m.PinOnMapPicker })),
+  { ssr: false }
+);
 
 const STORAGE_KEY = "msm-delivery-location";
 

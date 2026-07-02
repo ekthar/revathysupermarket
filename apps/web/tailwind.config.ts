@@ -125,8 +125,8 @@ const config: Config = {
       },
       boxShadow: {
         "elevation-1": "0 1px 3px rgba(5, 5, 5, 0.04), 0 4px 12px rgba(5, 5, 5, 0.06)",
-        "elevation-2": "0 4px 16px rgba(5, 5, 5, 0.08), 0 12px 32px rgba(5, 5, 5, 0.10)",
-        "elevation-3": "0 8px 24px rgba(5, 5, 5, 0.12), 0 24px 64px rgba(5, 5, 5, 0.18)",
+        "elevation-2": "0 2px 8px rgba(5, 5, 5, 0.04), 0 4px 16px rgba(5, 5, 5, 0.06)",
+        "elevation-3": "0 4px 12px rgba(5, 5, 5, 0.06), 0 12px 32px rgba(5, 5, 5, 0.08)",
         premium: "0 24px 80px -42px rgba(5, 5, 5, 0.65)",
         soft: "0 18px 45px -30px rgba(5, 5, 5, 0.35)"
       },

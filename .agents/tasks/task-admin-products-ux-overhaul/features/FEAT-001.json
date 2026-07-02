@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Redesign admin products page with tab-based layout to eliminate cognitive overload, remove redundant editing surfaces, and add a proper import template with simplified columns (name, category, price, discountPrice, costPrice, gstRate, stock, unit, brand, image, description). Improve the ProductManagementForm with DB-backed category combobox, live validation, and better image UX. Improve the SpreadsheetManager with full import preview and separate template download.",
+  "status": "completed",
+  "steps": [
+    "1. Create a Tabs UI component at apps/web/components/ui/tabs.tsx using @radix-ui/react-tabs (already in package.json). Follow the shadcn pattern with Tabs, TabsList, TabsTrigger, TabsContent exports.",
+    "2. Rewrite apps/web/app/admin/products/page.tsx to use a tab-based layout with 3 tabs: 'Add Product' (ProductManagementForm), 'Inventory' (ProductSpreadsheetManager - default active tab), 'Import / Export' (new dedicated section). Remove AdminProductsClient from rendering. Fetch categories from DB and pass them as props.",
+    "3. Update apps/web/lib/admin-product-bulk.ts: Add a new constant `productTemplateColumns` with user-friendly columns: name, category, price, discountPrice, costPrice, gstRate, stock, unit, brand, image, description. Update `normalizeProductSheetRow` to also handle costPrice, gstRate, and brand from import files (map 'Cost Price', 'cost_price', 'GST', 'GST Rate', 'gst_rate', 'Brand' etc.).",
+    "4. Update apps/web/app/api/admin/products/export/route.ts: Add support for `?format=template` query param that returns an XLSX/CSV with just the template columns header row plus 2-3 example rows showing the expected format (not real data). Include costPrice, gstRate, brand in the full export too.",
+    "5. Update apps/web/components/admin/product-spreadsheet-manager.tsx: (a) Split into two parts - keep the spreadsheet editor but move import/export into a new dedicated component. (b) Remove the 8-row limit on import preview - show all rows in a scrollable container. (c) Change the 'Template' button to point to `?format=template`. (d) Add costPrice, gstRate, brand columns to the spreadsheet table.",
+    "6. Create a new component apps/web/components/admin/product-import-export.tsx for the 'Import / Export' tab: Contains clear 'Download Template' button (calls ?format=template), 'Export All Products' buttons (XLSX/CSV), and a full import wizard with file upload, preview of ALL rows (scrollable), error summary, and commit button. Include helpful instructions explaining the template format.",
+    "7. Update apps/web/components/admin/product-management-form.tsx: (a) Accept categories as a prop (array of {id, name}) instead of using the static import from lib/products.ts. (b) Replace the static <select> with a searchable combobox/datalist that shows DB categories. (c) Add client-side validation: price must be > discountPrice when both present, name >= 2 chars, description >= 10 chars, show inline error messages on blur. (d) Simplify the image section - keep the upload area but make it clearer with a preview thumbnail when URL is set.",
+    "8. Verify TypeScript compiles cleanly: run `npx tsc --noEmit` from apps/web. Fix any type errors."
+  ],
+  "acceptance_criteria": [
+    "The admin products page shows a clean tab-based layout with 'Add Product', 'Inventory', and 'Import / Export' tabs",
+    "The AdminProductsClient card grid is no longer rendered on the page (redundant editing surface removed)",
+    "The 'Download Template' button downloads an XLSX with headers + example rows (not real product data) including columns: name, category, price, discountPrice, costPrice, gstRate, stock, unit, brand, image, description",
+    "The full export includes costPrice, gstRate, and brand columns",
+    "The import normalizer handles costPrice, gstRate, and brand from uploaded files",
+    "The ProductManagementForm shows a searchable category selector backed by DB categories",
+    "The ProductManagementForm shows inline validation errors (price > discount, name length, description length)",
+    "The import preview shows all rows (no 8-row limit) in a scrollable container",
+    "TypeScript compiles cleanly with `npx tsc --noEmit`"
+  ],
+  "verification": [
+    "cd /projects/sandbox/revathysupermarket/apps/web && npx prisma generate && npx tsc --noEmit",
+    "cd /projects/sandbox/revathysupermarket/apps/web && npx next lint"
+  ],
+  "blocked_reason": null,
+  "findings": "TypeScript compiles cleanly. Lint passes with only pre-existing warnings (no-img-element in product-management-form is acceptable for a tiny thumbnail preview, others unrelated). The AdminProduct type export is preserved in admin-products-client.tsx for backward compatibility. The gstRate field was added to AdminProduct type since it was needed by the import preview and spreadsheet columns. Review fixes applied: (1) discountPrice >= price check added to validateProductSheetRow, (2) costPrice and discountPrice upsert now use != null pattern instead of || to handle zero values correctly, (3) isPending renamed to isRefreshing and used to show loading state in the commit button."
+}

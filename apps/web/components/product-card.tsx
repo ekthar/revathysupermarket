@@ -86,7 +86,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       whileHover={{ y: -3 }}
       transition={springPresets.snappy}
       className={cn(
-        "relative overflow-hidden rounded-lg bg-white shadow-elevation-2 dark:bg-neutral-900 product-card-animated",
+        "relative overflow-hidden rounded-lg bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated",
         outOfStock && "opacity-50"
       )}
     >

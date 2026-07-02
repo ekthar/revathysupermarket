@@ -202,6 +202,18 @@ export const featureFlags: Array<{
     enabled: true,
     config: { mode: "after_assignment" },
   },
+  {
+    id: "ff_whatsapp_enabled",
+    key: "whatsapp_enabled",
+    enabled: true,
+    config: Prisma.JsonNull,
+  },
+  {
+    id: "ff_sms_enabled",
+    key: "sms_enabled",
+    enabled: false,
+    config: Prisma.JsonNull,
+  },
 ];
 
 /**

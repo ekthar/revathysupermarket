@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { normalizeIndianPhone, createOtpToken, countRecentOtps, otpRateLimitPer10Min } from "@/lib/otp";
 import { sendOtpViaWhatsApp } from "@/lib/whatsapp";
+import { sendOtpViaSms } from "@/lib/sms";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 export async function POST(request: Request) {
   try {
@@ -46,20 +48,47 @@ export async function POST(request: Request) {
     // Generate and store OTP
     const { otp, expiresAt } = await createOtpToken(normalizedPhone);
 
-    // Send OTP via WhatsApp (best effort)
-    try {
-      await sendOtpViaWhatsApp(normalizedPhone, otp);
-    } catch (error) {
-      console.error("WhatsApp OTP send failed:", error);
-      // In development, log OTP to console
+    // Check feature flags for delivery channels
+    const whatsappEnabled = await isFeatureEnabled("whatsapp_enabled");
+    const smsEnabled = await isFeatureEnabled("sms_enabled");
+
+    const channels: string[] = [];
+
+    // Send OTP via WhatsApp if enabled
+    if (whatsappEnabled) {
+      try {
+        await sendOtpViaWhatsApp(normalizedPhone, otp);
+        channels.push("WhatsApp");
+      } catch (error) {
+        console.error("WhatsApp OTP send failed:", error);
+      }
+    }
+
+    // Send OTP via SMS if enabled
+    if (smsEnabled) {
+      try {
+        await sendOtpViaSms(normalizedPhone, otp);
+        channels.push("SMS");
+      } catch (error) {
+        console.error("SMS OTP send failed:", error);
+      }
+    }
+
+    // If neither channel is enabled, log OTP to console in development
+    if (!whatsappEnabled && !smsEnabled) {
       if (process.env.NODE_ENV !== "production") {
         console.log(`[DEV OTP] Phone: ${normalizedPhone}, OTP: ${otp}`);
       }
     }
 
+    const message =
+      channels.length > 0
+        ? `OTP sent via ${channels.join(" and ")}`
+        : "OTP generated";
+
     return NextResponse.json({
       success: true,
-      message: "OTP sent to your WhatsApp",
+      message,
       expiresAt: expiresAt.toISOString(),
       // Only expose OTP when explicitly opted in via a local-only env flag
       ...(process.env.EXPOSE_DEV_OTP === "true" ? { devOtp: otp } : {})

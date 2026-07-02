@@ -23,6 +23,17 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check for duplicate product name (case-insensitive)
+    const existingProduct = await prisma.product.findFirst({
+      where: { name: { equals: parsed.data.name.trim(), mode: "insensitive" } },
+    });
+    if (existingProduct) {
+      return NextResponse.json(
+        { error: `A product named "${existingProduct.name}" already exists.` },
+        { status: 409 }
+      );
+    }
+
     const image = normalizeImageUrl(parsed.data.image?.trim() || "") || PRODUCT_IMAGE_FALLBACK;
     if (!isAllowedProductImageUrl(image)) {
       return NextResponse.json(

@@ -3,9 +3,17 @@
 import { useState } from "react";
 import { AlertCircle, CheckCircle2, ChevronDown, MapPinned, Navigation } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import dynamic from "next/dynamic";
 import { useToast } from "@/components/toast-provider";
 import { STORE_COORDINATES } from "@/lib/constants";
-import { PinOnMapPicker } from "@/components/checkout/pin-on-map-picker";
+
+// Lazy-load the map picker: it pulls in maplibre-gl (~200KB gzipped), which
+// should not be in the checkout page's initial bundle. It only loads when the
+// user taps "Pin exact location on map".
+const PinOnMapPicker = dynamic(
+  () => import("@/components/checkout/pin-on-map-picker").then((m) => ({ default: m.PinOnMapPicker })),
+  { ssr: false }
+);
 
 type SavedAddress = {
   id: string;

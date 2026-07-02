@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { springs } from "@/lib/motion";
 
 // Page transition wrapper - wraps page content for enter/exit animations
 export function PageTransition({
@@ -16,12 +17,7 @@ export function PageTransition({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -8 }}
-      transition={{
-        type: "spring",
-        stiffness: 260,
-        damping: 25,
-        mass: 0.8
-      }}
+      transition={springs.enter}
     >
       {children}
     </motion.div>
@@ -42,11 +38,7 @@ export function SlideInPage({
       initial={{ opacity: 0, x: 40 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: -40 }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 28
-      }}
+      transition={springs.layout}
     >
       {children}
     </motion.div>
@@ -67,11 +59,7 @@ export function SlideUpOverlay({
       initial={{ opacity: 0, y: "100%" }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: "100%" }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 30
-      }}
+      transition={springs.gentle}
     >
       {children}
     </motion.div>

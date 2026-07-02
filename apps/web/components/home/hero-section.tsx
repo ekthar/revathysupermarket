@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronUp } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { springs } from "@/lib/motion";
 
 export function HeroSection({
   storeName,
@@ -43,7 +44,7 @@ export function HeroSection({
               <motion.h1
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.1 }}
+                transition={{ ...springs.gentle, delay: 0.1 }}
                 className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] tracking-tight text-neutral-900 dark:text-white"
               >
                 {storeName}
@@ -51,7 +52,7 @@ export function HeroSection({
               <motion.p
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ type: "spring", stiffness: 100, damping: 20, delay: 0.25 }}
+                transition={{ ...springs.gentle, delay: 0.25 }}
                 className="mt-5 text-lg text-neutral-600 dark:text-neutral-300 max-w-md leading-relaxed"
               >
                 Shop from thousands of farm-fresh fruits, vegetables, dairy and daily essentials at unbeatable prices.
@@ -59,7 +60,7 @@ export function HeroSection({
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 20, delay: 0.4 }}
+                transition={{ ...springs.enter, delay: 0.4 }}
               >
                 <Link
                   href={heroHref}
@@ -92,7 +93,7 @@ export function HeroSection({
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.8 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", stiffness: 200, damping: 15, delay: 0.6 }}
+                transition={{ ...springs.enter, delay: 0.6 }}
                 className="absolute top-6 right-6"
               >
                 <motion.div
@@ -116,7 +117,7 @@ export function HeroSection({
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
-                transition={{ type: "spring", stiffness: 300, damping: 15, delay: 0.9 }}
+                transition={{ ...springs.snappy, delay: 0.9 }}
                 className="absolute bottom-8 left-6"
               >
                 <motion.div

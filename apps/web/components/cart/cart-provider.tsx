@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+import { toast as sonnerToast } from "sonner";
 import type { CartItem, Product } from "@/lib/types";
 
 type CartActions = {
@@ -32,6 +33,13 @@ type CartStore = {
 const CartStoreContext = createContext<CartStore | null>(null);
 
 const CART_STORAGE_KEY = "msm-cart-v1";
+
+/** Joins product names into a natural list: "A", "A and B", "A, B and C". */
+function listNames(names: string[]): string {
+  if (names.length === 1) return names[0];
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
 
 // Cart state is optimistic by design - updates are instant in React state,
 // persisted to localStorage synchronously. No server-side sync required.
@@ -66,6 +74,77 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     listenersRef.current.forEach((listener) => listener());
   }, [hydrated, items]);
 
+  // Reconcile the cart against current server stock/price once after hydration.
+  // The cart is a client-side snapshot, so items can go out of stock or change
+  // price after they were added. We drop sold-out/removed items, clamp
+  // quantities to what's available, refresh prices, and apologise for any change.
+  useEffect(() => {
+    if (!hydrated) return;
+    const snapshot = itemsRef.current;
+    if (snapshot.length === 0) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/cart/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ids: snapshot.map((item) => item.id) }),
+        });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          items: Array<{ id: string; name: string; stock: number; price: number; discountPrice: number | null; isActive: boolean }>;
+        };
+        if (cancelled) return;
+
+        const fresh = new Map(data.items.map((p) => [p.id, p]));
+        const removed: string[] = [];
+        const reduced: string[] = [];
+
+        setItems((current) => {
+          const next: CartItem[] = [];
+          for (const item of current) {
+            const server = fresh.get(item.id);
+            // Missing, deactivated, or fully out of stock → drop it.
+            if (!server || !server.isActive || server.stock <= 0) {
+              removed.push(item.name);
+              continue;
+            }
+            let quantity = item.quantity;
+            if (quantity > server.stock) {
+              quantity = server.stock;
+              reduced.push(item.name);
+            }
+            next.push({
+              ...item,
+              quantity,
+              stock: server.stock,
+              price: server.price,
+              discountPrice: server.discountPrice ?? undefined,
+            });
+          }
+          return next;
+        });
+
+        if (removed.length > 0 || reduced.length > 0) {
+          const parts: string[] = [];
+          if (removed.length > 0) {
+            parts.push(`${listNames(removed)} ${removed.length > 1 ? "are" : "is"} now out of stock and ${removed.length > 1 ? "were" : "was"} removed`);
+          }
+          if (reduced.length > 0) {
+            parts.push(`we reduced the quantity of ${listNames(reduced)} to what's in stock`);
+          }
+          sonnerToast(`Sorry about that — ${parts.join(", and ")}.`);
+        }
+      } catch {
+        // Network/parse failure: leave the cart as-is; checkout re-validates server-side.
+      }
+    })();
+
+    return () => { cancelled = true; };
+    // Runs once per fresh hydration; intentionally not keyed on `items`.
+  }, [hydrated]);
+
   // Memoized store for granular per-item subscriptions
   const store = useMemo<CartStore>(() => ({
     getState: () => itemsRef.current,
@@ -77,14 +156,20 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   // Stable action references that never change identity
   const addItem = useCallback((product: Product, quantity = 1) => {
+    // Never add a sold-out product to the cart.
+    const max = product.stock ?? 0;
+    if (max <= 0) return;
     setItems((current) => {
       const existing = current.find((item) => item.id === product.id);
       if (existing) {
+        // Refresh the stored stock/price ceiling and clamp to available stock.
         return current.map((item) =>
-          item.id === product.id ? { ...item, quantity: item.quantity + quantity } : item
+          item.id === product.id
+            ? { ...item, stock: max, price: product.price, discountPrice: product.discountPrice, quantity: Math.min(item.quantity + quantity, max) }
+            : item
         );
       }
-      return [...current, { ...product, quantity }];
+      return [...current, { ...product, quantity: Math.min(quantity, max) }];
     });
   }, []);
 
@@ -92,12 +177,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setItems((current) => {
       const next = [...current];
       for (const product of productsToAdd) {
+        const max = product.stock ?? 0;
+        if (max <= 0) continue; // skip sold-out items (e.g. during reorder)
         const quantity = product.quantity ?? 1;
         const existingIndex = next.findIndex((item) => item.id === product.id);
         if (existingIndex >= 0) {
-          next[existingIndex] = { ...next[existingIndex], quantity: next[existingIndex].quantity + quantity };
+          next[existingIndex] = { ...next[existingIndex], stock: max, quantity: Math.min(next[existingIndex].quantity + quantity, max) };
         } else {
-          next.push({ ...product, quantity });
+          next.push({ ...product, quantity: Math.min(quantity, max) });
         }
       }
       return next;
@@ -113,7 +200,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       setItems((current) => current.filter((item) => item.id !== id));
       return;
     }
-    setItems((current) => current.map((item) => (item.id === id ? { ...item, quantity } : item)));
+    setItems((current) => current.map((item) => {
+      if (item.id !== id) return item;
+      // Clamp to the last-known available stock so a shopper can't exceed it.
+      const max = item.stock ?? Infinity;
+      return { ...item, quantity: Math.min(quantity, max) };
+    }));
   }, []);
 
   const clearCart = useCallback(() => {

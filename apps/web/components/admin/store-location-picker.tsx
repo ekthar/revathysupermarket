@@ -5,8 +5,28 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LocateFixed, MapPin, Navigation } from "lucide-react";
 
-/** Reliable free tile style (Carto Positron) */
-const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+/**
+ * Raster XYZ tile style (OpenStreetMap). Deliberately avoiding vector tile
+ * styles here — those require glyph/sprite fetches and worker-driven vector
+ * tile requests, which are far more fragile under a locked-down CSP. Raster
+ * tiles are plain PNG image requests with no extra dependencies.
+ */
+const MAP_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    osm: {
+      type: "raster",
+      tiles: [
+        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors"
+    }
+  },
+  layers: [{ id: "osm-tiles", type: "raster", source: "osm" }]
+};
 
 type LatLng = { latitude: number; longitude: number };
 

@@ -187,6 +187,25 @@ function createStoreMarkerEl(): HTMLDivElement {
   return el;
 }
 
+/** Dark raster basemap (CartoDB Dark Matter) — plain image tiles, no glyphs/sprites/vector workers required. */
+const DARK_RASTER_STYLE: maplibregl.StyleSpecification = {
+  version: 8,
+  sources: {
+    "carto-dark": {
+      type: "raster",
+      tiles: [
+        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+      ],
+      tileSize: 256,
+      attribution: "© OpenStreetMap contributors © CARTO"
+    }
+  },
+  layers: [{ id: "carto-dark-tiles", type: "raster", source: "carto-dark" }]
+};
+
 const EMPTY_ROUTE: GeoJSON.Feature<GeoJSON.LineString> = {
   type: "Feature",
   properties: {},
@@ -248,7 +267,11 @@ export function DeliveryMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "https://tiles.openfreemap.org/styles/dark",
+      // Raster tiles (CartoDB Dark Matter), not a vector style — avoids the
+      // glyph/sprite/vector-worker fetches that a vector style JSON needs,
+      // which are fragile under a locked-down CSP. Plain raster PNG tiles
+      // keep the same dark "cyberspace" look with far fewer moving parts.
+      style: DARK_RASTER_STYLE,
       center: [customerLocation.longitude, customerLocation.latitude],
       zoom: 14,
       attributionControl: false,

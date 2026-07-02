@@ -14,10 +14,13 @@ interface DeliveryMapProps {
   etaMinutes?: number | null;
 }
 
-// ─── Neon "cyberspace" palette ───
-const NEON_CYAN = "#22d3ee";
-const NEON_MAGENTA = "#f472b6";
-const NEON_AMBER = "#fbbf24";
+// ─── Brand-aligned palette ───
+// Matches the app's minimalist black + fresh-green design language.
+// Rider = secondary green, Customer = primary black, Store = lime-fresh accent.
+const BRAND_GREEN = "#22C55E";
+const BRAND_BLACK = "#050505";
+const BRAND_LIME = "#A7D129";
+const BRAND_GREEN_MUTED = "#16a34a";
 
 function haversineDistanceKm(
   a: { latitude: number; longitude: number },
@@ -68,20 +71,20 @@ function createRiderMarkerEl(etaMinutes?: number | null): HTMLDivElement {
   el.style.cursor = "pointer";
   el.style.position = "relative";
 
-  // ETA badge above the marker — neon cyan pill
+  // ETA badge above the marker — green pill matching brand
   if (etaMinutes != null && etaMinutes > 0) {
     const badge = document.createElement("div");
     badge.className = "rider-eta-badge";
     badge.style.cssText =
-      `position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:#0b1220;color:${NEON_CYAN};font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap;border:1px solid ${NEON_CYAN}66;box-shadow:0 0 10px ${NEON_CYAN}88;z-index:10;`;
+      `position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:white;color:${BRAND_GREEN_MUTED};font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap;border:1px solid ${BRAND_GREEN}44;box-shadow:0 2px 8px rgba(34,197,94,0.2);z-index:10;`;
     badge.textContent = `${etaMinutes} min`;
     el.appendChild(badge);
   }
 
-  // Outer neon glow ring (pulsing)
+  // Outer pulse ring
   const pulse = document.createElement("div");
   pulse.style.cssText =
-    `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;border:2px solid ${NEON_CYAN};box-shadow:0 0 16px ${NEON_CYAN}, 0 0 32px ${NEON_CYAN}55;animation:rider-pulse 1.8s ease-out infinite;pointer-events:none;z-index:0;`;
+    `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;border:2px solid ${BRAND_GREEN};box-shadow:0 0 12px ${BRAND_GREEN}66;animation:rider-pulse 1.8s ease-out infinite;pointer-events:none;z-index:0;`;
   el.appendChild(pulse);
 
   // Rotation wrapper for heading — scooter glyph on a glowing disc
@@ -95,15 +98,15 @@ function createRiderMarkerEl(etaMinutes?: number | null): HTMLDivElement {
   rotationWrapper.innerHTML = `<svg viewBox="0 0 52 52" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
     <defs>
       <filter id="rider-glow" x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="2.5" result="blur"/>
+        <feGaussianBlur stdDeviation="2" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <circle cx="26" cy="26" r="22" fill="#0b1220" stroke="${NEON_CYAN}" stroke-width="2" filter="url(#rider-glow)"/>
-    <g fill="none" stroke="${NEON_CYAN}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" filter="url(#rider-glow)">
+    <circle cx="26" cy="26" r="22" fill="white" stroke="${BRAND_GREEN}" stroke-width="2.5" filter="url(#rider-glow)"/>
+    <g fill="none" stroke="${BRAND_GREEN_MUTED}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <!-- scooter body -->
-      <circle cx="18" cy="34" r="4" fill="#0b1220"/>
-      <circle cx="34" cy="34" r="4" fill="#0b1220"/>
+      <circle cx="18" cy="34" r="4" fill="white"/>
+      <circle cx="34" cy="34" r="4" fill="white"/>
       <path d="M18 34 H26 L30 22 H36"/>
       <path d="M26 34 L30 26"/>
       <path d="M34 22 H38 M36 18 L38 22"/>
@@ -122,28 +125,28 @@ function createCustomerMarkerEl(lat: number, lng: number): HTMLDivElement {
   el.style.cursor = "pointer";
   el.style.position = "relative";
 
-  // Neon magenta rounded-square with home icon
+  // Brand black rounded-square with home icon
   el.innerHTML = `<svg viewBox="0 0 44 44" width="44" height="44" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <filter id="dest-glow" x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="2.2" result="blur"/>
+      <filter id="dest-glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="1.5" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <rect x="4" y="4" width="36" height="36" rx="10" fill="#0b1220" stroke="${NEON_MAGENTA}" stroke-width="2" filter="url(#dest-glow)"/>
-    <path d="M22 13 L30 19 V29 H26 V23 H18 V29 H14 V19 Z" fill="${NEON_MAGENTA}"/>
+    <rect x="4" y="4" width="36" height="36" rx="10" fill="${BRAND_BLACK}" stroke="${BRAND_BLACK}" stroke-width="2" filter="url(#dest-glow)"/>
+    <path d="M22 13 L30 19 V29 H26 V23 H18 V29 H14 V19 Z" fill="white"/>
   </svg>`;
 
-  // Magenta pulse ring
+  // Subtle pulse ring
   const pulse = document.createElement("div");
   pulse.style.cssText =
-    `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:${NEON_MAGENTA}22;box-shadow:0 0 18px ${NEON_MAGENTA}66;animation:map-pulse 2s ease-out infinite;pointer-events:none;z-index:-1;`;
+    `position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:56px;height:56px;border-radius:50%;background:${BRAND_BLACK}15;box-shadow:0 0 12px ${BRAND_BLACK}22;animation:map-pulse 2s ease-out infinite;pointer-events:none;z-index:-1;`;
   el.appendChild(pulse);
 
   // "Your Home" label below
   const label = document.createElement("div");
   label.style.cssText =
-    `position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:#0b1220;color:${NEON_MAGENTA};font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;white-space:nowrap;border:1px solid ${NEON_MAGENTA}55;box-shadow:0 0 8px ${NEON_MAGENTA}55;`;
+    `position:absolute;bottom:-20px;left:50%;transform:translateX(-50%);background:white;color:${BRAND_BLACK};font-size:10px;font-weight:800;padding:2px 7px;border-radius:6px;white-space:nowrap;border:1px solid #e5e7eb;box-shadow:0 2px 6px rgba(0,0,0,0.08);`;
   label.textContent = "Your Home";
   el.appendChild(label);
 
@@ -167,43 +170,44 @@ function createStoreMarkerEl(): HTMLDivElement {
   el.style.position = "relative";
   el.innerHTML = `<svg viewBox="0 0 26 26" width="26" height="26" xmlns="http://www.w3.org/2000/svg">
     <defs>
-      <filter id="store-glow" x="-60%" y="-60%" width="220%" height="220%">
-        <feGaussianBlur stdDeviation="1.6" result="blur"/>
+      <filter id="store-glow" x="-40%" y="-40%" width="180%" height="180%">
+        <feGaussianBlur stdDeviation="1.2" result="blur"/>
         <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
       </filter>
     </defs>
-    <circle cx="13" cy="13" r="11" fill="#0b1220" stroke="${NEON_AMBER}" stroke-width="1.75" filter="url(#store-glow)"/>
-    <path d="M7 11 L9 8 H17 L19 11 Z M7 11 V18 H19 V11" fill="none" stroke="${NEON_AMBER}" stroke-width="1.5" stroke-linejoin="round"/>
-    <rect x="11" y="14" width="4" height="4" fill="${NEON_AMBER}" rx="0.5"/>
+    <circle cx="13" cy="13" r="11" fill="white" stroke="${BRAND_LIME}" stroke-width="2" filter="url(#store-glow)"/>
+    <path d="M7 11 L9 8 H17 L19 11 Z M7 11 V18 H19 V11" fill="none" stroke="${BRAND_GREEN_MUTED}" stroke-width="1.5" stroke-linejoin="round"/>
+    <rect x="11" y="14" width="4" height="4" fill="${BRAND_GREEN_MUTED}" rx="0.5"/>
   </svg>`;
 
   // "Store" label below
   const label = document.createElement("div");
   label.style.cssText =
-    `position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);background:#0b1220;color:${NEON_AMBER};font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;white-space:nowrap;border:1px solid ${NEON_AMBER}55;`;
+    `position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);background:white;color:${BRAND_GREEN_MUTED};font-size:9px;font-weight:800;padding:1px 5px;border-radius:4px;white-space:nowrap;border:1px solid #e5e7eb;box-shadow:0 1px 4px rgba(0,0,0,0.06);`;
   label.textContent = "Store";
   el.appendChild(label);
 
   return el;
 }
 
-/** Dark raster basemap (CartoDB Dark Matter) — plain image tiles, no glyphs/sprites/vector workers required. */
-const DARK_RASTER_STYLE: maplibregl.StyleSpecification = {
+/** Light raster basemap (CartoDB Positron) — clean, minimal, brand-aligned.
+ *  Plain image tiles, no glyphs/sprites/vector workers required. */
+const MAP_STYLE: maplibregl.StyleSpecification = {
   version: 8,
   sources: {
-    "carto-dark": {
+    "carto-positron": {
       type: "raster",
       tiles: [
-        "https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png",
-        "https://d.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png"
+        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+        "https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
       ],
       tileSize: 256,
-      attribution: "© OpenStreetMap contributors © CARTO"
+      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
     }
   },
-  layers: [{ id: "carto-dark-tiles", type: "raster", source: "carto-dark" }]
+  layers: [{ id: "carto-tiles", type: "raster", source: "carto-positron" }]
 };
 
 const EMPTY_ROUTE: GeoJSON.Feature<GeoJSON.LineString> = {
@@ -223,7 +227,7 @@ function ensureRouteLayers(map: maplibregl.Map) {
       type: "line",
       source: "route-line",
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": NEON_CYAN, "line-width": 12, "line-opacity": 0.25, "line-blur": 6 },
+      paint: { "line-color": BRAND_GREEN, "line-width": 10, "line-opacity": 0.15, "line-blur": 5 },
     });
   }
   if (!map.getLayer("route-line-core")) {
@@ -232,7 +236,7 @@ function ensureRouteLayers(map: maplibregl.Map) {
       type: "line",
       source: "route-line",
       layout: { "line-cap": "round", "line-join": "round" },
-      paint: { "line-color": NEON_CYAN, "line-width": 3.5, "line-opacity": 0.95 },
+      paint: { "line-color": BRAND_GREEN, "line-width": 3.5, "line-opacity": 0.9 },
     });
   }
 }
@@ -267,11 +271,11 @@ export function DeliveryMap({
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      // Raster tiles (CartoDB Dark Matter), not a vector style — avoids the
+      // Raster tiles (CartoDB Positron), not a vector style — avoids the
       // glyph/sprite/vector-worker fetches that a vector style JSON needs,
       // which are fragile under a locked-down CSP. Plain raster PNG tiles
-      // keep the same dark "cyberspace" look with far fewer moving parts.
-      style: DARK_RASTER_STYLE,
+      // keep a clean, minimal look with far fewer moving parts.
+      style: MAP_STYLE,
       center: [customerLocation.longitude, customerLocation.latitude],
       zoom: 14,
       attributionControl: false,
@@ -303,8 +307,8 @@ export function DeliveryMap({
         100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
       }
       @keyframes rider-pulse {
-        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(1.7); opacity: 0; }
+        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
+        100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
       }
     `;
     document.head.appendChild(style);
@@ -335,7 +339,7 @@ export function DeliveryMap({
         const badge = document.createElement("div");
         badge.className = "rider-eta-badge";
         badge.style.cssText =
-          `position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:#0b1220;color:${NEON_CYAN};font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap;border:1px solid ${NEON_CYAN}66;box-shadow:0 0 10px ${NEON_CYAN}88;z-index:10;`;
+          `position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:white;color:${BRAND_GREEN_MUTED};font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap;border:1px solid ${BRAND_GREEN}44;box-shadow:0 2px 8px rgba(34,197,94,0.2);z-index:10;`;
         badge.textContent = `${etaMinutesProp} min`;
         el.appendChild(badge);
       }
@@ -454,25 +458,25 @@ export function DeliveryMap({
   const handleZoomOut = () => mapRef.current?.zoomOut({ duration: 200 });
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-cyan-500/20 ${className ?? ""}`}>
-      <div ref={containerRef} className="h-[320px] w-full bg-[#0b1220]" />
-      {/* Distance remaining overlay — neon HUD chip */}
+    <div className={`relative overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-soft ${className ?? ""}`}>
+      <div ref={containerRef} className="h-[320px] w-full bg-neutral-100" />
+      {/* Distance remaining overlay — clean minimal chip */}
       {distanceRemaining !== null && (
-        <div className="absolute top-3 left-3 rounded-xl border border-cyan-400/30 bg-[#0b1220]/90 px-3 py-1.5 shadow-[0_0_16px_rgba(34,211,238,0.35)] backdrop-blur-sm">
-          <p className="text-micro font-bold uppercase tracking-wide text-cyan-300/70">Distance</p>
-          <p className="text-body font-black text-cyan-300">
+        <div className="absolute top-3 left-3 rounded-xl border border-neutral-200 bg-white/95 px-3 py-1.5 shadow-sm backdrop-blur-sm">
+          <p className="text-micro font-bold uppercase tracking-wide text-neutral-400">Distance</p>
+          <p className="text-body font-black text-neutral-900">
             {distanceRemaining < 1 ? `${Math.round(distanceRemaining * 1000)} m` : `${distanceRemaining.toFixed(1)} km`}
           </p>
         </div>
       )}
-      {/* Subtle vignette for depth on the dark map */}
-      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_center,transparent_55%,rgba(0,0,0,0.35)_100%)]" />
-      {/* Custom zoom controls — neon HUD buttons */}
+      {/* Subtle vignette for depth */}
+      <div className="pointer-events-none absolute inset-0 rounded-2xl bg-[radial-gradient(ellipse_at_center,transparent_65%,rgba(0,0,0,0.06)_100%)]" />
+      {/* Custom zoom controls — minimal brand buttons */}
       <div className="absolute right-3 bottom-6 flex flex-col gap-1.5">
         <button
           type="button"
           onClick={handleZoomIn}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/30 bg-[#0b1220]/90 text-lg font-bold text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.25)] backdrop-blur-sm hover:bg-[#0b1220] active:scale-95 transition"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white/95 text-base font-bold text-neutral-700 shadow-sm backdrop-blur-sm hover:bg-white active:scale-95 transition"
           aria-label="Zoom in"
         >
           +
@@ -480,7 +484,7 @@ export function DeliveryMap({
         <button
           type="button"
           onClick={handleZoomOut}
-          className="flex h-10 w-10 items-center justify-center rounded-xl border border-cyan-400/30 bg-[#0b1220]/90 text-lg font-bold text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.25)] backdrop-blur-sm hover:bg-[#0b1220] active:scale-95 transition"
+          className="flex h-9 w-9 items-center justify-center rounded-xl border border-neutral-200 bg-white/95 text-base font-bold text-neutral-700 shadow-sm backdrop-blur-sm hover:bg-white active:scale-95 transition"
           aria-label="Zoom out"
         >
           -

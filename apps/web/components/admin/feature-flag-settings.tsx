@@ -8,6 +8,7 @@ import {
   MapPin, Pencil, RefreshCw, Moon, CalendarClock, Layers, Navigation, Timer,
   MessageCircle, Phone,
 } from "lucide-react";
+import { useToast } from "@/components/toast-provider";
 
 interface FlagData {
   key: string;
@@ -242,12 +243,7 @@ const CONFIG_HINTS: Record<string, Record<string, { type: "select" | "number" | 
 export function FeatureFlagSettings({ flags, deliveryPartners }: Props) {
   const [flagState, setFlagState] = useState<FlagData[]>(flags);
   const [saving, setSaving] = useState<string | null>(null);
-  const [toast, setToast] = useState<{ message: string; type: "success" | "error" } | null>(null);
-
-  function showToast(message: string, type: "success" | "error") {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  }
+  const { showToast } = useToast();
 
   async function updateFlag(key: string, updates: { enabled?: boolean; config?: Record<string, unknown> | null }) {
     setSaving(key);
@@ -314,13 +310,6 @@ export function FeatureFlagSettings({ flags, deliveryPartners }: Props) {
 
   return (
     <div className="space-y-8">
-      {/* Toast notification */}
-      {toast && (
-        <div className={`fixed top-4 right-4 z-50 rounded-xl px-4 py-3 text-sm font-bold shadow-lg ${toast.type === "success" ? "bg-emerald-500 text-white" : "bg-red-500 text-white"}`}>
-          {toast.message}
-        </div>
-      )}
-
       {FLAG_CATEGORIES.map((category) => (
         <div key={category.title} className="space-y-3">
           <h2 className="text-lg font-black text-slate-800 dark:text-slate-200 px-1">{category.title}</h2>

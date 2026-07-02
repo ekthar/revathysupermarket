@@ -5,7 +5,6 @@ import { auth, signOut } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 import { ChevronRight, CreditCard, Gift, Heart, HelpCircle, LogOut, MapPin, Package, Pencil, Phone, Settings, User, Wallet } from "lucide-react";
-import { ThemeToggleInline } from "@/components/theme-toggle";
 import { InstallAppButton } from "@/components/install-app-button";
 import { StoreInfoLinks } from "@/components/ui/store-info-links";
 
@@ -99,20 +98,6 @@ export default async function AccountPage() {
         <AccountRow href="/account/settings" icon={Settings} label="Preferences" detail="Notifications & theme" />
         {user?.phone && <AccountRow href="/account/edit" icon={Phone} label="Phone" detail={user.phone} />}
         <AccountRow href="/support" icon={HelpCircle} label="Help & Support" detail="Tickets & WhatsApp" />
-      </div>
-
-      {/* Appearance */}
-      <div className="overflow-hidden rounded-lg bg-white shadow-elevation-3 dark:bg-neutral-900">
-        <p className="px-4 pt-3.5 pb-1 text-caption font-semibold text-neutral-400 uppercase tracking-wide">Appearance</p>
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <div className="h-9 w-9 rounded-xl bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center shrink-0">
-              <Settings className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-            </div>
-            <p className="text-body font-medium text-neutral-800 dark:text-white">Dark Mode</p>
-          </div>
-          <ThemeToggleInline />
-        </div>
       </div>
 
       {/* Logout */}

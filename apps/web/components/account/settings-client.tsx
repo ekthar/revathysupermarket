@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Bell, MessageCircle, Megaphone, Package, Moon, Sun, TrendingDown, Gift, Truck } from "lucide-react";
-import { useTheme } from "next-themes";
+import { Bell, MessageCircle, Megaphone, Package, TrendingDown, Gift, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
 
@@ -22,7 +21,6 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
   const [settings, setSettings] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const { resolvedTheme, setTheme } = useTheme();
 
   async function toggleSetting(key: keyof typeof settings) {
     const newValue = !settings[key];
@@ -103,29 +101,6 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
           enabled={settings.deliveryAlerts}
           onToggle={() => toggleSetting("deliveryAlerts")}
         />
-      </div>
-
-      {/* Appearance Section */}
-      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
-        <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">Appearance</p>
-
-        <div className="px-4 py-4">
-          <p className="text-body font-medium text-neutral-800 dark:text-white mb-3">Theme</p>
-          <div className="grid grid-cols-2 gap-2">
-            <ThemeOption
-              icon={Sun}
-              label="Light"
-              active={resolvedTheme === "light"}
-              onClick={() => setTheme("light")}
-            />
-            <ThemeOption
-              icon={Moon}
-              label="Dark"
-              active={resolvedTheme === "dark"}
-              onClick={() => setTheme("dark")}
-            />
-          </div>
-        </div>
       </div>
 
       {/* About Section */}
@@ -210,31 +185,4 @@ function SettingToggle({
   );
 }
 
-function ThemeOption({
-  icon: Icon,
-  label,
-  active,
-  onClick
-}: {
-  icon: React.ElementType;
-  label: string;
-  active: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`flex flex-col items-center gap-1.5 py-3 rounded-xl transition-all press ${
-        active
-          ? "bg-primary/10 dark:bg-primary/20 border-2 border-primary"
-          : "bg-neutral-50 dark:bg-neutral-800 border-2 border-transparent"
-      }`}
-    >
-      <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-neutral-400"}`} />
-      <span className={`text-caption font-semibold ${active ? "text-primary" : "text-neutral-500 dark:text-neutral-400"}`}>
-        {label}
-      </span>
-    </button>
-  );
-}
+

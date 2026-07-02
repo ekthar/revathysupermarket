@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import {
-  Bike, CreditCard, ExternalLink,
+  Bike, CreditCard, ExternalLink, LogOut,
   MapPin, Package, ShieldCheck, Truck, Zap,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
 import { statusLabels } from "@/lib/constants";
@@ -247,6 +248,13 @@ function DeliveryAppShellInner({
             <h1 className="text-lg font-black text-white">{partnerName}</h1>
           </div>
           <Zap className="h-5 w-5 text-emerald-200" />
+          <button
+            onClick={() => signOut({ callbackUrl: "/login" })}
+            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur"
+            aria-label="Logout"
+          >
+            <LogOut className="h-5 w-5 text-white" />
+          </button>
         </div>
 
         {/* Stats Row */}

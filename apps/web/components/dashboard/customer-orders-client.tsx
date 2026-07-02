@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, Star, XCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { orderStatuses, statusLabels } from "@/lib/constants";
+import { calculateDistanceKm } from "@/lib/distance";
 import { readApiResponse } from "@/lib/client-api";
 import { cn, formatCurrency } from "@/lib/utils";
 import { DeliveryOtpCard } from "@/components/dashboard/delivery-otp-card";
@@ -44,16 +45,6 @@ type LiveOrderState = {
   status?: keyof typeof statusLabels;
   deliveryPartnerLocation?: { latitude: number; longitude: number; updatedAt?: string } | null;
 };
-
-function distanceKm(a: { latitude: number; longitude: number }, b: { latitude: number; longitude: number }) {
-  const radius = 6371;
-  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
-  const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;
-  const lat1 = (a.latitude * Math.PI) / 180;
-  const lat2 = (b.latitude * Math.PI) / 180;
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * radius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
 
 type EditItemSnapshot = { name: string; quantity: number; price: number };
 
@@ -495,7 +486,10 @@ function LiveTrackingPanel({ order, live }: { order: CustomerOrder; live?: LiveO
   if (!rider && !["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY"].includes(order.status)) return null;
 
   const destination = { latitude: order.latitude, longitude: order.longitude };
-  const distance = rider ? distanceKm(rider, destination) : null;
+  const distance = rider ? calculateDistanceKm(
+    { lat: rider.latitude, lng: rider.longitude },
+    { lat: destination.latitude, lng: destination.longitude }
+  ) : null;
   const etaMinutes = distance !== null ? Math.max(2, Math.ceil((distance / 18) * 60)) : null;
 
   return (

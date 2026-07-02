@@ -22,6 +22,17 @@ export function calculateDistanceKm(
   return 2 * EARTH_RADIUS_KM * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * Haversine distance in meters — used for proximity checks in delivery
+ * (e.g., "is the rider within 200m of the customer?").
+ */
+export function calculateDistanceMeters(
+  point1: { lat: number; lng: number },
+  point2: { lat: number; lng: number }
+) {
+  return calculateDistanceKm(point1, point2) * 1000;
+}
+
 export function isWithinDeliveryRadius(
   customer: { lat: number; lng: number },
   radiusKm: number,

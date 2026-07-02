@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 import { publishOrderStatusChanged, publishRiderLocation } from "@/lib/realtime/event-publisher";
+import { calculateDistanceMeters } from "@/lib/distance";
 
 /**
  * POST /api/delivery/arrive
@@ -39,7 +40,10 @@ export async function POST(req: Request) {
   }
 
   // Calculate distance to delivery address
-  const distanceM = haversineDistance(latitude, longitude, Number(order.latitude), Number(order.longitude));
+  const distanceM = calculateDistanceMeters(
+    { lat: latitude, lng: longitude },
+    { lat: Number(order.latitude), lng: Number(order.longitude) }
+  );
 
   if (distanceM > 100) {
     return NextResponse.json({ error: `Too far from delivery address (${Math.round(distanceM)}m). Must be within 100m.`, code: "TOO_FAR", distance: distanceM }, { status: 400 });
@@ -83,12 +87,4 @@ export async function POST(req: Request) {
   }).catch(() => null);
 
   return NextResponse.json({ success: true, status: "ARRIVING", distance: Math.round(distanceM) });
-}
-
-function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 6371000; // meters
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLon = ((lon2 - lon1) * Math.PI) / 180;
-  const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }

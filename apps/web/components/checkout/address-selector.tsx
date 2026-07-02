@@ -141,6 +141,7 @@ export function AddressSelector({
           <select
             defaultValue=""
             onChange={(event) => applySavedAddress(event.target.value)}
+            aria-label="Choose a saved delivery address"
             className="h-11 w-full rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
           >
             <option value="">Choose saved address</option>
@@ -177,6 +178,7 @@ export function AddressSelector({
             onClick={useCurrentLocation}
             disabled={locationState === "loading"}
             whileTap={{ scale: 0.9 }}
+            aria-label="Detect delivery location using GPS"
             className="shrink-0 rounded-full bg-black px-3 py-2 text-caption font-bold text-white"
           >
             {locationState === "loading" ? "Finding..." : locationOk ? "Refresh" : "Detect"}

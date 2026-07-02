@@ -90,8 +90,8 @@ export async function POST(request: Request) {
       success: true,
       message,
       expiresAt: expiresAt.toISOString(),
-      // Only expose OTP when explicitly opted in via a local-only env flag
-      ...(process.env.EXPOSE_DEV_OTP === "true" ? { devOtp: otp } : {})
+      // Only expose OTP in non-production environments with explicit opt-in
+      ...(process.env.EXPOSE_DEV_OTP === "true" && process.env.NODE_ENV !== "production" ? { devOtp: otp } : {})
     });
   } catch (error) {
     console.error("OTP send error:", error);

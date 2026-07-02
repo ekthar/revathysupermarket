@@ -3,12 +3,13 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Camera, Eye, EyeOff, ImagePlus, Megaphone, MessageCircle, Save, Search, Settings, Trash2, Upload } from "lucide-react";
+import { Camera, Eye, EyeOff, ImagePlus, MapPin, Megaphone, MessageCircle, Save, Search, Settings, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast-provider";
 import { readApiResponse } from "@/lib/client-api";
 import type { StoreSettings } from "@/lib/store-settings";
+import { StoreLocationPicker } from "./store-location-picker";
 
 type Banner = {
   id: string;
@@ -196,6 +197,27 @@ export function SettingsManagementClient({
             <Input value={form.googleMapsUrl} onChange={(event) => update("googleMapsUrl", event.target.value)} placeholder="e.g. https://maps.app.goo.gl/..." className="h-12 rounded-2xl" />
           </FieldGroup>
         </div>
+        {/* Store Location Map Picker */}
+        <div className="mt-2 flex items-center gap-3 border-t border-border pt-4 md:col-span-2">
+          <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10">
+            <MapPin className="h-5 w-5 text-primary" />
+          </span>
+          <div>
+            <h4 className="font-display text-xl font-black">Store Location</h4>
+            <p className="text-xs font-bold text-muted-foreground">Pin your store on the map. This is used for delivery distance calculations.</p>
+          </div>
+        </div>
+        <div className="md:col-span-2">
+          <StoreLocationPicker
+            latitude={form.storeLatitude}
+            longitude={form.storeLongitude}
+            onChange={({ latitude, longitude }) => {
+              update("storeLatitude", latitude);
+              update("storeLongitude", longitude);
+            }}
+          />
+        </div>
+
         <FieldGroup label="Instagram URL">
           <Input value={form.instagramUrl} onChange={(event) => update("instagramUrl", event.target.value)} placeholder="e.g. https://instagram.com/yourstore" className="h-12 rounded-2xl" />
         </FieldGroup>
@@ -691,7 +713,7 @@ function PincodeTagInput({ value, onChange }: { value: string; onChange: (value:
 
 const SETTINGS_SECTIONS = [
   { id: "logo", label: "Store Logo", keywords: ["logo", "image", "brand", "icon", "upload"] },
-  { id: "store", label: "Store Details", keywords: ["store", "name", "phone", "whatsapp", "address", "maps", "social", "instagram", "facebook"] },
+  { id: "store", label: "Store Details", keywords: ["store", "name", "phone", "whatsapp", "address", "maps", "social", "instagram", "facebook", "location", "map", "pin", "latitude", "longitude"] },
   { id: "gst", label: "GST Billing", keywords: ["gst", "gstin", "tax", "billing", "business"] },
   { id: "delivery", label: "Delivery & Orders", keywords: ["delivery", "radius", "fee", "minimum", "order", "estimate", "pincode"] },
   { id: "whatsapp", label: "WhatsApp API", keywords: ["whatsapp", "api", "template", "message", "webhook"] },

@@ -3,17 +3,80 @@ import ExcelJS from "exceljs";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { requireReportStaff } from "@/lib/authz";
-import { productSheetColumns } from "@/lib/admin-product-bulk";
+import { productSheetColumns, productTemplateColumns } from "@/lib/admin-product-bulk";
 
 function csvCell(value: unknown) {
   return `"${String(value ?? "").replace(/"/g, '""')}"`;
 }
 
+const templateExampleRows = [
+  {
+    name: "Robusta Banana",
+    category: "Fruits",
+    price: 72,
+    discountPrice: 64,
+    costPrice: 50,
+    gstRate: 5,
+    stock: 42,
+    unit: "1 kg",
+    brand: "Fresh Farm",
+    image: "",
+    description: "Sweet Kerala bananas selected for daily freshness."
+  },
+  {
+    name: "Milma Milk",
+    category: "Dairy",
+    price: 34,
+    discountPrice: "",
+    costPrice: 28,
+    gstRate: 0,
+    stock: 100,
+    unit: "500 ml",
+    brand: "Milma",
+    image: "",
+    description: "Fresh toned milk for daily use."
+  },
+  {
+    name: "Kerala Banana Chips",
+    category: "Snacks",
+    price: 95,
+    discountPrice: 88,
+    costPrice: 60,
+    gstRate: 12,
+    stock: 48,
+    unit: "200 g",
+    brand: "",
+    image: "",
+    description: "Crispy banana chips fried in coconut oil."
+  }
+];
+
 export async function GET(request: Request) {
   const session = await auth();
   const unauthorized = requireReportStaff(session);
   if (unauthorized) return unauthorized;
-  const format = new URL(request.url).searchParams.get("format") === "csv" ? "csv" : "xlsx";
+
+  const url = new URL(request.url);
+  const formatParam = url.searchParams.get("format") ?? "xlsx";
+
+  // Template mode: return headers + example rows (no real data)
+  if (formatParam === "template") {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Product Template");
+    sheet.columns = productTemplateColumns.map((col) => ({ header: col, key: col, width: 18 }));
+    sheet.addRows(templateExampleRows);
+    sheet.views = [{ state: "frozen", ySplit: 1 }];
+    sheet.getRow(1).font = { bold: true };
+    const buffer = await workbook.xlsx.writeBuffer();
+    return new Response(Buffer.from(buffer), {
+      headers: {
+        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "Content-Disposition": "attachment; filename=product-import-template.xlsx"
+      }
+    });
+  }
+
+  // Full export
   const products = await prisma.product.findMany({
     select: {
       id: true,
@@ -24,6 +87,9 @@ export async function GET(request: Request) {
       category: { select: { name: true } },
       price: true,
       discountPrice: true,
+      costPrice: true,
+      gstRate: true,
+      brand: true,
       stock: true,
       unit: true,
       image: true,
@@ -31,6 +97,7 @@ export async function GET(request: Request) {
     },
     orderBy: { createdAt: "desc" }
   });
+
   const rows = products.map((product) => ({
     id: product.id,
     slug: product.slug,
@@ -40,16 +107,19 @@ export async function GET(request: Request) {
     category: product.category.name,
     price: Number(product.price),
     discountPrice: product.discountPrice ? Number(product.discountPrice) : "",
+    costPrice: product.costPrice ? Number(product.costPrice) : "",
+    gstRate: product.gstRate != null ? Number(product.gstRate) : "",
+    brand: product.brand ?? "",
     stock: product.stock,
     unit: product.unit,
     image: product.image,
     description: product.description
   }));
 
-  if (format === "csv") {
+  if (formatParam === "csv") {
     const csv = [
       productSheetColumns.join(","),
-      ...rows.map((row) => productSheetColumns.map((column) => csvCell(row[column])).join(","))
+      ...rows.map((row) => productSheetColumns.map((column) => csvCell(row[column as keyof typeof row])).join(","))
     ].join("\n");
     return new Response(csv, {
       headers: {

@@ -20,6 +20,7 @@ export type AdminProduct = {
   price: number;
   discountPrice?: number;
   costPrice?: number;
+  gstRate?: number;
   brand?: string;
   stock: number;
   image?: string | null;

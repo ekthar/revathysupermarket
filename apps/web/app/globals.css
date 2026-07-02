@@ -633,7 +633,7 @@ html[data-keyboard-open] .pb-safe {
 }
 .product-card-animated:hover {
   transform: translateY(-3px) translateZ(0);
-  box-shadow: 0 12px 32px -8px rgba(0,0,0,0.12);
+  box-shadow: 0 2px 8px -4px rgba(0,0,0,0.06);
 }
 .product-card-animated:active {
   transform: scale(0.97) translateZ(0);

@@ -86,7 +86,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       whileHover={{ y: -3 }}
       transition={springPresets.snappy}
       className={cn(
-        "relative overflow-hidden rounded-lg bg-white shadow-elevation-2 dark:bg-neutral-900 product-card-animated",
+        "relative overflow-hidden rounded-lg bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated",
         outOfStock && "opacity-50"
       )}
     >
@@ -203,7 +203,7 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
           aria-label={`Add ${product.name} to cart`}
           className={variant === "horizontal"
             ? "flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
-            : "flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 shadow-elevation-3 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+            : "flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
           }
         >
           <Plus className="h-4 w-4" />

@@ -1,6 +1,11 @@
 import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import "./globals.css";
+// MapLibre stylesheet must be globally available. The map components are
+// lazy-loaded (ssr:false), and CSS side-effect imports inside dynamically-
+// loaded client components aren't reliably injected by the App Router —
+// a missing stylesheet leaves the GL canvas unsized (renders blank).
+import "maplibre-gl/dist/maplibre-gl.css";
 import { auth } from "@/auth";
 import { Header } from "@/components/header";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";

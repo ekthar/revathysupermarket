@@ -300,19 +300,6 @@ export function DeliveryMap({
 
     map.on("load", () => ensureRouteLayers(map));
 
-    const style = document.createElement("style");
-    style.textContent = `
-      @keyframes map-pulse {
-        0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
-        100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
-      }
-      @keyframes rider-pulse {
-        0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
-        100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
-      }
-    `;
-    document.head.appendChild(style);
-
     return () => {
       if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
       routeAbortRef.current?.abort();
@@ -321,7 +308,6 @@ export function DeliveryMap({
       riderMarkerRef.current = null;
       customerMarkerRef.current = null;
       storeMarkerRef.current = null;
-      style.remove();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

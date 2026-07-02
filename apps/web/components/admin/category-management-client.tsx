@@ -19,6 +19,12 @@ type Category = {
   productCount: number;
 };
 
+/** Inline field error message — matches the field-error class in globals.css */
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1 text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">{message}</p>;
+}
+
 export function CategoryManagementClient({ categories }: { categories: Category[] }) {
   const router = useRouter();
   const { showToast } = useToast();
@@ -29,12 +35,25 @@ export function CategoryManagementClient({ categories }: { categories: Category[
 
   // Create form
   const [createForm, setCreateForm] = useState({ name: "", description: "", image: "", sortOrder: "0" });
+  const [createErrors, setCreateErrors] = useState<{ name?: string }>({});
   // Edit form
   const [editForm, setEditForm] = useState({ name: "", description: "", image: "", sortOrder: "0" });
+  const [editErrors, setEditErrors] = useState<{ name?: string }>({});
+
+  /** Validate a category name field on blur */
+  function validateName(value: string): string | undefined {
+    const trimmed = value.trim();
+    if (!trimmed) return "Name is required";
+    if (trimmed.length < 2) return "Name must be at least 2 characters";
+    return undefined;
+  }
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
-    if (!createForm.name.trim()) { showToast("Name is required", "error"); return; }
+    const nameErr = validateName(createForm.name);
+    if (nameErr) { setCreateErrors({ name: nameErr }); return; }
+    setCreateErrors({});
+
     const res = await fetch("/api/admin/categories", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -66,6 +85,10 @@ export function CategoryManagementClient({ categories }: { categories: Category[
   async function handleEdit(e: React.FormEvent) {
     e.preventDefault();
     if (!editingId) return;
+    const nameErr = validateName(editForm.name);
+    if (nameErr) { setEditErrors({ name: nameErr }); return; }
+    setEditErrors({});
+
     const res = await fetch(`/api/admin/categories/${editingId}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
@@ -121,13 +144,17 @@ export function CategoryManagementClient({ categories }: { categories: Category[
             </button>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
-            <Input
-              value={createForm.name}
-              onChange={(e) => setCreateForm((f) => ({ ...f, name: e.target.value }))}
-              placeholder="Category name *"
-              required
-              className="h-12 rounded-2xl"
-            />
+            <div>
+              <Input
+                value={createForm.name}
+                onChange={(e) => { setCreateForm((f) => ({ ...f, name: e.target.value })); if (createErrors.name) setCreateErrors({}); }}
+                onBlur={(e) => { const err = validateName(e.target.value); setCreateErrors(err ? { name: err } : {}); }}
+                placeholder="Category name *"
+                aria-invalid={!!createErrors.name}
+                className={`h-12 rounded-2xl ${createErrors.name ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+              />
+              <FieldError message={createErrors.name} />
+            </div>
             <Input
               value={createForm.description}
               onChange={(e) => setCreateForm((f) => ({ ...f, description: e.target.value }))}
@@ -170,13 +197,17 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                 {editingId === cat.id ? (
                   <form onSubmit={handleEdit} className="space-y-3">
                     <div className="grid gap-3 md:grid-cols-2">
-                      <Input
-                        value={editForm.name}
-                        onChange={(e) => setEditForm((f) => ({ ...f, name: e.target.value }))}
-                        placeholder="Category name"
-                        required
-                        className="h-11 rounded-2xl"
-                      />
+                      <div>
+                        <Input
+                          value={editForm.name}
+                          onChange={(e) => { setEditForm((f) => ({ ...f, name: e.target.value })); if (editErrors.name) setEditErrors({}); }}
+                          onBlur={(e) => { const err = validateName(e.target.value); setEditErrors(err ? { name: err } : {}); }}
+                          placeholder="Category name"
+                          aria-invalid={!!editErrors.name}
+                          className={`h-11 rounded-2xl ${editErrors.name ? "border-red-400 focus-visible:ring-red-400" : ""}`}
+                        />
+                        <FieldError message={editErrors.name} />
+                      </div>
                       <Input
                         value={editForm.description}
                         onChange={(e) => setEditForm((f) => ({ ...f, description: e.target.value }))}

@@ -1,7 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import { unstable_cache } from "next/cache";
-import { ChevronRight, ChevronUp, Sparkles, Zap } from "lucide-react";
+import { ChevronRight, Zap } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
@@ -100,8 +99,6 @@ export default async function HomePage() {
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);
   const offers = allProducts.filter((p) => p.discountPrice).slice(0, 8);
-  const featured = allProducts.filter((p) => p.isFeatured).slice(0, 8);
-  const freshPicks = [...allProducts].sort(() => Math.random() - 0.5).slice(0, 10);
 
   const heroImage = banner?.image || "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop";
   const heroTitle = banner?.title || "Fresh Groceries Delivered Fast";
@@ -141,11 +138,11 @@ export default async function HomePage() {
         allProducts={allProducts}
       />
 
-      {/* Weekly Best Selling Items */}
+      {/* Trending This Week — top picks by popularity */}
       <div className="cv-auto">
         <AnimatedProductSection
-          title="Weekly Best Selling Items"
-          subtitle="Top picks loved by customers this week"
+          title="Trending This Week"
+          subtitle="Top picks loved by customers"
           products={trending.slice(0, 8)}
           showCategoryPills
           categoryPills={["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Bakery", "Meat & Fish", "Beverages"]}
@@ -153,12 +150,12 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* On Sale Today - items with active discounts */}
+      {/* On Sale Today - items with active discounts (only if there are offers) */}
       {offers.length > 0 && (
         <div className="cv-auto">
           <AnimatedProductSection
             title="On Sale Today"
-            subtitle="Limited-time discounts you do not want to miss"
+            subtitle="Limited-time discounts you don't want to miss"
             icon={<Zap className="h-5 w-5 text-orange-500" />}
             products={offers}
             layout="grid"
@@ -166,79 +163,22 @@ export default async function HomePage() {
         </div>
       )}
 
-      {/* Explore More - discover new products */}
-      <div className="cv-auto">
-        <AnimatedProductSection
-          title="Explore More"
-          subtitle="Discover something new from our collection"
-          icon={<Sparkles className="h-5 w-5 text-yellow-500" />}
-          products={freshPicks}
-          layout="mixed"
-        />
-      </div>
-
-      {/* All Products with side banner - Desktop */}
-      <section className="hidden md:block max-w-7xl mx-auto px-6 lg:px-8 pt-12">
-        <div className="grid lg:grid-cols-[1fr_380px] gap-6">
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="section-title">All Products</h2>
-              <Link href="/products" className="text-sm font-semibold text-primary flex items-center gap-1">
-                View all {allProducts.length} products <ChevronRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <AnimatedProductSection
-              title=""
-              products={allProducts.slice(0, 12)}
-              layout="grid"
-              hideHeader
-            />
-          </div>
-
-          {/* Side banner */}
-          <div className="hidden lg:block">
-            <div className="sticky top-[90px] rounded-3xl overflow-hidden aspect-[3/4] relative">
-              <Image
-                src="https://images.unsplash.com/photo-1610348725531-843dff563e2c?w=600&h=800&fit=crop"
-                alt="Fresh Fruits & Vegetables"
-                fill
-                sizes="380px"
-                className="object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-6">
-                <h3 className="font-display text-2xl font-black text-white leading-tight">
-                  Fresh Fruits & Vegetables. Delivered Daily.
-                </h3>
-                <p className="mt-2 text-sm text-white/80">
-                  We deliver everything you need straight to your door.
-                </p>
-                <Link href="/products?category=Fruits" className="inline-flex items-center gap-2 mt-4 px-5 py-2.5 bg-white rounded-full text-sm font-bold text-neutral-900 press">
-                  Shop Fresh Produce
-                  <ChevronUp className="h-3.5 w-3.5 rotate-90" />
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Mobile: All products grid */}
-      <section className="px-4 pt-6 pb-6 md:hidden">
-        <div className="flex items-center justify-between">
-          <h2 className="text-title font-bold text-neutral-900 dark:text-white">All Products</h2>
-          <Link href="/products" className="flex items-center text-caption font-medium text-primary">
-            See all <ChevronRight className="h-3.5 w-3.5" />
+      {/* All Products — single responsive grid for both mobile and desktop */}
+      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-8 md:pt-12 pb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="section-title text-lg md:text-2xl">All Products</h2>
+          <Link href="/products" className="text-sm font-semibold text-primary flex items-center gap-1">
+            View all {allProducts.length} products <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-2 mt-3">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
           {allProducts.slice(0, 12).map((p) => (
             <ProductCard key={p.id} product={p} />
           ))}
         </div>
         {allProducts.length > 12 && (
-          <Link href="/products" className="mt-4 flex h-11 items-center justify-center rounded-xl border border-neutral-200 text-body font-semibold text-primary press">
-            View all {allProducts.length} products
+          <Link href="/products" className="mt-6 flex h-11 items-center justify-center rounded-2xl border border-neutral-200 dark:border-neutral-800 text-body font-semibold text-primary press hover:bg-neutral-50 dark:hover:bg-neutral-900 transition">
+            Browse all {allProducts.length} products
           </Link>
         )}
       </section>

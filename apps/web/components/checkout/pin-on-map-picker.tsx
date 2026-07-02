@@ -6,6 +6,9 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import { LocateFixed, MapPin, X } from "lucide-react";
 import { motion } from "framer-motion";
 
+/** Reliable free tile style (Carto Positron) */
+const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+
 type LatLng = { latitude: number; longitude: number };
 
 interface PinOnMapPickerProps {
@@ -29,12 +32,14 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
   const mapRef = useRef<maplibregl.Map | null>(null);
   const [center, setCenter] = useState<LatLng>(initial);
   const [locating, setLocating] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
+  const [mapError, setMapError] = useState(false);
 
   useEffect(() => {
     if (!containerRef.current) return;
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      style: MAP_STYLE,
       center: [initial.longitude, initial.latitude],
       zoom: 17,
       attributionControl: false,
@@ -46,7 +51,13 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
       setCenter({ latitude: c.lat, longitude: c.lng });
     };
     map.on("move", syncCenter);
-    map.on("load", syncCenter);
+    map.on("load", () => {
+      syncCenter();
+      setMapLoaded(true);
+    });
+    map.on("error", () => {
+      setMapError(true);
+    });
 
     return () => {
       map.off("move", syncCenter);
@@ -97,11 +108,36 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
       </div>
 
       {/* Map */}
-      <div className="relative flex-1">
+      <div className="relative flex-1" style={{ minHeight: "300px" }}>
         <div ref={containerRef} className="absolute inset-0" />
 
+        {/* Loading overlay */}
+        {!mapLoaded && !mapError && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
+            <div className="flex flex-col items-center gap-2">
+              <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
+              <p className="text-xs font-bold text-muted-foreground">Loading map...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {mapError && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
+            <div className="flex flex-col items-center gap-2 px-6 text-center">
+              <MapPin className="h-8 w-8 text-neutral-400" />
+              <p className="text-sm font-bold text-neutral-600 dark:text-neutral-400">
+                Could not load map tiles
+              </p>
+              <p className="text-xs text-neutral-500">
+                You can still confirm this location using coordinates below
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Fixed center pin (screen-anchored, not a real map marker) */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-full">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-full">
           <div className="flex flex-col items-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-black shadow-lg">
               <MapPin className="h-6 w-6 text-white" fill="white" />
@@ -115,7 +151,7 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
           type="button"
           onClick={useMyLocation}
           disabled={locating}
-          className="absolute bottom-24 right-4 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg dark:bg-neutral-900 disabled:opacity-50 press"
+          className="absolute bottom-24 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg dark:bg-neutral-900 disabled:opacity-50 press"
           aria-label="Use my current location"
         >
           <LocateFixed className={`h-5 w-5 text-primary ${locating ? "animate-pulse" : ""}`} />

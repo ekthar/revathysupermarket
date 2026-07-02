@@ -5,6 +5,9 @@ import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LocateFixed, MapPin, Navigation } from "lucide-react";
 
+/** Reliable free tile style (Carto Positron) */
+const MAP_STYLE = "https://basemaps.cartocdn.com/gl/positron-gl-style/style.json";
+
 type LatLng = { latitude: number; longitude: number };
 
 interface StoreLocationPickerProps {
@@ -15,7 +18,7 @@ interface StoreLocationPickerProps {
 
 /**
  * Premium inline map picker for admin settings.
- * Uses MapLibre GL with OpenFreeMap tiles - same center-pin UX as the checkout picker,
+ * Uses MapLibre GL with Carto Positron tiles - same center-pin UX as the checkout picker,
  * but embedded in a card rather than full-screen.
  */
 export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLocationPickerProps) {
@@ -34,7 +37,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: "https://tiles.openfreemap.org/styles/liberty",
+      style: MAP_STYLE,
       center: [longitude, latitude],
       zoom: 16,
       attributionControl: false,

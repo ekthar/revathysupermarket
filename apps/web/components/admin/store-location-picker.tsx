@@ -1,32 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { LocateFixed, MapPin, Navigation } from "lucide-react";
-
-/**
- * Raster XYZ tile style (OpenStreetMap). Deliberately avoiding vector tile
- * styles here — those require glyph/sprite fetches and worker-driven vector
- * tile requests, which are far more fragile under a locked-down CSP. Raster
- * tiles are plain PNG image requests with no extra dependencies.
- */
-const MAP_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    osm: {
-      type: "raster",
-      tiles: [
-        "https://a.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://b.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "https://c.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      ],
-      tileSize: 256,
-      attribution: "© OpenStreetMap contributors"
-    }
-  },
-  layers: [{ id: "osm-tiles", type: "raster", source: "osm" }]
-};
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -37,13 +12,14 @@ interface StoreLocationPickerProps {
 }
 
 /**
- * Premium inline map picker for admin settings.
- * Uses MapLibre GL with Carto Positron tiles - same center-pin UX as the checkout picker,
+ * Premium inline map picker for admin settings using Leaflet.
+ * Uses Carto Positron tiles - same center-pin UX as the checkout picker,
  * but embedded in a card rather than full-screen.
  */
 export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLocationPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  const mapRef = useRef<any>(null);
+  const LRef = useRef<any>(null);
   const [center, setCenter] = useState<LatLng>({ latitude, longitude });
   const [locating, setLocating] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -52,44 +28,65 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
 
+  // Initialize Leaflet map
   useEffect(() => {
     if (!containerRef.current) return;
 
-    const map = new maplibregl.Map({
-      container: containerRef.current,
-      style: MAP_STYLE,
-      center: [longitude, latitude],
-      zoom: 16,
-      attributionControl: false,
-    });
+    let active = true;
+    let map: any = null;
 
-    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "bottom-right");
+    const init = async () => {
+      const L = (await import("leaflet")).default;
+      if (!active) return;
+      LRef.current = L;
 
-    mapRef.current = map;
+      // Initialize map
+      map = L.map(containerRef.current!, {
+        center: [latitude, longitude],
+        zoom: 16,
+        zoomControl: false,
+        attributionControl: false,
+      });
+      mapRef.current = map;
 
-    const syncCenter = () => {
-      const c = map.getCenter();
-      const newCenter = { latitude: c.lat, longitude: c.lng };
-      setCenter(newCenter);
-    };
+      // Add custom Leaflet zoom control on bottom-right
+      L.control.zoom({ position: "bottomright" }).addTo(map);
 
-    const onMoveEnd = () => {
-      const c = map.getCenter();
-      onChangeRef.current({ latitude: c.lat, longitude: c.lng });
-    };
+      // Add CartoDB Positron Light raster basemap tiles
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+      }).addTo(map);
 
-    map.on("move", syncCenter);
-    map.on("moveend", onMoveEnd);
-    map.on("load", () => {
+      const syncCenter = () => {
+        const c = map.getCenter();
+        const newCenter = { latitude: c.lat, longitude: c.lng };
+        setCenter(newCenter);
+      };
+
+      const onMoveEnd = () => {
+        const c = map.getCenter();
+        onChangeRef.current({ latitude: c.lat, longitude: c.lng });
+      };
+
+      map.on("move", syncCenter);
+      map.on("moveend", onMoveEnd);
+
       syncCenter();
       setMapLoaded(true);
-    });
+    };
+
+    init();
 
     return () => {
-      map.off("move", syncCenter);
-      map.off("moveend", onMoveEnd);
-      map.remove();
-      mapRef.current = null;
+      active = false;
+      if (map) {
+        map.off("move");
+        map.off("moveend");
+        map.remove();
+        mapRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -99,11 +96,11 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        mapRef.current?.flyTo({
-          center: [position.coords.longitude, position.coords.latitude],
-          zoom: 17,
-          duration: 1000,
-        });
+        mapRef.current?.flyTo(
+          [position.coords.latitude, position.coords.longitude],
+          17,
+          { animate: true, duration: 1.0 }
+        );
         setLocating(false);
       },
       () => {
@@ -112,15 +109,6 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
       { enableHighAccuracy: true, timeout: 12000 }
     );
   }, []);
-
-  const recenterToStore = useCallback(() => {
-    if (!mapRef.current) return;
-    mapRef.current.flyTo({
-      center: [longitude, latitude],
-      zoom: 16,
-      duration: 800,
-    });
-  }, [latitude, longitude]);
 
   return (
     <div className="space-y-3">
@@ -135,7 +123,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
 
         {/* Loading overlay */}
         {!mapLoaded && (
-          <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
+          <div className="absolute inset-0 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900 z-[400]">
             <div className="flex flex-col items-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
               <p className="text-xs font-bold text-muted-foreground">Loading map...</p>
@@ -144,7 +132,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
         )}
 
         {/* Fixed center pin (screen-anchored) */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-full">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-[400] -translate-x-1/2 -translate-y-full">
           <div className="flex flex-col items-center">
             <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary shadow-xl ring-4 ring-primary/20">
               <MapPin className="h-6 w-6 text-white" fill="white" />
@@ -154,7 +142,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
         </div>
 
         {/* Top-left badge */}
-        <div className="absolute left-3 top-3 z-10 flex items-center gap-1.5 rounded-xl bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-sm dark:bg-neutral-900/95">
+        <div className="absolute left-3 top-3 z-[400] flex items-center gap-1.5 rounded-xl bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-sm dark:bg-neutral-900/95">
           <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-300">
             Drag map to reposition
@@ -166,7 +154,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
           type="button"
           onClick={useMyLocation}
           disabled={locating}
-          className="absolute bottom-14 right-3 z-10 flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 dark:bg-neutral-900"
+          className="absolute bottom-14 right-3 z-[400] flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 dark:bg-neutral-900"
           aria-label="Use current GPS location"
           title="Use current GPS location"
         >

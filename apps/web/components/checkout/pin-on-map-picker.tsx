@@ -1,40 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import maplibregl from "maplibre-gl";
-import "maplibre-gl/dist/maplibre-gl.css";
 import { LocateFixed, MapPin, X } from "lucide-react";
 import { motion } from "framer-motion";
-
-/**
- * Raster XYZ tile style (CartoDB Positron). Raster tiles are plain PNG image
- * requests with no glyph/sprite/vector-worker dependencies, so they stay
- * reliable under a locked-down CSP.
- *
- * We use CartoDB rather than raw OpenStreetMap tiles: OSM's tile usage policy
- * throttles/blocks bulk and commercial traffic (a common cause of "map won't
- * load" in production), whereas the Carto basemap CDN is built for embedding.
- * It's also the same basemap the live tracking map uses, so the app has one
- * consistent, minimal map look.
- */
-const MAP_STYLE: maplibregl.StyleSpecification = {
-  version: 8,
-  sources: {
-    carto: {
-      type: "raster",
-      tiles: [
-        "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-        "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-        "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
-        "https://d.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"
-      ],
-      tileSize: 256,
-      attribution: "&copy; OpenStreetMap contributors &copy; CARTO"
-    }
-  },
-  layers: [{ id: "carto-tiles", type: "raster", source: "carto" }]
-};
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -46,23 +15,18 @@ interface PinOnMapPickerProps {
 }
 
 /**
- * Swiggy-style "pin your exact location" picker.
+ * Swiggy-style "pin your exact location" picker using Leaflet.
  *
  * A full-screen map with a fixed center pin — the user drags/pans the MAP
- * underneath a pin that stays visually anchored to the screen center (the
- * standard delivery-app UX, avoids a draggable-marker hit-testing problem on
- * small screens). "Use my current location" recenters via GPS. Confirming
- * returns the coordinates at screen center for the caller to reverse-geocode.
+ * underneath a pin that stays visually anchored to the screen center.
  */
 export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const mapRef = useRef<maplibregl.Map | null>(null);
+  const mapRef = useRef<any>(null);
   const [center, setCenter] = useState<LatLng>(initial);
   const [locating, setLocating] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
-  const [mapError, setMapError] = useState(false);
   const [portalMounted, setPortalMounted] = useState(false);
-  const mapInitialized = useRef(false);
 
   // Gate portal rendering to avoid SSR/hydration mismatch (document.body
   // doesn't exist during SSR). Also lock body scroll while the picker is open.
@@ -75,71 +39,83 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
     };
   }, []);
 
-  // Initialize the map once the container DOM node is available.
-  // Uses a callback ref to guarantee the node exists when we init.
-  const initMap = useCallback((node: HTMLDivElement | null) => {
-    if (!node || mapInitialized.current) return;
-    mapInitialized.current = true;
-    containerRef.current = node;
+  // Initialize the map once the container and Leaflet are available.
+  useEffect(() => {
+    if (!portalMounted) return;
 
-    const map = new maplibregl.Map({
-      container: node,
-      style: MAP_STYLE,
-      center: [initial.longitude, initial.latitude],
-      zoom: 17,
-      attributionControl: false,
-    });
-    mapRef.current = map;
+    let active = true;
+    let map: any = null;
+    let resizeObserver: ResizeObserver | null = null;
+    let settleTimer: number | null = null;
 
-    const syncCenter = () => {
-      const c = map.getCenter();
-      setCenter({ latitude: c.lat, longitude: c.lng });
-    };
-    map.on("move", syncCenter);
-    map.on("load", () => {
+    const initMap = async () => {
+      const L = (await import("leaflet")).default;
+      if (!active) return;
+      if (!containerRef.current) return;
+
+      // Initialize map
+      map = L.map(containerRef.current, {
+        center: [initial.latitude, initial.longitude],
+        zoom: 17,
+        zoomControl: false,
+        attributionControl: false,
+      });
+      mapRef.current = map;
+
+      // Add CartoDB Positron Light raster tiles
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
+        subdomains: 'abcd',
+        maxZoom: 20
+      }).addTo(map);
+
+      const syncCenter = () => {
+        const c = map.getCenter();
+        setCenter({ latitude: c.lat, longitude: c.lng });
+      };
+
+      map.on("move", syncCenter);
+      
+      // Leaflet is ready to render tiles immediately
       syncCenter();
       setMapLoaded(true);
-      // Resize after load guarantees the GL canvas fills the real box.
-      map.resize();
-    });
-    map.on("error", () => {
-      setMapError(true);
-    });
 
-    // Keep the GL canvas in sync with the container box. The observer fires
-    // once the flex/anim layout gives the container its final dimensions,
-    // and again on rotation or keyboard show/hide.
-    let raf = 0;
-    const resizeObserver = new ResizeObserver(() => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => mapRef.current?.resize());
-    });
-    resizeObserver.observe(node);
-    // Explicit resize after the modal entrance animation settles.
-    window.setTimeout(() => mapRef.current?.resize(), 350);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+      // Handle container resizing
+      resizeObserver = new ResizeObserver(() => {
+        map?.invalidateSize();
+      });
+      resizeObserver.observe(containerRef.current);
 
-  // Cleanup map on unmount
-  useEffect(() => {
+      // Settle size after modal animation opens
+      settleTimer = window.setTimeout(() => {
+        map?.invalidateSize();
+      }, 350);
+    };
+
+    initMap();
+
     return () => {
-      if (mapRef.current) {
-        mapRef.current.remove();
+      active = false;
+      if (settleTimer) window.clearTimeout(settleTimer);
+      if (resizeObserver) resizeObserver.disconnect();
+      if (map) {
+        map.remove();
         mapRef.current = null;
       }
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [portalMounted]);
 
   function useMyLocation() {
     if (!navigator.geolocation || !mapRef.current) return;
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        mapRef.current?.flyTo({
-          center: [position.coords.longitude, position.coords.latitude],
-          zoom: 17,
-          duration: 800,
-        });
+        mapRef.current?.flyTo(
+          [position.coords.latitude, position.coords.longitude],
+          17,
+          { animate: true, duration: 0.8 }
+        );
         setLocating(false);
       },
       () => setLocating(false),
@@ -175,11 +151,11 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
 
       {/* Map */}
       <div className="relative flex-1" style={{ minHeight: "300px" }}>
-        <div ref={initMap} className="absolute inset-0" />
+        <div ref={containerRef} className="absolute inset-0" />
 
         {/* Loading overlay */}
-        {!mapLoaded && !mapError && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
+        {!mapLoaded && (
+          <div className="absolute inset-0 z-[20] flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
             <div className="flex flex-col items-center gap-2">
               <div className="h-8 w-8 animate-spin rounded-full border-3 border-primary border-t-transparent" />
               <p className="text-xs font-bold text-muted-foreground">Loading map...</p>
@@ -187,24 +163,8 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
           </div>
         )}
 
-        {/* Error state — only when the map never finished loading. A single
-            transient tile error must not cover an otherwise-working map. */}
-        {mapError && !mapLoaded && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900">
-            <div className="flex flex-col items-center gap-2 px-6 text-center">
-              <MapPin className="h-8 w-8 text-neutral-400" />
-              <p className="text-sm font-bold text-neutral-600 dark:text-neutral-400">
-                Could not load map tiles
-              </p>
-              <p className="text-xs text-neutral-500">
-                You can still confirm this location using coordinates below
-              </p>
-            </div>
-          </div>
-        )}
-
         {/* Fixed center pin (screen-anchored, not a real map marker) */}
-        <div className="pointer-events-none absolute left-1/2 top-1/2 z-10 -translate-x-1/2 -translate-y-full">
+        <div className="pointer-events-none absolute left-1/2 top-1/2 z-[10] -translate-x-1/2 -translate-y-full">
           <div className="flex flex-col items-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-full bg-black shadow-lg">
               <MapPin className="h-6 w-6 text-white" fill="white" />
@@ -218,7 +178,7 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
           type="button"
           onClick={useMyLocation}
           disabled={locating}
-          className="absolute bottom-24 right-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg dark:bg-neutral-900 disabled:opacity-50 press"
+          className="absolute bottom-24 right-4 z-[10] flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-lg dark:bg-neutral-900 disabled:opacity-50 press"
           aria-label="Use my current location"
         >
           <LocateFixed className={`h-5 w-5 text-primary ${locating ? "animate-pulse" : ""}`} />

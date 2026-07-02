@@ -2,6 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
+import { springs, stagger } from "@/lib/motion";
 
 // Staggered container - children animate in one by one
 export function StaggerContainer({
@@ -53,11 +54,7 @@ export function StaggerItem({
           opacity: 1,
           y: 0,
           scale: 1,
-          transition: {
-            type: "spring",
-            stiffness: 260,
-            damping: 20
-          }
+          transition: springs.enter,
         }
       }}
     >
@@ -93,12 +90,7 @@ export function FadeInView({
       initial={{ opacity: 0, x: offsets[direction].x, y: offsets[direction].y }}
       whileInView={{ opacity: 1, x: 0, y: 0 }}
       viewport={{ once, margin: "-40px" }}
-      transition={{
-        type: "spring",
-        stiffness: 200,
-        damping: 20,
-        delay
-      }}
+      transition={{ ...springs.gentle, delay }}
     >
       {children}
     </motion.div>
@@ -179,12 +171,7 @@ export function ScaleInView({
       initial={{ opacity: 0, scale: 0.85 }}
       whileInView={{ opacity: 1, scale: 1 }}
       viewport={{ once, margin: "-30px" }}
-      transition={{
-        type: "spring",
-        stiffness: 260,
-        damping: 20,
-        delay
-      }}
+      transition={{ ...springs.enter, delay }}
     >
       {children}
     </motion.div>
@@ -205,11 +192,7 @@ export function AnimatedSectionHeader({
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true, margin: "-30px" }}
-      transition={{
-        type: "spring",
-        stiffness: 300,
-        damping: 25
-      }}
+      transition={springs.layout}
     >
       {children}
     </motion.div>

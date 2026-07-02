@@ -1006,6 +1006,16 @@ html[data-keyboard-open] .pb-safe {
   hyphens: auto;
 }
 
+/* Delivery map marker pulse animations (moved from per-mount <style> injection) */
+@keyframes map-pulse {
+  0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
+  100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
+}
+@keyframes rider-pulse {
+  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
+  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
+}
+
 /* Fluid container that respects safe areas and never overflows */
 .fluid-container {
   width: 100%;

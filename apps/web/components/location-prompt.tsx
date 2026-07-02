@@ -49,6 +49,7 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
   const [pincode, setPincode] = useState("");
   const [resolvedLocation, setResolvedLocation] = useState<DeliveryLocation | null>(null);
   const [showPinPicker, setShowPinPicker] = useState(false);
+  const [geocodeFailed, setGeocodeFailed] = useState(false);
   const [mapInitial, setMapInitial] = useState<{ latitude: number; longitude: number }>({
     latitude: STORE_COORDINATES.lat,
     longitude: STORE_COORDINATES.lng,
@@ -110,10 +111,13 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
     );
   }, []);
 
+  // State setters (setShowPinPicker, setError, etc.) are stable per React guarantees,
+  // so the empty dependency array is intentional.
   const handleMapConfirm = useCallback(async (location: { latitude: number; longitude: number }) => {
     setShowPinPicker(false);
     setError(null);
     setOutsideRadius(false);
+    setGeocodeFailed(false);
 
     const { latitude: lat, longitude: lng } = location;
     const distance = calculateDistanceKm({ lat, lng }, STORE_COORDINATES);
@@ -124,6 +128,7 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
     let address = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
     let area: string | undefined = withinRadius ? "Near Store" : "Outside Delivery Area";
     let pincodeValue: string | undefined;
+    let didGeocodeFail = false;
 
     try {
       const res = await fetch(`/api/geocode/reverse?latitude=${lat}&longitude=${lng}`);
@@ -134,9 +139,15 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
         if (parts.length > 0) address = parts.join(", ");
         area = geo.locality || geo.street || area;
         pincodeValue = geo.pincode || undefined;
+      } else {
+        didGeocodeFail = true;
       }
     } catch {
-      // Geocoding failed, use coordinate-based defaults
+      didGeocodeFail = true;
+    }
+
+    if (didGeocodeFail) {
+      setGeocodeFailed(true);
     }
 
     const deliveryLocation: DeliveryLocation = {
@@ -184,16 +195,17 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
   if (!open) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[95] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm"
-        onClick={(e) => {
-          if (e.target === e.currentTarget && getSavedLocation()) handleClose();
-        }}
-      >
+    <>
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[95] flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget && getSavedLocation()) handleClose();
+          }}
+        >
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -327,6 +339,20 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
             </motion.div>
           )}
 
+          {/* Geocode failed notice */}
+          {geocodeFailed && resolvedLocation && (
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 flex items-center gap-2 p-3 rounded-xl bg-blue-50 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/30"
+            >
+              <AlertTriangle className="h-4 w-4 text-blue-500 shrink-0" />
+              <p className="text-xs font-medium text-blue-700 dark:text-blue-400">
+                Could not resolve address. Location saved with coordinates only.
+              </p>
+            </motion.div>
+          )}
+
           {/* Confirm Button */}
           {resolvedLocation && (
             <motion.button
@@ -340,6 +366,7 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
           )}
         </motion.div>
       </motion.div>
+      </AnimatePresence>
 
       {/* Pin on map picker overlay */}
       <AnimatePresence>
@@ -353,6 +380,6 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
           />
         )}
       </AnimatePresence>
-    </AnimatePresence>
+    </>
   );
 }

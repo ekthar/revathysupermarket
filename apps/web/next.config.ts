@@ -26,6 +26,9 @@ const contentSecurityPolicy = [
 ].filter(Boolean).join("; ");
 
 const nextConfig: NextConfig = {
+  experimental: {
+    optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
+  },
   async headers() {
     return [
       {

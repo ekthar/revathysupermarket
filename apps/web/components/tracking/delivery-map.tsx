@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback, useState } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { calculateDistanceKm } from "@/lib/distance";
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -21,21 +22,6 @@ const BRAND_GREEN = "#22C55E";
 const BRAND_BLACK = "#050505";
 const BRAND_LIME = "#A7D129";
 const BRAND_GREEN_MUTED = "#16a34a";
-
-function haversineDistanceKm(
-  a: { latitude: number; longitude: number },
-  b: { latitude: number; longitude: number }
-): number {
-  const R = 6371;
-  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
-  const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;
-  const lat1 = (a.latitude * Math.PI) / 180;
-  const lat2 = (b.latitude * Math.PI) / 180;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
 
 function lerp(a: number, b: number, t: number): number {
   return a + (b - a) * t;
@@ -391,7 +377,10 @@ export function DeliveryMap({
     }
 
     const newPos = { lng: deliveryPartnerLocation.longitude, lat: deliveryPartnerLocation.latitude };
-    const dist = haversineDistanceKm(deliveryPartnerLocation, customerLocation);
+    const dist = calculateDistanceKm(
+      { lat: deliveryPartnerLocation.latitude, lng: deliveryPartnerLocation.longitude },
+      { lat: customerLocation.latitude, lng: customerLocation.longitude }
+    );
     setDistanceRemaining(dist);
 
     // Road-snapped route: only re-fetch when the rider has moved a
@@ -399,9 +388,9 @@ export function DeliveryMap({
     // steady stream of GPS ticks doesn't hammer the routing API.
     const shouldRefetchRoute =
       !lastRoutedAtRef.current ||
-      haversineDistanceKm(
-        { latitude: lastRoutedAtRef.current.lat, longitude: lastRoutedAtRef.current.lng },
-        deliveryPartnerLocation
+      calculateDistanceKm(
+        { lat: lastRoutedAtRef.current.lat, lng: lastRoutedAtRef.current.lng },
+        { lat: deliveryPartnerLocation.latitude, lng: deliveryPartnerLocation.longitude }
       ) > 0.04;
 
     if (shouldRefetchRoute && map.isStyleLoaded()) {

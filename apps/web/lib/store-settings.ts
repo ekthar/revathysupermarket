@@ -1,6 +1,6 @@
 import { unstable_cache, unstable_noStore as noStore } from "next/cache";
 import { prisma } from "@/lib/prisma";
-import { SITE } from "@/lib/constants";
+import { SITE, STORE_COORDINATES } from "@/lib/constants";
 import { serviceablePincodes } from "@/lib/delivery";
 
 export type StoreSettings = {
@@ -36,8 +36,8 @@ export const defaultStoreSettings: StoreSettings = {
   phone: SITE.phone,
   whatsapp: SITE.whatsapp,
   deliveryRadiusKm: SITE.deliveryRadiusKm,
-  storeLatitude: Number(process.env.STORE_LAT ?? "8.4004"),
-  storeLongitude: Number(process.env.STORE_LNG ?? "77.0851"),
+  storeLatitude: STORE_COORDINATES.lat,
+  storeLongitude: STORE_COORDINATES.lng,
   serviceablePincodes: serviceablePincodes(),
   googleMapsUrl: "",
   instagramUrl: "",

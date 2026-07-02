@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { LocateFixed, MapPin, X } from "lucide-react";
@@ -60,6 +61,18 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
   const [locating, setLocating] = useState(false);
   const [mapLoaded, setMapLoaded] = useState(false);
   const [mapError, setMapError] = useState(false);
+  const [portalMounted, setPortalMounted] = useState(false);
+
+  // Gate portal rendering to avoid SSR/hydration mismatch (document.body
+  // doesn't exist during SSR). Also lock body scroll while the picker is open.
+  useEffect(() => {
+    setPortalMounted(true);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -131,12 +144,15 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
     );
   }
 
-  return (
+  const content = (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[95] flex flex-col bg-white dark:bg-neutral-950"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Pin your exact location on map"
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-100 dark:border-neutral-800">
@@ -221,4 +237,8 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
       </div>
     </motion.div>
   );
+
+  return portalMounted
+    ? createPortal(content, document.body)
+    : null;
 }

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
+import { calculateDistanceKm } from "@/lib/distance";
 import { springs } from "@/lib/motion";
 import {
   ArrowLeft,
@@ -99,21 +100,6 @@ function getStepIndex(status: string): number {
   return 0;
 }
 
-function distanceKm(
-  a: { latitude: number; longitude: number },
-  b: { latitude: number; longitude: number }
-) {
-  const radius = 6371;
-  const dLat = ((b.latitude - a.latitude) * Math.PI) / 180;
-  const dLng = ((b.longitude - a.longitude) * Math.PI) / 180;
-  const lat1 = (a.latitude * Math.PI) / 180;
-  const lat2 = (b.latitude * Math.PI) / 180;
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * radius * Math.atan2(Math.sqrt(h), Math.sqrt(1 - h));
-}
-
 function getStatusLabel(status: string): string {
   const map: Record<string, string> = {
     ORDER_RECEIVED: "Order received",
@@ -152,7 +138,10 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
 
       // If rider is en route and we have their location, calculate from rider position
       if (riderEnRoute && riderLoc) {
-        const dist = distanceKm(riderLoc, data.destination);
+        const dist = calculateDistanceKm(
+          { lat: riderLoc.latitude, lng: riderLoc.longitude },
+          { lat: data.destination.latitude, lng: data.destination.longitude }
+        );
         return Math.max(2, Math.ceil((dist / 18) * 60));
       }
 
@@ -309,19 +298,6 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
                 <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary-500 shadow-lg shadow-secondary-500/40">
                   <Truck className="h-8 w-8 text-white" />
                 </div>
-                {data.deliveryPartnerLocation && (
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    className="rounded-full bg-neutral-900/80 px-3 py-1 text-micro font-bold text-white dark:bg-white/90 dark:text-neutral-900"
-                  >
-                    {distanceKm(
-                      data.deliveryPartnerLocation,
-                      data.destination
-                    ).toFixed(1)}{" "}
-                    km away
-                  </motion.div>
-                )}
               </motion.div>
               {/* Pulse rings around the delivery icon */}
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">

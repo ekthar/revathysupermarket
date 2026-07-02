@@ -80,12 +80,33 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
     map.on("load", () => {
       syncCenter();
       setMapLoaded(true);
+      // The picker mounts inside an animated full-screen modal, so the
+      // container can still be settling its size when the map initializes.
+      // A resize after load guarantees the GL canvas fills the real box
+      // (otherwise the map renders into a 0-size canvas and shows blank).
+      map.resize();
     });
     map.on("error", () => {
       setMapError(true);
     });
 
+    // Keep the GL canvas in sync with the container box. This is the robust
+    // fix for "blank map in a modal": the observer fires once the flex/anim
+    // layout gives the container its final dimensions, and again on rotation
+    // or keyboard show/hide.
+    let raf = 0;
+    const resizeObserver = new ResizeObserver(() => {
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => mapRef.current?.resize());
+    });
+    resizeObserver.observe(containerRef.current);
+    // Belt-and-suspenders: an explicit resize after the modal entrance anim.
+    const settleTimer = window.setTimeout(() => mapRef.current?.resize(), 350);
+
     return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(settleTimer);
+      resizeObserver.disconnect();
       map.off("move", syncCenter);
       map.remove();
       mapRef.current = null;

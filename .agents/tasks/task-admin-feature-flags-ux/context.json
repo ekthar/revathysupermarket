@@ -1,0 +1,21 @@
+{
+  "project_type": "Next.js App Router monorepo (Turborepo)",
+  "language": "TypeScript/React",
+  "build_system": "Turborepo with npm, Next.js, Prisma",
+  "test_framework": "No dedicated test files found - validation via TypeScript compiler",
+  "build_command": "cd apps/web && npx prisma generate && npx tsc --noEmit",
+  "test_command": "cd apps/web && npx tsc --noEmit",
+  "verification_instructions": "Run `npx prisma generate && npx tsc --noEmit` from apps/web to verify no type errors. Run `npx next lint` for lint check.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "npm install at root, npx prisma generate in apps/web",
+  "environment_constraints": "No external network restrictions observed. Build verifiable via tsc --noEmit.",
+  "contribution_requirements": "Commit directly to main branch. Do NOT push.",
+  "key_patterns": "Feature flags UI uses FLAG_META (metadata map) + FLAG_CATEGORIES (grouping array) + custom card components for complex flags + generic ConfigFlagCard for simple config. Icons from lucide-react. Tailwind CSS with rounded-2xl cards, font-black headings, slate color palette. Admin components are client components with 'use client' directive.",
+  "relevant_files": [
+    "apps/web/components/admin/feature-flag-settings.tsx",
+    "apps/web/components/admin/settings-management-client.tsx",
+    "apps/web/prisma/feature-flags.ts",
+    "apps/web/app/admin/settings/page.tsx"
+  ],
+  "directory_structure": "apps/web/ contains the Next.js app. components/admin/ has admin panel client components. app/admin/ has route pages. prisma/ has schema and seeds."
+}

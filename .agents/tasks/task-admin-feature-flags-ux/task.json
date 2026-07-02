@@ -1,0 +1,7 @@
+{
+  "task_id": "task-admin-feature-flags-ux",
+  "task_description": "Fix missing WhatsApp/SMS feature flags in admin panel, replace confusing generic text inputs in ConfigFlagCard with smart rendering (dropdowns, number inputs with units, time pickers, checkboxes) based on flag type, and reorganize categories.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001"],
+  "blocked_reason": null
+}

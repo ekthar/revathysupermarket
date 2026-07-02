@@ -6,6 +6,7 @@ import {
   Package, Clock, TrendingUp, Heart, Wallet, Star, Users, Globe,
   ShoppingCart, Store, AlertTriangle, CreditCard, Smartphone, Gift,
   MapPin, Pencil, RefreshCw, Moon, CalendarClock, Layers, Navigation, Timer,
+  MessageCircle, Phone,
 } from "lucide-react";
 
 interface FlagData {
@@ -175,6 +176,16 @@ const FLAG_META: Record<string, { label: string; description: string; icon: Reac
     description: "Control when ETA is shown: always or only after rider assignment",
     icon: Timer,
   },
+  whatsapp_enabled: {
+    label: "WhatsApp Notifications",
+    description: "Send OTPs and order updates via WhatsApp Business API",
+    icon: MessageCircle,
+  },
+  sms_enabled: {
+    label: "SMS Notifications",
+    description: "Send OTPs and order updates via SMS",
+    icon: Phone,
+  },
 };
 
 const FLAG_CATEGORIES: { title: string; keys: string[]; color: string }[] = [
@@ -199,11 +210,34 @@ const FLAG_CATEGORIES: { title: string; keys: string[]; color: string }[] = [
     color: "amber",
   },
   {
+    title: "Notifications & Messaging",
+    keys: ["whatsapp_enabled", "sms_enabled", "ring_alert_rules", "print_required_alert"],
+    color: "indigo",
+  },
+  {
     title: "Operations",
-    keys: ["stock_value_visible", "ring_alert_rules", "print_required_alert", "store_open_hours", "maintenance_mode", "dark_store_mode", "free_delivery_threshold"],
+    keys: ["stock_value_visible", "store_open_hours", "maintenance_mode", "dark_store_mode", "free_delivery_threshold"],
     color: "red",
   },
 ];
+
+const CONFIG_HINTS: Record<string, Record<string, { type: "select" | "number" | "text" | "time" | "checkbox"; options?: string[]; suffix?: string; prefix?: string; label?: string }>> = {
+  delivery_mode: { mode: { type: "select", options: ["both", "instant", "scheduled"], label: "Delivery Mode" } },
+  delivery_radius_km: { value: { type: "number", suffix: "km", label: "Radius" } },
+  minimum_order_value: { value: { type: "number", prefix: "\u20B9", label: "Minimum Amount" } },
+  free_delivery_threshold: { value: { type: "number", prefix: "\u20B9", label: "Threshold" } },
+  max_orders_per_hour: { value: { type: "number", suffix: "orders/hr", label: "Limit" }, action: { type: "select", options: ["queue", "reject"], label: "When Exceeded" } },
+  surge_pricing_enabled: { multiplier: { type: "number", suffix: "\u00D7", label: "Multiplier" }, message: { type: "text", label: "Display Message" } },
+  delivery_partner_assignment: { mode: { type: "select", options: ["nearest", "round_robin", "manual"], label: "Assignment Mode" } },
+  eta_display_mode: { mode: { type: "select", options: ["always", "after_assignment"], label: "Show ETA" } },
+  substitute_approval_mode: { mode: { type: "select", options: ["always_ask", "auto_accept", "auto_reject"], label: "Substitution Handling" } },
+  store_open_hours: { open: { type: "time", label: "Opens At" }, close: { type: "time", label: "Closes At" }, autoToggle: { type: "checkbox", label: "Auto-toggle store status" } },
+  max_items_per_order: { value: { type: "number", suffix: "items", label: "Maximum" } },
+  order_edit_window_minutes: { value: { type: "number", suffix: "minutes", label: "Edit Window" } },
+  new_user_discount: { percent: { type: "number", suffix: "%", label: "Discount" }, maxDiscount: { type: "number", prefix: "\u20B9", label: "Max Discount" }, minOrder: { type: "number", prefix: "\u20B9", label: "Min Order" } },
+  referral_enabled: { senderReward: { type: "number", prefix: "\u20B9", label: "Sender Reward" }, receiverReward: { type: "number", prefix: "\u20B9", label: "Receiver Reward" } },
+  maintenance_mode: { message: { type: "text", label: "Message" }, eta: { type: "text", label: "ETA (optional)" } },
+};
 
 export function FeatureFlagSettings({ flags, deliveryPartners }: Props) {
   const [flagState, setFlagState] = useState<FlagData[]>(flags);
@@ -308,7 +342,7 @@ export function FeatureFlagSettings({ flags, deliveryPartners }: Props) {
 
               // Flags with config get a config card
               if (flag.config && typeof flag.config === "object") {
-                return <ConfigFlagCard key={flagKey} flag={flag} saving={saving === flagKey} updateFlag={updateFlag} />;
+                return <SmartConfigFlagCard key={flagKey} flag={flag} saving={saving === flagKey} updateFlag={updateFlag} />;
               }
 
               // Simple boolean flags
@@ -367,8 +401,8 @@ function FlagCard({
   );
 }
 
-/** Card for flags with JSON config - renders toggle + editable config fields */
-function ConfigFlagCard({
+/** Smart card for flags with JSON config - renders toggle + hint-based config fields */
+function SmartConfigFlagCard({
   flag,
   saving,
   updateFlag,
@@ -380,6 +414,101 @@ function ConfigFlagCard({
   const meta = FLAG_META[flag.key] ?? { label: flag.key, description: "", icon: Settings };
   const Icon = meta.icon;
   const config = flag.config as Record<string, unknown> | null;
+  const hints = CONFIG_HINTS[flag.key];
+
+  function formatOptionLabel(value: string): string {
+    return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+
+  function renderHintField(cfgKey: string, hint: { type: "select" | "number" | "text" | "time" | "checkbox"; options?: string[]; suffix?: string; prefix?: string; label?: string }) {
+    const currentValue = config?.[cfgKey];
+    const fieldLabel = hint.label ?? cfgKey.replace(/([A-Z])/g, " $1");
+
+    if (hint.type === "select") {
+      return (
+        <label key={cfgKey} className="block">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{fieldLabel}</span>
+          <select
+            defaultValue={currentValue != null ? String(currentValue) : hint.options?.[0] ?? ""}
+            onChange={(e) => { updateFlag(flag.key, { config: { ...config, [cfgKey]: e.target.value } }); }}
+            className="mt-1 h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-sm"
+          >
+            {hint.options?.map((opt) => (
+              <option key={opt} value={opt}>{formatOptionLabel(opt)}</option>
+            ))}
+          </select>
+        </label>
+      );
+    }
+
+    if (hint.type === "number") {
+      return (
+        <label key={cfgKey} className="block">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{fieldLabel}</span>
+          <div className="mt-1 flex items-center gap-1">
+            {hint.prefix && <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">{hint.prefix}</span>}
+            <input
+              type="number"
+              defaultValue={currentValue != null ? String(currentValue) : ""}
+              onBlur={(e) => {
+                const parsed = Number(e.target.value) || 0;
+                updateFlag(flag.key, { config: { ...config, [cfgKey]: parsed } });
+              }}
+              className="h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-sm"
+            />
+            {hint.suffix && <span className="text-sm font-semibold text-slate-500 dark:text-slate-400 whitespace-nowrap">{hint.suffix}</span>}
+          </div>
+        </label>
+      );
+    }
+
+    if (hint.type === "text") {
+      return (
+        <label key={cfgKey} className="block">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{fieldLabel}</span>
+          <input
+            type="text"
+            defaultValue={currentValue != null ? String(currentValue) : ""}
+            onBlur={(e) => { updateFlag(flag.key, { config: { ...config, [cfgKey]: e.target.value.trim() } }); }}
+            className="mt-1 h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-sm"
+          />
+        </label>
+      );
+    }
+
+    if (hint.type === "time") {
+      return (
+        <label key={cfgKey} className="block">
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{fieldLabel}</span>
+          <input
+            type="time"
+            defaultValue={currentValue != null ? String(currentValue) : ""}
+            onChange={(e) => { updateFlag(flag.key, { config: { ...config, [cfgKey]: e.target.value } }); }}
+            className="mt-1 h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-sm"
+          />
+        </label>
+      );
+    }
+
+    if (hint.type === "checkbox") {
+      return (
+        <label key={cfgKey} className="flex items-center gap-2 py-1">
+          <div className="relative inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              checked={currentValue === true}
+              onChange={(e) => { updateFlag(flag.key, { config: { ...config, [cfgKey]: e.target.checked } }); }}
+              className="sr-only peer"
+            />
+            <div className="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-600 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600" />
+          </div>
+          <span className="text-xs font-bold text-slate-600 dark:text-slate-400">{fieldLabel}</span>
+        </label>
+      );
+    }
+
+    return null;
+  }
 
   return (
     <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden">
@@ -407,23 +536,25 @@ function ConfigFlagCard({
       {config && Object.keys(config).length > 0 && (
         <div className="border-t border-slate-100 dark:border-slate-800 px-5 py-4">
           <div className="grid grid-cols-2 gap-3">
-            {Object.entries(config).map(([cfgKey, cfgValue]) => (
-              <label key={cfgKey} className="block">
-                <span className="text-xs font-bold text-slate-600 dark:text-slate-400 capitalize">{cfgKey.replace(/([A-Z])/g, " $1")}</span>
-                <input
-                  type={typeof cfgValue === "number" ? "number" : "text"}
-                  defaultValue={cfgValue != null ? String(cfgValue) : ""}
-                  onBlur={(e) => {
-                    const raw = e.target.value.trim();
-                    let parsed: unknown = raw;
-                    if (typeof cfgValue === "number") parsed = Number(raw) || 0;
-                    else if (typeof cfgValue === "boolean") parsed = raw === "true";
-                    updateFlag(flag.key, { config: { ...config, [cfgKey]: parsed } });
-                  }}
-                  className="mt-1 h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-sm"
-                />
-              </label>
-            ))}
+            {hints
+              ? Object.entries(hints).map(([cfgKey, hint]) => renderHintField(cfgKey, hint))
+              : Object.entries(config).map(([cfgKey, cfgValue]) => (
+                  <label key={cfgKey} className="block">
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400 capitalize">{cfgKey.replace(/([A-Z])/g, " $1")}</span>
+                    <input
+                      type={typeof cfgValue === "number" ? "number" : "text"}
+                      defaultValue={cfgValue != null ? String(cfgValue) : ""}
+                      onBlur={(e) => {
+                        const raw = e.target.value.trim();
+                        let parsed: unknown = raw;
+                        if (typeof cfgValue === "number") parsed = Number(raw) || 0;
+                        else if (typeof cfgValue === "boolean") parsed = raw === "true";
+                        updateFlag(flag.key, { config: { ...config, [cfgKey]: parsed } });
+                      }}
+                      className="mt-1 h-9 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-sm"
+                    />
+                  </label>
+                ))}
           </div>
         </div>
       )}

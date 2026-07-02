@@ -8,6 +8,7 @@ import { MapPin } from "lucide-react";
 import { getLoyaltyConfig } from "@/lib/loyalty-config";
 import { LoyaltySettingsClient } from "@/components/admin/loyalty-settings-client";
 import { FeatureFlagSettings } from "@/components/admin/feature-flag-settings";
+import { seedFeatureFlags } from "@/prisma/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,13 @@ export default async function AdminSettingsPage() {
       </div>
     );
   }
+
+  // Self-healing: ensure every default feature flag defined in code exists
+  // in the DB before we read them. This is a no-op (besides a handful of
+  // upserts) once the DB is caught up, but guarantees that flags added to
+  // `featureFlags` after the last seed run (e.g. whatsapp_enabled,
+  // sms_enabled) actually show up here without requiring a manual reseed.
+  await seedFeatureFlags(prisma).catch(() => 0);
 
   const [settings, banners, templateRows, loyaltyConfig, flags, deliveryPartners] = await Promise.all([
     getStoreSettings(),

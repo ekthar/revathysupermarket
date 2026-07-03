@@ -10,6 +10,8 @@ interface PaymentMethodSelectorProps {
   walletBalance: number;
   walletLoading: boolean;
   totalAmount: number;
+  codEnabled?: boolean;
+  upiOnDeliveryEnabled?: boolean;
 }
 
 export function PaymentMethodSelector({
@@ -18,6 +20,8 @@ export function PaymentMethodSelector({
   walletBalance,
   walletLoading,
   totalAmount,
+  codEnabled = true,
+  upiOnDeliveryEnabled = true,
 }: PaymentMethodSelectorProps) {
   return (
     <motion.section
@@ -28,22 +32,26 @@ export function PaymentMethodSelector({
     >
       <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Payment Method</h2>
       <div className="space-y-3">
-        <PaymentMethodCard
-          active={paymentMethod === "COD"}
-          icon={<Wallet className="h-5 w-5" />}
-          iconBg="bg-secondary-100 text-secondary-700"
-          label="Cash on Delivery"
-          description="Pay with cash when order arrives"
-          onClick={() => onMethodChange("COD")}
-        />
-        <PaymentMethodCard
-          active={paymentMethod === "UPI_ON_DELIVERY"}
-          icon={<Smartphone className="h-5 w-5" />}
-          iconBg="bg-blue-100 text-blue-700"
-          label="UPI on Delivery"
-          description="Pay via UPI/GPay to delivery partner"
-          onClick={() => onMethodChange("UPI_ON_DELIVERY")}
-        />
+        {codEnabled && (
+          <PaymentMethodCard
+            active={paymentMethod === "COD"}
+            icon={<Wallet className="h-5 w-5" />}
+            iconBg="bg-secondary-100 text-secondary-700"
+            label="Cash on Delivery"
+            description="Pay with cash when order arrives"
+            onClick={() => onMethodChange("COD")}
+          />
+        )}
+        {upiOnDeliveryEnabled && (
+          <PaymentMethodCard
+            active={paymentMethod === "UPI_ON_DELIVERY"}
+            icon={<Smartphone className="h-5 w-5" />}
+            iconBg="bg-blue-100 text-blue-700"
+            label="UPI on Delivery"
+            description="Pay via UPI/GPay to delivery partner"
+            onClick={() => onMethodChange("UPI_ON_DELIVERY")}
+          />
+        )}
         <PaymentMethodCard
           active={paymentMethod === "CARD"}
           icon={<Wallet className="h-5 w-5" />}

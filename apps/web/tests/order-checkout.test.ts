@@ -79,6 +79,15 @@ test("checkoutErrorResponse returns 409 for LOYALTY_BALANCE", () => {
   assert.equal(result.code, "LOYALTY_BALANCE");
 });
 
+test("checkoutErrorResponse returns 400 for disabled delivery and payment flags", () => {
+  for (const code of ["SCHEDULED_DELIVERY_DISABLED", "INSTANT_DELIVERY_DISABLED", "TIP_DISABLED", "PAYMENT_METHOD_DISABLED"]) {
+    const result = checkoutErrorResponse(new Error(code));
+    assert.ok(result);
+    assert.equal(result.status, 400);
+    assert.equal(result.code, code);
+  }
+});
+
 test("checkoutErrorResponse returns null for unknown error", () => {
   const result = checkoutErrorResponse(new Error("SOME_UNKNOWN_ERROR"));
   assert.equal(result, null);

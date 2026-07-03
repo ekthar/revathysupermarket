@@ -97,6 +97,11 @@ export function CheckoutForm({
   freeDeliveryThreshold = 500,
   gstRatePercent = 0,
   gstin = "",
+  allowScheduledDelivery = true,
+  allowInstantDelivery = true,
+  tipEnabled = true,
+  codEnabled = true,
+  upiOnDeliveryEnabled = true,
   savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
@@ -109,10 +114,14 @@ export function CheckoutForm({
   freeDeliveryThreshold?: number;
   gstRatePercent?: number;
   gstin?: string;
+  allowScheduledDelivery?: boolean;
+  allowInstantDelivery?: boolean;
+  tipEnabled?: boolean;
+  codEnabled?: boolean;
+  upiOnDeliveryEnabled?: boolean;
   savedAddresses?: SavedAddress[];
 }) {
   const rewardsEnabled = process.env.NEXT_PUBLIC_ENABLE_REWARDS !== "false";
-  const slotsEnabled = process.env.NEXT_PUBLIC_ENABLE_DELIVERY_SLOTS !== "false";
   const { items, subtotal, clearCart } = useCart();
   const { showToast } = useToast();
   const t = useTranslations("checkout");
@@ -126,7 +135,9 @@ export function CheckoutForm({
 
   const [walletBalance, setWalletBalance] = useState<number>(0);
   const [walletLoading, setWalletLoading] = useState(true);
-  const [deliveryMode, setDeliveryMode] = useState<"ASAP" | "SCHEDULED">("ASAP");
+  const [deliveryMode, setDeliveryMode] = useState<"ASAP" | "SCHEDULED">(
+    allowInstantDelivery ? "ASAP" : "SCHEDULED"
+  );
   const [deliverySlotId, setDeliverySlotId] = useState("");
   const [promoCode, setPromoCode] = useState("");
   const [loyaltyBalance, setLoyaltyBalance] = useState(0);
@@ -186,6 +197,27 @@ export function CheckoutForm({
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
   const canSubmit = items.length > 0 && locationOk && !addressNotCovered && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
+
+  useEffect(() => {
+    if (!allowInstantDelivery && deliveryMode === "ASAP") setDeliveryMode("SCHEDULED");
+    if (!allowScheduledDelivery && deliveryMode === "SCHEDULED") {
+      setDeliveryMode("ASAP");
+      setDeliverySlotId("");
+    }
+  }, [allowInstantDelivery, allowScheduledDelivery, deliveryMode]);
+
+  useEffect(() => {
+    if (!tipEnabled && tipAmount > 0) setTipAmount(0);
+  }, [tipEnabled, tipAmount]);
+
+  useEffect(() => {
+    if (form.paymentMethod === "COD" && !codEnabled) {
+      update("paymentMethod", upiOnDeliveryEnabled ? "UPI_ON_DELIVERY" : "CARD");
+    }
+    if (form.paymentMethod === "UPI_ON_DELIVERY" && !upiOnDeliveryEnabled) {
+      update("paymentMethod", codEnabled ? "COD" : "CARD");
+    }
+  }, [codEnabled, form.paymentMethod, upiOnDeliveryEnabled]);
 
   useEffect(() => {
     const latitude = Number(form.latitude);
@@ -418,11 +450,12 @@ export function CheckoutForm({
             onModeChange={setDeliveryMode}
             deliverySlotId={deliverySlotId}
             onSlotChange={setDeliverySlotId}
-            slotsEnabled={slotsEnabled}
+            scheduledEnabled={allowScheduledDelivery}
+            instantEnabled={allowInstantDelivery}
           />
 
           {/* Tip for delivery partner */}
-          <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />
+          {tipEnabled && <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />}
 
           {/* Delivery instructions */}
           <DeliveryInstructions
@@ -444,6 +477,8 @@ export function CheckoutForm({
             walletBalance={walletBalance}
             walletLoading={walletLoading}
             totalAmount={totalAmount}
+            codEnabled={codEnabled}
+            upiOnDeliveryEnabled={upiOnDeliveryEnabled}
           />
         </div>
 

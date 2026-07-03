@@ -4,6 +4,7 @@ import { checkoutSchema } from "@/lib/validations";
 import type { StoreSettings } from "@/lib/store-settings";
 import { getLoyaltyConfig } from "@/lib/loyalty-config";
 import { calculateDeliveryFee } from "@/lib/delivery-fee";
+import { getFeatureFlag, isFeatureEnabled } from "@/lib/feature-flags";
 
 type CheckoutInput = z.infer<typeof checkoutSchema>;
 
@@ -45,6 +46,22 @@ export async function createAuthoritativeOrder({
   });
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   if (subtotal < settings.minimumOrderValue) throw new Error("MINIMUM_ORDER");
+  const [deliveryModeFlag, instantDeliveryEnabled, slotOnlyMode, tipEnabled, codEnabled, upiOnDeliveryEnabled] = await Promise.all([
+    getFeatureFlag<{ mode?: "both" | "instant" | "scheduled" }>("delivery_mode"),
+    isFeatureEnabled("instant_delivery_enabled"),
+    isFeatureEnabled("slot_only_mode"),
+    isFeatureEnabled("tip_enabled"),
+    isFeatureEnabled("cod_enabled"),
+    isFeatureEnabled("upi_on_delivery_enabled"),
+  ]);
+  const configuredDeliveryMode = deliveryModeFlag.enabled ? deliveryModeFlag.config?.mode ?? "both" : "instant";
+  const scheduledAllowed = configuredDeliveryMode === "both" || configuredDeliveryMode === "scheduled" || slotOnlyMode;
+  const instantAllowed = !slotOnlyMode && instantDeliveryEnabled && (configuredDeliveryMode === "both" || configuredDeliveryMode === "instant");
+  if (data.deliveryMode === "SCHEDULED" && !scheduledAllowed) throw new Error("SCHEDULED_DELIVERY_DISABLED");
+  if (data.deliveryMode === "ASAP" && !instantAllowed) throw new Error("INSTANT_DELIVERY_DISABLED");
+  if ((data.tipAmount ?? 0) > 0 && !tipEnabled) throw new Error("TIP_DISABLED");
+  if (data.paymentMethod === "COD" && !codEnabled) throw new Error("PAYMENT_METHOD_DISABLED");
+  if (data.paymentMethod === "UPI_ON_DELIVERY" && !upiOnDeliveryEnabled) throw new Error("PAYMENT_METHOD_DISABLED");
   const loyaltyConfig = await getLoyaltyConfig();
   const feeQuote = await calculateDeliveryFee(distanceKm, subtotal);
   // freeDelivery orders have no slab applied — that's expected and valid
@@ -166,6 +183,10 @@ export function checkoutErrorResponse(error: unknown) {
   if (message === "MINIMUM_ORDER") return { status: 400, error: "Your cart no longer meets the minimum order value.", code: message };
   if (message === "DELIVERY_SLOT_REQUIRED") return { status: 400, error: "Choose a delivery slot.", code: message };
   if (message === "DELIVERY_SLOT_FULL") return { status: 409, error: "That delivery slot just filled up. Choose another slot.", code: message };
+  if (message === "SCHEDULED_DELIVERY_DISABLED") return { status: 400, error: "Scheduled delivery is not available right now.", code: message };
+  if (message === "INSTANT_DELIVERY_DISABLED") return { status: 400, error: "ASAP delivery is not available right now.", code: message };
+  if (message === "TIP_DISABLED") return { status: 400, error: "Tips are not available right now.", code: message };
+  if (message === "PAYMENT_METHOD_DISABLED") return { status: 400, error: "That payment method is not available right now.", code: message };
   if (message.startsWith("OUT_OF_STOCK:")) return { status: 409, error: `${message.slice(13)} is no longer available in the requested quantity.`, code: "OUT_OF_STOCK" };
   if (message === "PROMO_INVALID" || message === "PROMO_EXHAUSTED") return { status: 409, error: "That promo code is no longer available.", code: message };
   if (message === "LOYALTY_BALANCE") return { status: 409, error: "Your points balance changed. Review and try again.", code: message };

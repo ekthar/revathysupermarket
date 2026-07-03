@@ -34,3 +34,22 @@ export async function isFeatureEnabled(key: string): Promise<boolean> {
   if (flag) return flag.enabled;
   return DEFAULT_ENABLED_BY_KEY[key] ?? false;
 }
+
+export async function getFeatureFlag<TConfig = Record<string, unknown>>(
+  key: string,
+): Promise<{ enabled: boolean; config: TConfig | null }> {
+  const flag = await prisma.featureFlag
+    .findUnique({
+      where: { key },
+      select: { enabled: true, config: true },
+    })
+    .catch(() => null);
+
+  if (flag) return { enabled: flag.enabled, config: flag.config as TConfig | null };
+
+  const defaultFlag = featureFlags.find((entry) => entry.key === key);
+  return {
+    enabled: defaultFlag?.enabled ?? false,
+    config: (defaultFlag?.config && typeof defaultFlag.config === "object" ? defaultFlag.config : null) as TConfig | null,
+  };
+}

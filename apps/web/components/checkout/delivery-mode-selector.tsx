@@ -17,7 +17,8 @@ interface DeliveryModeSelectorProps {
   onModeChange: (mode: "ASAP" | "SCHEDULED") => void;
   deliverySlotId: string;
   onSlotChange: (slotId: string) => void;
-  slotsEnabled: boolean;
+  scheduledEnabled: boolean;
+  instantEnabled: boolean;
 }
 
 function getDateLabel(dateStr: string): string {
@@ -55,17 +56,18 @@ export function DeliveryModeSelector({
   onModeChange,
   deliverySlotId,
   onSlotChange,
-  slotsEnabled,
+  scheduledEnabled,
+  instantEnabled,
 }: DeliveryModeSelectorProps) {
   const [slots, setSlots] = useState<DeliverySlot[]>([]);
 
   useEffect(() => {
-    if (!slotsEnabled) return;
+    if (!scheduledEnabled) return;
     fetch("/api/delivery-slots")
       .then((res) => (res.ok ? res.json() : { slots: [] }))
       .then((data) => setSlots(data.slots ?? []))
       .catch(() => undefined);
-  }, [slotsEnabled]);
+  }, [scheduledEnabled]);
 
   const groupedSlots = useMemo(() => groupSlotsByDate(slots), [slots]);
   const dateKeys = useMemo(() => Array.from(groupedSlots.keys()), [groupedSlots]);
@@ -78,7 +80,7 @@ export function DeliveryModeSelector({
     }
   }, [dateKeys, selectedDate]);
 
-  if (!slotsEnabled) return null;
+  if (!scheduledEnabled && !instantEnabled) return null;
 
   const currentDateSlots = groupedSlots.get(selectedDate) ?? [];
 
@@ -86,35 +88,39 @@ export function DeliveryModeSelector({
     <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery time</h2>
       <div className="mt-3 grid grid-cols-2 gap-2">
-        <motion.button
-          type="button"
-          onClick={() => onModeChange("ASAP")}
-          whileTap={{ scale: 0.96 }}
-          className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
-            deliveryMode === "ASAP"
-              ? "bg-black text-white shadow-md"
-              : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-          }`}
-        >
-          <Zap className="h-4 w-4" />
-          ASAP
-        </motion.button>
-        <motion.button
-          type="button"
-          onClick={() => onModeChange("SCHEDULED")}
-          whileTap={{ scale: 0.96 }}
-          className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
-            deliveryMode === "SCHEDULED"
-              ? "bg-black text-white shadow-md"
-              : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
-          }`}
-        >
-          <Calendar className="h-4 w-4" />
-          Schedule
-        </motion.button>
+        {instantEnabled && (
+          <motion.button
+            type="button"
+            onClick={() => onModeChange("ASAP")}
+            whileTap={{ scale: 0.96 }}
+            className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
+              deliveryMode === "ASAP"
+                ? "bg-black text-white shadow-md"
+                : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+            }`}
+          >
+            <Zap className="h-4 w-4" />
+            ASAP
+          </motion.button>
+        )}
+        {scheduledEnabled && (
+          <motion.button
+            type="button"
+            onClick={() => onModeChange("SCHEDULED")}
+            whileTap={{ scale: 0.96 }}
+            className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
+              deliveryMode === "SCHEDULED"
+                ? "bg-black text-white shadow-md"
+                : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+            }`}
+          >
+            <Calendar className="h-4 w-4" />
+            Schedule
+          </motion.button>
+        )}
       </div>
 
-      {deliveryMode === "SCHEDULED" && (
+      {scheduledEnabled && deliveryMode === "SCHEDULED" && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}

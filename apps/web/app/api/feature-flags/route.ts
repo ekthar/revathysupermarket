@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/api-auth";
 import { z } from "zod";
+
+export const dynamic = "force-dynamic";
 
 const updateSchema = z.object({
   key: z.string().min(1),
@@ -49,9 +52,9 @@ export async function PUT(request: Request) {
   }
 
   // Build update payload (only provided fields)
-  const updateData: Record<string, unknown> = {};
+  const updateData: { enabled?: boolean; config?: Prisma.InputJsonValue | typeof Prisma.JsonNull } = {};
   if (enabled !== undefined) updateData.enabled = enabled;
-  if (config !== undefined) updateData.config = config;
+  if (config !== undefined) updateData.config = config === null ? Prisma.JsonNull : config as Prisma.InputJsonValue;
 
   const updated = await prisma.featureFlag.update({
     where: { key },

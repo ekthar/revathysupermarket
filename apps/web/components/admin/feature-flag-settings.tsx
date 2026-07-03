@@ -259,7 +259,7 @@ export function FeatureFlagSettings({ flags, deliveryPartners }: Props) {
         return;
       }
       setFlagState((prev) =>
-        prev.map((f) => (f.key === key ? { ...f, ...updates, enabled: updates.enabled ?? f.enabled, config: updates.config !== undefined ? updates.config : f.config } : f))
+        prev.map((f) => (f.key === key ? data.flag ?? { ...f, ...updates, enabled: updates.enabled ?? f.enabled, config: updates.config !== undefined ? updates.config : f.config } : f))
       );
       showToast(`${FLAG_META[key]?.label ?? key} updated`, "success");
     } catch {

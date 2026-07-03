@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CheckoutForm } from "@/components/checkout-form";
 import { getStoreSettings } from "@/lib/store-settings";
+import { getFeatureFlag, isFeatureEnabled } from "@/lib/feature-flags";
 
 import { SITE } from "@/lib/constants";
 
@@ -29,10 +30,21 @@ export default async function CheckoutPage() {
     );
   }
   const settings = await getStoreSettings();
-  const addresses = await prisma.address.findMany({
-    where: { userId: session.user.id },
-    orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }]
-  }).catch(() => []);
+  const [addresses, deliveryModeFlag, instantDeliveryEnabled, slotOnlyMode, tipEnabled, codEnabled, upiOnDeliveryEnabled] = await Promise.all([
+    prisma.address.findMany({
+      where: { userId: session.user.id },
+      orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }]
+    }).catch(() => []),
+    getFeatureFlag<{ mode?: "both" | "instant" | "scheduled" }>("delivery_mode"),
+    isFeatureEnabled("instant_delivery_enabled"),
+    isFeatureEnabled("slot_only_mode"),
+    isFeatureEnabled("tip_enabled"),
+    isFeatureEnabled("cod_enabled"),
+    isFeatureEnabled("upi_on_delivery_enabled"),
+  ]);
+  const deliveryMode = deliveryModeFlag.enabled ? deliveryModeFlag.config?.mode ?? "both" : "instant";
+  const allowScheduledDelivery = deliveryMode === "both" || deliveryMode === "scheduled" || slotOnlyMode;
+  const allowInstantDelivery = !slotOnlyMode && instantDeliveryEnabled && (deliveryMode === "both" || deliveryMode === "instant");
   return (
     <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
       <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
@@ -58,6 +70,11 @@ export default async function CheckoutPage() {
         freeDeliveryThreshold={settings.freeDeliveryThreshold}
         gstRatePercent={settings.gstRatePercent}
         gstin={settings.gstin}
+        allowScheduledDelivery={allowScheduledDelivery}
+        allowInstantDelivery={allowInstantDelivery}
+        tipEnabled={tipEnabled}
+        codEnabled={codEnabled}
+        upiOnDeliveryEnabled={upiOnDeliveryEnabled}
         savedAddresses={addresses.map((address) => ({
           id: address.id,
           label: address.label,

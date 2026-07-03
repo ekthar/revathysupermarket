@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authenticateMobileRequest } from "@/lib/mobile-auth";
@@ -57,9 +58,9 @@ export async function PUT(request: Request) {
   }
 
   // Build update payload (only provided fields)
-  const updateData: Record<string, unknown> = {};
+  const updateData: { enabled?: boolean; config?: Prisma.InputJsonValue | typeof Prisma.JsonNull } = {};
   if (enabled !== undefined) updateData.enabled = enabled;
-  if (config !== undefined) updateData.config = config;
+  if (config !== undefined) updateData.config = config === null ? Prisma.JsonNull : config as Prisma.InputJsonValue;
 
   const updated = await prisma.featureFlag.update({
     where: { key },

@@ -27,8 +27,8 @@ export const productSheetColumns = [
   "featured",
   "name",
   "category",
-  "price",
-  "discountPrice",
+  "mrp",
+  "salesPrice",
   "costPrice",
   "gstRate",
   "brand",
@@ -42,8 +42,8 @@ export const productSheetColumns = [
 export const productTemplateColumns = [
   "name",
   "category",
-  "price",
-  "discountPrice",
+  "mrp",
+  "salesPrice",
   "costPrice",
   "gstRate",
   "stock",
@@ -56,7 +56,7 @@ export const productTemplateColumns = [
 export function normalizeProductSheetRow(input: Record<string, unknown>): ProductSheetRow {
   const activeValue = input.active ?? input.Active ?? input.isActive ?? input["Is Active"];
   const featuredValue = input.featured ?? input.Featured ?? input.isFeatured ?? input["Is Featured"];
-  const discountValue = input.discountPrice ?? input["Discount Price"] ?? input.discount_price ?? input["Discounted Rate"];
+  const discountValue = input.salesPrice ?? input.SalesPrice ?? input["Sales Price"] ?? input.discountPrice ?? input["Discount Price"] ?? input.discount_price ?? input["Discounted Rate"];
   const costPriceValue = input.costPrice ?? input["Cost Price"] ?? input.cost_price ?? input["costprice"];
   const gstRateValue = input.gstRate ?? input["GST Rate"] ?? input.gst_rate ?? input.GST ?? input.gst ?? input["GST %"];
   const brandValue = input.brand ?? input.Brand ?? input["brand"];
@@ -75,13 +75,13 @@ export function normalizeProductSheetRow(input: Record<string, unknown>): Produc
         : ["true", "1", "yes", "featured"].includes(String(featuredValue ?? "false").trim().toLowerCase()),
     name: String(input.name ?? input.Name ?? input["Product Name"] ?? "").trim(),
     category: String(input.category ?? input.Category ?? "").trim(),
-    price: Number(input.price ?? input.Price ?? input.Rate ?? input.rate ?? 0),
+    price: Number(input.mrp ?? input.MRP ?? input.price ?? input.Price ?? input.Rate ?? input.rate ?? 0),
     discountPrice: discountValue === undefined || discountValue === "" || discountValue === null ? null : Number(discountValue),
     costPrice: costPriceValue === undefined || costPriceValue === "" || costPriceValue === null ? null : Number(costPriceValue),
     gstRate: gstRateValue === undefined || gstRateValue === "" || gstRateValue === null ? null : Number(gstRateValue),
     brand: brandValue ? String(brandValue).trim() : null,
     stock: Number(input.stock ?? input.Stock ?? 0),
-    unit: String(input.unit ?? input.Unit ?? "1 pc").trim() || "1 pc",
+    unit: String(input.unit ?? input.Unit ?? "pcs").trim() || "pcs",
     image: image || null,
     description: String(input.description ?? input.Description ?? "").trim()
   };
@@ -159,7 +159,7 @@ export async function upsertProductSheetRows(rows: ProductSheetRow[]) {
       gstRate: row.gstRate != null ? row.gstRate : undefined,
       brand: row.brand || undefined,
       stock: row.stock,
-      unit: row.unit || "1 pc",
+      unit: row.unit || "pcs",
       image,
       description: row.description,
       isActive: row.active ?? true,

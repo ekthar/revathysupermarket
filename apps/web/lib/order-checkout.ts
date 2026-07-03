@@ -22,10 +22,22 @@ export async function createAuthoritativeOrder({
 }) {
   const requestedIds = [...new Set(data.items.map((item) => item.productId))];
   const products = await prisma.product.findMany({
-    where: { id: { in: requestedIds }, isActive: true },
-    select: { id: true, name: true, price: true, discountPrice: true, gstRate: true }
+    where: { id: { in: requestedIds } },
+    select: { id: true, name: true, price: true, discountPrice: true, gstRate: true, isActive: true }
   });
-  if (products.length !== requestedIds.length) throw new Error("PRODUCT_UNAVAILABLE");
+  
+  const invalidProducts = requestedIds.filter(id => {
+    const p = products.find(p => p.id === id);
+    return !p || !p.isActive;
+  });
+
+  if (invalidProducts.length > 0) {
+    const missingNames = invalidProducts.map(id => {
+      const p = products.find(p => p.id === id);
+      return p ? p.name : "An unknown item";
+    });
+    throw new Error(`PRODUCT_UNAVAILABLE:${missingNames.join(", ")}`);
+  }
   const productById = new Map(products.map((product) => [product.id, product]));
   const items = data.items.map((item) => {
     const product = productById.get(item.productId)!;
@@ -149,6 +161,7 @@ export async function createAuthoritativeOrder({
 
 export function checkoutErrorResponse(error: unknown) {
   const message = error instanceof Error ? error.message : "";
+  if (message.startsWith("PRODUCT_UNAVAILABLE:")) return { status: 409, error: `${message.slice(20)} ${message.includes(",") ? "are" : "is"} no longer available. Please remove from cart.`, code: "PRODUCT_UNAVAILABLE" };
   if (message === "PRODUCT_UNAVAILABLE") return { status: 409, error: "One or more products are no longer available.", code: message };
   if (message === "MINIMUM_ORDER") return { status: 400, error: "Your cart no longer meets the minimum order value.", code: message };
   if (message === "DELIVERY_SLOT_REQUIRED") return { status: 400, error: "Choose a delivery slot.", code: message };

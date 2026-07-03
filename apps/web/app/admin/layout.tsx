@@ -12,6 +12,7 @@ import { getPublicStoreSettings } from "@/lib/store-settings";
 import { InstallAppButton } from "@/components/install-app-button";
 import { getAuthContext } from "@/lib/auth-guard";
 import { hasPermission, hasFullAccess, type AuthContext } from "@/lib/permissions";
+import { AlarmProvider } from "@/components/admin/alarm-provider";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -126,7 +127,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </div>
 
         {/* Main content */}
-        <main className="mt-5 min-w-0">{children}</main>
+        <main className="mt-5 min-w-0">
+          <AlarmProvider>{children}</AlarmProvider>
+        </main>
       </div>
     </div>
   );

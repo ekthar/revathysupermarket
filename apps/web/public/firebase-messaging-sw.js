@@ -32,10 +32,24 @@ messaging.onBackgroundMessage((payload) => {
       orderId: data.orderId,
       type: data.type,
     },
-    requireInteraction: data.type === "delivery_assignment",
+    // Keep heavy notifications on screen indefinitely for Windows Doze
+    requireInteraction: data.type === "delivery_assignment" || data.type === "order_received",
     renotify: true,
     vibrate: [300, 100, 300, 100, 300],
   };
+
+  // Broadcast to all open tabs so they can ring the heavy alarm
+  self.clients.matchAll({ includeUncontrolled: true, type: "window" }).then((clientList) => {
+    clientList.forEach((client) => {
+      client.postMessage({
+        type: "HEAVY_ALARM",
+        payload: {
+          title,
+          ...data
+        }
+      });
+    });
+  });
 
   return self.registration.showNotification(title, options);
 });

@@ -14,6 +14,8 @@ interface FcmPayload {
   orderNumber: string;
   deepLink?: string;
   type: string;
+  title?: string;
+  body?: string;
 }
 
 /**
@@ -42,6 +44,8 @@ export async function sendFcmToUser(userId: string, payload: FcmPayload): Promis
 
   let anySuccess = false;
   const staleTokenIds: string[] = [];
+  const defaultTitle = payload.title || `Order #${payload.orderNumber}`;
+  const defaultBody = payload.body || (payload.type === "delivery_assignment" ? "New delivery order assigned to you!" : "Order status updated");
 
   for (const device of devices) {
     try {
@@ -52,6 +56,8 @@ export async function sendFcmToUser(userId: string, payload: FcmPayload): Promis
           eventId: payload.eventId,
           orderId: payload.orderId,
           orderNumber: payload.orderNumber,
+          title: defaultTitle,
+          body: defaultBody,
           deepLink: payload.deepLink || `msmsupermarket://delivery/order/${payload.orderId}`,
         },
         android: { priority: "high" },
@@ -67,10 +73,8 @@ export async function sendFcmToUser(userId: string, payload: FcmPayload): Promis
         webpush: {
           headers: { Urgency: "high" },
           notification: {
-            title: `Order #${payload.orderNumber}`,
-            body: payload.type === "delivery_assignment"
-              ? "New delivery order assigned to you!"
-              : "Order status updated",
+            title: defaultTitle,
+            body: defaultBody,
             icon: "/icons/icon-192.png",
           },
         },
@@ -126,6 +130,8 @@ export async function sendFcmToAdmins(payload: FcmPayload): Promise<boolean> {
 
   let anySuccess = false;
   const staleTokenIds: string[] = [];
+  const defaultTitle = payload.title || `New Alert for Order #${payload.orderNumber}`;
+  const defaultBody = payload.body || "Admin action required for this order.";
 
   for (const device of adminDevices) {
     try {
@@ -136,6 +142,8 @@ export async function sendFcmToAdmins(payload: FcmPayload): Promise<boolean> {
           eventId: payload.eventId,
           orderId: payload.orderId,
           orderNumber: payload.orderNumber,
+          title: defaultTitle,
+          body: defaultBody,
           deepLink: payload.deepLink || `msmsupermarket://admin/orders/${payload.orderId}`,
         },
         android: { priority: "high" },
@@ -152,8 +160,8 @@ export async function sendFcmToAdmins(payload: FcmPayload): Promise<boolean> {
         webpush: {
           headers: { Urgency: "high" },
           notification: {
-            title: `Order #${payload.orderNumber} Rejected`,
-            body: "A delivery partner rejected this order. Immediate action required.",
+            title: defaultTitle,
+            body: defaultBody,
             icon: "/icons/icon-192.png",
             requireInteraction: true,
           },

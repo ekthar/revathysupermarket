@@ -10,18 +10,18 @@ const schema = z.object({
 });
 
 const defaultUnits = [
-  "1 pc",
+  "pcs",
   "10 nos",
-  "1 kg",
+  "kg",
   "500 g",
   "250 g",
   "100 g",
-  "1 L",
+  "L",
   "500 ml",
   "250 ml",
-  "1 packet",
-  "1 box",
-  "1 bundle",
+  "packet",
+  "box",
+  "bundle",
 ];
 
 export async function GET() {

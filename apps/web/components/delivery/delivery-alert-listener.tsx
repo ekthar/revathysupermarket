@@ -2,156 +2,259 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Package, X, MapPin, ArrowRight, Volume2 } from "lucide-react";
+import { Bell, Package, X, MapPin, ArrowRight, Volume2, VolumeX } from "lucide-react";
 
 type AlertOrder = { id: string; orderNumber: string; customerName: string; address: string; total: number };
 
-/**
- * Delivery partner alert system.
- * Uses polling every 5 seconds to check for new assigned orders.
- * Plays continuous beeping + vibration until dismissed.
- * Works on Vercel (no long-lived SSE needed).
- *
- * The server only returns unacknowledged orders (deliveryAlertAckAt = null),
- * so ANY order returned should always trigger the fullscreen alert.
- * No client-side deduplication is needed.
- */
+const DB_NAME = "msm-delivery-db";
+const STORE_NAME = "alerts";
+const SOUND_ENABLED_KEY = "delivery-alert-sound-enabled";
+const AUDIO_UNLOCKED_KEY = "delivery-audio-unlocked";
+
+async function openDB(): Promise<IDBDatabase> {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_NAME)) {
+        db.createObjectStore(STORE_NAME, { keyPath: "id" });
+      }
+    };
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function saveAlertOrder(order: AlertOrder): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).put(order);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function getUnackedAlertOrders(): Promise<AlertOrder[]> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readonly");
+    const req = tx.objectStore(STORE_NAME).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+}
+
+async function clearAlertOrder(orderId: string): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).delete(orderId);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
+async function clearAllAlertOrders(): Promise<void> {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, "readwrite");
+    tx.objectStore(STORE_NAME).clear();
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+}
+
 export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
   const [alert, setAlert] = useState<AlertOrder | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const ctxRef = useRef<AudioContext | null>(null);
   const alertOpenRef = useRef(false);
   const [soundEnabled, setSoundEnabled] = useState(false);
+  const [audioReady, setAudioReady] = useState(false);
+  const isMountedRef = useRef(true);
 
+  // Load persisted settings on mount
   useEffect(() => {
-    setSoundEnabled(localStorage.getItem("delivery-alert-sound-enabled") === "true");
+    const enabled = localStorage.getItem(SOUND_ENABLED_KEY) === "true";
+    const unlocked = localStorage.getItem(AUDIO_UNLOCKED_KEY) === "true";
+    setSoundEnabled(enabled);
+    setAudioReady(unlocked);
+    isMountedRef.current = true;
+
+    // Sync IndexedDB alerts on cold start (beeping will start on next poll cycle)
+    getUnackedAlertOrders().then((orders) => {
+      if (isMountedRef.current && orders.length > 0 && !alertOpenRef.current) {
+        alertOpenRef.current = true;
+        setAlert(orders[0]);
+      }
+    }).catch(() => { /* ignore */ });
+
+    return () => { isMountedRef.current = false; };
+  }, []);
+
+  const ensureContext = useCallback(async (): Promise<AudioContext | null> => {
+    if (!ctxRef.current || ctxRef.current.state === "closed") {
+      try {
+        const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        ctxRef.current = new Ctor();
+      } catch { return null; }
+    }
+    if (ctxRef.current.state === "suspended") {
+      try { await ctxRef.current.resume(); } catch { return null; }
+    }
+    return ctxRef.current;
   }, []);
 
   const enableSound = useCallback(async () => {
-    try {
-      if (!ctxRef.current || ctxRef.current.state === "closed") ctxRef.current = new AudioContext();
-      await ctxRef.current.resume();
-      const oscillator = ctxRef.current.createOscillator();
-      const gain = ctxRef.current.createGain();
-      oscillator.connect(gain); gain.connect(ctxRef.current.destination);
-      gain.gain.setValueAtTime(0.08, ctxRef.current.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.01, ctxRef.current.currentTime + 0.12);
-      oscillator.start(); oscillator.stop(ctxRef.current.currentTime + 0.12);
-      localStorage.setItem("delivery-alert-sound-enabled", "true");
-      setSoundEnabled(true);
-    } catch { /* device has no usable Web Audio implementation */ }
-  }, []);
+    const ctx = await ensureContext();
+    if (!ctx) return;
+    // Play a test beep to confirm
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = 880; o.type = "square";
+    g.gain.setValueAtTime(0.08, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+    o.start(); o.stop(ctx.currentTime + 0.12);
+    localStorage.setItem(SOUND_ENABLED_KEY, "true");
+    localStorage.setItem(AUDIO_UNLOCKED_KEY, "true");
+    setSoundEnabled(true);
+    setAudioReady(true);
+  }, [ensureContext]);
 
-  /** Attempt to create/resume AudioContext programmatically (may succeed if page had prior user interaction). */
-  const tryAutoEnableSound = useCallback(async () => {
-    try {
-      if (!ctxRef.current || ctxRef.current.state === "closed") ctxRef.current = new AudioContext();
-      if (ctxRef.current.state === "suspended") {
-        try {
-          await ctxRef.current.resume();
-          localStorage.setItem("delivery-alert-sound-enabled", "true");
-          setSoundEnabled(true);
-        } catch { /* browser blocked auto-resume, visual alert still shows */ }
-      } else if (ctxRef.current.state === "running") {
-        localStorage.setItem("delivery-alert-sound-enabled", "true");
-        setSoundEnabled(true);
+  // Auto-resume on any user interaction (page focus, click, etc.)
+  useEffect(() => {
+    const unlock = async () => {
+      const ctx = await ensureContext();
+      if (ctx) {
+        localStorage.setItem(AUDIO_UNLOCKED_KEY, "true");
+        setAudioReady(true);
       }
-    } catch { /* audio unavailable */ }
-  }, []);
+    };
+    window.addEventListener("click", unlock, { once: true, passive: true });
+    window.addEventListener("keydown", unlock, { once: true, passive: true });
+    window.addEventListener("touchstart", unlock, { once: true, passive: true });
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") unlock();
+    });
+    return () => {
+      window.removeEventListener("click", unlock);
+      window.removeEventListener("keydown", unlock);
+      window.removeEventListener("touchstart", unlock);
+    };
+  }, [ensureContext]);
 
   const startBeeping = useCallback(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
-    const beep = () => {
-      try {
-        if (!ctxRef.current || ctxRef.current.state === "closed") ctxRef.current = new AudioContext();
-        const ctx = ctxRef.current;
-        if (ctx.state === "suspended") ctx.resume();
-        // Tone 1
+    const beep = async () => {
+      const ctx = await ensureContext();
+      if (!ctx) return;
+      // Three-tone ascending pattern
+      const playTone = (freq: number, start: number, dur: number) => {
         const o = ctx.createOscillator(); const g = ctx.createGain();
         o.connect(g); g.connect(ctx.destination);
-        o.frequency.setValueAtTime(880, ctx.currentTime); o.type = "square";
-        g.gain.setValueAtTime(0.25, ctx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
-        o.start(ctx.currentTime); o.stop(ctx.currentTime + 0.25);
-        // Tone 2
-        const o2 = ctx.createOscillator(); const g2 = ctx.createGain();
-        o2.connect(g2); g2.connect(ctx.destination);
-        o2.frequency.setValueAtTime(1100, ctx.currentTime + 0.3); o2.type = "square";
-        g2.gain.setValueAtTime(0.25, ctx.currentTime + 0.3);
-        g2.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.55);
-        o2.start(ctx.currentTime + 0.3); o2.stop(ctx.currentTime + 0.55);
-        // Tone 3
-        const o3 = ctx.createOscillator(); const g3 = ctx.createGain();
-        o3.connect(g3); g3.connect(ctx.destination);
-        o3.frequency.setValueAtTime(1320, ctx.currentTime + 0.6); o3.type = "square";
-        g3.gain.setValueAtTime(0.25, ctx.currentTime + 0.6);
-        g3.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.9);
-        o3.start(ctx.currentTime + 0.6); o3.stop(ctx.currentTime + 0.9);
-      } catch { /* audio unavailable */ }
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+        o.frequency.value = freq; o.type = "square";
+        g.gain.setValueAtTime(0.25, ctx.currentTime + start);
+        g.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + start + dur);
+        o.start(ctx.currentTime + start); o.stop(ctx.currentTime + start + dur);
+      };
+      playTone(880, 0, 0.25);
+      playTone(1100, 0.3, 0.25);
+      playTone(1320, 0.6, 0.3);
     };
     beep();
     intervalRef.current = setInterval(beep, 2000);
-  }, []);
+    // Vibration
+    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
+  }, [ensureContext]);
 
   const stopBeeping = useCallback(() => {
     if (intervalRef.current) { clearInterval(intervalRef.current); intervalRef.current = null; }
     if (navigator.vibrate) navigator.vibrate(0);
   }, []);
 
-  /** Shared poll-and-alert logic used by both interval poller and visibility handler */
   const checkForOrders = useCallback(async () => {
     if (alertOpenRef.current) return;
-    const res = await fetch("/api/delivery/poll", { cache: "no-store" });
-    if (!res.ok) return;
-    const data = await res.json();
-    const orders: AlertOrder[] = data.orders ?? [];
+    try {
+      const res = await fetch("/api/delivery/poll", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = await res.json();
+      const orders: AlertOrder[] = data.orders ?? [];
 
-    if (orders.length > 0 && !alertOpenRef.current) {
-      alertOpenRef.current = true;
-      setAlert(orders[0]);
-      if (localStorage.getItem("delivery-alert-sound-enabled") === "true") {
-        startBeeping();
-      } else {
-        // Try to auto-resume AudioContext and await the result before starting beep
-        await tryAutoEnableSound();
-        if (localStorage.getItem("delivery-alert-sound-enabled") === "true") {
+      // Also check IndexedDB for any persisted alerts not yet shown
+      const persisted = await getUnackedAlertOrders();
+      const allOrders = [...orders, ...persisted.filter(p => !orders.some(o => o.id === p.id))];
+
+      if (allOrders.length > 0 && !alertOpenRef.current) {
+        alertOpenRef.current = true;
+        const order = allOrders[0];
+        setAlert(order);
+        await saveAlertOrder(order); // Persist
+        if (soundEnabled) {
           startBeeping();
+        } else {
+          // Try to auto-enable sound
+          const ctx = await ensureContext();
+          if (ctx) {
+            localStorage.setItem(SOUND_ENABLED_KEY, "true");
+            localStorage.setItem(AUDIO_UNLOCKED_KEY, "true");
+            setSoundEnabled(true);
+            setAudioReady(true);
+            startBeeping();
+          }
         }
       }
-    }
-  }, [startBeeping, tryAutoEnableSound]);
+    } catch { /* ignore, retry next cycle */ }
+  }, [soundEnabled, startBeeping, ensureContext]);
 
-  // Poll for new orders every 5 seconds
+  // Poll every 10 seconds
   useEffect(() => {
     if (!partnerId) return;
     let active = true;
 
     async function poll() {
       if (!active) return;
-      try {
-        await checkForOrders();
-      } catch { /* network error, retry next cycle */ }
+      await checkForOrders();
     }
 
     poll();
-    const timer = setInterval(poll, 5000);
+    const timer = setInterval(poll, 10000);
     return () => { active = false; clearInterval(timer); stopBeeping(); };
   }, [partnerId, checkForOrders, stopBeeping]);
 
-  // Visibility change: trigger immediate poll when page becomes visible
+  // Start beeping when alert becomes active and sound is enabled
+  useEffect(() => {
+    if (alert && soundEnabled && audioReady) {
+      startBeeping();
+    } else if (!alert) {
+      stopBeeping();
+    }
+    return stopBeeping;
+  }, [alert, soundEnabled, audioReady, startBeeping, stopBeeping]);
+
+  // Visibility change: immediate poll when page becomes visible
   useEffect(() => {
     if (!partnerId) return;
-
     function handleVisibilityChange() {
       if (document.visibilityState === "visible" && !alertOpenRef.current) {
-        checkForOrders().catch(() => { /* ignore, regular poll will retry */ });
+        checkForOrders().catch(() => {});
       }
     }
-
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, [partnerId, checkForOrders]);
+
+  // Background Sync registration (for when app is closed)
+  useEffect(() => {
+    if ("serviceWorker" in navigator && "sync" in (window.ServiceWorkerRegistration.prototype as any)) {
+      navigator.serviceWorker.ready.then((reg) => {
+        // Register periodic sync for closed-app polling
+        if ("periodicSync" in reg) {
+          (reg as any).periodicSync.register("delivery-poll", { minInterval: 30000 }).catch(() => {});
+        }
+      });
+    }
+  }, []);
 
   const acknowledge = useCallback(async (reload: boolean) => {
     const orderId = alert?.id;
@@ -159,51 +262,59 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
     alertOpenRef.current = false;
     stopBeeping();
     if (!orderId) return;
-    await fetch("/api/delivery/poll", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId })
-    }).catch(() => null);
+    try {
+      await fetch("/api/delivery/poll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId })
+      });
+      await clearAlertOrder(orderId);
+    } catch { /* ignore */ }
     if (reload) window.location.reload();
   }, [alert?.id, stopBeeping]);
 
   return (
     <>
-      {!soundEnabled && (
+      {!soundEnabled && !audioReady && (
         <button type="button" onClick={enableSound} className="fixed bottom-24 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-xl dark:bg-white dark:text-slate-950">
           <Volume2 className="h-4 w-4" /> Enable assignment alarm
         </button>
       )}
+      {soundEnabled && !audioReady && (
+        <button type="button" onClick={enableSound} className="fixed bottom-24 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-amber-500 px-5 py-3 text-sm font-black text-white shadow-xl">
+          <VolumeX className="h-4 w-4" /> Tap to unlock sound
+        </button>
+      )}
       <AnimatePresence>
-      {alert && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/95 p-4">
-          <motion.div initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.8 }} transition={{ type: "spring", damping: 20 }} className="w-full max-w-sm rounded-3xl bg-white shadow-2xl dark:bg-slate-800 overflow-hidden">
-            <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white overflow-hidden">
-              <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.4, 0.2] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/20" />
-              <div className="relative flex items-center gap-4">
-                <motion.div animate={{ rotate: [-15, 15, -15] }} transition={{ repeat: Infinity, duration: 0.5 }} className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20"><Bell className="h-7 w-7" /></motion.div>
-                <div><p className="text-sm font-bold opacity-90">NEW ORDER!</p><p className="text-3xl font-black">#{alert.orderNumber}</p></div>
-              </div>
-            </div>
-            <div className="p-5">
-              <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-700/50">
-                <div className="flex items-start gap-3">
-                  <Package className="mt-0.5 h-5 w-5 text-emerald-600 shrink-0" />
-                  <div className="flex-1">
-                    <p className="font-bold text-slate-800 dark:text-white">{alert.customerName}</p>
-                    <p className="mt-1 flex items-start gap-1 text-sm text-slate-500"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span className="line-clamp-2">{alert.address}</span></p>
-                    <p className="mt-3 text-2xl font-black text-emerald-600">{"\u20B9"}{alert.total.toLocaleString("en-IN")}</p>
-                  </div>
+        {alert && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/95 p-4">
+            <motion.div initial={{ scale: 0.8, y: 50 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.8 }} transition={{ type: "spring", damping: 20 }} className="w-full max-w-sm rounded-3xl bg-white shadow-2xl dark:bg-slate-800 overflow-hidden">
+              <div className="relative bg-gradient-to-br from-emerald-500 to-emerald-700 p-6 text-white overflow-hidden">
+                <motion.div animate={{ scale: [1, 1.5, 1], opacity: [0.2, 0.4, 0.2] }} transition={{ repeat: Infinity, duration: 1.5 }} className="absolute -right-6 -top-6 h-28 w-28 rounded-full bg-white/20" />
+                <div className="relative flex items-center gap-4">
+                  <motion.div animate={{ rotate: [-15, 15, -15] }} transition={{ repeat: Infinity, duration: 0.5 }} className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/20"><Bell className="h-7 w-7" /></motion.div>
+                  <div><p className="text-sm font-bold opacity-90">NEW ORDER!</p><p className="text-3xl font-black">#{alert.orderNumber}</p></div>
                 </div>
               </div>
-              <div className="mt-5 grid grid-cols-2 gap-3">
-                <button onClick={() => void acknowledge(false)} className="flex h-14 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 font-bold text-slate-600 active:bg-slate-50 dark:border-slate-600 dark:text-slate-300"><X className="h-4 w-4" /> Dismiss</button>
-                <button type="button" onClick={() => void acknowledge(true)} className="flex h-14 items-center justify-center gap-2 rounded-xl bg-emerald-600 font-black text-white active:bg-emerald-700">View <ArrowRight className="h-4 w-4" /></button>
+              <div className="p-5">
+                <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-700/50">
+                  <div className="flex items-start gap-3">
+                    <Package className="mt-0.5 h-5 w-5 text-emerald-600 shrink-0" />
+                    <div className="flex-1">
+                      <p className="font-bold text-slate-800 dark:text-white">{alert.customerName}</p>
+                      <p className="mt-1 flex items-start gap-1 text-sm text-slate-500"><MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0" /><span className="line-clamp-2">{alert.address}</span></p>
+                      <p className="mt-3 text-2xl font-black text-emerald-600">{"\u20B9"}{alert.total.toLocaleString("en-IN")}</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-5 grid grid-cols-2 gap-3">
+                  <button onClick={() => void acknowledge(false)} className="flex h-14 items-center justify-center gap-2 rounded-xl border-2 border-slate-200 font-bold text-slate-600 active:bg-slate-50 dark:border-slate-600 dark:text-slate-300"><X className="h-4 w-4" /> Dismiss</button>
+                  <button type="button" onClick={() => void acknowledge(true)} className="flex h-14 items-center justify-center gap-2 rounded-xl bg-emerald-600 font-black text-white active:bg-emerald-700">View <ArrowRight className="h-4 w-4" /></button>
+                </div>
               </div>
-            </div>
+            </motion.div>
           </motion.div>
-        </motion.div>
-      )}
+        )}
       </AnimatePresence>
     </>
   );

@@ -30,63 +30,65 @@ export interface AdminRejectPayload {
 }
 
 class NotifeeService {
-  private channelsCreated = false;
+  private channelsPromise: Promise<void> | null = null;
 
   /**
    * Create notification channels on app startup.
    * Must be called before displaying any notifications.
    */
   async createChannels(): Promise<void> {
-    if (this.channelsCreated) return;
+    if (this.channelsPromise) return this.channelsPromise;
 
-    // Delivery alert channel — high importance, custom sound, bypasses DND
-    await notifee.createChannel({
-      id: "delivery_alert",
-      name: "Delivery Alerts",
-      description: "Incoming order assignment alerts",
-      importance: AndroidImportance.HIGH,
-      sound: "delivery_alarm",
-      vibration: true,
-      vibrationPattern: [0, 300, 100, 300, 100, 300],
-      bypassDnd: true,
-      visibility: AndroidVisibility.PUBLIC,
-    });
+    this.channelsPromise = (async () => {
+      // Delivery alert channel — high importance, custom sound, bypasses DND
+      await notifee.createChannel({
+        id: "delivery_alert",
+        name: "Delivery Alerts",
+        description: "Incoming order assignment alerts",
+        importance: AndroidImportance.HIGH,
+        sound: "delivery_alarm",
+        vibration: true,
+        vibrationPattern: [0, 300, 100, 300, 100, 300],
+        bypassDnd: true,
+        visibility: AndroidVisibility.PUBLIC,
+      });
 
-    // Admin emergency channel — distinct sound for order rejections
-    await notifee.createChannel({
-      id: "admin_emergency",
-      name: "Emergency Alerts",
-      description: "Critical alerts when orders are rejected",
-      importance: AndroidImportance.HIGH,
-      sound: "emergency_bell",
-      vibration: true,
-      vibrationPattern: [0, 500, 200, 500],
-      bypassDnd: true,
-      visibility: AndroidVisibility.PUBLIC,
-    });
+      // Admin emergency channel — distinct sound for order rejections
+      await notifee.createChannel({
+        id: "admin_emergency",
+        name: "Emergency Alerts",
+        description: "Critical alerts when orders are rejected",
+        importance: AndroidImportance.HIGH,
+        sound: "emergency_bell",
+        vibration: true,
+        vibrationPattern: [0, 500, 200, 500],
+        bypassDnd: true,
+        visibility: AndroidVisibility.PUBLIC,
+      });
 
-    // Packing alert channel — high importance, vibration, bypasses DND
-    await notifee.createChannel({
-      id: "packing_alert",
-      name: "Packing Alerts",
-      description: "Incoming packing order assignment alerts",
-      importance: AndroidImportance.HIGH,
-      sound: "delivery_alarm",
-      vibration: true,
-      vibrationPattern: [0, 300, 100, 300, 100, 300],
-      bypassDnd: true,
-      visibility: AndroidVisibility.PUBLIC,
-    });
+      // Packing alert channel — high importance, vibration, bypasses DND
+      await notifee.createChannel({
+        id: "packing_alert",
+        name: "Packing Alerts",
+        description: "Incoming packing order assignment alerts",
+        importance: AndroidImportance.HIGH,
+        sound: "delivery_alarm",
+        vibration: true,
+        vibrationPattern: [0, 300, 100, 300, 100, 300],
+        bypassDnd: true,
+        visibility: AndroidVisibility.PUBLIC,
+      });
 
-    // General notification channel
-    await notifee.createChannel({
-      id: "general",
-      name: "General",
-      description: "General notifications",
-      importance: AndroidImportance.DEFAULT,
-    });
+      // General notification channel
+      await notifee.createChannel({
+        id: "general",
+        name: "General",
+        description: "General notifications",
+        importance: AndroidImportance.DEFAULT,
+      });
+    })();
 
-    this.channelsCreated = true;
+    return this.channelsPromise;
   }
 
   /**

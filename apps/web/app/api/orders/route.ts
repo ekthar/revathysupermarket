@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateDistanceKm } from "@/lib/distance";
@@ -65,79 +66,94 @@ export async function POST(request: Request) {
       );
     }
 
-    {
-      const order = await createAuthoritativeOrder({
-        data,
-        userId: session.user.id,
-        orderNumber: await createOrderNumber(),
-        distanceKm,
-        settings
-      });
-
-      const existingAddress = await prisma.address.findFirst({
-        where: { userId: session.user.id, houseName: data.houseName, pincode: data.pincode, street: data.street }
-      }).catch(() => null);
-      if (!existingAddress) {
-        await prisma.address.create({ data: { userId: session.user.id, label: "Home", houseName: data.houseName, street: data.street, landmark: data.landmark, pincode: data.pincode, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
-      } else {
-        await prisma.address.update({ where: { id: existingAddress.id }, data: { landmark: data.landmark, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+    // Retry order creation on unique constraint violation (P2002) for orderNumber
+    let order: Awaited<ReturnType<typeof createAuthoritativeOrder>>;
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        order = await createAuthoritativeOrder({
+          data,
+          userId: session.user.id,
+          orderNumber: await createOrderNumber(),
+          distanceKm,
+          settings
+        });
+        break;
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === "P2002" &&
+          (err.meta?.target as string[] | undefined)?.includes("orderNumber") &&
+          attempt < MAX_RETRIES - 1
+        ) {
+          continue;
+        }
+        throw err;
       }
-      await sendWhatsAppTemplate({ to: order.phone, template: "order_confirmed", params: [order.orderNumber, String(order.items.length), Number(order.total).toFixed(2), order.paymentMethod], orderId: order.id }).catch(() => null);
-      await notifyOrderStatus(session.user.id, order.orderNumber, "ORDER_RECEIVED", order.id).catch(() => null);
+    }
 
-      // Broadcast new order alert to all connected delivery partners + staff
+    // Address upsert — user-facing concern, keep before parallel block
+    const existingAddress = await prisma.address.findFirst({
+      where: { userId: session.user.id, houseName: data.houseName, pincode: data.pincode, street: data.street }
+    }).catch(() => null);
+    if (!existingAddress) {
+      await prisma.address.create({ data: { userId: session.user.id, label: "Home", houseName: data.houseName, street: data.street, landmark: data.landmark, pincode: data.pincode, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+    } else {
+      await prisma.address.update({ where: { id: existingAddress.id }, data: { landmark: data.landmark, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+    }
+
+    // Fire-and-forget side effects — run all in parallel
+    const orderAddress = `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`;
+    Promise.allSettled([
+      sendWhatsAppTemplate({ to: order!.phone, template: "order_confirmed", params: [order!.orderNumber, String(order!.items.length), Number(order!.total).toFixed(2), order!.paymentMethod], orderId: order!.id }).catch(() => null),
+      notifyOrderStatus(session.user.id, order!.orderNumber, "ORDER_RECEIVED", order!.id).catch(() => null),
       broadcastToAllDeliveryPartners({
         type: "new_order",
         order: {
-          id: order.id,
-          orderNumber: order.orderNumber,
+          id: order!.id,
+          orderNumber: order!.orderNumber,
           customerName: data.customerName,
-          address: `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`,
-          total: Number(order.total)
+          address: orderAddress,
+          total: Number(order!.total)
         }
-      });
-
-      // Send push notification to all admins
+      }),
       sendFcmToAdmins({
         type: "new_order_alert",
-        eventId: `new-order-${order.id}-${Date.now()}`,
-        orderId: order.id,
-        orderNumber: order.orderNumber,
-        deepLink: `msmsupermarket://admin/orders/${order.id}`,
-      }).catch(() => null);
-
-      // Send push notification to all delivery partners
-      const deliveryPartners = await prisma.user.findMany({
+        eventId: `new-order-${order!.id}-${Date.now()}`,
+        orderId: order!.id,
+        orderNumber: order!.orderNumber,
+        deepLink: `msmsupermarket://admin/orders/${order!.id}`,
+      }).catch(() => null),
+      // Send push to all delivery partners in parallel (fix N+1)
+      prisma.user.findMany({
         where: { role: "DELIVERY_PARTNER", isActive: true },
         select: { id: true }
-      }).catch(() => []);
-      for (const partner of deliveryPartners) {
-        sendPushToUser(partner.id, {
-          title: "🆕 New Order!",
-          body: `Order #${order.orderNumber} from ${data.customerName} - ₹${Number(order.total).toFixed(0)}`,
-          url: "/delivery",
-          orderId: order.id
-        }).catch(() => null);
-      }
-
-      // ─── PUBLISH REAL-TIME EVENTS ───
-      const orderAddress = `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`;
+      }).catch(() => [] as { id: string }[]).then((partners) =>
+        Promise.all(partners.map((partner) =>
+          sendPushToUser(partner.id, {
+            title: "🆕 New Order!",
+            body: `Order #${order!.orderNumber} from ${data.customerName} - ₹${Number(order!.total).toFixed(0)}`,
+            url: "/delivery",
+            orderId: order!.id
+          }).catch(() => null)
+        ))
+      ),
       publishNewOrder({
-        orderId: order.id,
-        orderNumber: order.orderNumber,
+        orderId: order!.id,
+        orderNumber: order!.orderNumber,
         customerName: data.customerName,
         address: orderAddress,
-        total: Number(order.total),
-      }).catch(() => null);
+        total: Number(order!.total),
+      }).catch(() => null),
       publishOrderStatusChanged({
-        orderId: order.id,
-        orderNumber: order.orderNumber,
+        orderId: order!.id,
+        orderNumber: order!.orderNumber,
         status: "ORDER_RECEIVED",
         userId: session.user.id,
-      }).catch(() => null);
+      }).catch(() => null),
+    ]);
 
-      return NextResponse.json({ orderId: order.id, orderNumber: order.orderNumber, total: Number(order.total) });
-    }
+    return NextResponse.json({ orderId: order!.id, orderNumber: order!.orderNumber, total: Number(order!.total) });
   } catch (error) {
     const checkoutError = checkoutErrorResponse(error);
     if (checkoutError) return NextResponse.json({ error: checkoutError.error, code: checkoutError.code }, { status: checkoutError.status });

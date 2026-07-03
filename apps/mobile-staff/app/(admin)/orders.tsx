@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, TextInput, RefreshControl, ScrollView, Vibration } from "react-native";
+import { router } from "expo-router";
 import { api } from "@/services/api";
 import { AnimatedScreen } from "@/components/AnimatedScreen";
 import { AnimatedPressable } from "@/components/AnimatedPressable";
@@ -135,7 +136,7 @@ export default function AdminOrdersScreen() {
                 className="bg-white dark:bg-slate-950 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 shadow-sm"
                 accessibilityRole="button"
                 accessibilityLabel={`Order ${item.orderNumber}, ${item.customerName}, ${statusLabel}, ${item.total} rupees`}
-                onPress={() => Vibration.vibrate(5)}
+                onPress={() => { Vibration.vibrate(5); router.push(`/(admin)/order/${item.id}` as any); }}
                 haptic={false}
               >
                 <View className="flex-row justify-between items-center">

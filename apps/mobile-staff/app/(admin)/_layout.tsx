@@ -54,6 +54,11 @@ export default function AdminLayout() {
           ),
         }}
       />
+      {/* Hide order sub-screens from tab bar */}
+      <Tabs.Screen name="order/[id]/index" options={{ href: null }} />
+      <Tabs.Screen name="order/[id]/stock-check" options={{ href: null }} />
+      <Tabs.Screen name="order/[id]/bill" options={{ href: null }} />
+      <Tabs.Screen name="order/[id]/assign" options={{ href: null }} />
     </Tabs>
   );
 }

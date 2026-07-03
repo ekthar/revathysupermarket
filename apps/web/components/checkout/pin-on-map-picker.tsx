@@ -74,7 +74,7 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
         setCenter({ latitude: c.lat, longitude: c.lng });
       };
 
-      map.on("move", syncCenter);
+      map.on("moveend", syncCenter);
       
       // Leaflet is ready to render tiles immediately
       syncCenter();

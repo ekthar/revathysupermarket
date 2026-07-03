@@ -20,86 +20,93 @@ import { getDeviceTokenRole } from "../stores/auth";
 async function routeIncomingMessage(
   message: FirebaseMessagingTypes.RemoteMessage
 ): Promise<void> {
-  const type = message.data?.type as string | undefined;
-  const isForeground = AppState.currentState === "active";
+  try {
+    const type = message.data?.type as string | undefined;
+    const isForeground = AppState.currentState === "active";
 
-  if (isForeground) {
-    if (type === "delivery_assignment") {
-      router.push(
-        `/alert/${message.data?.eventId}?orderId=${message.data?.orderId}&orderNumber=${message.data?.orderNumber}` as any
-      );
-    } else if (type === "packing_assignment") {
-      router.push(
-        `/alert/packing/${message.data?.eventId}?orderId=${message.data?.orderId}&orderNumber=${message.data?.orderNumber}` as any
-      );
-    } else if (type === "new_order_alert") {
-      alarmService.startAlarm().catch(() => null);
-      Alert.alert(
-        "🆕 New Order received!",
-        `Order #${message.data?.orderNumber} is waiting for approval.`,
-        [
-          {
-            text: "View Order",
-            onPress: async () => {
-              await alarmService.stopAlarm();
-              router.push(`/(admin)/orders` as any);
-            }
-          },
-          {
-            text: "Mute",
-            onPress: async () => {
-              await alarmService.stopAlarm();
-            },
-            style: "cancel"
-          }
-        ],
-        { cancelable: false }
-      );
-    }
-  }
-
-  switch (type) {
-    case "delivery_assignment":
-      await notifeeService.showDeliveryAlert({
-        eventId: message.data?.eventId as string,
-        orderId: message.data?.orderId as string,
-        orderNumber: message.data?.orderNumber as string,
-        deepLink: message.data?.deepLink as string,
-      });
-      break;
-
-    case "packing_assignment":
-      await notifeeService.showPackingAlert({
-        eventId: message.data?.eventId as string,
-        orderId: message.data?.orderId as string,
-        orderNumber: message.data?.orderNumber as string,
-      });
-      break;
-
-    case "new_order_alert":
-      await notifeeService.showAdminNewOrderAlert({
-        orderId: message.data?.orderId as string,
-        orderNumber: message.data?.orderNumber as string,
-      });
-      break;
-
-    case "order_rejected":
-      await notifeeService.showAdminRejectAlert({
-        orderId: message.data?.orderId as string,
-        orderNumber: message.data?.orderNumber as string,
-        reason: message.data?.reason as string,
-      });
-      break;
-
-    default:
-      // Generic notification
-      if (message.notification) {
-        await notifeeService.showGenericNotification(
-          message.notification.title ?? "MSM Staff",
-          message.notification.body ?? ""
+    if (isForeground) {
+      if (type === "delivery_assignment") {
+        router.push(
+          `/alert/${message.data?.eventId}?orderId=${message.data?.orderId}&orderNumber=${message.data?.orderNumber}` as any
         );
+        return;
+      } else if (type === "packing_assignment") {
+        router.push(
+          `/alert/packing/${message.data?.eventId}?orderId=${message.data?.orderId}&orderNumber=${message.data?.orderNumber}` as any
+        );
+        return;
+      } else if (type === "new_order_alert") {
+        alarmService.startAlarm().catch(() => null);
+        Alert.alert(
+          "🆕 New Order received!",
+          `Order #${message.data?.orderNumber} is waiting for approval.`,
+          [
+            {
+              text: "View Order",
+              onPress: async () => {
+                await alarmService.stopAlarm();
+                router.push(`/(admin)/orders` as any);
+              }
+            },
+            {
+              text: "Mute",
+              onPress: async () => {
+                await alarmService.stopAlarm();
+              },
+              style: "cancel"
+            }
+          ],
+          { cancelable: false }
+        );
+        return;
       }
-      break;
+    }
+
+    switch (type) {
+      case "delivery_assignment":
+        await notifeeService.showDeliveryAlert({
+          eventId: message.data?.eventId as string,
+          orderId: message.data?.orderId as string,
+          orderNumber: message.data?.orderNumber as string,
+          deepLink: message.data?.deepLink as string,
+        });
+        break;
+
+      case "packing_assignment":
+        await notifeeService.showPackingAlert({
+          eventId: message.data?.eventId as string,
+          orderId: message.data?.orderId as string,
+          orderNumber: message.data?.orderNumber as string,
+        });
+        break;
+
+      case "new_order_alert":
+        await notifeeService.showAdminNewOrderAlert({
+          orderId: message.data?.orderId as string,
+          orderNumber: message.data?.orderNumber as string,
+        });
+        break;
+
+      case "order_rejected":
+        await notifeeService.showAdminRejectAlert({
+          orderId: message.data?.orderId as string,
+          orderNumber: message.data?.orderNumber as string,
+          reason: message.data?.reason as string,
+        });
+        break;
+
+      default:
+        // Generic notification
+        if (message.notification) {
+          await notifeeService.showGenericNotification(
+            message.notification.title ?? "MSM Staff",
+            message.notification.body ?? ""
+          );
+        }
+        break;
+    }
+  } catch (error) {
+    console.error("[FCM] Error routing incoming message:", error);
   }
 }
 
@@ -130,7 +137,17 @@ class FcmService {
     // Listen for token refresh
     messaging().onTokenRefresh((newToken) => {
       this.token = newToken;
-      // Re-register silently -- role will be fetched from last known
+      // Re-register with backend using last known role
+      const role = getDeviceTokenRole();
+      if (role) {
+        const installationId = `staff-${Platform.OS}-${newToken.slice(-16)}`;
+        api.post("/devices", {
+          token: newToken,
+          platform: Platform.OS,
+          installationId,
+          role,
+        }).catch((err) => console.warn("[FCM] Token re-registration failed:", err));
+      }
     });
 
     return this.token;

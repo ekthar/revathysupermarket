@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { View, Text, ScrollView, Switch, TextInput, ActivityIndicator, Alert } from "react-native";
 import { api } from "@/services/api";
+import { useAuthStore } from "@/stores/auth";
 import { AnimatedScreen } from "@/components/AnimatedScreen";
+import { AnimatedPressable } from "@/components/AnimatedPressable";
 import { AnimatedFadeIn } from "@/components/AnimatedFadeIn";
 
 interface Flag {
@@ -20,6 +22,7 @@ const FLAG_LABELS: Record<string, { label: string; desc: string }> = {
 export default function AdminSettingsScreen() {
   const [flags, setFlags] = useState<Flag[]>([]);
   const [loading, setLoading] = useState(true);
+  const logout = useAuthStore((s) => s.logout);
 
   useEffect(() => {
     api.get("/feature-flags").then(({ data }) => {
@@ -53,6 +56,31 @@ export default function AdminSettingsScreen() {
     <AnimatedScreen className="flex-1 bg-white dark:bg-slate-950">
       <ScrollView className="flex-1 bg-white dark:bg-slate-950" contentContainerStyle={{ padding: 20 }}>
         <Text className="text-2xl font-bold text-slate-900 dark:text-white pt-10 mb-6">Feature Flags</Text>
+
+        {/* Logout */}
+        <AnimatedFadeIn index={0}>
+          <AnimatedPressable
+            onPress={() => {
+              Alert.alert(
+                "Log Out",
+                "Are you sure you want to log out?",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Log Out",
+                    style: "destructive",
+                    onPress: () => logout(),
+                  },
+                ]
+              );
+            }}
+            className="mb-6 h-14 bg-red-500 dark:bg-red-600 rounded-2xl items-center justify-center"
+            accessibilityRole="button"
+            accessibilityLabel="Log out"
+          >
+            <Text className="text-white text-base font-bold">Log Out</Text>
+          </AnimatedPressable>
+        </AnimatedFadeIn>
 
         {flags.map((flag, i) => {
           const meta = FLAG_LABELS[flag.key] ?? { label: flag.key, desc: "" };

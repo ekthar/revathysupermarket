@@ -70,7 +70,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
         onChangeRef.current({ latitude: c.lat, longitude: c.lng });
       };
 
-      map.on("move", syncCenter);
+      map.on("moveend", syncCenter);
       map.on("moveend", onMoveEnd);
 
       syncCenter();
@@ -82,8 +82,6 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
     return () => {
       active = false;
       if (map) {
-        map.off("move");
-        map.off("moveend");
         map.remove();
         mapRef.current = null;
       }

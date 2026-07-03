@@ -68,19 +68,27 @@ export async function GET(request: Request) {
     sheet.views = [{ state: "frozen", ySplit: 1 }];
     sheet.getRow(1).font = { bold: true };
 
-    // Fetch and append Allowed Categories & GST sheet for user reference
-    const categories = await prisma.category.findMany({ select: { name: true }, orderBy: { name: "asc" } });
+    // Fetch and append allowed values for user reference.
+    const [categories, units] = await Promise.all([
+      prisma.category.findMany({ select: { name: true }, orderBy: { name: "asc" } }),
+      prisma.unit.findMany({ select: { name: true }, orderBy: { name: "asc" } }).catch(() => []),
+    ]);
     const allowedGst = [0, 3, 5, 12, 40];
-    const refSheet = workbook.addWorksheet("Allowed Categories & GST");
+    const suggestedUnits = units.length > 0
+      ? units.map((unit) => unit.name)
+      : ["pcs", "10 nos", "kg", "500 g", "250 g", "100 g", "L", "500 ml", "250 ml", "packet", "box", "bundle"];
+    const refSheet = workbook.addWorksheet("Allowed Values");
     refSheet.columns = [
       { header: "Allowed Categories", key: "category", width: 25 },
-      { header: "Allowed GST Rates (%)", key: "gst", width: 25 }
+      { header: "Allowed GST Rates (%)", key: "gst", width: 25 },
+      { header: "Suggested Units", key: "unit", width: 25 }
     ];
-    const maxLength = Math.max(categories.length, allowedGst.length);
+    const maxLength = Math.max(categories.length, allowedGst.length, suggestedUnits.length);
     for (let i = 0; i < maxLength; i++) {
       refSheet.addRow({
         category: categories[i]?.name ?? "",
-        gst: allowedGst[i] !== undefined ? allowedGst[i] : ""
+        gst: allowedGst[i] !== undefined ? allowedGst[i] : "",
+        unit: suggestedUnits[i] ?? ""
       });
     }
     refSheet.getRow(1).font = { bold: true };

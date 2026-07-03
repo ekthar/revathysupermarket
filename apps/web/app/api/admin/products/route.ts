@@ -7,6 +7,7 @@ import { requireProductStaff } from "@/lib/authz";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
 import { isAllowedProductImageUrl, normalizeImageUrl, PRODUCT_IMAGE_FALLBACK, safeProductImageUrl } from "@/lib/image";
+import { ensureProductUnits } from "@/lib/admin-product-bulk";
 
 export async function POST(request: Request) {
   try {
@@ -47,6 +48,8 @@ export async function POST(request: Request) {
       update: { name: parsed.data.category },
       create: { name: parsed.data.category, slug: slugify(parsed.data.category) }
     });
+    const unit = parsed.data.unit?.trim() || "1 pc";
+    await ensureProductUnits([unit]);
 
     const baseSlug = slugify(parsed.data.name);
     let slug = baseSlug;
@@ -67,7 +70,7 @@ export async function POST(request: Request) {
         gstRate: parsed.data.gstRate ?? null,
         stock: parsed.data.stock,
         categoryId: category.id,
-        unit: parsed.data.unit?.trim() || "1 pc",
+        unit,
         isActive: parsed.data.isActive ?? true,
         isFeatured: parsed.data.isFeatured ?? false,
         costPrice: parsed.data.costPrice ?? null,

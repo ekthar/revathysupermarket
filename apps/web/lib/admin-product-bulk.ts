@@ -104,6 +104,16 @@ export function validateProductSheetRow(row: ProductSheetRow) {
   return errors;
 }
 
+export async function ensureProductUnits(units: Array<string | null | undefined>) {
+  const names = [...new Set(units.map((unit) => unit?.trim()).filter((unit): unit is string => Boolean(unit)))];
+  if (names.length === 0) return;
+
+  await prisma.unit.createMany({
+    data: names.map((name) => ({ name })),
+    skipDuplicates: true
+  });
+}
+
 async function uniqueProductSlug(name: string, currentId?: string, preferredSlug?: string) {
   const baseSlug = slugify(preferredSlug || name) || "product";
   let slug = baseSlug;
@@ -132,6 +142,7 @@ async function findExistingProduct(row: ProductSheetRow) {
 export async function upsertProductSheetRows(rows: ProductSheetRow[]) {
   const results: Array<{ name: string; action: "created" | "updated"; id: string }> = [];
   const errors: Array<{ row: number; errors: string[] }> = [];
+  const validRows: ProductSheetRow[] = [];
 
   for (const [index, row] of rows.entries()) {
     const rowErrors = validateProductSheetRow(row);
@@ -139,7 +150,12 @@ export async function upsertProductSheetRows(rows: ProductSheetRow[]) {
       errors.push({ row: index + 1, errors: rowErrors });
       continue;
     }
+    validRows.push(row);
+  }
 
+  await ensureProductUnits(validRows.map((row) => row.unit));
+
+  for (const row of validRows) {
     const categorySlug = slugify(row.category);
     const category = await prisma.category.upsert({
       where: { slug: categorySlug },

@@ -7,6 +7,7 @@ import { requireProductStaff } from "@/lib/authz";
 import { productSchema } from "@/lib/validations";
 import { slugify } from "@/lib/utils";
 import { isAllowedProductImageUrl, normalizeImageUrl, safeProductImageUrl } from "@/lib/image";
+import { ensureProductUnits } from "@/lib/admin-product-bulk";
 
 async function uniqueProductSlug(name: string, id: string) {
   const baseSlug = slugify(name) || "product";
@@ -51,13 +52,15 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
       where: { id },
       select: { name: true, price: true, discountPrice: true, stock: true, isActive: true, isFeatured: true }
     });
+    const unit = productData.unit?.trim();
+    if (unit) await ensureProductUnits([unit]);
     const slug = productData.name ? await uniqueProductSlug(productData.name, id) : undefined;
     const product = await prisma.product.update({
       where: { id },
       data: {
         ...productData,
         image: productData.image !== undefined ? safeProductImageUrl(productData.image) : undefined,
-        unit: productData.unit?.trim(),
+        unit,
         slug,
         category: category
           ? {

@@ -149,7 +149,8 @@ export function ProductManagementForm({ categories }: Props) {
       description,
       isFeatured: formData.get("isFeatured") === "on",
       brand: String(formData.get("brand") ?? "").trim() || undefined,
-      costPrice: costPriceValue ? Number(costPriceValue) : undefined
+      costPrice: costPriceValue ? Number(costPriceValue) : undefined,
+      unit: String(formData.get("unit") ?? "1 pc").trim() || "1 pc"
     };
 
     const response = await fetch("/api/admin/products", {
@@ -249,8 +250,48 @@ export function ProductManagementForm({ categories }: Props) {
       {/* Stock */}
       <Input name="stock" placeholder="Stock quantity" type="number" min="0" step="1" required className="h-12 rounded-2xl" />
 
-      {/* GST Rate */}
-      <Input name="gstRate" placeholder="GST % (e.g. 5, 12, 18)" type="number" min="0" max="28" step="0.01" className="h-12 rounded-2xl" />
+      {/* Unit with datalist to select or create a new unit */}
+      <div className="space-y-1">
+        <input
+          name="unit"
+          list="unit-options"
+          placeholder="Unit (e.g. 1 pc, 10 nos)"
+          defaultValue="1 pc"
+          className="h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        />
+        <datalist id="unit-options">
+          <option value="1 pc" />
+          <option value="10 nos" />
+          <option value="1 kg" />
+          <option value="500 g" />
+          <option value="250 g" />
+          <option value="100 g" />
+          <option value="1 L" />
+          <option value="500 ml" />
+          <option value="250 ml" />
+          <option value="1 packet" />
+          <option value="1 box" />
+          <option value="1 bundle" />
+        </datalist>
+      </div>
+
+      {/* GST Rate select */}
+      <div className="space-y-1">
+        <select
+          name="gstRate"
+          defaultValue=""
+          className="h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+        >
+          <option value="">Select GST %</option>
+          <option value="0">0%</option>
+          <option value="3">3%</option>
+          <option value="5">5%</option>
+          <option value="12">12%</option>
+          <option value="18">18%</option>
+          <option value="28">28%</option>
+          <option value="40">40%</option>
+        </select>
+      </div>
 
       {/* Brand */}
       <Input name="brand" placeholder="Brand (optional)" maxLength={100} className="h-12 rounded-2xl" />

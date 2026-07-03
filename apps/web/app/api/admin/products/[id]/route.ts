@@ -109,23 +109,50 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
     const unauthorized = requireProductStaff(session);
     if (unauthorized) return unauthorized;
     const { id } = await params;
-    const product = await prisma.product.update({
-      where: { id },
-      data: { isActive: false },
-      select: { id: true, isActive: true }
+
+    // Check if the product has ever been sold
+    const soldCount = await prisma.orderItem.count({
+      where: { productId: id }
     });
-    revalidateTag("products");
-    revalidateTag("homepage");
-    await writeAuditLog({
-      actorId: session?.user?.id,
-      actorRole: session?.user?.role,
-      action: "product_deactivated",
-      targetType: "Product",
-      targetId: product.id
-    });
-    return NextResponse.json({ ok: true, product });
+
+    if (soldCount > 0) {
+      // Soft-delete: just deactivate it
+      const product = await prisma.product.update({
+        where: { id },
+        data: { isActive: false },
+        select: { id: true, name: true, isActive: true }
+      });
+      revalidateTag("products");
+      revalidateTag("homepage");
+      await writeAuditLog({
+        actorId: session?.user?.id,
+        actorRole: session?.user?.role,
+        action: "product_deactivated",
+        targetType: "Product",
+        targetId: product.id,
+        metadata: { name: product.name, reason: "Product has sales history, soft deactivating instead of deleting." }
+      });
+      return NextResponse.json({ ok: true, action: "deactivated", product });
+    } else {
+      // Hard-delete: completely remove it
+      const product = await prisma.product.delete({
+        where: { id },
+        select: { id: true, name: true }
+      });
+      revalidateTag("products");
+      revalidateTag("homepage");
+      await writeAuditLog({
+        actorId: session?.user?.id,
+        actorRole: session?.user?.role,
+        action: "product_deleted",
+        targetType: "Product",
+        targetId: product.id,
+        metadata: { name: product.name }
+      });
+      return NextResponse.json({ ok: true, action: "deleted", product });
+    }
   } catch (error) {
     console.error("Product delete failed", error);
-    return NextResponse.json({ error: "Product could not be deactivated." }, { status: 500 });
+    return NextResponse.json({ error: "Product could not be deleted." }, { status: 500 });
   }
 }

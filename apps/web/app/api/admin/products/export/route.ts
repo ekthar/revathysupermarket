@@ -67,6 +67,24 @@ export async function GET(request: Request) {
     sheet.addRows(templateExampleRows);
     sheet.views = [{ state: "frozen", ySplit: 1 }];
     sheet.getRow(1).font = { bold: true };
+
+    // Fetch and append Allowed Categories & GST sheet for user reference
+    const categories = await prisma.category.findMany({ select: { name: true }, orderBy: { name: "asc" } });
+    const allowedGst = [0, 3, 5, 12, 18, 28, 40];
+    const refSheet = workbook.addWorksheet("Allowed Categories & GST");
+    refSheet.columns = [
+      { header: "Allowed Categories", key: "category", width: 25 },
+      { header: "Allowed GST Rates (%)", key: "gst", width: 25 }
+    ];
+    const maxLength = Math.max(categories.length, allowedGst.length);
+    for (let i = 0; i < maxLength; i++) {
+      refSheet.addRow({
+        category: categories[i]?.name ?? "",
+        gst: allowedGst[i] !== undefined ? allowedGst[i] : ""
+      });
+    }
+    refSheet.getRow(1).font = { bold: true };
+
     const buffer = await workbook.xlsx.writeBuffer();
     return new Response(Buffer.from(buffer), {
       headers: {

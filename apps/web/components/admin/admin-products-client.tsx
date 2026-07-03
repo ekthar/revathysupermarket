@@ -289,7 +289,8 @@ function EditProductModal({
     isActive: product.isActive,
     isFeatured: product.isFeatured,
     brand: product.brand ?? "",
-    costPrice: product.costPrice ? String(product.costPrice) : ""
+    costPrice: product.costPrice ? String(product.costPrice) : "",
+    gstRate: product.gstRate ? String(product.gstRate) : ""
   });
   const [saving, setSaving] = useState(false);
 
@@ -307,7 +308,8 @@ function EditProductModal({
       stock: Number(form.stock),
       image: form.image.trim() || undefined,
       brand: form.brand.trim() || undefined,
-      costPrice: form.costPrice ? Number(form.costPrice) : undefined
+      costPrice: form.costPrice ? Number(form.costPrice) : undefined,
+      gstRate: form.gstRate ? Number(form.gstRate) : undefined
     };
     const response = await fetch(`/api/admin/products/${product.id}`, {
       method: "PATCH",
@@ -330,6 +332,7 @@ function EditProductModal({
       price: payload.price,
       discountPrice: payload.discountPrice,
       costPrice: payload.costPrice,
+      gstRate: payload.gstRate,
       brand: payload.brand,
       stock: payload.stock,
       image: payload.image,
@@ -391,7 +394,21 @@ function EditProductModal({
             </label>
             <label>
               <span className="text-sm font-bold">Unit</span>
-              <Input value={form.unit} onChange={(event) => update("unit", event.target.value)} className="mt-2 h-12 rounded-2xl" />
+              <Input value={form.unit} onChange={(event) => update("unit", event.target.value)} list="edit-unit-options" className="mt-2 h-12 rounded-2xl" />
+              <datalist id="edit-unit-options">
+                <option value="1 pc" />
+                <option value="10 nos" />
+                <option value="1 kg" />
+                <option value="500 g" />
+                <option value="250 g" />
+                <option value="100 g" />
+                <option value="1 L" />
+                <option value="500 ml" />
+                <option value="250 ml" />
+                <option value="1 packet" />
+                <option value="1 box" />
+                <option value="1 bundle" />
+              </datalist>
             </label>
           </div>
           <div className="grid grid-cols-2 gap-3">
@@ -401,7 +418,26 @@ function EditProductModal({
             </label>
             <label>
               <span className="text-sm font-bold">Cost price</span>
-              <Input type="number" min="1" step="0.01" value={form.costPrice} onChange={(event) => update("costPrice", event.target.value)} placeholder="Cost price (optional)" className="mt-2 h-12 rounded-2xl" />
+              <Input type="number" min="0" step="0.01" value={form.costPrice} onChange={(event) => update("costPrice", event.target.value)} placeholder="Cost price (optional)" className="mt-2 h-12 rounded-2xl" />
+            </label>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <label className="flex flex-col">
+              <span className="text-sm font-bold">GST %</span>
+              <select
+                value={form.gstRate}
+                onChange={(event) => update("gstRate", event.target.value)}
+                className="mt-2 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              >
+                <option value="">Select GST %</option>
+                <option value="0">0%</option>
+                <option value="3">3%</option>
+                <option value="5">5%</option>
+                <option value="12">12%</option>
+                <option value="18">18%</option>
+                <option value="28">28%</option>
+                <option value="40">40%</option>
+              </select>
             </label>
           </div>
           <label>

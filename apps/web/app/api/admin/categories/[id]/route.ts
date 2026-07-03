@@ -79,15 +79,27 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   if (!category) return NextResponse.json({ error: "Category not found." }, { status: 404 });
 
-  // Don't allow deletion if products are attached
-  if (category._count.products > 0) {
+  // Check if any product in this category has ever been sold
+  const soldProductsCount = await prisma.orderItem.count({
+    where: {
+      product: {
+        categoryId: id
+      }
+    }
+  });
+
+  if (soldProductsCount > 0) {
     return NextResponse.json(
-      { error: `Cannot delete "${category.name}" — it has ${category._count.products} product(s). Reassign them first.` },
+      { error: `Cannot delete "${category.name}" — sales have already been processed for products in this category.` },
       { status: 400 }
     );
   }
 
-  await prisma.category.delete({ where: { id } });
+  // Deleting products attached to this category (sales checked and 0 found)
+  await prisma.$transaction([
+    prisma.product.deleteMany({ where: { categoryId: id } }),
+    prisma.category.delete({ where: { id } })
+  ]);
 
   await writeAuditLog({
     actorId: session?.user?.id,
@@ -95,7 +107,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
     action: "category_deleted",
     targetType: "Category",
     targetId: id,
-    metadata: { name: category.name }
+    metadata: { name: category.name, deletedProductCount: category._count.products }
   });
 
   return NextResponse.json({ success: true });

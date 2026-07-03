@@ -21,6 +21,24 @@ export default async function AdminCategoriesPage() {
     include: { _count: { select: { products: true } } }
   }).catch(() => []);
 
+  const categoriesWithSales = await Promise.all(
+    categories.map(async (c) => {
+      const salesCount = await prisma.orderItem.count({
+        where: { product: { categoryId: c.id } }
+      });
+      return {
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        description: c.description,
+        image: c.image,
+        sortOrder: c.sortOrder,
+        productCount: c._count.products,
+        hasSales: salesCount > 0
+      };
+    })
+  );
+
   return (
     <div>
       <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
@@ -29,15 +47,7 @@ export default async function AdminCategoriesPage() {
         <p className="mt-2 text-sm text-muted-foreground">Create, edit, reorder, and manage product categories with images.</p>
       </section>
       <CategoryManagementClient
-        categories={categories.map((c) => ({
-          id: c.id,
-          name: c.name,
-          slug: c.slug,
-          description: c.description,
-          image: c.image,
-          sortOrder: c.sortOrder,
-          productCount: c._count.products
-        }))}
+        categories={categoriesWithSales}
       />
     </div>
   );

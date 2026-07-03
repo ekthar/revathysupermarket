@@ -927,3 +927,9 @@ model Review {
   @@index([userId])
   @@index([rating])
 }
+
+model Unit {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+}

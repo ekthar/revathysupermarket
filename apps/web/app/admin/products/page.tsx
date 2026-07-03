@@ -34,7 +34,8 @@ export default async function AdminProductsPage() {
         unit: true,
         isActive: true,
         isFeatured: true,
-        category: { select: { name: true } }
+        category: { select: { name: true } },
+        _count: { select: { orderItems: true } }
       },
       orderBy: { createdAt: "desc" }
     }).catch(() => []),
@@ -43,6 +44,16 @@ export default async function AdminProductsPage() {
       select: { id: true, name: true }
     }).catch(() => [])
   ]);
+
+  let dbUnits = await prisma.unit.findMany({ orderBy: { name: "asc" } }).catch(() => []);
+  if (dbUnits.length === 0) {
+    const defaultUnits = ["1 pc", "10 nos", "1 kg", "500 g", "250 g", "100 g", "1 L", "500 ml", "250 ml", "1 packet", "1 box", "1 bundle"];
+    await prisma.unit.createMany({
+      data: defaultUnits.map((name) => ({ name })),
+      skipDuplicates: true
+    }).catch(() => null);
+    dbUnits = await prisma.unit.findMany({ orderBy: { name: "asc" } }).catch(() => []);
+  }
 
   const products: AdminProduct[] = dbProducts.map((product) => ({
     id: product.id,
@@ -59,15 +70,28 @@ export default async function AdminProductsPage() {
     description: product.description,
     unit: product.unit,
     isActive: product.isActive,
-    isFeatured: product.isFeatured
+    isFeatured: product.isFeatured,
+    isSold: (product as any)._count?.orderItems > 0
   }));
 
   const categories = dbCategories.map((c) => ({ id: c.id, name: c.name }));
+
+  const units = await Promise.all(
+    dbUnits.map(async (u) => {
+      const productCount = await prisma.product.count({ where: { unit: u.name } });
+      return {
+        id: u.id,
+        name: u.name,
+        productCount
+      };
+    })
+  );
 
   return (
     <AdminProductsPageClient
       products={products}
       categories={categories}
+      units={units}
     />
   );
 }

@@ -21,9 +21,10 @@ type FormErrors = {
 
 type Props = {
   categories: { id: string; name: string }[];
+  units?: { id: string; name: string }[];
 };
 
-export function ProductManagementForm({ categories }: Props) {
+export function ProductManagementForm({ categories, units }: Props) {
   const router = useRouter();
   const { showToast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -48,17 +49,17 @@ export function ProductManagementForm({ categories }: Props) {
         return value.trim().length < 2 ? "Category is required" : undefined;
       case "price": {
         const priceNum = Number(value);
-        if (value && (!Number.isFinite(priceNum) || priceNum <= 0)) return "Price must be greater than 0";
+        if (value && (!Number.isFinite(priceNum) || priceNum <= 0)) return "MRP must be greater than 0";
         return undefined;
       }
       case "discountPrice": {
         if (!value) return undefined;
         const discountNum = Number(value);
-        if (!Number.isFinite(discountNum) || discountNum <= 0) return "Discount price must be greater than 0";
+        if (!Number.isFinite(discountNum) || discountNum <= 0) return "Sales price must be greater than 0";
         const priceStr = allValues?.price ?? "";
         const priceNum = Number(priceStr);
         if (priceStr && Number.isFinite(priceNum) && discountNum >= priceNum) {
-          return "Discount price must be less than the selling price";
+          return "Sales price must be less than MRP";
         }
         return undefined;
       }
@@ -222,7 +223,7 @@ export function ProductManagementForm({ categories }: Props) {
       <div className="space-y-1">
         <Input
           name="price"
-          placeholder="Selling price"
+          placeholder="MRP"
           type="number"
           min="1"
           step="0.01"
@@ -237,7 +238,7 @@ export function ProductManagementForm({ categories }: Props) {
       <div className="space-y-1">
         <Input
           name="discountPrice"
-          placeholder="Discount price (optional)"
+          placeholder="Sales price (optional)"
           type="number"
           min="1"
           step="0.01"
@@ -260,18 +261,9 @@ export function ProductManagementForm({ categories }: Props) {
           className="h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         />
         <datalist id="unit-options">
-          <option value="1 pc" />
-          <option value="10 nos" />
-          <option value="1 kg" />
-          <option value="500 g" />
-          <option value="250 g" />
-          <option value="100 g" />
-          <option value="1 L" />
-          <option value="500 ml" />
-          <option value="250 ml" />
-          <option value="1 packet" />
-          <option value="1 box" />
-          <option value="1 bundle" />
+          {units?.map((u) => (
+            <option key={u.id} value={u.name} />
+          ))}
         </datalist>
       </div>
 
@@ -287,8 +279,6 @@ export function ProductManagementForm({ categories }: Props) {
           <option value="3">3%</option>
           <option value="5">5%</option>
           <option value="12">12%</option>
-          <option value="18">18%</option>
-          <option value="28">28%</option>
           <option value="40">40%</option>
         </select>
       </div>

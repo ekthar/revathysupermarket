@@ -70,7 +70,7 @@ export async function GET(request: Request) {
 
     // Fetch and append Allowed Categories & GST sheet for user reference
     const categories = await prisma.category.findMany({ select: { name: true }, orderBy: { name: "asc" } });
-    const allowedGst = [0, 3, 5, 12, 18, 28, 40];
+    const allowedGst = [0, 3, 5, 12, 40];
     const refSheet = workbook.addWorksheet("Allowed Categories & GST");
     refSheet.columns = [
       { header: "Allowed Categories", key: "category", width: 25 },

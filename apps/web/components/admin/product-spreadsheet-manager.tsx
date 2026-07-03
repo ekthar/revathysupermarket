@@ -24,8 +24,8 @@ const columns: SheetColumn[] = [
   { key: "isFeatured", label: "Featured", type: "checkbox" },
   { key: "name", label: "Product Name" },
   { key: "category", label: "Category" },
-  { key: "price", label: "Price", type: "number" },
-  { key: "discountPrice", label: "Discount Price", type: "number" },
+  { key: "price", label: "MRP", type: "number" },
+  { key: "discountPrice", label: "Sales Price", type: "number" },
   { key: "costPrice", label: "Cost Price", type: "number" },
   { key: "gstRate", label: "GST %", type: "number" },
   { key: "brand", label: "Brand" },
@@ -66,9 +66,9 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
   function validate(product: SheetProduct) {
     if (!product.name || product.name.length < 2) return "Name required";
     if (!product.category || product.category.length < 2) return "Category required";
-    if (!Number.isFinite(product.price) || product.price <= 0) return "Price must be positive";
-    if (product.discountPrice !== undefined && product.discountPrice !== null && product.discountPrice <= 0) return "Discount must be positive";
-    if (product.discountPrice && product.price && product.discountPrice >= product.price) return "Discount must be less than price";
+    if (!Number.isFinite(product.price) || product.price <= 0) return "MRP must be positive";
+    if (product.discountPrice !== undefined && product.discountPrice !== null && product.discountPrice <= 0) return "Sales price must be positive";
+    if (product.discountPrice && product.price && product.discountPrice >= product.price) return "Sales price must be less than MRP";
     if (!Number.isInteger(product.stock) || product.stock < 0) return "Stock must be 0 or above";
     if (!product.description || product.description.length < 10) return "Description too short";
     return "";

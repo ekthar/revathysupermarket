@@ -17,6 +17,7 @@ type Category = {
   image: string | null;
   sortOrder: number;
   productCount: number;
+  hasSales: boolean;
 };
 
 /** Inline field error message — matches the field-error class in globals.css */
@@ -300,9 +301,9 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                       <button
                         type="button"
                         onClick={() => handleDelete(cat)}
-                        disabled={cat.productCount > 0}
+                        disabled={cat.hasSales}
                         className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                        title={cat.productCount > 0 ? "Has products — reassign first" : "Delete"}
+                        title={cat.hasSales ? "Category has sales history and cannot be deleted" : "Delete"}
                       >
                         <Trash2 className="h-3.5 w-3.5 text-red-500" />
                       </button>

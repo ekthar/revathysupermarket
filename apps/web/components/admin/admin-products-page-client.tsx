@@ -1,18 +1,20 @@
 "use client";
 
-import { Package, PlusCircle, FileSpreadsheet, LayoutGrid } from "lucide-react";
+import { Package, PlusCircle, FileSpreadsheet, LayoutGrid, Scale } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProductManagementForm } from "@/components/admin/product-management-form";
 import { ProductSpreadsheetManager } from "@/components/admin/product-spreadsheet-manager";
 import { ProductImportExport } from "@/components/admin/product-import-export";
 import { AdminProductsClient, type AdminProduct } from "@/components/admin/admin-products-client";
+import { UnitManagementClient } from "@/components/admin/unit-management-client";
 
 type Props = {
   products: AdminProduct[];
   categories: { id: string; name: string }[];
+  units: { id: string; name: string; productCount: number }[];
 };
 
-export function AdminProductsPageClient({ products, categories }: Props) {
+export function AdminProductsPageClient({ products, categories, units }: Props) {
   return (
     <div>
       <div className="mb-4">
@@ -36,6 +38,10 @@ export function AdminProductsPageClient({ products, categories }: Props) {
             <PlusCircle className="h-4 w-4" />
             Add Product
           </TabsTrigger>
+          <TabsTrigger value="units" className="gap-1.5">
+            <Scale className="h-4 w-4" />
+            Units
+          </TabsTrigger>
           <TabsTrigger value="import-export" className="gap-1.5">
             <FileSpreadsheet className="h-4 w-4" />
             Import / Export
@@ -43,7 +49,7 @@ export function AdminProductsPageClient({ products, categories }: Props) {
         </TabsList>
 
         <TabsContent value="inventory">
-          <AdminProductsClient products={products} />
+          <AdminProductsClient products={products} units={units} />
         </TabsContent>
 
         <TabsContent value="spreadsheet">
@@ -51,7 +57,11 @@ export function AdminProductsPageClient({ products, categories }: Props) {
         </TabsContent>
 
         <TabsContent value="add-product">
-          <ProductManagementForm categories={categories} />
+          <ProductManagementForm categories={categories} units={units} />
+        </TabsContent>
+
+        <TabsContent value="units">
+          <UnitManagementClient units={units} />
         </TabsContent>
 
         <TabsContent value="import-export">

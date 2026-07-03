@@ -54,6 +54,10 @@ export default auth((request) => {
     return Response.redirect(new URL("/delivery", request.nextUrl));
   }
 
+  if (isCustomerShoppingRoute && staffRoles.has(role)) {
+    return Response.redirect(new URL("/admin", request.nextUrl));
+  }
+
   if (isAdminRoute && !isAdminLoginRoute && !staffRoles.has(role)) {
     const loginUrl = new URL("/admin/login", request.nextUrl);
     loginUrl.searchParams.set("callbackUrl", request.nextUrl.pathname);

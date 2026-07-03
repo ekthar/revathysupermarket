@@ -91,12 +91,12 @@ export function validateProductSheetRow(row: ProductSheetRow) {
   const errors: string[] = [];
   if (!row.name || row.name.length < 2) errors.push("Product name is required.");
   if (!row.category || row.category.length < 2) errors.push("Category is required.");
-  if (!Number.isFinite(row.price) || row.price <= 0) errors.push("Price must be greater than 0.");
+  if (!Number.isFinite(row.price) || row.price <= 0) errors.push("MRP must be greater than 0.");
   if (row.discountPrice !== null && row.discountPrice !== undefined && (!Number.isFinite(row.discountPrice) || row.discountPrice <= 0)) {
-    errors.push("Discount price must be greater than 0.");
+    errors.push("Sales price must be greater than 0.");
   }
   if (row.discountPrice != null && row.price > 0 && row.discountPrice >= row.price) {
-    errors.push("Discount price must be less than selling price.");
+    errors.push("Sales price must be less than MRP.");
   }
   if (!Number.isInteger(row.stock) || row.stock < 0) errors.push("Stock must be a whole number 0 or above.");
   if (!row.description || row.description.length < 10) errors.push("Description must be at least 10 characters.");

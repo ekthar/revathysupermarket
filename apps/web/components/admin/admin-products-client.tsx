@@ -28,6 +28,7 @@ export type AdminProduct = {
   unit?: string;
   isActive: boolean;
   isFeatured: boolean;
+  isSold?: boolean;
 };
 
 type ProductResponse = {
@@ -43,7 +44,13 @@ const tabs = [
   { key: "inactive", label: "Inactive" }
 ] as const;
 
-export function AdminProductsClient({ products: initialProducts }: { products: AdminProduct[] }) {
+export function AdminProductsClient({
+  products: initialProducts,
+  units
+}: {
+  products: AdminProduct[];
+  units: { id: string; name: string }[];
+}) {
   const router = useRouter();
   const { showToast } = useToast();
   const [products, setProducts] = useState(initialProducts);
@@ -239,9 +246,17 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
                   {product.isActive ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   {product.isActive ? "Hide" : "Show"}
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={() => deactivate(product)} className="text-red-600">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => deactivate(product)}
+                  className={cn("text-red-600", product.isSold && "opacity-50 cursor-not-allowed text-slate-400")}
+                  disabled={product.isSold}
+                  title={product.isSold ? "Product has sales history and cannot be deleted" : "Delete"}
+                >
                   <Trash2 className="h-4 w-4" />
-                  Delete
+                  {product.isSold ? "Sold" : "Delete"}
                 </Button>
               </div>
             </div>
@@ -253,6 +268,7 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
         {editing && (
           <EditProductModal
             product={editing}
+            units={units}
             onClose={() => setEditing(null)}
             onSaved={(nextProduct) => {
               updateLocal(nextProduct.id, nextProduct);
@@ -269,10 +285,12 @@ export function AdminProductsClient({ products: initialProducts }: { products: A
 
 function EditProductModal({
   product,
+  units,
   onClose,
   onSaved
 }: {
   product: AdminProduct;
+  units: { id: string; name: string }[];
   onClose: () => void;
   onSaved: (product: AdminProduct) => void;
 }) {
@@ -379,11 +397,11 @@ function EditProductModal({
           </label>
           <div className="grid grid-cols-2 gap-3">
             <label>
-              <span className="text-sm font-bold">Price</span>
+              <span className="text-sm font-bold">MRP</span>
               <Input required type="number" min="1" value={form.price} onChange={(event) => update("price", event.target.value)} className="mt-2 h-12 rounded-2xl" />
             </label>
             <label>
-              <span className="text-sm font-bold">Offer price</span>
+              <span className="text-sm font-bold">Sales price</span>
               <Input type="number" min="1" value={form.discountPrice} onChange={(event) => update("discountPrice", event.target.value)} className="mt-2 h-12 rounded-2xl" />
             </label>
           </div>
@@ -396,18 +414,9 @@ function EditProductModal({
               <span className="text-sm font-bold">Unit</span>
               <Input value={form.unit} onChange={(event) => update("unit", event.target.value)} list="edit-unit-options" className="mt-2 h-12 rounded-2xl" />
               <datalist id="edit-unit-options">
-                <option value="1 pc" />
-                <option value="10 nos" />
-                <option value="1 kg" />
-                <option value="500 g" />
-                <option value="250 g" />
-                <option value="100 g" />
-                <option value="1 L" />
-                <option value="500 ml" />
-                <option value="250 ml" />
-                <option value="1 packet" />
-                <option value="1 box" />
-                <option value="1 bundle" />
+                {units?.map((u) => (
+                  <option key={u.id} value={u.name} />
+                ))}
               </datalist>
             </label>
           </div>
@@ -434,8 +443,6 @@ function EditProductModal({
                 <option value="3">3%</option>
                 <option value="5">5%</option>
                 <option value="12">12%</option>
-                <option value="18">18%</option>
-                <option value="28">28%</option>
                 <option value="40">40%</option>
               </select>
             </label>

@@ -1,11 +1,11 @@
 "use client";
 
-import { Package, PlusCircle, FileSpreadsheet } from "lucide-react";
+import { Package, PlusCircle, FileSpreadsheet, LayoutGrid } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { ProductManagementForm } from "@/components/admin/product-management-form";
 import { ProductSpreadsheetManager } from "@/components/admin/product-spreadsheet-manager";
 import { ProductImportExport } from "@/components/admin/product-import-export";
-import type { AdminProduct } from "@/components/admin/admin-products-client";
+import { AdminProductsClient, type AdminProduct } from "@/components/admin/admin-products-client";
 
 type Props = {
   products: AdminProduct[];
@@ -24,13 +24,17 @@ export function AdminProductsPageClient({ products, categories }: Props) {
 
       <Tabs defaultValue="inventory" className="w-full">
         <TabsList className="w-full flex-wrap sm:w-auto">
+          <TabsTrigger value="inventory" className="gap-1.5">
+            <LayoutGrid className="h-4 w-4" />
+            Visual Inventory
+          </TabsTrigger>
+          <TabsTrigger value="spreadsheet" className="gap-1.5">
+            <Package className="h-4 w-4" />
+            Spreadsheet Editor
+          </TabsTrigger>
           <TabsTrigger value="add-product" className="gap-1.5">
             <PlusCircle className="h-4 w-4" />
             Add Product
-          </TabsTrigger>
-          <TabsTrigger value="inventory" className="gap-1.5">
-            <Package className="h-4 w-4" />
-            Inventory
           </TabsTrigger>
           <TabsTrigger value="import-export" className="gap-1.5">
             <FileSpreadsheet className="h-4 w-4" />
@@ -38,12 +42,16 @@ export function AdminProductsPageClient({ products, categories }: Props) {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="add-product">
-          <ProductManagementForm categories={categories} />
+        <TabsContent value="inventory">
+          <AdminProductsClient products={products} />
         </TabsContent>
 
-        <TabsContent value="inventory">
+        <TabsContent value="spreadsheet">
           <ProductSpreadsheetManager products={products} />
+        </TabsContent>
+
+        <TabsContent value="add-product">
+          <ProductManagementForm categories={categories} />
         </TabsContent>
 
         <TabsContent value="import-export">

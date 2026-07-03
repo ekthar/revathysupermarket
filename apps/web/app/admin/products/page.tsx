@@ -76,16 +76,19 @@ export default async function AdminProductsPage() {
 
   const categories = dbCategories.map((c) => ({ id: c.id, name: c.name }));
 
-  const units = await Promise.all(
-    dbUnits.map(async (u) => {
-      const productCount = await prisma.product.count({ where: { unit: u.name } });
-      return {
-        id: u.id,
-        name: u.name,
-        productCount
-      };
-    })
+  const productCounts = await prisma.product.groupBy({
+    by: ["unit"],
+    _count: { _all: true },
+    where: { unit: { in: dbUnits.map((u) => u.name) } }
+  });
+  const productCountByUnit = new Map(
+    productCounts.map((count) => [count.unit, count._count._all])
   );
+  const units = dbUnits.map((u) => ({
+    id: u.id,
+    name: u.name,
+    productCount: productCountByUnit.get(u.name) ?? 0
+  }));
 
   return (
     <AdminProductsPageClient

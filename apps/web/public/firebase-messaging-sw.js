@@ -33,7 +33,7 @@ messaging.onBackgroundMessage((payload) => {
       type: data.type,
     },
     // Keep heavy notifications on screen indefinitely for Windows Doze
-    requireInteraction: data.type === "delivery_assignment" || data.type === "order_received",
+    requireInteraction: data.type === "delivery_assignment" || data.type === "new_order_alert",
     renotify: true,
     vibrate: [300, 100, 300, 100, 300],
   };

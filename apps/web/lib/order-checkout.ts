@@ -170,6 +170,6 @@ export function checkoutErrorResponse(error: unknown) {
   if (message === "PROMO_INVALID" || message === "PROMO_EXHAUSTED") return { status: 409, error: "That promo code is no longer available.", code: message };
   if (message === "LOYALTY_BALANCE") return { status: 409, error: "Your points balance changed. Review and try again.", code: message };
   if (message === "WALLET_BALANCE") return { status: 409, error: "Insufficient wallet balance.", code: message };
-  if (message === "DELIVERY_OUT_OF_RANGE") return { status: 400, error: "Sorry, we are unable to deliver to your address. Please contact us for assistance.", code: message };
+  if (message === "DELIVERY_OUT_OF_RANGE") return { status: 400, error: "Sorry, this address is outside our delivery-fee range. Please contact us for assistance.", code: message };
   return null;
 }

@@ -60,11 +60,6 @@ html {
   background: hsl(var(--background));
   overflow-x: clip;
   scroll-padding-top: var(--scroll-offset);
-  touch-action: pan-x pan-y;
-}
-
-body {
-  overscroll-behavior-y: none;
 }
 
 *, *::before, *::after {

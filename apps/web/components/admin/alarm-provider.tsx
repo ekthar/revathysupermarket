@@ -39,7 +39,7 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
     const handleMessage = (event: MessageEvent) => {
       if (event.data && event.data.type === "HEAVY_ALARM") {
         const type = event.data.payload?.type;
-        if (type === "order_received") {
+        if (type === "new_order_alert") {
           setAlarmPayload(event.data.payload);
           setAlarmActive(true);
         }

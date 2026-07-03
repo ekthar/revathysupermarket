@@ -42,18 +42,18 @@ export async function GET() {
     orderBy: { name: "asc" },
   });
 
-  // Include product count using each unit string dynamically
-  const unitsWithCounts = await Promise.all(
-    units.map(async (unit) => {
-      const productCount = await prisma.product.count({
-        where: { unit: unit.name },
-      });
-      return {
-        ...unit,
-        productCount,
-      };
-    })
+  const productCounts = await prisma.product.groupBy({
+    by: ["unit"],
+    _count: { _all: true },
+    where: { unit: { in: units.map((unit) => unit.name) } },
+  });
+  const productCountByUnit = new Map(
+    productCounts.map((count) => [count.unit, count._count._all])
   );
+  const unitsWithCounts = units.map((unit) => ({
+    ...unit,
+    productCount: productCountByUnit.get(unit.name) ?? 0,
+  }));
 
   return NextResponse.json({ units: unitsWithCounts });
 }

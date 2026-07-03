@@ -104,7 +104,7 @@ export async function POST(request: Request) {
 
     // Fire-and-forget side effects — run all in parallel
     const orderAddress = `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`;
-    Promise.allSettled([
+    await Promise.allSettled([
       sendWhatsAppTemplate({ to: order!.phone, template: "order_confirmed", params: [order!.orderNumber, String(order!.items.length), Number(order!.total).toFixed(2), order!.paymentMethod], orderId: order!.id }).catch(() => null),
       notifyOrderStatus(session.user.id, order!.orderNumber, "ORDER_RECEIVED", order!.id).catch(() => null),
       broadcastToAllDeliveryPartners({

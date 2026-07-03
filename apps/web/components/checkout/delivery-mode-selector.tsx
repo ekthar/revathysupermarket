@@ -63,7 +63,7 @@ export function DeliveryModeSelector({
 
   useEffect(() => {
     if (!scheduledEnabled) return;
-    fetch("/api/delivery-slots")
+    fetch("/api/delivery-slots", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : { slots: [] }))
       .then((data) => setSlots(data.slots ?? []))
       .catch(() => undefined);

@@ -2,7 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
-const unitMapping = {
+const unitMapping: Record<string, string> = {
   "1 pc": "pcs",
   "1 kg": "kg",
   "1 l": "L",

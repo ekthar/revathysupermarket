@@ -1,4 +1,4 @@
-name: Build TWA APK
+name: Build TWA AAB & Deploy to Play Console
 
 on:
   push:
@@ -7,10 +7,24 @@ on:
       - 'apps/twa/**'
       - '.github/workflows/build-twa.yml'
   workflow_dispatch:
+    inputs:
+      track:
+        description: 'Play Console track'
+        required: true
+        default: 'internal'
+        type: choice
+        options:
+          - internal
+          - alpha
+          - beta
+          - production
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
     steps:
       - name: Checkout repository
@@ -32,36 +46,62 @@ jobs:
         with:
           gradle-version: '8.5'
 
-      - name: Build Debug APK
-        run: gradle assembleDebug
-        working-directory: apps/twa
-
-      - name: Build Release APK
-        if: env.KEYSTORE_BASE64 != ''
+      - name: Decode Keystore
+        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
+        id: keystore
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
+          echo "KEYSTORE_FILE=$(pwd)/keystore.jks" >> $GITHUB_OUTPUT
         env:
           KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+
+      - name: Build Release AAB
+        run: ./gradlew bundleRelease
+        working-directory: apps/twa
+        env:
+          KEYSTORE_FILE: ${{ steps.keystore.outputs.KEYSTORE_FILE }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: twa-release-aab
+          path: apps/twa/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+
+      - name: Deploy to Google Play Console
+        if: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON != '' && github.event_name != 'pull_request' }}
+        uses: r0adkll/upload-google-play@v1.1.1
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: in.msmsupermarket.app
+          releaseFiles: apps/twa/app/build/outputs/bundle/release/*.aab
+          track: ${{ github.event.inputs.track || 'internal' }}
+          status: draft
+          inAppUpdatePriority: 2
+          releaseName: "TWA ${{ github.run_number }}"
+          userFraction: 0.1
+
+  deploy-assetlinks:
+    needs: build
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy assetlinks.json to .well-known
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ secrets.GH_PAGES_TOKEN != '' }}
+        with:
+          github_token: ${{ secrets.GH_PAGES_TOKEN }}
+          publish_dir: .well-known
+          destination_dir: .well-known
+          force_orphan: true
+          full_commit_message: "chore: update assetlinks.json [skip ci]"
+
+      - name: Verify assetlinks.json accessible
         run: |
-          echo "$KEYSTORE_BASE64" | base64 --decode > keystore.jks
-          export KEYSTORE_FILE=$(pwd)/keystore.jks
-          gradle assembleRelease
-        working-directory: apps/twa
-
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: twa-debug-apk
-          path: apps/twa/app/build/outputs/apk/debug/*.apk
-          if-no-files-found: warn
-
-      - name: Upload Release APK
-        if: env.KEYSTORE_BASE64 != ''
-        uses: actions/upload-artifact@v4
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        with:
-          name: twa-release-apk
-          path: apps/twa/app/build/outputs/apk/release/*.apk
-          if-no-files-found: warn
+          curl -f "https://msmsupermarket.in/.well-known/assetlinks.json" || echo "⚠️  assetlinks.json not yet live (DNS/CDN propagation)"

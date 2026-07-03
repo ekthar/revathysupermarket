@@ -5,9 +5,11 @@
  */
 
 import messaging, { FirebaseMessagingTypes } from "@react-native-firebase/messaging";
-import { Platform } from "react-native";
+import { Platform, Alert, AppState } from "react-native";
+import { router } from "expo-router";
 import { api } from "./api";
 import { notifeeService } from "./notifee";
+import { alarmService } from "./alarm";
 import { getDeviceTokenRole } from "../stores/auth";
 
 /**
@@ -19,6 +21,42 @@ async function routeIncomingMessage(
   message: FirebaseMessagingTypes.RemoteMessage
 ): Promise<void> {
   const type = message.data?.type as string | undefined;
+  const isForeground = AppState.currentState === "active";
+
+  if (isForeground) {
+    if (type === "delivery_assignment") {
+      router.push(
+        `/alert/${message.data?.eventId}?orderId=${message.data?.orderId}&orderNumber=${message.data?.orderNumber}` as any
+      );
+    } else if (type === "packing_assignment") {
+      router.push(
+        `/alert/packing/${message.data?.eventId}?orderId=${message.data?.orderId}&orderNumber=${message.data?.orderNumber}` as any
+      );
+    } else if (type === "new_order_alert") {
+      alarmService.startAlarm().catch(() => null);
+      Alert.alert(
+        "🆕 New Order received!",
+        `Order #${message.data?.orderNumber} is waiting for approval.`,
+        [
+          {
+            text: "View Order",
+            onPress: async () => {
+              await alarmService.stopAlarm();
+              router.push(`/(admin)/orders` as any);
+            }
+          },
+          {
+            text: "Mute",
+            onPress: async () => {
+              await alarmService.stopAlarm();
+            },
+            style: "cancel"
+          }
+        ],
+        { cancelable: false }
+      );
+    }
+  }
 
   switch (type) {
     case "delivery_assignment":
@@ -33,6 +71,13 @@ async function routeIncomingMessage(
     case "packing_assignment":
       await notifeeService.showPackingAlert({
         eventId: message.data?.eventId as string,
+        orderId: message.data?.orderId as string,
+        orderNumber: message.data?.orderNumber as string,
+      });
+      break;
+
+    case "new_order_alert":
+      await notifeeService.showAdminNewOrderAlert({
         orderId: message.data?.orderId as string,
         orderNumber: message.data?.orderNumber as string,
       });

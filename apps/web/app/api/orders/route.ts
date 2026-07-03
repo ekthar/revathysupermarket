@@ -13,6 +13,7 @@ import { checkoutErrorResponse, createAuthoritativeOrder } from "@/lib/order-che
 import { broadcastToAllDeliveryPartners } from "@/lib/delivery-alerts";
 import { publishNewOrder, publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
 import { sendPushToUser } from "@/lib/push";
+import { sendFcmToAdmins } from "@/lib/fcm-admin";
 
 function orderNumber() {
   const date = new Date();
@@ -95,6 +96,15 @@ export async function POST(request: Request) {
           total: Number(order.total)
         }
       });
+
+      // Send push notification to all admins
+      sendFcmToAdmins({
+        type: "new_order_alert",
+        eventId: `new-order-${order.id}-${Date.now()}`,
+        orderId: order.id,
+        orderNumber: order.orderNumber,
+        deepLink: `msmsupermarket://admin/orders/${order.id}`,
+      }).catch(() => null);
 
       // Send push notification to all delivery partners
       const deliveryPartners = await prisma.user.findMany({

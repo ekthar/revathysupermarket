@@ -9,6 +9,7 @@ import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
 import { awardDeliveredOrderBenefits, releaseCancelledOrderReservations } from "@/lib/loyalty";
 import { publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
+import { sendFcmToUser } from "@/lib/fcm-admin";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -57,6 +58,21 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     // Restore inventory on cancellation
     if (parsed.data.status === "CANCELLED") {
       await releaseCancelledOrderReservations(id);
+    }
+
+    if (parsed.data.status === "PACKING") {
+      const packingStaff = await prisma.user.findMany({
+        where: { role: "PACKING_STAFF", isActive: true },
+        select: { id: true }
+      }).catch(() => []);
+      for (const staff of packingStaff) {
+        sendFcmToUser(staff.id, {
+          type: "packing_assignment",
+          eventId: `pack-${id}-${Date.now()}`,
+          orderId: id,
+          orderNumber: before?.orderNumber ?? "",
+        }).catch(() => null);
+      }
     }
 
     // Send in-app notification

@@ -136,6 +136,39 @@ class NotifeeService {
   }
 
   /**
+   * Display a new order alert for admins.
+   */
+  async showAdminNewOrderAlert(payload: { orderId: string; orderNumber: string }): Promise<void> {
+    await this.createChannels();
+
+    await notifee.displayNotification({
+      id: `new-order-${payload.orderId}`,
+      title: "🆕 New Order Received",
+      body: `Order #${payload.orderNumber} is waiting for approval.`,
+      android: {
+        channelId: "admin_emergency",
+        category: AndroidCategory.ALARM,
+        importance: AndroidImportance.HIGH,
+        fullScreenAction: {
+          id: "view_new_order",
+          launchActivity: "default",
+        },
+        sound: "emergency_bell",
+        ongoing: false,
+        pressAction: {
+          id: "view_order",
+          launchActivity: "default",
+        },
+      },
+      data: {
+        type: "new_order_alert",
+        orderId: payload.orderId,
+        orderNumber: payload.orderNumber,
+      },
+    });
+  }
+
+  /**
    * Display a full-screen emergency alert for admins when an order is rejected.
    * Different tone and styling from delivery alerts.
    */

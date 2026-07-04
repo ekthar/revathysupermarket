@@ -2,7 +2,24 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import crypto from "crypto";
 
-const JWT_SECRET = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "dev-secret";
+function getJwtSecret(): string {
+  const secret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (secret) return secret;
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "[mobile-auth] AUTH_SECRET is not set. Mobile JWT tokens will be rejected. " +
+      "Set AUTH_SECRET (or NEXTAUTH_SECRET) in your environment."
+    );
+  }
+  const fallback = "dev-secret-" + crypto.randomBytes(8).toString("hex");
+  console.warn(
+    "[mobile-auth] WARNING: No AUTH_SECRET set. Using a per-process random secret. " +
+    "All existing sessions will be invalidated on restart. Set AUTH_SECRET in .env for persistence."
+  );
+  return fallback;
+}
+
+const JWT_SECRET = getJwtSecret();
 const ACCESS_TOKEN_EXPIRY = 900; // 15 minutes in seconds
 
 export interface MobileTokenPayload {

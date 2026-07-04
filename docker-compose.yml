@@ -48,6 +48,7 @@ services:
       REDIS_URL: redis://redis:6379
       NODE_ENV: development
       HOSTNAME: 0.0.0.0
+      AUTH_SECRET: dev-docker-compose-secret-change-in-production
     volumes:
       - .:/app
       - /app/node_modules

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AlertCircle, CheckCircle2, ChevronDown, MapPinned, Navigation } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -70,7 +70,8 @@ export function AddressSelector({
   const [showManualLocation, setShowManualLocation] = useState(false);
   const [showPinPicker, setShowPinPicker] = useState(false);
   const [selectedAddressId, setSelectedAddressId] = useState("");
-  const [formExpanded, setFormExpanded] = useState(savedAddresses.length === 0);
+
+  const [formExpanded, setFormExpanded] = useState(true);
 
   /** Reverse-geocodes and patches the form. Shared by GPS-detect and the pin-on-map picker. */
   async function applyPickedLocation(lat: number, lng: number, source: "GPS" | "pinned location" = "pinned location") {
@@ -116,6 +117,15 @@ export function AddressSelector({
   }
 
   const selectedAddress = savedAddresses.find((entry) => entry.id === selectedAddressId);
+
+  // Auto-select default saved address on mount. Collapse only if name+phone are present.
+  useEffect(() => {
+    if (savedAddresses.length === 0 || selectedAddressId) return;
+    const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
+    if (defaultAddr && defaultAddr.customerName && defaultAddr.phone) {
+      applySavedAddress(defaultAddr.id);
+    }
+  }, []);
 
   function useCurrentLocation() {
     if (!navigator.geolocation) {
@@ -179,6 +189,14 @@ export function AddressSelector({
               </button>
             )}
           </div>
+          {/* Small option to add a new address */}
+          <button
+            type="button"
+            onClick={() => { setSelectedAddressId(""); setFormExpanded(true); }}
+            className="flex w-full items-center justify-center gap-1 border-t border-neutral-100 dark:border-neutral-700 py-2.5 text-micro font-semibold text-neutral-500 hover:text-primary hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors press"
+          >
+            + Deliver to a new address
+          </button>
         </div>
       )}
 

@@ -41,7 +41,7 @@ const getHomepageProducts = unstable_cache(
   async () => prisma.product.findMany({
     where: { isActive: true },
     select: { id: true, slug: true, name: true, description: true, image: true, price: true, discountPrice: true, stock: true, popularity: true, unit: true, isFeatured: true, createdAt: true, category: { select: { name: true } } },
-    orderBy: [{ popularity: "desc" }, { createdAt: "desc" }],
+    orderBy: [{ isFeatured: "desc" }, { popularity: "desc" }, { createdAt: "desc" }],
     take: 60
   }).catch(() => []),
   ["homepage-products"],

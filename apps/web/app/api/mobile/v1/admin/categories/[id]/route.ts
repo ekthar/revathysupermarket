@@ -37,6 +37,7 @@ export async function GET(
       slug: category.slug,
       description: category.description,
       image: category.image,
+      icon: category.icon,
       sortOrder: category.sortOrder,
       productCount: category._count.products,
       subCategories: category.subCategories,
@@ -69,6 +70,7 @@ export async function PATCH(
   }
   if (body.description !== undefined) data.description = body.description;
   if (body.image !== undefined) data.image = body.image;
+  if (body.icon !== undefined) data.icon = body.icon;
   if (body.sortOrder !== undefined) data.sortOrder = body.sortOrder;
 
   const category = await prisma.category.update({

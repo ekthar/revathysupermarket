@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 // Cart import removed - was unused and causing unnecessary re-renders on cart changes
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
-import { categories } from "@/lib/products";
+import { categories as demoCategories } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { prefetchProductImages } from "@/lib/hooks/use-preload";
 import { useVirtualGrid } from "@/lib/hooks/use-virtual-grid";
@@ -140,6 +140,7 @@ export function ProductGrid({
   initialCategory = "All",
   initialQuery = "",
   initialSort = "popularity",
+  categories = demoCategories,
 }: {
   initialItems?: Product[];
   initialTotal?: number;
@@ -147,6 +148,7 @@ export function ProductGrid({
   initialCategory?: string;
   initialQuery?: string;
   initialSort?: SortMode;
+  categories?: readonly string[];
 }) {
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);

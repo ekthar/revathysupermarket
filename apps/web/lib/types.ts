@@ -1,13 +1,7 @@
-export type Category =
-  | "Fruits"
-  | "Vegetables"
-  | "Dairy"
-  | "Beverages"
-  | "Snacks"
-  | "Household"
-  | "Personal Care"
-  | "Frozen Foods"
-  | "Grocery Essentials";
+// Category names are fully admin-managed (see /admin/categories) and no longer a
+// fixed set - widened from a literal union so a fresh client install isn't stuck
+// with the original demo category names at the type level.
+export type Category = string;
 
 export type SubCategory = {
   id: string;

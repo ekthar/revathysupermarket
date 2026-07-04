@@ -131,7 +131,7 @@ export const staffUpdateSchema = z.object({
 
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1),
-  newPassword: z.string().min(8).regex(/[A-Za-z]/).regex(/\d/)
+  newPassword: z.string().min(8).regex(/[a-z]/).regex(/[A-Z]/).regex(/\d/).regex(/[^a-zA-Z0-9]/)
 });
 
 export const forgotPasswordSchema = z.object({
@@ -140,7 +140,7 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(20),
-  password: z.string().min(8).regex(/[A-Za-z]/).regex(/\d/)
+  password: z.string().min(8).regex(/[a-z]/).regex(/[A-Z]/).regex(/\d/).regex(/[^a-zA-Z0-9]/)
 });
 
 export const deliveryAssignmentSchema = z.object({

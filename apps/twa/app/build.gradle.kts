@@ -1,22 +1,23 @@
 plugins {
     id("com.android.application")
+    id("org.jetbrains.kotlin.android")
 }
 
 android {
-    namespace = "in.msmsupermarket.app"
-    compileSdk = 34
+    namespace = "com.revathysupermarket.twa"
+    compileSdk = 36
 
     defaultConfig {
-        applicationId = "in.msmsupermarket.app"
-        minSdk = 23
-        targetSdk = 34
+        applicationId = "com.revathysupermarket.twa"
+        minSdk = 24
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
-        manifestPlaceholders["hostName"] = "msmsupermarket.in"
-        manifestPlaceholders["defaultUrl"] = "https://msmsupermarket.in/?source=twa"
-        manifestPlaceholders["launcherName"] = "MSM Supermarket"
-        manifestPlaceholders["assetStatements"] = """[{"relation": ["delegate_permission/common.handle_all_urls"], "target": {"namespace": "android_app", "package_name": "in.msmsupermarket.app", "sha256_cert_fingerprints": ["__SIGNING_KEY_SHA256__"]}}]"""
+        manifestPlaceholders["hostName"] = "revathysupermarket.vercel.app"
+        manifestPlaceholders["defaultUrl"] = "https://revathysupermarket.vercel.app/?source=twa"
+        manifestPlaceholders["launcherName"] = "Revathy Supermarket"
+        manifestPlaceholders["assetStatements"] = """[{"relation": ["delegate_permission/common.handle_all_urls"], "target": {"namespace": "android_app", "package_name": "com.revathysupermarket.twa", "sha256_cert_fingerprints": ["__REPLACE_WITH_YOUR_SHA256_FINGERPRINT__"]}}]"""
     }
 
     signingConfigs {
@@ -48,6 +49,10 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
     }
 }
 

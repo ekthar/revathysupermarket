@@ -3,15 +3,15 @@
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "web",
-      "site": "https://msmsupermarket.in"
+      "site": "https://revathysupermarket.vercel.app"
     }
   },
   {
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "in.msmsupermarket.app",
-      "sha256_cert_fingerprints": ["__SIGNING_KEY_SHA256__"]
+      "package_name": "com.revathysupermarket.twa",
+      "sha256_cert_fingerprints": ["__REPLACE_WITH_YOUR_SHA256_FINGERPRINT__"]
     }
   }
 ]

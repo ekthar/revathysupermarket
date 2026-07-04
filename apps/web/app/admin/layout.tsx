@@ -5,10 +5,9 @@ import { auth, signOut } from "@/auth";
 import { isStaffRole } from "@/lib/authz";
 import { roleLabel } from "@/lib/roles";
 import { NewOrderAlert } from "@/components/admin/new-order-alert";
-import { prisma } from "@/lib/prisma";
 import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { StoreToggleButton } from "@/components/admin/store-toggle-button";
-import { getPublicStoreSettings } from "@/lib/store-settings";
+import { getPublicShellSettings } from "@/lib/store-settings";
 import { InstallAppButton } from "@/components/install-app-button";
 import { getAuthContext } from "@/lib/auth-guard";
 import { hasPermission, hasFullAccess, type AuthContext } from "@/lib/permissions";
@@ -19,11 +18,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!isStaffRole(session?.user?.role)) return <>{children}</>;
   const role = session.user.role;
   const userName = session.user.name || session.user.email || "Staff";
-  const settings = await getPublicStoreSettings();
-
-  // Fetch logo URL
-  const logoSetting = await prisma.setting.findUnique({ where: { key: "logoUrl" } }).catch(() => null);
-  const logoUrl = logoSetting?.value || null;
+  const shell = await getPublicShellSettings();
+  const { settings, logoUrl } = shell;
 
   // Get permission context
   const ctx = await getAuthContext();

@@ -182,6 +182,7 @@ model OtpToken {
 
   @@index([phone, expiresAt])
   @@index([userId])
+  @@index([tokenHash])
 }
 
 model WhatsAppLog {
@@ -412,6 +413,8 @@ model Order {
   @@index([userId, createdAt])
   @@index([deliverySlotId])
   @@index([estimatedDeliveryAt])
+  @@index([paymentStatus])
+  @@index([status, createdAt])
 }
 
 model OrderItem {
@@ -514,6 +517,7 @@ model WalletTransaction {
   @@index([orderId])
   @@index([returnRequestId])
   @@index([createdAt])
+  @@index([userId, type])
 }
 
 model PushSubscription {
@@ -862,6 +866,7 @@ model DeliveryCollection {
   @@index([partnerId, createdAt])
   @@index([status])
   @@index([reconciledById])
+  @@index([partnerId, status])
 }
 
 model MobileRefreshToken {

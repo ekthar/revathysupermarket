@@ -1,6 +1,12 @@
 import { fileURLToPath } from "node:url";
 
-export const requiredProductionEnv = ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"];
+export const requiredProductionEnv = [
+  "DATABASE_URL",
+  "DIRECT_DATABASE_URL",
+  "AUTH_SECRET",
+  "UPSTASH_REDIS_REST_URL",
+  "UPSTASH_REDIS_REST_TOKEN",
+];
 
 export function isProductionEnv(env = process.env) {
   return env.VERCEL_ENV === "production" || env.NODE_ENV === "production";

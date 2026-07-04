@@ -8,8 +8,8 @@ export const ARRIVAL_RADIUS_METERS = Number(process.env.ARRIVAL_RADIUS_METERS ??
 export const SITE = {
   name: process.env.NEXT_PUBLIC_STORE_NAME ?? "MSM Supermarket",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://msmsupermarket.in",
-  phone: "+91 98765 43210",
-  whatsapp: "919876543210",
+  phone: process.env.STORE_PHONE ?? "",
+  whatsapp: process.env.STORE_WHATSAPP ?? "",
   address: process.env.NEXT_PUBLIC_STORE_ADDRESS ?? "Kerala, India",
   deliveryRadiusKm: 5
 };

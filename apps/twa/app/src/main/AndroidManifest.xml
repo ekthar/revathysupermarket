@@ -6,7 +6,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="${launcherName}"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MSMSupermarket">
+        android:theme="@style/Theme.RevathySupermarket">
 
         <meta-data
             android:name="asset_statements"
@@ -15,7 +15,7 @@
         <activity
             android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
             android:exported="true"
-            android:theme="@style/Theme.MSMSupermarket.Launch">
+            android:theme="@style/Theme.RevathySupermarket.Launch">
 
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"

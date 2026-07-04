@@ -1,4 +1,4 @@
-name: Build TWA AAB & Deploy to Play Console
+name: Build TWA AAB
 
 on:
   push:
@@ -7,17 +7,6 @@ on:
       - 'apps/twa/**'
       - '.github/workflows/build-twa.yml'
   workflow_dispatch:
-    inputs:
-      track:
-        description: 'Play Console track'
-        required: true
-        default: 'internal'
-        type: choice
-        options:
-          - internal
-          - alpha
-          - beta
-          - production
 
 jobs:
   build:
@@ -25,11 +14,6 @@ jobs:
     permissions:
       contents: read
     env:
-      # The `secrets` context cannot be referenced in `if:` conditions, only in `env:`/`with:`.
-      # Map the secrets we need to gate on into job-level env vars so steps can check
-      # `env.X != ''` instead - otherwise every `if: secrets.X != ''` below evaluates to
-      # `'' != ''` (false) and silently skips signing/deploy on every run, even when the
-      # secrets are configured.
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       PLAY_SERVICE_ACCOUNT_JSON: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
 
@@ -37,16 +21,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
-          java-version: '17'
+          java-version: '21'
           distribution: 'temurin'
 
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'build-tools;34.0.0 platforms;android-34'
+          packages: 'build-tools;36.0.0 platforms;android-36'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -65,19 +49,17 @@ jobs:
       - name: Verify assetlinks.json fingerprint is set before shipping a signed build
         if: env.KEYSTORE_BASE64 != ''
         run: |
-          if grep -q "__SIGNING_KEY_SHA256__\|REPLACE_WITH_YOUR_SHA256_FINGERPRINT" \
+          if grep -q "REPLACE_WITH_YOUR_SHA256_FINGERPRINT" \
             apps/web/public/.well-known/assetlinks.json apps/twa/app/build.gradle.kts; then
             echo "::error::assetlinks.json / build.gradle.kts still contain a placeholder SHA-256" \
-              "fingerprint. Replace __SIGNING_KEY_SHA256__ with the release keystore's real" \
-              "fingerprint (keytool -list -v -keystore <file> | grep SHA256) before shipping a" \
-              "signed build, or the TWA will fail Digital Asset Links verification and Chrome" \
-              "will show its address bar instead of launching full-screen."
+              "fingerprint. Replace __REPLACE_WITH_YOUR_SHA256_FINGERPRINT__ with the release" \
+              "keystore's real fingerprint (keytool -list -v -keystore <file> | grep SHA256)" \
+              "before shipping a signed build, or the TWA will fail Digital Asset Links" \
+              "verification and Chrome will show its address bar instead of launching full-screen."
             exit 1
           fi
 
       - name: Build Release AAB
-        # No Gradle wrapper is committed under apps/twa, so use the `gradle` binary the
-        # setup-gradle action puts on PATH rather than a nonexistent ./gradlew.
         run: gradle bundleRelease
         working-directory: apps/twa
         env:
@@ -98,29 +80,21 @@ jobs:
         uses: r0adkll/upload-google-play@v1.1.1
         with:
           serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
-          packageName: in.msmsupermarket.app
+          packageName: com.revathysupermarket.twa
           releaseFiles: apps/twa/app/build/outputs/bundle/release/*.aab
           track: ${{ github.event.inputs.track || 'internal' }}
           status: draft
           inAppUpdatePriority: 2
           releaseName: "TWA ${{ github.run_number }}"
-          # userFraction only applies to a staged rollout (status: inProgress/halted); it's
-          # invalid alongside `status: draft` and the upload-google-play action rejects it.
 
   verify-assetlinks:
     needs: build
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
     steps:
-      # assetlinks.json ships as apps/web/public/.well-known/assetlinks.json and is served
-      # directly by the Next.js app (see next.config.ts headers for /.well-known/:path*) -
-      # it deploys automatically with the web app itself. There is nothing to separately
-      # publish here (an earlier version of this workflow pushed a stray copy to gh-pages,
-      # which the real msmsupermarket.in domain never reads from). This job just smoke-tests
-      # that the live file is actually reachable after a deploy.
       - name: Verify assetlinks.json is live
         run: |
-          curl -f "https://msmsupermarket.in/.well-known/assetlinks.json" || {
+          curl -f "https://revathysupermarket.vercel.app/.well-known/assetlinks.json" || {
             echo "::error::assetlinks.json is not reachable on the production domain.";
             exit 1;
           }

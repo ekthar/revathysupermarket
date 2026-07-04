@@ -74,9 +74,9 @@ export async function POST(request: Request) {
       }
     }
 
-    // If neither channel is enabled, log OTP to console in development
+    // If neither channel is enabled, log OTP to console when explicitly opted-in
     if (!whatsappEnabled && !smsEnabled) {
-      if (process.env.NODE_ENV !== "production") {
+      if (process.env.EXPOSE_DEV_OTP === "true" && process.env.NODE_ENV !== "production") {
         console.log(`[DEV OTP] Phone: ${normalizedPhone}, OTP: ${otp}`);
       }
     }

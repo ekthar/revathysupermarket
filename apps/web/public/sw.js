@@ -78,14 +78,19 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request).then((response) => {
+      const fetchPromise = fetch(event.request).then((response) => {
         if (response.ok && (response.type === "basic" || response.type === "cors")) {
           const clone = response.clone();
           caches.open(CACHE).then((cache) => cache.put(event.request, clone));
         }
         return response;
       }).catch(() => new Response("", { status: 404 }));
+      // Stale-while-revalidate: return cached immediately, fetch latest in background
+      if (cached) {
+        fetchPromise.catch(() => {});
+        return cached;
+      }
+      return fetchPromise;
     })
   );
 });

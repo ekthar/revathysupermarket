@@ -14,5 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "msm-twa"
+rootProject.name = "revathy-supermarket-twa"
 include(":app")

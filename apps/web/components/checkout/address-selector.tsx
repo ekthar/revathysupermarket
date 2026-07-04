@@ -101,16 +101,17 @@ export function AddressSelector({
     const address = savedAddresses.find((entry) => entry.id === addressId);
     if (!address) return;
     setSelectedAddressId(addressId);
-    onFormPatch({
-      customerName: address.customerName,
-      phone: address.phone,
+    const patch: Record<string, string> = {
       houseName: address.houseName,
       street: address.street,
       landmark: address.landmark,
       pincode: address.pincode,
       latitude: address.latitude.toString(),
       longitude: address.longitude.toString(),
-    });
+    };
+    if (address.customerName) patch.customerName = address.customerName;
+    if (address.phone) patch.phone = address.phone;
+    onFormPatch(patch);
     onLocationStateChange("success");
     setFormExpanded(false);
     showToast(`${address.label} address selected`, "success");
@@ -167,7 +168,7 @@ export function AddressSelector({
               <p className="text-caption text-neutral-600 dark:text-neutral-400 mt-0.5">
                 {selectedAddress.houseName}, {selectedAddress.street}{selectedAddress.landmark ? `, ${selectedAddress.landmark}` : ""} — {selectedAddress.pincode}
               </p>
-              {(form.customerName && form.phone) ? (
+              {(form.customerName.length >= 2 && form.phone.length >= 10) ? (
                 <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">
                   {form.customerName} · {form.phone}
                 </p>
@@ -179,24 +180,29 @@ export function AddressSelector({
           </div>
 
           {/* Inline name+phone prompt for old addresses that lack them */}
-          {(!form.customerName || !form.phone) && (
-            <div className="px-4 py-3 border-t border-neutral-100 dark:border-neutral-700 bg-amber-50/50 dark:bg-amber-950/10">
-              <p className="text-micro font-semibold text-amber-700 dark:text-amber-400 mb-2">
-                Add your name & phone number for delivery
+          {(form.customerName.length < 2 || form.phone.length < 10) && (
+            <div className="px-4 py-3 border-t border-neutral-100 dark:border-neutral-700">
+              <p className="text-micro font-semibold text-neutral-500 mb-2">
+                {(!form.customerName || !form.phone)
+                  ? "Add your name & phone number for delivery"
+                  : "Enter full 10-digit phone number"}
               </p>
               <div className="flex gap-2">
                 <input
                   value={form.customerName}
                   onChange={(e) => onUpdate("customerName", e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                   placeholder="Your name"
-                  className="h-9 flex-1 min-w-0 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
+                  className="h-9 w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 <input
                   value={form.phone}
                   onChange={(e) => onUpdate("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                   placeholder="Phone number"
                   type="tel"
-                  className="h-9 flex-1 min-w-0 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
+                  autoComplete="tel"
+                  className="h-9 w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
             </div>

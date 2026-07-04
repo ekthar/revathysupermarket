@@ -118,9 +118,10 @@ export function ProductImportExport() {
             <li><strong>price</strong> - Selling price (required, must be greater than 0)</li>
             <li><strong>discountPrice</strong> - Discounted selling price (optional, must be less than price)</li>
             <li><strong>costPrice</strong> - Your purchase/cost price (optional)</li>
-            <li><strong>gstRate</strong> - GST percentage e.g. 5, 12, 18 (optional)</li>
+            <li><strong>gstRate</strong> - GST percentage, 0-28 e.g. 5, 12, 18 (optional)</li>
             <li><strong>stock</strong> - Available quantity (required, whole number)</li>
             <li><strong>unit</strong> - Unit label e.g. &quot;1 kg&quot;, &quot;500 ml&quot; (defaults to &quot;1 pc&quot;)</li>
+            <li className="text-muted-foreground/80">Rows with an obviously wrong category, GST rate, or unit (blank, numbers-only, or garbled) are flagged per-row - e.g. &quot;Row 6: GST error...&quot;.</li>
             <li><strong>brand</strong> - Brand name (optional)</li>
             <li><strong>image</strong> - HTTPS image URL (optional, leave blank for default)</li>
             <li><strong>description</strong> - Product description (required, min 10 chars)</li>

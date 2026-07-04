@@ -17,6 +17,11 @@ type UnackOrder = {
   createdAt: string;
 };
 
+// Persists whether the admin has already unlocked the siren once before, so a reload
+// (or a closed-and-reopened PWA) doesn't show "Tap to Enable Alarm Sound" again if the
+// browser is willing to resume the AudioContext without a fresh gesture this time.
+const AUDIO_UNLOCKED_KEY = "admin-alarm-audio-unlocked";
+
 export function AlarmProvider({ children }: { children: React.ReactNode }) {
   const [orders, setOrders] = useState<UnackOrder[]>([]);
   const [audioReady, setAudioReady] = useState(false);
@@ -86,18 +91,41 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // Browsers block autoplay until the user interacts with the page.
+  // If the admin unlocked the siren on a previous visit, trust that going forward: hide
+  // the prompt immediately and try to resume the AudioContext right away. Some browsers
+  // (especially an installed/TWA origin with a history of user-initiated audio) allow
+  // this to succeed with no fresh gesture at all; when they don't, the very next click,
+  // keydown, touch, or tab-foreground event below silently finishes the resume for us.
+  useEffect(() => {
+    if (localStorage.getItem(AUDIO_UNLOCKED_KEY) === "true") {
+      setAudioReady(true);
+      ensureContext();
+    }
+  }, [ensureContext]);
+
+  // Browsers block autoplay until the user interacts with the page. Beyond the first
+  // click/keydown/touch, also retry silently whenever the tab/app is foregrounded again -
+  // that covers switching back to an installed PWA without a full close, where the
+  // AudioContext is often still alive and just needs another resume() call.
   useEffect(() => {
     const unlock = () => {
-      if (ensureContext()) setAudioReady(true);
+      if (ensureContext()) {
+        localStorage.setItem(AUDIO_UNLOCKED_KEY, "true");
+        setAudioReady(true);
+      }
+    };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") unlock();
     };
     window.addEventListener("click", unlock, { once: true });
     window.addEventListener("keydown", unlock, { once: true });
     window.addEventListener("touchstart", unlock, { once: true });
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("click", unlock);
       window.removeEventListener("keydown", unlock);
       window.removeEventListener("touchstart", unlock);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [ensureContext]);
 
@@ -236,7 +264,12 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
               <div className="px-6 py-4 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20">
                 <button
                   type="button"
-                  onClick={() => { if (ensureContext()) setAudioReady(true); }}
+                  onClick={() => {
+                    if (ensureContext()) {
+                      localStorage.setItem(AUDIO_UNLOCKED_KEY, "true");
+                      setAudioReady(true);
+                    }
+                  }}
                   className="w-full h-12 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold flex items-center justify-center gap-2 transition"
                 >
                   <Volume2 className="h-5 w-5" /> Tap to Enable Alarm Sound

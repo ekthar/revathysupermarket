@@ -253,6 +253,10 @@ model Category {
   slug          String        @unique
   description   String?
   image         String?
+  // Single emoji shown on the homepage category tiles (mobile grid) and anywhere else
+  // a lightweight icon is preferable to a photo. Falls back to a generic cart emoji
+  // in the UI when unset - see CATEGORY_ICON_FALLBACK in lib/category-icons.ts.
+  icon          String?
   sortOrder     Int           @default(0)
   products      Product[]
   subCategories SubCategory[]

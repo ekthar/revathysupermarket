@@ -10,6 +10,7 @@ export async function GET() {
         slug: true,
         description: true,
         image: true,
+        icon: true,
         sortOrder: true,
       },
       orderBy: { sortOrder: "asc" },

@@ -15,6 +15,7 @@ type Category = {
   slug: string;
   description: string | null;
   image: string | null;
+  icon: string | null;
   sortOrder: number;
   productCount: number;
   hasSales: boolean;
@@ -35,10 +36,10 @@ export function CategoryManagementClient({ categories }: { categories: Category[
   const [showCreate, setShowCreate] = useState(false);
 
   // Create form
-  const [createForm, setCreateForm] = useState({ name: "", description: "", image: "", sortOrder: "0" });
+  const [createForm, setCreateForm] = useState({ name: "", description: "", image: "", icon: "", sortOrder: "0" });
   const [createErrors, setCreateErrors] = useState<{ name?: string }>({});
   // Edit form
-  const [editForm, setEditForm] = useState({ name: "", description: "", image: "", sortOrder: "0" });
+  const [editForm, setEditForm] = useState({ name: "", description: "", image: "", icon: "", sortOrder: "0" });
   const [editErrors, setEditErrors] = useState<{ name?: string }>({});
 
   /** Validate a category name field on blur */
@@ -62,13 +63,14 @@ export function CategoryManagementClient({ categories }: { categories: Category[
         name: createForm.name.trim(),
         description: createForm.description.trim() || undefined,
         image: createForm.image.trim() || undefined,
+        icon: createForm.icon.trim() || undefined,
         sortOrder: Number(createForm.sortOrder) || 0
       })
     });
     const data = await readApiResponse<{ category?: Category; error?: string }>(res);
     if (!res.ok) { showToast(data.error ?? "Failed to create category", "error"); return; }
     showToast("Category created", "success");
-    setCreateForm({ name: "", description: "", image: "", sortOrder: "0" });
+    setCreateForm({ name: "", description: "", image: "", icon: "", sortOrder: "0" });
     setShowCreate(false);
     startTransition(() => router.refresh());
   }
@@ -79,6 +81,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
       name: cat.name,
       description: cat.description ?? "",
       image: cat.image ?? "",
+      icon: cat.icon ?? "",
       sortOrder: String(cat.sortOrder)
     });
   }
@@ -97,6 +100,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
         name: editForm.name.trim(),
         description: editForm.description.trim() || undefined,
         image: editForm.image.trim() || null,
+        icon: editForm.icon.trim() || null,
         sortOrder: Number(editForm.sortOrder) || 0
       })
     });
@@ -170,6 +174,13 @@ export function CategoryManagementClient({ categories }: { categories: Category[
               className="h-12 rounded-2xl"
             />
             <Input
+              value={createForm.icon}
+              onChange={(e) => setCreateForm((f) => ({ ...f, icon: e.target.value }))}
+              placeholder="Emoji icon (optional, e.g. 🍎)"
+              maxLength={16}
+              className="h-12 rounded-2xl"
+            />
+            <Input
               value={createForm.sortOrder}
               onChange={(e) => setCreateForm((f) => ({ ...f, sortOrder: e.target.value }))}
               placeholder="Sort order"
@@ -223,6 +234,13 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                         className="h-11 rounded-2xl"
                       />
                       <Input
+                        value={editForm.icon}
+                        onChange={(e) => setEditForm((f) => ({ ...f, icon: e.target.value }))}
+                        placeholder="Emoji icon"
+                        maxLength={16}
+                        className="h-11 rounded-2xl"
+                      />
+                      <Input
                         value={editForm.sortOrder}
                         onChange={(e) => setEditForm((f) => ({ ...f, sortOrder: e.target.value }))}
                         placeholder="Sort order"
@@ -249,6 +267,8 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                     <div className="relative h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center overflow-hidden shrink-0">
                       {cat.image ? (
                         <Image src={cat.image} alt={cat.name} fill className="object-cover" unoptimized />
+                      ) : cat.icon ? (
+                        <span className="text-2xl leading-none">{cat.icon}</span>
                       ) : (
                         <Package className="h-5 w-5 text-primary" />
                       )}

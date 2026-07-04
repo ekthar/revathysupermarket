@@ -10,12 +10,13 @@ import { AnimatedProductSection } from "@/components/home/animated-product-secti
 import { HomeSearch } from "@/components/home/home-search";
 import { LiveOrderBanner } from "@/components/tracking/live-order-banner";
 import { LocationPrompt } from "@/components/location-prompt";
-import { categories, products } from "@/lib/products";
+import { categories as demoCategories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 import type { Product } from "@/lib/types";
 import { auth } from "@/auth";
 import { getActiveOrderSummary } from "@/lib/live-order";
+import { categoryColorForIndex } from "@/lib/category-icons";
 
 export const revalidate = 60;
 
@@ -47,7 +48,18 @@ const getHomepageProducts = unstable_cache(
   { revalidate: 60, tags: ["homepage", "products"] }
 );
 
-const categoryImages: Record<string, string> = {
+const getHomepageCategories = unstable_cache(
+  async () => prisma.category.findMany({
+    orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+    select: { name: true, image: true, icon: true }
+  }).catch(() => []),
+  ["homepage-categories"],
+  { revalidate: 60, tags: ["homepage", "categories"] }
+);
+
+// Demo-only fallbacks, used solely when a fresh install has zero real categories in
+// the DB yet (see AdminCategories -> real icons/images take over automatically).
+const demoCategoryImages: Record<string, string> = {
   Fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=200&h=200&fit=crop",
   Vegetables: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200&h=200&fit=crop",
   Dairy: "https://images.unsplash.com/photo-1628088062854-d1870b4553da?w=200&h=200&fit=crop",
@@ -59,7 +71,7 @@ const categoryImages: Record<string, string> = {
   "Grocery Essentials": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&h=200&fit=crop"
 };
 
-const categoryColors: Record<string, string> = {
+const demoCategoryColors: Record<string, string> = {
   Fruits: "bg-orange-50",
   Vegetables: "bg-secondary-50",
   Dairy: "bg-blue-50",
@@ -71,17 +83,18 @@ const categoryColors: Record<string, string> = {
   "Grocery Essentials": "bg-amber-50"
 };
 
-const categoryIcons: Record<string, string> = {
+const demoCategoryIcons: Record<string, string> = {
   Fruits: "\ud83c\udf4e", Vegetables: "\ud83e\udd2c", Dairy: "\ud83e\udd5b", Beverages: "\ud83e\uddc3", Snacks: "\ud83c\udf7f",
   Household: "\ud83e\uddf9", "Personal Care": "\ud83e\uddf4", "Frozen Foods": "\ud83e\uddc6", "Grocery Essentials": "\ud83c\udf5a"
 };
 
 export default async function HomePage() {
   const session = await auth();
-  const [settings, banner, dbProducts, promoBanners, activeOrder] = await Promise.all([
+  const [settings, banner, dbProducts, dbCategories, promoBanners, activeOrder] = await Promise.all([
     getPublicStoreSettings(),
     getHomepageBanner(),
     getHomepageProducts(),
+    getHomepageCategories(),
     getPromoBanners(),
     getActiveOrderSummary(session?.user?.id)
   ]);
@@ -96,6 +109,22 @@ export default async function HomePage() {
         popularity: p.popularity, unit: p.unit, isFeatured: p.isFeatured
       }))
     : products;
+
+  // Real DB categories drive the "Popular Categories" widget once an admin has added
+  // any; a fresh install with zero categories falls back to the demo set so the
+  // homepage isn't blank before the store owner sets things up.
+  const categories: readonly string[] = dbCategories.length > 0
+    ? dbCategories.map((c) => c.name)
+    : demoCategories;
+  const categoryImages: Record<string, string> = dbCategories.length > 0
+    ? Object.fromEntries(dbCategories.filter((c) => c.image).map((c) => [c.name, c.image as string]))
+    : demoCategoryImages;
+  const categoryIcons: Record<string, string> = dbCategories.length > 0
+    ? Object.fromEntries(dbCategories.filter((c) => c.icon).map((c) => [c.name, c.icon as string]))
+    : demoCategoryIcons;
+  const categoryColors: Record<string, string> = dbCategories.length > 0
+    ? Object.fromEntries(dbCategories.map((c, i) => [c.name, categoryColorForIndex(i)]))
+    : demoCategoryColors;
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);
   const offers = allProducts.filter((p) => p.discountPrice).slice(0, 8);
@@ -145,7 +174,7 @@ export default async function HomePage() {
           subtitle="Top picks loved by customers"
           products={trending.slice(0, 8)}
           showCategoryPills
-          categoryPills={["Fresh Vegetables", "Fruits", "Dairy & Eggs", "Bakery", "Meat & Fish", "Beverages"]}
+          categoryPills={categories.slice(0, 6)}
           categories={categories}
         />
       </div>

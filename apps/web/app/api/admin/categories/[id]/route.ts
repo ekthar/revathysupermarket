@@ -10,6 +10,7 @@ const updateSchema = z.object({
   name: z.string().min(2).optional(),
   description: z.string().optional(),
   image: z.string().trim().optional().nullable(),
+  icon: z.string().trim().max(16).optional().nullable(),
   sortOrder: z.coerce.number().int().min(0).optional()
 });
 
@@ -49,6 +50,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   }
   if (parsed.data.description !== undefined) data.description = parsed.data.description;
   if (parsed.data.image !== undefined) data.image = parsed.data.image;
+  if (parsed.data.icon !== undefined) data.icon = parsed.data.icon;
   if (parsed.data.sortOrder !== undefined) data.sortOrder = parsed.data.sortOrder;
 
   const category = await prisma.category.update({ where: { id }, data });

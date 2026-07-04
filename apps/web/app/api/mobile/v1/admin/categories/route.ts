@@ -27,6 +27,7 @@ export async function GET(request: Request) {
       slug: c.slug,
       description: c.description,
       image: c.image,
+      icon: c.icon,
       sortOrder: c.sortOrder,
       productCount: c._count.products,
       createdAt: c.createdAt.toISOString(),
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { name, description, image, sortOrder } = body;
+  const { name, description, image, icon, sortOrder } = body;
 
   if (!name) {
     return NextResponse.json({ error: "Missing required field: name" }, { status: 400 });
@@ -60,6 +61,7 @@ export async function POST(request: Request) {
       slug,
       description: description || null,
       image: image || null,
+      icon: icon || null,
       sortOrder: sortOrder ?? 0,
     },
   });

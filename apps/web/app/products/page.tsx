@@ -3,9 +3,21 @@ import { unstable_cache } from "next/cache";
 import { ProductGrid } from "@/components/product-grid";
 import { SubcategoryPillsServer } from "@/components/subcategory-pills-server";
 import { prisma } from "@/lib/prisma";
-import { products as fallbackProducts } from "@/lib/products";
+import { products as fallbackProducts, categories as demoCategories } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { SITE } from "@/lib/constants";
+
+const getCategoryNames = unstable_cache(
+  async () => {
+    const rows = await prisma.category.findMany({
+      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
+      select: { name: true }
+    }).catch(() => []);
+    return rows.map((c) => c.name);
+  },
+  ["products-page-categories"],
+  { revalidate: 60, tags: ["categories"] }
+);
 
 export const metadata: Metadata = {
   title: "Shop Groceries",
@@ -128,7 +140,11 @@ export default async function ProductsPage({
   searchParams: Promise<{ category?: string; q?: string; sort?: string }>;
 }) {
   const { category, q, sort } = await searchParams;
-  const { items, nextCursor, total } = await getProducts({ category, q, sort, limit: 24 });
+  const [{ items, nextCursor, total }, dbCategoryNames] = await Promise.all([
+    getProducts({ category, q, sort, limit: 24 }),
+    getCategoryNames(),
+  ]);
+  const categoryNames = dbCategoryNames.length > 0 ? dbCategoryNames : demoCategories;
   const initialCategory = category || "All";
   return (
     <main className="min-h-screen bg-background pb-24">
@@ -169,6 +185,7 @@ export default async function ProductsPage({
         initialCategory={initialCategory}
         initialQuery={q || ""}
         initialSort={(sort as "popularity" | "low" | "high" | "newest") || "popularity"}
+        categories={categoryNames}
       />
     </main>
   );

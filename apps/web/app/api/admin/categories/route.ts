@@ -10,6 +10,9 @@ const schema = z.object({
   name: z.string().min(2),
   description: z.string().optional(),
   image: z.string().trim().optional(),
+  // A single emoji (possibly a multi-codepoint sequence, e.g. skin-tone/ZWJ combos) -
+  // capped well above any realistic emoji length just to stop pasted paragraphs.
+  icon: z.string().trim().max(16).optional(),
   sortOrder: z.coerce.number().int().min(0).optional()
 });
 
@@ -47,6 +50,7 @@ export async function POST(request: Request) {
       slug,
       description: parsed.data.description,
       image: parsed.data.image,
+      icon: parsed.data.icon,
       sortOrder: parsed.data.sortOrder ?? 0
     }
   });

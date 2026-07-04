@@ -28,6 +28,7 @@ type DeliveryOrder = {
   status: string;
   total: number;
   paymentMethod: string;
+  deliveryInstructions?: string | null;
   customerUnavailableWaitUntil?: string | null;
   items: Array<{ id: string; name: string; quantity: number; price: number }>;
   collection?: {
@@ -320,14 +321,16 @@ function DeliveryAppShellInner({
                     <div className="flex items-start justify-between gap-3 p-4">
                       <div>
                         <div className="flex items-center gap-2">
-                          <h3 className="text-lg font-black text-slate-900 dark:text-white">
-                            #{order.orderNumber}
+                          <h3 className="text-xl font-black text-slate-900 dark:text-white">
+                            {order.customerName}
                           </h3>
                           <span className={`rounded-full px-2 py-0.5 text-micro font-black ${statusColor(order.status)}`}>
                             {statusLabels[order.status as keyof typeof statusLabels] ?? order.status}
                           </span>
                         </div>
-                        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">{order.customerName}</p>
+                        <p className="mt-0.5 text-sm text-slate-500 dark:text-slate-400">
+                          #{order.orderNumber} · {order.phone}
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="font-black text-slate-900 dark:text-white">{formatCurrency(order.total)}</p>
@@ -349,6 +352,18 @@ function DeliveryAppShellInner({
                         <ExternalLink className="h-4 w-4 text-slate-400" />
                       </button>
                     </div>
+
+                    {/* Delivery Instructions */}
+                    {order.deliveryInstructions && (
+                      <div className="px-4 mt-2">
+                        <div className="flex items-start gap-2 rounded-xl bg-amber-50 p-3 dark:bg-amber-900/20">
+                          <span className="text-lg">📝</span>
+                          <p className="text-sm font-medium text-amber-800 dark:text-amber-300">
+                            {order.deliveryInstructions}
+                          </p>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Expandable Items */}
                     <details className="mx-4 mt-3 rounded-xl border border-slate-100 dark:border-slate-800">

@@ -59,6 +59,7 @@ export default async function DeliveryPage() {
           latitude: o.latitude != null ? Number(o.latitude) : null,
           longitude: o.longitude != null ? Number(o.longitude) : null,
           status: o.status,
+          deliveryInstructions: o.deliveryInstructions,
           customerUnavailableWaitUntil: o.customerUnavailableWaitUntil,
           total: Number(o.total),
           paymentMethod: o.paymentMethod,

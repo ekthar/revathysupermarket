@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Bike, CreditCard, ExternalLink, LogOut,
-  MapPin, Package, ShieldCheck, Truck, Zap, Volume2, VolumeX,
+  MapPin, EyeOff, Package, ShieldCheck, Truck, Zap, Volume2, VolumeX,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -121,7 +121,10 @@ function DeliveryAppShellInner({
   const { showToast } = useToast();
   const [soundOn, setSoundOn] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
+  const [isHidden, setIsHidden] = useState(false);
+  const wakeLockRef = useRef<any>(null);
 
+  // Online/offline detection
   useEffect(() => {
     setSoundOn(localStorage.getItem(SOUND_KEY) === "true");
     const onOnline = () => setOnline(true);
@@ -129,6 +132,42 @@ function DeliveryAppShellInner({
     window.addEventListener("online", onOnline);
     window.addEventListener("offline", onOffline);
     return () => { window.removeEventListener("online", onOnline); window.removeEventListener("offline", onOffline); };
+  }, []);
+
+  // Visibility: warn rider when app is backgrounded, force-publish location on resume
+  useEffect(() => {
+    const onVisibility = () => {
+      const hidden = document.hidden;
+      setIsHidden(hidden);
+      if (!hidden) {
+        location.forcePublish();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => document.removeEventListener("visibilitychange", onVisibility);
+  }, [location]);
+
+  // Wake Lock: keep screen on while the app is in the foreground
+  useEffect(() => {
+    let active = true;
+    async function acquire() {
+      if (!navigator.wakeLock) return;
+      try {
+        wakeLockRef.current = await navigator.wakeLock.request("screen");
+        wakeLockRef.current.addEventListener("release", () => {
+          if (active && !document.hidden) {
+            acquire();
+          }
+        });
+      } catch {
+        // Wake lock not supported or denied — silently degrade
+      }
+    }
+    acquire();
+    return () => {
+      active = false;
+      wakeLockRef.current?.release().catch(() => {});
+    };
   }, []);
   // No more client-side relabeling of OUT_FOR_DELIVERY -> ARRIVING. Arrival is
   // now a real, GPS-verified server transition (see markArrived below) — the
@@ -332,6 +371,24 @@ function DeliveryAppShellInner({
         </div>
       </header>
 
+      {/* Visibility Warning Banner */}
+      <AnimatePresence>
+        {isHidden && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            className="overflow-hidden"
+          >
+            <div className="mx-4 mt-3 flex items-center gap-2 rounded-xl bg-amber-100 px-4 py-3 dark:bg-amber-900/30">
+              <EyeOff className="h-5 w-5 shrink-0 text-amber-700 dark:text-amber-400" />
+              <p className="text-xs font-bold text-amber-800 dark:text-amber-300 leading-relaxed">
+                Tracking paused — keep the app open and the screen on so customers can see your live location.
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Active Orders Section */}
       <section className="px-4 pt-5">

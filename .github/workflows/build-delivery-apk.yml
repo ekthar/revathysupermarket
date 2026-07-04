@@ -1,0 +1,66 @@
+name: Build Delivery APK
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/web/capacitor.config.ts"
+      - "apps/web/android/**"
+      - "apps/web/package.json"
+      - ".github/workflows/build-delivery-apk.yml"
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps
+        working-directory: .
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "build-tools;34.0.0 platforms;android-34"
+
+      - name: Sync Capacitor Android
+        run: npx cap sync android
+        env:
+          CAPACITOR_SERVER_URL: ${{ vars.CAPACITOR_SERVER_URL || 'https://revathysupermarket.com' }}
+
+      - name: Build Release APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease --no-daemon -Dorg.gradle.jvmargs="-Xmx4g"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: delivery-release-apk
+          path: apps/web/android/app/build/outputs/apk/release/*.apk
+          retention-days: 30
+
+      - name: Upload AAB
+        uses: actions/upload-artifact@v4
+        with:
+          name: delivery-release-aab
+          path: apps/web/android/app/build/outputs/bundle/release/*.aab
+          retention-days: 30

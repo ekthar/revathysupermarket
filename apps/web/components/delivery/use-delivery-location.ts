@@ -6,26 +6,86 @@ export type LocationPermissionState = "checking" | "prompt" | "granted" | "denie
 
 export type LiveCoords = { latitude: number; longitude: number; heading?: number | null };
 
+// Minimal types for the native Capacitor background geolocation plugin
+type BgLocation = { latitude: number; longitude: number; heading?: number | null; accuracy: number; altitude: number | null; bearing?: number | null };
+type BgPlugin = {
+  requestPermission: () => Promise<string>;
+  addWatcher: (opts: any, cb: (location?: BgLocation, error?: any) => void) => Promise<string>;
+  removeWatcher: (opts: { id: string }) => Promise<void>;
+};
+
 /**
- * Compulsory GPS for delivery partners.
+ * Unified location hook that works in both PWA (browser Geolocation API) and
+ * Capacitor native (background geolocation plugin) environments.
  *
- * Location is not optional for a delivery rider: it is what proves arrival
- * at the customer's door (server-side, within 250m) and what lets the
- * customer see the rider moving on the live map. This hook:
- *
- * 1. Reports the current permission state (checking/prompt/granted/denied).
- * 2. Once granted, continuously watches position and publishes it to
- *    `/api/delivery/location` every 5s (replaces the old silent
- *    DeliveryMapView-only publisher).
- * 3. Exposes the latest known coordinates so the caller can attach them to
- *    the "Mark Arrived" / GPS-verified actions.
+ * When running inside a Capacitor native shell on Android/iOS, it uses the
+ * @capacitor-community/background-geolocation plugin which keeps sending
+ * location updates even when the app is backgrounded or the screen is off.
+ * When running as a plain PWA in the browser, it falls back to
+ * navigator.geolocation.watchPosition with the existing 5s-throttled publish.
  */
 export function useDeliveryLocation(): UseDeliveryLocation {
   const [permission, setPermission] = useState<LocationPermissionState>("checking");
   const [coords, setCoords] = useState<LiveCoords | null>(null);
   const coordsRef = useRef<LiveCoords | null>(null);
   const watchIdRef = useRef<number | null>(null);
+  const bgWatcherRef = useRef<any>(null);
 
+  const isNative = typeof window !== "undefined" && !!(window as any).Capacitor?.isNative;
+
+  // ─── Native Capacitor background location ───
+  const startNative = useCallback(async () => {
+    try {
+      const mod: any = await import("@capacitor-community/background-geolocation");
+      const BackgroundGeolocation: BgPlugin = mod.BackgroundGeolocation ?? mod;
+      const perm = await BackgroundGeolocation.requestPermission();
+      if (perm !== "granted") { setPermission("denied"); return; }
+      setPermission("granted");
+      const watcherId = await BackgroundGeolocation.addWatcher(
+        {
+          backgroundMessage: "Revathy Delivery is tracking your location.",
+          backgroundTitle: "Delivery Tracking Active",
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: 10,
+        },
+        (location, error) => {
+          if (error || !location) return;
+          const next: LiveCoords = {
+            latitude: location.latitude,
+            longitude: location.longitude,
+            heading: location.heading,
+          };
+          coordsRef.current = next;
+          setCoords(next);
+          fetch("/api/delivery/location", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              latitude: next.latitude,
+              longitude: next.longitude,
+              heading: next.heading ?? undefined,
+            }),
+          }).catch(() => null);
+        }
+      );
+      bgWatcherRef.current = { plugin: BackgroundGeolocation, watcherId };
+    } catch {
+      // Plugin not available — fall through to browser API
+    }
+  }, []);
+
+  const stopNative = useCallback(async () => {
+    try {
+      if (bgWatcherRef.current) {
+        const { plugin, watcherId } = bgWatcherRef.current;
+        await plugin.removeWatcher({ id: watcherId });
+        bgWatcherRef.current = null;
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // ─── Web browser Geolocation API fallback ───
   const startWatching = useCallback(() => {
     if (!navigator.geolocation || watchIdRef.current !== null) return;
     let lastPublishedAt = 0;
@@ -40,7 +100,6 @@ export function useDeliveryLocation(): UseDeliveryLocation {
         coordsRef.current = next;
         setCoords(next);
         setPermission("granted");
-
         const now = Date.now();
         if (document.visibilityState === "hidden" || now - lastPublishedAt < 5000) return;
         lastPublishedAt = now;
@@ -71,8 +130,12 @@ export function useDeliveryLocation(): UseDeliveryLocation {
     }
   }, []);
 
-  // On mount: check existing permission state without prompting (where supported).
+  // ─── On mount: detect environment & start tracking ───
   useEffect(() => {
+    if (isNative) {
+      startNative();
+      return () => { stopNative(); };
+    }
     if (!navigator.geolocation) {
       setPermission("unsupported");
       return;
@@ -93,24 +156,20 @@ export function useDeliveryLocation(): UseDeliveryLocation {
         };
       })
       .catch(() => setPermission("prompt"));
-    return () => {
-      active = false;
-    };
-  }, []);
+    return () => { active = false; };
+  }, [isNative, startNative, stopNative]);
 
-  // Once granted, start the live watcher; stop it on unmount.
   useEffect(() => {
+    if (isNative) return;
     if (permission !== "granted") return;
     startWatching();
     return stopWatching;
-  }, [permission, startWatching, stopWatching]);
+  }, [permission, startWatching, stopWatching, isNative]);
 
-  /** Triggers the native browser permission prompt (must be called from a user gesture). */
+  // ─── Public API ───
   const requestPermission = useCallback(() => {
-    if (!navigator.geolocation) {
-      setPermission("unsupported");
-      return;
-    }
+    if (isNative) { startNative(); return; }
+    if (!navigator.geolocation) { setPermission("unsupported"); return; }
     navigator.geolocation.getCurrentPosition(
       (position) => {
         coordsRef.current = { latitude: position.coords.latitude, longitude: position.coords.longitude, heading: position.coords.heading };
@@ -122,11 +181,11 @@ export function useDeliveryLocation(): UseDeliveryLocation {
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
-  }, []);
+  }, [isNative, startNative]);
 
-  /** Fetches a fresh single fix (used right before a GPS-verified action like "Mark Arrived"). */
   const getFreshCoords = useCallback((): Promise<LiveCoords> => {
     return new Promise((resolve, reject) => {
+      if (isNative && coordsRef.current) return resolve(coordsRef.current);
       if (!navigator.geolocation) return reject(new Error("Location is not available on this device."));
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -142,9 +201,23 @@ export function useDeliveryLocation(): UseDeliveryLocation {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
       );
     });
+  }, [isNative]);
+
+  const forcePublish = useCallback(async () => {
+    const current = coordsRef.current;
+    if (!current) return;
+    await fetch("/api/delivery/location", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        latitude: current.latitude,
+        longitude: current.longitude,
+        heading: current.heading ?? undefined,
+      }),
+    }).catch(() => null);
   }, []);
 
-  return { permission, coords, requestPermission, getFreshCoords };
+  return { permission, coords, requestPermission, getFreshCoords, forcePublish };
 }
 
 export type UseDeliveryLocation = {
@@ -152,4 +225,5 @@ export type UseDeliveryLocation = {
   coords: LiveCoords | null;
   requestPermission: () => void;
   getFreshCoords: () => Promise<LiveCoords>;
+  forcePublish: () => Promise<void>;
 };

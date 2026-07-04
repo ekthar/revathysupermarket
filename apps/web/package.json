@@ -16,11 +16,20 @@
     "seed": "tsx -r dotenv/config prisma/seed.ts",
     "seed:flags": "tsx -r dotenv/config prisma/seed-flags.ts",
     "prisma:generate": "prisma generate",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "cap:sync": "npx cap sync",
+    "cap:sync:android": "npx cap sync android",
+    "cap:sync:ios": "npx cap sync ios",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",
     "@aws-sdk/client-s3": "^3.716.0",
+    "@capacitor-community/background-geolocation": "^1.2.26",
+    "@capacitor/android": "^8.4.1",
+    "@capacitor/core": "^8.4.1",
+    "@capacitor/ios": "^8.4.1",
     "@formkit/auto-animate": "^0.8.2",
     "@msm/shared": "*",
     "@prisma/adapter-neon": "^6.1.0",
@@ -64,6 +73,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@capacitor/cli": "^8.4.1",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.61.0",
     "@types/bcryptjs": "^2.4.6",

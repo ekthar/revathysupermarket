@@ -90,7 +90,8 @@ async function readSettingRows(): Promise<SettingRow[]> {
         timer = setTimeout(() => reject(new Error("Store settings query timed out")), 2_000);
       }),
     ]);
-  } catch {
+  } catch (e) {
+    console.error("Store settings fetch failed:", e);
     return [];
   } finally {
     if (timer) clearTimeout(timer);
@@ -143,6 +144,7 @@ export async function getStoreSettings(): Promise<StoreSettings> {
   return readStoreSettings();
 }
 
+// For real-time data (orders, stock, cart), use noStore() or dynamic = force-dynamic instead of unstable_cache.
 const getCachedPublicShellSettings = unstable_cache(
   async () => {
     const rows = await readSettingRows();

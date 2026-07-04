@@ -173,6 +173,7 @@ export async function createAuthoritativeOrder({
     if (pointsRedeemed > 0) await tx.loyaltyTransaction.create({ data: { userId, orderId: order.id, type: "REDEEM", points: -pointsRedeemed, reason: `Redeemed on order #${order.orderNumber}` } });
     if (promoId) await tx.promoRedemption.create({ data: { promoCodeId: promoId, userId, orderId: order.id, discount: promoDiscount } });
     return order;
+  // Neon HTTP adapter: verify Serializable isolation behaves as expected over HTTP. If issues arise, switch to DIRECT_DATABASE_URL (TCP).
   }, { isolationLevel: "Serializable" });
 }
 

@@ -49,6 +49,8 @@ const nextConfig: NextConfig = {
       {
         // CORS headers for mobile API routes only — session-based routes
         // rely on same-origin and middleware CSRF checks.
+        // Public GET endpoints (/api/products, /api/offers, etc.) are intentionally
+        // accessible from any origin since they serve public catalog data.
         source: "/api/mobile/:path*",
         headers: [
           { key: "Access-Control-Allow-Origin", value: process.env.MOBILE_CORS_ORIGIN || "https://revathysupermarket.vercel.app" },

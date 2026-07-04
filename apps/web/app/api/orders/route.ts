@@ -95,18 +95,18 @@ export async function POST(request: Request) {
     // Address upsert — user-facing concern, keep before parallel block
     const existingAddress = await prisma.address.findFirst({
       where: { userId: session.user.id, houseName: data.houseName, pincode: data.pincode, street: data.street }
-    }).catch(() => null);
+    }).catch((e) => { console.error("Address find failed:", e); return null; });
     if (!existingAddress) {
-      await prisma.address.create({ data: { userId: session.user.id, label: "Home", customerName: data.customerName, phone: data.phone, houseName: data.houseName, street: data.street, landmark: data.landmark, pincode: data.pincode, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+      await prisma.address.create({ data: { userId: session.user.id, label: "Home", customerName: data.customerName, phone: data.phone, houseName: data.houseName, street: data.street, landmark: data.landmark, pincode: data.pincode, latitude: data.latitude, longitude: data.longitude } }).catch((e) => { console.error("Address create failed:", e); return null; });
     } else {
-      await prisma.address.update({ where: { id: existingAddress.id }, data: { customerName: data.customerName, phone: data.phone, landmark: data.landmark, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+      await prisma.address.update({ where: { id: existingAddress.id }, data: { customerName: data.customerName, phone: data.phone, landmark: data.landmark, latitude: data.latitude, longitude: data.longitude } }).catch((e) => { console.error("Address update failed:", e); return null; });
     }
 
     // Fire-and-forget side effects — run all in parallel
     const orderAddress = `${data.houseName}, ${data.street}, ${data.landmark}, ${data.pincode}`;
     await Promise.allSettled([
-      sendWhatsAppTemplate({ to: order!.phone, template: "order_confirmed", params: [order!.orderNumber, String(order!.items.length), Number(order!.total).toFixed(2), order!.paymentMethod], orderId: order!.id }).catch(() => null),
-      notifyOrderStatus(session.user.id, order!.orderNumber, "ORDER_RECEIVED", order!.id).catch(() => null),
+      sendWhatsAppTemplate({ to: order!.phone, template: "order_confirmed", params: [order!.orderNumber, String(order!.items.length), Number(order!.total).toFixed(2), order!.paymentMethod], orderId: order!.id }).catch((e) => { console.error("WhatsApp order confirmation failed:", e); return null; }),
+      notifyOrderStatus(session.user.id, order!.orderNumber, "ORDER_RECEIVED", order!.id).catch((e) => { console.error("Order status notification failed:", e); return null; }),
       broadcastToAllDeliveryPartners({
         type: "new_order",
         order: {
@@ -123,19 +123,19 @@ export async function POST(request: Request) {
         orderId: order!.id,
         orderNumber: order!.orderNumber,
         deepLink: `msmsupermarket://admin/orders/${order!.id}`,
-      }).catch(() => null),
+      }).catch((e) => { console.error("FCM admin notification failed:", e); return null; }),
       // Send push to all delivery partners in parallel (fix N+1)
       prisma.user.findMany({
         where: { role: "DELIVERY_PARTNER", isActive: true },
         select: { id: true }
-      }).catch(() => [] as { id: string }[]).then((partners) =>
+      }).catch((e) => { console.error("Delivery partner fetch failed:", e); return [] as { id: string }[]; }).then((partners) =>
         Promise.all(partners.map((partner) =>
           sendPushToUser(partner.id, {
             title: "🆕 New Order!",
             body: `Order #${order!.orderNumber} from ${data.customerName} - ₹${Number(order!.total).toFixed(0)}`,
             url: "/delivery",
             orderId: order!.id
-          }).catch(() => null)
+          }).catch((e) => { console.error("Push to delivery partner failed:", e); return null; })
         ))
       ),
       publishNewOrder({
@@ -144,13 +144,13 @@ export async function POST(request: Request) {
         customerName: data.customerName,
         address: orderAddress,
         total: Number(order!.total),
-      }).catch(() => null),
+      }).catch((e) => { console.error("New order event publish failed:", e); return null; }),
       publishOrderStatusChanged({
         orderId: order!.id,
         orderNumber: order!.orderNumber,
         status: "ORDER_RECEIVED",
         userId: session.user.id,
-      }).catch(() => null),
+      }).catch((e) => { console.error("Order status event publish failed:", e); return null; }),
     ]);
 
     return NextResponse.json({ orderId: order!.id, orderNumber: order!.orderNumber, total: Number(order!.total) });
@@ -206,7 +206,21 @@ export async function GET(request: Request) {
           items: {
             include: {
               product: {
-                include: { category: true }
+                select: {
+                  id: true,
+                  slug: true,
+                  name: true,
+                  price: true,
+                  discountPrice: true,
+                  image: true,
+                  description: true,
+                  stock: true,
+                  popularity: true,
+                  unit: true,
+                  isFeatured: true,
+                  createdAt: true,
+                  category: { select: { name: true } }
+                }
               }
             }
           },

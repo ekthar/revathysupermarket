@@ -92,12 +92,9 @@ export async function signInWithGoogleFirebase(): Promise<{ ok: boolean; idToken
     provider.addScope("email");
     provider.addScope("profile");
 
-    console.log("[Google Sign-In] Opening popup...");
     const result = await signInWithPopup(firebaseAuth, provider);
-    console.log("[Google Sign-In] Popup completed, getting ID token...");
 
     const idToken = await result.user.getIdToken();
-    console.log("[Google Sign-In] ID token obtained successfully.");
     return { ok: true, idToken };
   } catch (error: unknown) {
     // Firebase auth errors have a 'code' property with specific error types

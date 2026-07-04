@@ -98,30 +98,47 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await auth();
   const unauthorized = requireProductStaff(session);
   if (unauthorized) return unauthorized;
-  const products = await prisma.product.findMany({
-    select: {
-      id: true,
-      slug: true,
-      name: true,
-      description: true,
-      image: true,
-      price: true,
-      discountPrice: true,
-      costPrice: true,
-      brand: true,
-      stock: true,
-      popularity: true,
-      unit: true,
-      isActive: true,
-      isFeatured: true,
-      createdAt: true,
-      category: { select: { name: true } }
-    },
-    orderBy: { createdAt: "desc" }
+
+  const { searchParams } = new URL(request.url);
+  const page = Math.max(1, parseInt(searchParams.get("page") || "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)));
+  const skip = (page - 1) * limit;
+
+  const [products, total] = await Promise.all([
+    prisma.product.findMany({
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        description: true,
+        image: true,
+        price: true,
+        discountPrice: true,
+        costPrice: true,
+        brand: true,
+        stock: true,
+        popularity: true,
+        unit: true,
+        isActive: true,
+        isFeatured: true,
+        createdAt: true,
+        category: { select: { name: true } }
+      },
+      orderBy: { createdAt: "desc" },
+      skip,
+      take: limit,
+    }),
+    prisma.product.count(),
+  ]);
+
+  return NextResponse.json({
+    products,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
   });
-  return NextResponse.json({ products });
 }

@@ -1,3 +1,9 @@
+console.warn(
+  "[rate-limit] In-memory rate limiter loaded. This is a DEV-ONLY fallback and does NOT work in serverless " +
+  "(each invocation gets a fresh Map). In production, configure UPSTASH_REDIS_REST_URL and " +
+  "UPSTASH_REDIS_REST_TOKEN so the distributed Redis limiter is used instead."
+);
+
 /**
  * In-process rate limiter — LOCAL DEVELOPMENT FALLBACK ONLY.
  * This does NOT work in serverless environments (each invocation is stateless).

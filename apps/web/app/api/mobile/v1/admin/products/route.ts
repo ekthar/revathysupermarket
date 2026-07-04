@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateMobileRequest } from "@/lib/mobile-auth";
+import { productSchema } from "@/lib/validations";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 /**
  * GET /api/mobile/v1/admin/products
@@ -75,12 +77,20 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const body = await request.json();
-  const { name, description, image, price, discountPrice, costPrice, brand, stock, unit, categoryId, subCategoryId, isActive, isFeatured, gstRate } = body;
+  const limit = await enforceRateLimit(`mobile-admin:${auth.userId}`, 60, 60);
+  if (limit.limited) return rateLimitResponse(limit.reset);
 
-  if (!name || !description || !price || !unit || !categoryId) {
-    return NextResponse.json({ error: "Missing required fields: name, description, price, unit, categoryId" }, { status: 400 });
+  const body = await request.json();
+  const parsed = productSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json(
+      { error: "Validation failed", details: parsed.error.issues.map((i) => ({ field: i.path.join("."), message: i.message })) },
+      { status: 400 }
+    );
   }
+
+  const { name, description, image, price, discountPrice, costPrice, brand, stock, unit, isActive, isFeatured, gstRate } = parsed.data;
+  const { categoryId, subCategoryId } = body;
 
   const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "");
 
@@ -95,7 +105,7 @@ export async function POST(request: Request) {
       costPrice: costPrice || null,
       brand: brand || null,
       stock: stock ?? 0,
-      unit,
+      unit: unit ?? "1 pc",
       categoryId,
       subCategoryId: subCategoryId || null,
       isActive: isActive ?? true,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateMobileRequest } from "@/lib/mobile-auth";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 /**
  * GET /api/mobile/v1/admin/store-toggle
@@ -31,6 +32,9 @@ export async function POST(request: Request) {
   if (!["ADMIN", "OWNER", "MANAGER", "STAFF"].includes(auth.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
+
+  const limit = await enforceRateLimit(`mobile-admin:${auth.userId}`, 60, 60);
+  if (limit.limited) return rateLimitResponse(limit.reset);
 
   // Get current value
   const current = await prisma.setting.findUnique({

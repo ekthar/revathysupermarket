@@ -1,3 +1,4 @@
+// AUTO-INCREMENT this version string (e.g., v8, v9) in CI or before each deploy to force re-cache
 const CACHE = "msm-supermarket-v7";
 // NOTE: only list assets that actually exist in /public. `cache.addAll` is atomic - a
 // single 404 (e.g. a badge icon or sound file that was never added) rejects the whole
@@ -42,7 +43,7 @@ async function registerPeriodicSync() {
   if ("periodicSync" in self.registration) {
     try {
       await self.registration.periodicSync.register("delivery-poll", { minInterval: 30000 });
-      console.log("Periodic sync registered for delivery-poll");
+      console.info("Periodic sync registered for delivery-poll");
     } catch (e) {
       console.log("Periodic sync registration failed:", e);
     }

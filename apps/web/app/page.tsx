@@ -152,7 +152,7 @@ export default async function HomePage() {
         deliveryRadiusKm={settings.deliveryRadiusKm}
       />
 
-      {/* Mobile promo banners - dynamic from admin */}
+      {/* Promo banners - dynamic from admin */}
       <PromoBanners banners={promoBanners} />
 
       {/* Recent Orders - Foodizo horizontal cards (mobile only) */}
@@ -225,39 +225,7 @@ export default async function HomePage() {
         )}
       </section>
 
-      {/* Footer - Desktop */}
-      <footer className="hidden md:block border-t border-neutral-100 dark:border-neutral-800 mt-12">
-        <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <h3 className="font-display text-lg font-black text-neutral-900 dark:text-white">{settings.storeName}</h3>
-              <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed">
-                Skip the long lines and heavy bags, we&apos;ll handle the delivery for you.
-              </p>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Main Pages</h4>
-              <ul className="mt-3 space-y-2">
-                <li><Link href="/" className="text-sm text-neutral-500 hover:text-neutral-700">Home</Link></li>
-                <li><Link href="/products" className="text-sm text-neutral-500 hover:text-neutral-700">Shop All</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Help</h4>
-              <ul className="mt-3 space-y-2">
-                <li><Link href="/support" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Help Center</Link></li>
-                <li><Link href="/account/settings" className="text-sm text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Return Policy</Link></li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-neutral-900 dark:text-white">Contact Information</h4>
-              <ul className="mt-3 space-y-2">
-                <li className="text-sm text-neutral-500 dark:text-neutral-400">{settings.address || "Kerala, India"}</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </footer>
+
     </main>
   );
 }

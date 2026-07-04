@@ -109,7 +109,7 @@ function PaymentMethodCard({
       whileTap={{ scale: 0.97 }}
       animate={active ? { borderColor: "rgba(5,5,5,1)" } : { borderColor: "rgba(241,245,249,1)" }}
       className={`w-full flex items-center gap-3 rounded-2xl p-4 text-left border-2 transition-colors ${
-        active ? "bg-black/[0.03]" : "hover:border-neutral-200"
+        active ? "bg-black/[0.03] dark:bg-white/5" : "hover:border-neutral-200 dark:hover:border-neutral-700"
       }`}
     >
       <div className={`flex h-10 w-10 items-center justify-center rounded-full ${iconBg}`}>

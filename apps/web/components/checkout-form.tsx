@@ -157,6 +157,7 @@ export function CheckoutForm({
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
   const [deliveryOptionsOpen, setDeliveryOptionsOpen] = useState(true);
   const [offersSectionOpen, setOffersSectionOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
@@ -363,6 +364,12 @@ export function CheckoutForm({
       return;
     }
 
+    if (!showConfirm) {
+      setShowConfirm(true);
+      return;
+    }
+    setShowConfirm(false);
+
     // Save customer info for next time (onboarding persistence)
     saveCustomerInfo(form);
 
@@ -423,6 +430,50 @@ export function CheckoutForm({
     <form onSubmit={submit} className="pb-20 pt-4 md:pb-8">
       {/* First order celebration */}
       <FirstOrderCelebration show={showCelebration} onDismiss={dismissCelebration} />
+
+      {/* Confirm order dialog */}
+      <AnimatePresence>
+        {showConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[80] flex items-end justify-center bg-neutral-950/60 p-3 sm:items-center"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-order-title"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="w-full max-w-sm rounded-3xl bg-white p-6 shadow-2xl dark:bg-neutral-900"
+            >
+              <h2 id="confirm-order-title" className="font-display text-xl font-black text-neutral-900 dark:text-white">Place this order?</h2>
+              <div className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+                <div className="flex justify-between"><span>Items</span><span className="font-semibold text-neutral-900 dark:text-white">{items.length}</span></div>
+                <div className="flex justify-between"><span>Total</span><span className="font-semibold text-neutral-900 dark:text-white">{formatCurrency(totalAmount)}</span></div>
+                <div className="flex justify-between"><span>Payment</span><span className="font-semibold text-neutral-900 dark:text-white">{form.paymentMethod === "COD" ? "Cash on Delivery" : form.paymentMethod === "UPI_ON_DELIVERY" ? "UPI on Delivery" : form.paymentMethod}</span></div>
+              </div>
+              <div className="mt-5 grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(false)}
+                  className="h-12 rounded-2xl border border-neutral-200 bg-white text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="h-12 rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-neutral-800"
+                >
+                  Confirm & Place
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       <AnimatePresence>
         {placedOrderId && (
           <motion.div
@@ -531,6 +582,8 @@ export function CheckoutForm({
             <button
               type="button"
               onClick={() => setDeliveryOptionsOpen(!deliveryOptionsOpen)}
+              aria-expanded={deliveryOptionsOpen}
+              aria-controls="delivery-options-panel"
               className="flex w-full items-center justify-between px-4 py-3 text-left"
             >
               <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery Options</h2>
@@ -544,6 +597,7 @@ export function CheckoutForm({
             <AnimatePresence>
               {deliveryOptionsOpen && (
                 <motion.div
+                  id="delivery-options-panel"
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
@@ -576,6 +630,8 @@ export function CheckoutForm({
               <button
                 type="button"
                 onClick={() => setOffersSectionOpen(!offersSectionOpen)}
+                aria-expanded={offersSectionOpen}
+                aria-controls="offers-panel"
                 className="flex w-full items-center justify-between px-4 py-3 text-left"
               >
                 <div className="flex items-center gap-2">
@@ -596,6 +652,7 @@ export function CheckoutForm({
               <AnimatePresence>
                 {offersSectionOpen && (
                   <motion.div
+                    id="offers-panel"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}

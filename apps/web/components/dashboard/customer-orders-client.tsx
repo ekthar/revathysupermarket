@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, Star, XCircle } from "lucide-react";
+import { useToast } from "@/components/toast-provider";
 import { AnimatePresence, motion } from "framer-motion";
 import { orderStatuses, statusLabels } from "@/lib/constants";
 import { calculateDistanceKm } from "@/lib/distance";
@@ -74,6 +75,7 @@ const customerTimelineStatuses = ["PENDING", "PROCESSING", "READY_FOR_DELIVERY",
 
 export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = null }: { initialOrders: CustomerOrder[]; initialHistoryCursor?: string | null }) {
   const { addItems } = useCart();
+  const { showToast } = useToast();
   const [orders, setOrders] = useState(initialOrders);
   const [liveOrders, setLiveOrders] = useState<Record<string, LiveOrderState>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -86,6 +88,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   const [historyCursor, setHistoryCursor] = useState(initialHistoryCursor);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [streamUnavailable, setStreamUnavailable] = useState(!enableSseTracking);
+  const [processingEditIds, setProcessingEditIds] = useState<Set<string>>(new Set());
   // Swiggy-style: delivered/cancelled orders are collapsed by default
   const [expandedIds, setExpandedIds] = useState<Set<string>>(() => {
     const active = new Set<string>();
@@ -124,6 +127,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   async function loadOlderOrders() { if (!historyCursor || historyLoading) return; setHistoryLoading(true); const response = await fetch(`/api/orders/history?cursor=${encodeURIComponent(historyCursor)}`, { cache: "no-store" }); const data = await readApiResponse<{ orders?: CustomerOrder[]; nextCursor?: string | null }>(response); setHistoryLoading(false); if (response.ok && data.orders) { setOrders((current) => [...current, ...data.orders!.filter((order) => !current.some((existing) => existing.id === order.id))]); setHistoryCursor(data.nextCursor ?? null); } }
 
   async function decideEdit(orderId: string, decision: "approved" | "rejected") {
+    setProcessingEditIds((prev) => new Set(prev).add(orderId));
     const response = await fetch(`/api/orders/${orderId}/approval`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ decision }) });
     if (response.ok) {
       const refresh = await fetch("/api/orders", { cache: "no-store" });
@@ -133,14 +137,14 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
     }
     const data = await readApiResponse<{ error?: string; code?: string }>(response);
     if (response.status === 503 && data.code === "RATE_LIMIT_UNAVAILABLE") {
-      window.alert("Our ordering system is temporarily busy. Please wait a moment and try again.");
+      showToast("Our ordering system is temporarily busy. Please wait a moment and try again.", "error");
       return;
     }
     if (response.status === 429 && data.code === "RATE_LIMITED") {
-      window.alert("Too many attempts. Please wait a moment before trying again.");
+      showToast("Too many attempts. Please wait a moment before trying again.", "error");
       return;
     }
-    window.alert(data.error ?? "Approval update failed.");
+    showToast(data.error ?? "Approval update failed.", "error");
   }
 
 
@@ -150,14 +154,14 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
     if (!response.ok) {
       const data = await readApiResponse<{ error?: string; code?: string }>(response);
       if (response.status === 503 && data.code === "RATE_LIMIT_UNAVAILABLE") {
-        window.alert("Our ordering system is temporarily busy. Please wait a moment and try again.");
+        showToast("Our ordering system is temporarily busy. Please wait a moment and try again.", "error");
         return;
       }
       if (response.status === 429 && data.code === "RATE_LIMITED") {
-        window.alert("Too many attempts. Please wait a moment before trying again.");
+        showToast("Too many attempts. Please wait a moment before trying again.", "error");
         return;
       }
-      window.alert(data.error ?? "Feedback could not be saved.");
+      showToast(data.error ?? "Feedback could not be saved.", "error");
       return;
     }
     setRatingOrderId(null); setFeedbackComment("");
@@ -205,7 +209,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   return (
     <div className="space-y-3">
       {returnOrder && <ReturnRequestSheet order={returnOrder} onClose={() => setReturnOrder(null)} />}
-      {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-neutral-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title"><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl"><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-neutral-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
+      {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-neutral-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title" onKeyDown={(e) => { if (e.key === "Escape") setRatingOrderId(null); }}><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl" ref={(el) => el?.focus() } tabIndex={-1}><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-neutral-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
 
       {/* Buy Again section */}
       {buyAgainProducts.length > 0 && (
@@ -387,7 +391,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                       )}
 
                       {/* Edit approval */}
-                      {order.status === "AWAITING_CUSTOMER_APPROVAL" && (
+                      {order.status === "AWAITING_CUSTOMER_APPROVAL" && !processingEditIds.has(order.id) && (
                         <OrderEditApprovalCard order={order} onDecision={(d) => decideEdit(order.id, d)} />
                       )}
 
@@ -452,6 +456,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
 }
 
 function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose: () => void }) {
+  const { showToast } = useToast();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [reason, setReason] = useState("quality_issue");
   const [note, setNote] = useState("");
@@ -470,11 +475,11 @@ function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose:
     const data = await readApiResponse<{ error?: string; returnRequest?: { returnNumber?: string } }>(response);
     setLoading(false);
     if (!response.ok) return setError(data.error ?? "Return request could not be submitted.");
-    window.alert(`Return ${data.returnRequest?.returnNumber ?? "request"} submitted.`); onClose();
+    showToast(`Return ${data.returnRequest?.returnNumber ?? "request"} submitted.`, "success"); onClose();
   }
 
   async function upload(file?: File) { if (!file) return; setLoading(true); const body = new FormData(); body.set("file", file); const response = await fetch("/api/evidence/upload", { method: "POST", body }); const data = await response.json(); setLoading(false); if (!response.ok) return setError(data.error ?? "Evidence upload failed"); setPhotoUrl(data.url); }
-  return <div className="fixed inset-0 z-[95] flex items-end justify-center bg-neutral-950/60 p-2 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="return-title"><div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-start justify-between gap-3"><div><h2 id="return-title" className="font-display text-2xl font-black">Request a return</h2><p className="text-sm text-muted-foreground">Order #{order.orderNumber}</p></div><button onClick={onClose} aria-label="Close return form" className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"><XCircle className="h-5 w-5"/></button></div><div className="mt-4 divide-y divide-border rounded-2xl border border-border">{order.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 p-3"><div><p className="text-sm font-bold">{item.name}</p><p className="text-xs text-muted-foreground">{formatCurrency(item.price)} · purchased {item.quantity}</p></div><select aria-label={`Return quantity for ${item.name}`} value={quantities[item.id] ?? 0} onChange={(e) => setQuantities((current) => ({ ...current, [item.id]: Number(e.target.value) }))} className="h-10 rounded-xl border border-border bg-background px-3">{Array.from({ length: item.quantity + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}</select></div>)}</div><label className="mt-4 block text-sm font-bold">Bill Number / Order Invoice Number<input type="text" value={billNumber} onChange={(e) => setBillNumber(e.target.value)} required placeholder="Enter bill number" className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"/></label><label className="mt-4 block text-sm font-bold">Reason<select value={reason} onChange={(e) => setReason(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"><option value="wrong_item">Wrong item</option><option value="damaged">Damaged</option><option value="quality_issue">Quality issue</option><option value="changed_mind">Changed my mind</option><option value="other">Other</option></select></label><label className="mt-4 block text-sm font-bold">Tell us what happened<textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-xl border border-border bg-background p-3"/></label><label className="mt-4 block text-sm font-bold">Evidence photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} className="mt-2 block w-full text-sm"/></label>{photoUrl && <p className="mt-2 text-xs font-bold text-secondary-700">Photo uploaded</p>}<div className="mt-4 flex items-center justify-between rounded-xl bg-muted p-3 text-sm"><span>Estimated refund</span><strong>{formatCurrency(estimate)}</strong></div>{error && <p className="mt-3 text-sm font-bold text-red-600">{error}</p>}<button disabled={loading || !selected.length} onClick={submit} className="mt-4 h-12 w-full rounded-2xl bg-primary font-black text-white disabled:opacity-50">{loading ? "Submitting…" : "Submit return request"}</button></div></div>;
+  return <div className="fixed inset-0 z-[95] flex items-end justify-center bg-neutral-950/60 p-2 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="return-title" onKeyDown={(e) => { if (e.key === "Escape") onClose(); }}><div className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-background p-5 shadow-2xl sm:rounded-3xl"><div className="flex items-start justify-between gap-3"><div><h2 id="return-title" className="font-display text-2xl font-black">Request a return</h2><p className="text-sm text-muted-foreground">Order #{order.orderNumber}</p></div><button onClick={onClose} aria-label="Close return form" className="flex h-10 w-10 items-center justify-center rounded-full bg-muted"><XCircle className="h-5 w-5"/></button></div><div className="mt-4 divide-y divide-border rounded-2xl border border-border">{order.items.map((item) => <div key={item.id} className="flex items-center justify-between gap-3 p-3"><div><p className="text-sm font-bold">{item.name}</p><p className="text-xs text-muted-foreground">{formatCurrency(item.price)} · purchased {item.quantity}</p></div><select aria-label={`Return quantity for ${item.name}`} value={quantities[item.id] ?? 0} onChange={(e) => setQuantities((current) => ({ ...current, [item.id]: Number(e.target.value) }))} className="h-10 rounded-xl border border-border bg-background px-3">{Array.from({ length: item.quantity + 1 }, (_, value) => <option key={value} value={value}>{value}</option>)}</select></div>)}</div><label className="mt-4 block text-sm font-bold">Bill Number / Order Invoice Number<input type="text" value={billNumber} onChange={(e) => setBillNumber(e.target.value)} required placeholder="Enter bill number" className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"/></label><label className="mt-4 block text-sm font-bold">Reason<select value={reason} onChange={(e) => setReason(e.target.value)} className="mt-2 h-11 w-full rounded-xl border border-border bg-background px-3"><option value="wrong_item">Wrong item</option><option value="damaged">Damaged</option><option value="quality_issue">Quality issue</option><option value="changed_mind">Changed my mind</option><option value="other">Other</option></select></label><label className="mt-4 block text-sm font-bold">Tell us what happened<textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-xl border border-border bg-background p-3"/></label><label className="mt-4 block text-sm font-bold">Evidence photo (optional)<input type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => upload(e.target.files?.[0])} className="mt-2 block w-full text-sm"/></label>{photoUrl && <p className="mt-2 text-xs font-bold text-secondary-700">Photo uploaded</p>}<div className="mt-4 flex items-center justify-between rounded-xl bg-muted p-3 text-sm"><span>Estimated refund</span><strong>{formatCurrency(estimate)}</strong></div>{error && <p className="mt-3 text-sm font-bold text-red-600">{error}</p>}<button disabled={loading || !selected.length} onClick={submit} className="mt-4 h-12 w-full rounded-2xl bg-primary font-black text-white disabled:opacity-50">{loading ? "Submitting…" : "Submit return request"}</button></div></div>;
 }
 
 function OrderEditApprovalCard({ order, onDecision }: { order: CustomerOrder; onDecision: (decision: "approved" | "rejected") => void }) {

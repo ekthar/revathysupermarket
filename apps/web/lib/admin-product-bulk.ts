@@ -87,20 +87,50 @@ export function normalizeProductSheetRow(input: Record<string, unknown>): Produc
   };
 }
 
+// Catches obviously-broken values in a free-text field (blank column shifted into
+// the wrong cell, a price/GST number pasted into a text column, garbled paste, etc.)
+// without rejecting legitimate new category/unit names - those are still allowed to
+// flow through and get auto-created, same as today.
+const NUMBERS_ONLY = /^[\d.,%\s]+$/;
+const MAX_REASONABLE_LABEL_LENGTH = 40;
+
+function looksGarbled(value: string): boolean {
+  const trimmed = value.trim();
+  if (!trimmed) return false; // emptiness is handled by the "required" checks
+  if (NUMBERS_ONLY.test(trimmed)) return true; // e.g. "18" or "18%" pasted into a text column
+  if (!/[a-zA-Z]/.test(trimmed)) return true; // no letters at all
+  if (trimmed.length > MAX_REASONABLE_LABEL_LENGTH) return true; // likely the wrong column
+  return false;
+}
+
 export function validateProductSheetRow(row: ProductSheetRow) {
   const errors: string[] = [];
-  if (!row.name || row.name.length < 2) errors.push("Product name is required.");
-  if (!row.category || row.category.length < 2) errors.push("Category is required.");
-  if (!Number.isFinite(row.price) || row.price <= 0) errors.push("MRP must be greater than 0.");
+  if (!row.name || row.name.length < 2) errors.push("Name error: product name is required.");
+  if (!row.category || row.category.length < 2) {
+    errors.push("Category error: category name is required.");
+  } else if (looksGarbled(row.category)) {
+    errors.push(`Category error: "${row.category}" doesn't look like a valid category name.`);
+  }
+  if (!Number.isFinite(row.price) || row.price <= 0) errors.push("Price error: MRP must be greater than 0.");
   if (row.discountPrice !== null && row.discountPrice !== undefined && (!Number.isFinite(row.discountPrice) || row.discountPrice <= 0)) {
-    errors.push("Sales price must be greater than 0.");
+    errors.push("Price error: sales price must be greater than 0.");
   }
   if (row.discountPrice != null && row.price > 0 && row.discountPrice >= row.price) {
-    errors.push("Sales price must be less than MRP.");
+    errors.push("Price error: sales price must be less than MRP.");
   }
-  if (!Number.isInteger(row.stock) || row.stock < 0) errors.push("Stock must be a whole number 0 or above.");
-  if (!row.description || row.description.length < 10) errors.push("Description must be at least 10 characters.");
-  if (row.image && !isAllowedProductImageUrl(row.image)) errors.push("Image must be a valid HTTPS URL or blank.");
+  if (row.gstRate != null) {
+    if (!Number.isFinite(row.gstRate)) {
+      errors.push("GST error: GST rate must be a number (e.g. 5, 12, 18).");
+    } else if (row.gstRate < 0 || row.gstRate > 28) {
+      errors.push(`GST error: ${row.gstRate}% is not a valid GST rate (must be between 0 and 28).`);
+    }
+  }
+  if (!Number.isInteger(row.stock) || row.stock < 0) errors.push("Stock error: stock must be a whole number 0 or above.");
+  if (row.unit && looksGarbled(row.unit)) {
+    errors.push(`Unit error: "${row.unit}" doesn't look like a valid unit.`);
+  }
+  if (!row.description || row.description.length < 10) errors.push("Description error: description must be at least 10 characters.");
+  if (row.image && !isAllowedProductImageUrl(row.image)) errors.push("Image error: image must be a valid HTTPS URL or blank.");
   return errors;
 }
 

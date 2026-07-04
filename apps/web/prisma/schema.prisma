@@ -368,6 +368,7 @@ model Order {
   deliveryOtpAttempts     Int                     @default(0)
   deliveryOtpExpiresAt    DateTime?
   deliveryConfirmedAt     DateTime?
+  arrivedAt               DateTime?
   customerUnavailableAt  DateTime?
   customerUnavailableTimeout Int?
   billNumber              String?

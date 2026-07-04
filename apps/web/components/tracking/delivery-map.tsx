@@ -58,6 +58,7 @@ export function DeliveryMap({
   const riderMarkerRef = useRef<any>(null);
   const customerMarkerRef = useRef<any>(null);
   const storeMarkerRef = useRef<any>(null);
+  const geofenceCircleRef = useRef<any>(null);
   const routeLineCoreRef = useRef<any>(null);
   const routeLineGlowRef = useRef<any>(null);
   
@@ -183,6 +184,26 @@ export function DeliveryMap({
         );
       });
 
+      // Draw 250m geofence circle around the customer's location
+      geofenceCircleRef.current = L.circle(
+        [customerLocation.latitude, customerLocation.longitude],
+        {
+          radius: 250,
+          color: BRAND_BLACK,
+          fillColor: BRAND_BLACK,
+          fillOpacity: 0.04,
+          weight: 1.5,
+          dashArray: "6 6",
+          opacity: 0.35,
+          interactive: false,
+        }
+      ).addTo(map);
+      geofenceCircleRef.current.bindTooltip("Arrival zone (250m)", {
+        permanent: false,
+        direction: "center",
+        className: "geofence-tooltip",
+      });
+
       // Create store marker
       const storeIcon = L.divIcon({
         html: createStoreMarkerHtml(),
@@ -217,6 +238,7 @@ export function DeliveryMap({
         riderMarkerRef.current = null;
         customerMarkerRef.current = null;
         storeMarkerRef.current = null;
+        geofenceCircleRef.current = null;
         routeLineCoreRef.current = null;
         routeLineGlowRef.current = null;
       }

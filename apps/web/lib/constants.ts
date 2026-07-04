@@ -3,6 +3,8 @@ export const STORE_COORDINATES = {
   lng: Number(process.env.STORE_LNG ?? "76.843472")
 };
 
+export const ARRIVAL_RADIUS_METERS = Number(process.env.ARRIVAL_RADIUS_METERS ?? "250");
+
 export const SITE = {
   name: process.env.NEXT_PUBLIC_STORE_NAME ?? "MSM Supermarket",
   url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://msmsupermarket.in",

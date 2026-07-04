@@ -4,10 +4,11 @@ import { auth } from "@/auth";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 import { publishOrderStatusChanged, publishRiderLocation } from "@/lib/realtime/event-publisher";
 import { calculateDistanceMeters } from "@/lib/distance";
+import { ARRIVAL_RADIUS_METERS } from "@/lib/constants";
 
 /**
  * POST /api/delivery/arrive
- * Mark order as ARRIVING when partner is within 250m of delivery address.
+ * Mark order as ARRIVING when partner is within radius of delivery address.
  * Notifies the customer once.
  */
 export async function POST(req: Request) {
@@ -45,8 +46,8 @@ export async function POST(req: Request) {
     { lat: Number(order.latitude), lng: Number(order.longitude) }
   );
 
-  if (distanceM > 250) {
-    return NextResponse.json({ error: `Too far from delivery address (${Math.round(distanceM)}m). Must be within 250m.`, code: "TOO_FAR", distance: distanceM }, { status: 400 });
+  if (distanceM > ARRIVAL_RADIUS_METERS) {
+    return NextResponse.json({ error: `Too far from delivery address (${Math.round(distanceM)}m). Must be within ${ARRIVAL_RADIUS_METERS}m.`, code: "TOO_FAR", distance: distanceM }, { status: 400 });
   }
 
   // Update order status to ARRIVING

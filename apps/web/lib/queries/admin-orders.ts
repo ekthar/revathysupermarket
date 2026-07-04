@@ -16,6 +16,7 @@ type AdminOrder = {
   deliveryOtp?: string | null;
   deliveryOtpAttempts: number;
   deliveryOtpExpiresAt: string | null;
+  deliveryInstructions?: string | null;
   staffNote?: string | null;
   billNumber?: string | null;
   acknowledgedAt: string | null;
@@ -47,6 +48,7 @@ function normalizeOrder(order: RawApiOrder): AdminOrder {
     deliveryOtp: order.deliveryOtp,
     deliveryOtpAttempts: order.deliveryOtpAttempts ?? 0,
     deliveryOtpExpiresAt: order.deliveryOtpExpiresAt ?? null,
+    deliveryInstructions: order.deliveryInstructions,
     staffNote: order.staffNote,
     billNumber: order.billNumber ?? null,
     acknowledgedAt: order.acknowledgedAt ?? null,

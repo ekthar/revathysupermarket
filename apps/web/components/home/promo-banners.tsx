@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { Tag, Clock, Sparkles } from "lucide-react";
 
 type Banner = {
   id: string;
@@ -52,22 +53,44 @@ export function PromoBanners({ banners }: { banners?: Banner[] }) {
             viewport={{ once: true, margin: "-30px" }}
             whileTap={{ scale: 0.98 }}
           >
-            <Wrapper
-              {...(wrapperProps as any)}
-              className={`promo-card bg-gradient-to-br ${gradients[idx % gradients.length]} flex gap-3 press-3d block`}
-            >
-              <div className="flex-1 flex flex-col justify-between min-w-0">
-                <div>
-                  <h3 className="font-display text-title font-black leading-tight text-neutral-900 dark:text-white">
-                    {banner.title}
-                  </h3>
-                  {banner.subtitle && (
-                    <p className="mt-2 text-caption text-neutral-600 dark:text-neutral-300 leading-relaxed">
-                      {banner.subtitle}
-                    </p>
-                  )}
+              <Wrapper
+                {...(wrapperProps as any)}
+                className={`promo-card bg-gradient-to-br ${gradients[idx % gradients.length]} flex gap-3 press-3d block relative overflow-hidden`}
+              >
+                {/* Offer chip */}
+                {idx === 0 && (
+                  <div className="absolute top-0 left-0 z-10">
+                    <div className="bg-gradient-to-r from-red-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-br-lg flex items-center gap-1 shadow-lg">
+                      <Sparkles className="h-3 w-3" /> Limited
+                    </div>
+                  </div>
+                )}
+                {idx === 1 && (
+                  <div className="absolute top-0 left-0 z-10">
+                    <div className="bg-emerald-500 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-br-lg flex items-center gap-1 shadow-lg">
+                      <Tag className="h-3 w-3" /> Sale
+                    </div>
+                  </div>
+                )}
+                {idx > 1 && (
+                  <div className="absolute top-0 left-0 z-10">
+                    <div className="bg-purple-500 text-white text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-br-lg flex items-center gap-1 shadow-lg">
+                      <Clock className="h-3 w-3" /> New
+                    </div>
+                  </div>
+                )}
+                <div className="flex-1 flex flex-col justify-between min-w-0">
+                  <div className={idx < 2 ? "pt-5" : ""}>
+                    <h3 className="font-display text-title font-black leading-tight text-neutral-900 dark:text-white">
+                      {banner.title}
+                    </h3>
+                    {banner.subtitle && (
+                      <p className="mt-2 text-caption text-neutral-600 dark:text-neutral-300 leading-relaxed">
+                        {banner.subtitle}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
               {banner.image && (
                 <div className="relative w-24 h-24 shrink-0 self-center">
                   <Image

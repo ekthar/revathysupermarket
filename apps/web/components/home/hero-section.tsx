@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, Clock, Sparkles } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { springs } from "@/lib/motion";
 
 export function HeroSection({
@@ -22,6 +22,21 @@ export function HeroSection({
 }) {
   const heroRef = useRef<HTMLDivElement>(null);
   const reduceMotion = useReducedMotion();
+  const [timeLeft, setTimeLeft] = useState({ hours: 8, minutes: 45, seconds: 0 });
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => {
+        const total = prev.hours * 3600 + prev.minutes * 60 + prev.seconds - 1;
+        if (total <= 0) return { hours: 8, minutes: 0, seconds: 0 };
+        return {
+          hours: Math.floor(total / 3600),
+          minutes: Math.floor((total % 3600) / 60),
+          seconds: total % 60
+        };
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
@@ -41,6 +56,17 @@ export function HeroSection({
           <div className="grid grid-cols-2 gap-8 items-center">
             {/* Left: Text content with parallax */}
             <motion.div style={{ y: textY, opacity }}>
+              {/* Offer chip */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ ...springs.snappy, delay: 0.05 }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 px-3.5 py-1.5 mb-4 shadow-lg"
+              >
+                <Sparkles className="h-3.5 w-3.5 text-white" />
+                <span className="text-micro font-black uppercase tracking-wider text-white">Limited Time Offer</span>
+              </motion.div>
+
               <motion.h1
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -57,18 +83,28 @@ export function HeroSection({
               >
                 Shop from thousands of farm-fresh fruits, vegetables, dairy and daily essentials at unbeatable prices.
               </motion.p>
+
+              {/* Countdown + CTA row */}
               <motion.div
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ ...springs.enter, delay: 0.4 }}
+                className="mt-8 flex flex-wrap items-center gap-4"
               >
                 <Link
                   href={heroHref}
-                  className="show-all-pill mt-8 inline-flex"
+                  className="show-all-pill inline-flex"
                 >
                   Shop Now
                   <ChevronUp className="h-4 w-4 rotate-90" />
                 </Link>
+                {/* Countdown timer */}
+                <div className="flex items-center gap-2 rounded-full border border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30 px-3.5 py-1.5">
+                  <Clock className="h-3.5 w-3.5 text-orange-500" />
+                  <span className="text-micro font-black text-orange-700 dark:text-orange-300 font-mono tabular-nums">
+                    {String(timeLeft.hours).padStart(2, "0")}h {String(timeLeft.minutes).padStart(2, "0")}m {String(timeLeft.seconds).padStart(2, "0")}s
+                  </span>
+                </div>
               </motion.div>
             </motion.div>
 
@@ -113,7 +149,7 @@ export function HeroSection({
                 </motion.div>
               </motion.div>
 
-              {/* Secondary floating badge */}
+              {/* Offer badge - bottom left */}
               <motion.div
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -123,9 +159,27 @@ export function HeroSection({
                 <motion.div
                   animate={{ y: [3, -3, 3], rotate: [-1, 1, -1] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
-                  className="bg-primary text-white rounded-full px-4 py-2 text-caption font-bold shadow-premium"
+                  className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-full px-4 py-2 text-caption font-bold shadow-premium flex items-center gap-1.5"
                 >
-                  Same-Day Delivery
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Free Delivery
+                </motion.div>
+              </motion.div>
+
+              {/* Discount offer chip - top left */}
+              <motion.div
+                initial={{ opacity: 0, scale: 0, rotate: -10 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                transition={{ ...springs.snappy, delay: 0.7 }}
+                className="absolute top-4 left-4"
+              >
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  className="bg-red-500 text-white rounded-xl px-3 py-1.5 text-caption font-black shadow-lg flex items-center gap-1"
+                >
+                  <span className="text-lg">🔥</span>
+                  <span>UP TO 20% OFF</span>
                 </motion.div>
               </motion.div>
             </motion.div>

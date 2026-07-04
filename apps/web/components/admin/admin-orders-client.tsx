@@ -26,6 +26,7 @@ type AdminOrder = {
   deliveryOtp?: string | null;
   deliveryOtpAttempts: number;
   deliveryOtpExpiresAt: string | null;
+  deliveryInstructions?: string | null;
   staffNote?: string | null;
   billNumber?: string | null;
   acknowledgedAt: string | null;
@@ -420,6 +421,9 @@ export function AdminOrdersClient({
                   )}
                 </div>
                 <p suppressHydrationWarning className="text-caption text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
+                {order.deliveryInstructions && (
+                  <p className="text-micro text-amber-600 dark:text-amber-400 mt-0.5 truncate max-w-[200px] sm:max-w-[300px]">📝 {order.deliveryInstructions}</p>
+                )}
               </div>
               <p className="text-body font-bold text-slate-900 dark:text-white shrink-0 mr-2">{formatCurrency(order.total)}</p>
               <ChevronDown className={cn("h-4 w-4 text-slate-400 shrink-0 transition-transform", expandedOrderIds.has(order.id) && "rotate-180")} />
@@ -433,6 +437,12 @@ export function AdminOrdersClient({
                 <span className="mt-0.5 text-slate-400 shrink-0">📍</span>
                 <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">{order.address}</p>
               </div>
+              {order.deliveryInstructions && (
+                <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/20 px-4 py-2.5 sm:px-5 border-b border-amber-100 dark:border-amber-900/30">
+                  <span className="mt-0.5 shrink-0">📝</span>
+                  <p className="text-xs font-semibold text-amber-700 dark:text-amber-300">{order.deliveryInstructions}</p>
+                </div>
+              )}
               <div className="px-4 pb-5 pt-4 sm:px-5 space-y-4">
               {/* Action buttons */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">

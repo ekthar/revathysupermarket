@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { ChevronRight, Zap } from "lucide-react";
+import { ChevronRight, Star, Zap } from "lucide-react";
 import { ProductCard } from "@/components/product-card";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
@@ -187,6 +187,19 @@ export default async function HomePage() {
             subtitle="Limited-time discounts you don't want to miss"
             icon={<Zap className="h-5 w-5 text-orange-500" />}
             products={offers}
+            layout="grid"
+          />
+        </div>
+      )}
+
+      {/* Featured Products — staff picks */}
+      {allProducts.filter((p) => p.isFeatured).length > 0 && (
+        <div className="cv-auto">
+          <AnimatedProductSection
+            title="Staff Picks"
+            subtitle="Our featured favourites of the week"
+            icon={<Star className="h-5 w-5 text-yellow-500" />}
+            products={allProducts.filter((p) => p.isFeatured)}
             layout="grid"
           />
         </div>

@@ -188,6 +188,7 @@ export async function GET(request: Request) {
           landmark: true,
           pincode: true,
           notes: true,
+          deliveryInstructions: true,
           latitude: true,
           longitude: true,
           distanceKm: true,

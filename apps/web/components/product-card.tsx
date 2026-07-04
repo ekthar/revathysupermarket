@@ -102,8 +102,17 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
           >
             <ProductImage src={product.image} alt={product.name} className="object-cover" />
           </motion.div>
+          {product.isFeatured && (
+            <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-1 text-micro font-black text-white shadow-md z-10">
+              <Star className="h-2.5 w-2.5 fill-white" />
+              Featured
+            </span>
+          )}
           {product.discountPrice && (
-            <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md">
+            <span className={cn(
+              "absolute top-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md",
+              product.isFeatured ? "left-auto right-2" : "left-2"
+            )}>
               <Clock className="h-2.5 w-2.5" />
               {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
             </span>

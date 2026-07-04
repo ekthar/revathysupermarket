@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isStaffRole } from "@/lib/authz";
+import { getStoreSettings } from "@/lib/store-settings";
 import { LiveOrderTracking } from "@/components/tracking/live-order-tracking";
 import type { EtaDisplayMode } from "@/lib/live-order";
 
@@ -13,7 +14,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ id:
 
   const { id } = await params;
 
-  const [order, etaFlag] = await Promise.all([
+  const [order, etaFlag, storeSettings] = await Promise.all([
     prisma.order.findUnique({
       where: { id },
       select: {
@@ -53,6 +54,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ id:
     prisma.featureFlag.findUnique({
       where: { key: "eta_display_mode" },
     }),
+    getStoreSettings(),
   ]);
 
   if (!order) redirect("/dashboard");
@@ -116,6 +118,8 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ id:
     tipAmount: order.tipAmount ? Number(order.tipAmount) : undefined,
     total: order.total ? Number(order.total) : undefined,
     paymentMethod: order.paymentMethod ?? undefined,
+    storeLatitude: storeSettings.storeLatitude,
+    storeLongitude: storeSettings.storeLongitude,
   };
 
   return <LiveOrderTracking initialData={trackingData} />;

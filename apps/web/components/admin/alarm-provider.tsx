@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import { BellRing, Phone, ShoppingBag, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
@@ -243,92 +244,151 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
   return (
     <>
       {children}
-      {hasOrders && (
-        <div className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/80 backdrop-blur-sm p-4 overflow-y-auto">
-          <div className="bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-2xl border-4 border-red-500 my-8 animate-in fade-in zoom-in-95 duration-200">
-            {/* Header */}
-            <div className="flex items-center gap-3 px-6 py-5 bg-red-600 text-white rounded-t-xl">
-              <div className="h-12 w-12 bg-white/20 rounded-full flex items-center justify-center shrink-0">
-                <BellRing className="h-7 w-7 animate-pulse" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h2 className="text-xl font-black uppercase tracking-wider">New Order Alert</h2>
-                <p className="text-sm text-red-100">
-                  {orders.length} order{orders.length > 1 ? "s" : ""} waiting — accept to silence the alarm
-                </p>
-              </div>
-            </div>
+      <AnimatePresence>
+        {hasOrders && (
+          <motion.div
+            key="alarm-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="fixed inset-0 z-[9999] flex items-start justify-center overflow-y-auto p-4"
+            style={{ background: "radial-gradient(circle at 50% 0%, rgba(239,68,68,0.25), rgba(0,0,0,0.85) 70%)" }}
+          >
+            {/* Strobing edge flash — the "beacon light" of the alarm */}
+            <motion.div
+              className="pointer-events-none fixed inset-0 z-0"
+              animate={{ boxShadow: ["inset 0 0 0px rgba(239,68,68,0)", "inset 0 0 140px rgba(239,68,68,0.55)", "inset 0 0 0px rgba(239,68,68,0)"] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+            />
 
-            {/* Audio autoplay unlock prompt */}
-            {!audioReady && (
-              <div className="px-6 py-4 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20">
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (ensureContext()) {
-                      localStorage.setItem(AUDIO_UNLOCKED_KEY, "true");
-                      setAudioReady(true);
-                    }
-                  }}
-                  className="w-full h-12 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold flex items-center justify-center gap-2 transition"
-                >
-                  <Volume2 className="h-5 w-5" /> Tap to Enable Alarm Sound
-                </button>
-              </div>
-            )}
-
-            {/* Order list */}
-            <div className="px-6 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
-              {orders.map((order) => (
-                <div key={order.id} className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50">
-                  <div className="flex items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-black text-slate-900 dark:text-white">#{order.orderNumber}</p>
-                      <p className="text-sm text-slate-600 dark:text-slate-300 truncate">{order.customerName}</p>
-                      <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
-                        <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{order.phone}</span>
-                        <span className="flex items-center gap-1"><ShoppingBag className="h-3 w-3" />{order.itemCount} items</span>
-                      </div>
-                    </div>
-                    <p className="font-black text-slate-900 dark:text-white whitespace-nowrap">{formatCurrency(order.total)}</p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 12 }}
+              transition={{ type: "spring", stiffness: 300, damping: 26 }}
+              className="relative z-10 bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-[0_0_60px_rgba(239,68,68,0.35)] border-4 border-red-500 my-8 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="relative flex items-center gap-3 px-6 py-5 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white overflow-hidden">
+                <motion.div
+                  className="absolute inset-0 opacity-40"
+                  style={{ background: "linear-gradient(120deg, transparent, rgba(255,255,255,0.35), transparent)" }}
+                  animate={{ x: ["-120%", "220%"] }}
+                  transition={{ duration: 2.2, repeat: Infinity, ease: "linear" }}
+                />
+                <div className="relative h-12 w-12 shrink-0 flex items-center justify-center">
+                  <motion.span
+                    className="absolute inset-0 rounded-full bg-white/40"
+                    animate={{ scale: [1, 1.9, 1.9], opacity: [0.7, 0, 0] }}
+                    transition={{ duration: 1.4, repeat: Infinity, ease: "easeOut" }}
+                  />
+                  <div className="relative h-12 w-12 bg-white/20 rounded-full flex items-center justify-center">
+                    <motion.span
+                      animate={{ rotate: [0, -18, 18, -12, 12, 0] }}
+                      transition={{ duration: 0.9, repeat: Infinity, ease: "easeInOut" }}
+                    >
+                      <BellRing className="h-7 w-7" />
+                    </motion.span>
                   </div>
+                </div>
+                <div className="relative flex-1 min-w-0">
+                  <h2 className="text-xl font-black uppercase tracking-wider">New Order Alert</h2>
+                  <p className="text-sm text-red-100">
+                    {orders.length} order{orders.length > 1 ? "s" : ""} waiting — accept to silence the alarm
+                  </p>
+                </div>
+              </div>
+
+              {/* Audio autoplay unlock prompt */}
+              {!audioReady && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  className="px-6 py-4 bg-amber-50 dark:bg-amber-500/10 border-b border-amber-200 dark:border-amber-500/20"
+                >
+                  <motion.button
+                    type="button"
+                    onClick={() => {
+                      if (ensureContext()) {
+                        localStorage.setItem(AUDIO_UNLOCKED_KEY, "true");
+                        setAudioReady(true);
+                      }
+                    }}
+                    animate={{ scale: [1, 1.04, 1] }}
+                    transition={{ duration: 1.1, repeat: Infinity, ease: "easeInOut" }}
+                    whileTap={{ scale: 0.96 }}
+                    className="w-full h-12 rounded-xl bg-amber-500 hover:bg-amber-600 text-white font-bold flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <Volume2 className="h-5 w-5" /> Tap to Enable Alarm Sound
+                  </motion.button>
+                </motion.div>
+              )}
+
+              {/* Order list */}
+              <div className="px-6 py-4 space-y-3 max-h-[50vh] overflow-y-auto">
+                <AnimatePresence initial={false}>
+                  {orders.map((order, index) => (
+                    <motion.div
+                      key={order.id}
+                      layout
+                      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, x: 40, scale: 0.95, transition: { duration: 0.2 } }}
+                      transition={{ type: "spring", stiffness: 320, damping: 28, delay: index * 0.04 }}
+                      className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <p className="font-black text-slate-900 dark:text-white">#{order.orderNumber}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-300 truncate">{order.customerName}</p>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                            <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{order.phone}</span>
+                            <span className="flex items-center gap-1"><ShoppingBag className="h-3 w-3" />{order.itemCount} items</span>
+                          </div>
+                        </div>
+                        <p className="font-black text-slate-900 dark:text-white whitespace-nowrap">{formatCurrency(order.total)}</p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="sm"
+                        className="w-full mt-3 active:scale-[0.97] transition-transform"
+                        onClick={() => acceptOrder(order.id)}
+                        disabled={acknowledging === order.id}
+                      >
+                        {acknowledging === order.id ? "Accepting..." : "Accept Order"}
+                      </Button>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </div>
+
+              {/* Footer */}
+              <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex flex-col gap-2">
+                {orders.length > 1 && (
                   <Button
                     type="button"
                     variant="destructive"
-                    size="sm"
-                    className="w-full mt-3"
-                    onClick={() => acceptOrder(order.id)}
-                    disabled={acknowledging === order.id}
+                    className="w-full h-12 text-base font-bold active:scale-[0.97] transition-transform"
+                    onClick={acceptAll}
+                    disabled={acceptingAll}
                   >
-                    {acknowledging === order.id ? "Accepting..." : "Accept Order"}
+                    {acceptingAll ? "Accepting all..." : `Accept All (${orders.length})`}
                   </Button>
-                </div>
-              ))}
-            </div>
-
-            {/* Footer */}
-            <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex flex-col gap-2">
-              {orders.length > 1 && (
-                <Button
-                  type="button"
-                  variant="destructive"
-                  className="w-full h-12 text-base font-bold"
-                  onClick={acceptAll}
-                  disabled={acceptingAll}
+                )}
+                <Link
+                  href="/admin/orders"
+                  className="w-full h-11 rounded-2xl border border-slate-300 dark:border-slate-600 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:-translate-y-0.5 transition"
                 >
-                  {acceptingAll ? "Accepting all..." : `Accept All (${orders.length})`}
-                </Button>
-              )}
-              <Link
-                href="/admin/orders"
-                className="w-full h-11 rounded-2xl border border-slate-300 dark:border-slate-600 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
-              >
-                View on Orders Page
-              </Link>
-            </div>
-          </div>
-        </div>
-      )}
+                  View on Orders Page
+                </Link>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

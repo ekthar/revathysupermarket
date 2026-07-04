@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import {
   Bike, CreditCard, ExternalLink, LogOut,
-  MapPin, Package, ShieldCheck, Truck, Zap,
+  MapPin, Package, ShieldCheck, Truck, Zap, Volume2, VolumeX,
 } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,6 +16,9 @@ import { SlideToConfirm } from "@/components/delivery/slide-to-confirm";
 import { DeliveryOrderActions } from "@/components/delivery/delivery-order-actions";
 import { LocationGate } from "@/components/delivery/location-gate";
 import type { UseDeliveryLocation } from "@/components/delivery/use-delivery-location";
+
+const SOUND_KEY = "delivery-alert-sound-enabled";
+const AUDIO_KEY = "delivery-audio-unlocked";
 
 type DeliveryOrder = {
   id: string;
@@ -116,6 +119,17 @@ function DeliveryAppShellInner({
   location,
 }: DeliveryAppShellProps & { location: UseDeliveryLocation }) {
   const { showToast } = useToast();
+  const [soundOn, setSoundOn] = useState(false);
+  const [online, setOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    setSoundOn(localStorage.getItem(SOUND_KEY) === "true");
+    const onOnline = () => setOnline(true);
+    const onOffline = () => setOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => { window.removeEventListener("online", onOnline); window.removeEventListener("offline", onOffline); };
+  }, []);
   // No more client-side relabeling of OUT_FOR_DELIVERY -> ARRIVING. Arrival is
   // now a real, GPS-verified server transition (see markArrived below) — the
   // status shown here always reflects the database.
@@ -240,41 +254,81 @@ function DeliveryAppShellInner({
     <div className="mx-auto max-w-lg pb-24">
       {/* Header */}
       <header className="sticky top-0 z-40 bg-gradient-to-br from-emerald-600 to-emerald-700 px-5 pb-5 pt-[calc(env(safe-area-inset-top)+1rem)] shadow-lg shadow-emerald-900/20">
+        {/* Top row: greeting + partner name + status icons */}
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur">
             <Bike className="h-5 w-5 text-white" />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-white/70">{getGreeting()}</p>
-            <h1 className="text-lg font-black text-white">{partnerName}</h1>
+            <h1 className="text-lg font-black text-white truncate">{partnerName}</h1>
           </div>
-          <Zap className="h-5 w-5 text-emerald-200" />
-          <button
-            onClick={() => signOut({ callbackUrl: "/login" })}
-            className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur"
-            aria-label="Logout"
-          >
-            <LogOut className="h-5 w-5 text-white" />
-          </button>
+          <div className="flex items-center gap-2">
+            {/* Online indicator */}
+            <div className="flex items-center gap-1.5 rounded-full bg-white/10 px-2.5 py-1.5 backdrop-blur">
+              <span className={`h-2 w-2 rounded-full ${online ? "bg-emerald-300" : "bg-red-400"}`} />
+              <span className="text-micro font-bold text-white/80">{online ? "Online" : "Offline"}</span>
+            </div>
+            {/* Alarm toggle */}
+            <button
+              type="button"
+              onClick={() => {
+                const next = !soundOn;
+                setSoundOn(next);
+                localStorage.setItem(SOUND_KEY, String(next));
+                localStorage.setItem(AUDIO_KEY, String(next));
+                if (navigator.vibrate) navigator.vibrate(20);
+              }}
+              className={`flex h-8 w-8 items-center justify-center rounded-lg backdrop-blur transition-all ${
+                soundOn ? "bg-emerald-400/30" : "bg-white/10"
+              }`}
+              aria-label={soundOn ? "Mute alarm" : "Enable alarm"}
+            >
+              {soundOn ? <Volume2 className="h-4 w-4 text-white" /> : <VolumeX className="h-4 w-4 text-white/60" />}
+            </button>
+            {/* Logout */}
+            <button
+              onClick={() => signOut({ callbackUrl: "/login" })}
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10 backdrop-blur"
+              aria-label="Logout"
+            >
+              <LogOut className="h-4 w-4 text-white" />
+            </button>
+          </div>
         </div>
 
         {/* Stats Row */}
         <div className="mt-4 grid grid-cols-3 gap-2">
-          <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.05 }}
+            className="rounded-xl bg-white/15 p-3 backdrop-blur"
+          >
             <p className="text-micro font-bold text-white/70">Today</p>
             <p className="text-lg font-black text-white">{stats.todayDelivered}</p>
             <p className="text-micro text-white/60">deliveries</p>
-          </div>
-          <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-xl bg-white/15 p-3 backdrop-blur"
+          >
             <p className="text-micro font-bold text-white/70">Collected</p>
             <p className="text-lg font-black text-white">{formatCurrency(stats.todayCash + stats.todayUpi)}</p>
             <p className="text-micro text-white/60">cash + upi</p>
-          </div>
-          <div className="rounded-xl bg-white/15 p-3 backdrop-blur">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="rounded-xl bg-white/15 p-3 backdrop-blur"
+          >
             <p className="text-micro font-bold text-white/70">Lifetime</p>
             <p className="text-lg font-black text-white">{stats.totalDelivered}</p>
             <p className="text-micro text-white/60">total</p>
-          </div>
+          </motion.div>
         </div>
       </header>
 

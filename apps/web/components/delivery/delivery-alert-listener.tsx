@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Package, X, MapPin, ArrowRight, Volume2, VolumeX } from "lucide-react";
+import { Bell, Package, X, MapPin, ArrowRight } from "lucide-react";
 
 type AlertOrder = { id: string; orderNumber: string; customerName: string; address: string; total: number };
 
@@ -297,16 +297,6 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
 
   return (
     <>
-      {!soundEnabled && !audioReady && (
-        <button type="button" onClick={enableSound} className="fixed bottom-24 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-xl dark:bg-white dark:text-slate-950">
-          <Volume2 className="h-4 w-4" /> Enable assignment alarm
-        </button>
-      )}
-      {soundEnabled && !audioReady && (
-        <button type="button" onClick={enableSound} className="fixed bottom-24 left-1/2 z-[70] flex -translate-x-1/2 items-center gap-2 whitespace-nowrap rounded-full bg-amber-500 px-5 py-3 text-sm font-black text-white shadow-xl">
-          <VolumeX className="h-4 w-4" /> Tap to unlock sound
-        </button>
-      )}
       <AnimatePresence>
         {alert && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-950/95 p-4">

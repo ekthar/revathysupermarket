@@ -531,6 +531,8 @@ export function CheckoutForm({
             <button
               type="button"
               onClick={() => setDeliveryOptionsOpen(!deliveryOptionsOpen)}
+              aria-expanded={deliveryOptionsOpen}
+              aria-controls="delivery-options-panel"
               className="flex w-full items-center justify-between px-4 py-3 text-left"
             >
               <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery Options</h2>
@@ -544,6 +546,7 @@ export function CheckoutForm({
             <AnimatePresence>
               {deliveryOptionsOpen && (
                 <motion.div
+                  id="delivery-options-panel"
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
@@ -576,6 +579,8 @@ export function CheckoutForm({
               <button
                 type="button"
                 onClick={() => setOffersSectionOpen(!offersSectionOpen)}
+                aria-expanded={offersSectionOpen}
+                aria-controls="offers-panel"
                 className="flex w-full items-center justify-between px-4 py-3 text-left"
               >
                 <div className="flex items-center gap-2">
@@ -596,6 +601,7 @@ export function CheckoutForm({
               <AnimatePresence>
                 {offersSectionOpen && (
                   <motion.div
+                    id="offers-panel"
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}

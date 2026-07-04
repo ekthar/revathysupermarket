@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, Star, XCircle } from "lucide-react";
+import { useToast } from "@/components/toast-provider";
 import { AnimatePresence, motion } from "framer-motion";
 import { orderStatuses, statusLabels } from "@/lib/constants";
 import { calculateDistanceKm } from "@/lib/distance";
@@ -74,6 +75,7 @@ const customerTimelineStatuses = ["PENDING", "PROCESSING", "READY_FOR_DELIVERY",
 
 export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = null }: { initialOrders: CustomerOrder[]; initialHistoryCursor?: string | null }) {
   const { addItems } = useCart();
+  const { showToast } = useToast();
   const [orders, setOrders] = useState(initialOrders);
   const [liveOrders, setLiveOrders] = useState<Record<string, LiveOrderState>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -133,14 +135,14 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
     }
     const data = await readApiResponse<{ error?: string; code?: string }>(response);
     if (response.status === 503 && data.code === "RATE_LIMIT_UNAVAILABLE") {
-      window.alert("Our ordering system is temporarily busy. Please wait a moment and try again.");
+      showToast("Our ordering system is temporarily busy. Please wait a moment and try again.", "error");
       return;
     }
     if (response.status === 429 && data.code === "RATE_LIMITED") {
-      window.alert("Too many attempts. Please wait a moment before trying again.");
+      showToast("Too many attempts. Please wait a moment before trying again.", "error");
       return;
     }
-    window.alert(data.error ?? "Approval update failed.");
+    showToast(data.error ?? "Approval update failed.", "error");
   }
 
 
@@ -150,14 +152,14 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
     if (!response.ok) {
       const data = await readApiResponse<{ error?: string; code?: string }>(response);
       if (response.status === 503 && data.code === "RATE_LIMIT_UNAVAILABLE") {
-        window.alert("Our ordering system is temporarily busy. Please wait a moment and try again.");
+        showToast("Our ordering system is temporarily busy. Please wait a moment and try again.", "error");
         return;
       }
       if (response.status === 429 && data.code === "RATE_LIMITED") {
-        window.alert("Too many attempts. Please wait a moment before trying again.");
+        showToast("Too many attempts. Please wait a moment before trying again.", "error");
         return;
       }
-      window.alert(data.error ?? "Feedback could not be saved.");
+      showToast(data.error ?? "Feedback could not be saved.", "error");
       return;
     }
     setRatingOrderId(null); setFeedbackComment("");
@@ -452,6 +454,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
 }
 
 function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose: () => void }) {
+  const { showToast } = useToast();
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [reason, setReason] = useState("quality_issue");
   const [note, setNote] = useState("");
@@ -470,7 +473,7 @@ function ReturnRequestSheet({ order, onClose }: { order: CustomerOrder; onClose:
     const data = await readApiResponse<{ error?: string; returnRequest?: { returnNumber?: string } }>(response);
     setLoading(false);
     if (!response.ok) return setError(data.error ?? "Return request could not be submitted.");
-    window.alert(`Return ${data.returnRequest?.returnNumber ?? "request"} submitted.`); onClose();
+    showToast(`Return ${data.returnRequest?.returnNumber ?? "request"} submitted.`, "success"); onClose();
   }
 
   async function upload(file?: File) { if (!file) return; setLoading(true); const body = new FormData(); body.set("file", file); const response = await fetch("/api/evidence/upload", { method: "POST", body }); const data = await response.json(); setLoading(false); if (!response.ok) return setError(data.error ?? "Evidence upload failed"); setPhotoUrl(data.url); }

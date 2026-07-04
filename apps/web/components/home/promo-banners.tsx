@@ -38,7 +38,7 @@ export function PromoBanners({ banners }: { banners?: Banner[] }) {
   if (!banners || banners.length === 0) return null;
 
   return (
-    <section className="px-4 pt-4 space-y-3 md:hidden">
+    <section className="px-4 pt-4 space-y-3">
       {banners.map((banner, idx) => {
         const Wrapper = banner.href ? Link : "div";
         const wrapperProps = banner.href ? { href: banner.href } : {};

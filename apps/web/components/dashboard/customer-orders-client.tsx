@@ -70,6 +70,8 @@ function formatTime(dateStr: string) {
   return d.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" });
 }
 
+const customerTimelineStatuses = ["PENDING", "PROCESSING", "READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "DELIVERED"];
+
 export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = null }: { initialOrders: CustomerOrder[]; initialHistoryCursor?: string | null }) {
   const { addItems } = useCart();
   const [orders, setOrders] = useState(initialOrders);
@@ -176,6 +178,9 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
     );
   }
 
+  const activeOrders = orders.filter((o) => !["DELIVERED", "CANCELLED"].includes(o.status));
+  const completedOrders = orders.filter((o) => ["DELIVERED", "CANCELLED"].includes(o.status));
+
   // Build "Buy Again" items from delivered orders
   const buyAgainProducts = (() => {
     const productCounts = new Map<string, { product: Product; count: number }>();
@@ -238,18 +243,37 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
 
       {/* Status bar */}
       <div className="flex items-center justify-between rounded-2xl bg-white dark:bg-neutral-900 px-3 py-2 text-caption font-semibold text-neutral-500 dark:text-neutral-400 shadow-elevation-2 dark:shadow-none">
-        <span>{lastUpdated ? "Updated just now" : streamUnavailable ? "Fallback updates active" : "Live updates connected"}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-neutral-700 dark:text-neutral-300">{activeOrders.length} active · {completedOrders.length} completed</span>
+          <span className="text-neutral-400">·</span>
+          <span>{lastUpdated ? "Updated just now" : streamUnavailable ? "Fallback" : "Live"}</span>
+        </div>
         <RefreshCcw className={cn("h-3.5 w-3.5", isRefreshing && "animate-spin text-black")} />
       </div>
 
-      {/* Orders list */}
-      <AnimatePresence initial={false}>
-        {orders.map((order) => {
+      {(() => {
+        const groups: Array<{ title: string; key: string; orders: CustomerOrder[] }> = [];
+        if (activeOrders.length > 0) groups.push({ title: "Active Orders", key: "active", orders: activeOrders });
+        if (completedOrders.length > 0) groups.push({ title: "Past Orders", key: "past", orders: completedOrders });
+        if (groups.length === 0) return null;
+        return groups.map((group, idx) => (
+          <div key={group.key} className={idx > 0 ? "mt-5" : ""}>
+            <div className="flex items-center gap-2 px-1 mb-2">
+              {group.key === "active" ? (
+                <span className="flex h-2 w-2 rounded-full bg-success-500" />
+              ) : (
+                <span className="flex h-2 w-2 rounded-full bg-neutral-300" />
+              )}
+              <h3 className="text-sm font-black text-neutral-900 dark:text-white">{group.title}</h3>
+              <span className="text-micro font-normal text-neutral-400">({group.orders.length})</span>
+            </div>
+            <AnimatePresence initial={false}>
+              {group.orders.map((order) => {
           const isExpanded = expandedIds.has(order.id);
           const cancelled = order.status === "CANCELLED";
           const delivered = order.status === "DELIVERED";
           const isComplete = delivered || cancelled;
-          const activeIndex = orderStatuses.indexOf(order.status);
+          const activeIndex = customerTimelineStatuses.indexOf(order.status);
           const visibleItems = order.items.filter((item) => item.quantity > 0);
           const itemNames = visibleItems.slice(0, 3).map((i) => i.name).join(", ");
           const moreCount = visibleItems.length - 3;
@@ -334,7 +358,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                           variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } } }}
                           className="flex items-center gap-1 mb-4 overflow-x-auto no-scrollbar pb-1"
                         >
-                          {orderStatuses.filter((s) => s !== "CANCELLED").map((status, index) => (
+                          {customerTimelineStatuses.map((status, index) => (
                             <motion.div
                               key={status}
                               variants={{ hidden: { opacity: 0, scale: 0.7 }, visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 400, damping: 20 } } }}
@@ -347,7 +371,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                               )}>
                                 {index < activeIndex ? "✓" : index + 1}
                               </div>
-                              {index < orderStatuses.length - 2 && (
+                              {index < customerTimelineStatuses.length - 1 && (
                                 <div className={cn("h-[2px] w-4 sm:w-6 transition-colors", index < activeIndex ? "bg-black" : "bg-neutral-100 dark:bg-neutral-800")} />
                               )}
                             </motion.div>
@@ -417,8 +441,11 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
               </AnimatePresence>
             </motion.article>
           );
-        })}
-      </AnimatePresence>
+              })}
+            </AnimatePresence>
+          </div>
+        ));
+      })()}
       {historyCursor && <button disabled={historyLoading} onClick={loadOlderOrders} className="h-11 w-full rounded-2xl border border-border bg-background text-sm font-black disabled:opacity-50">{historyLoading ? "Loading…" : "Load older orders"}</button>}
     </div>
   );

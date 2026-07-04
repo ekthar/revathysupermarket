@@ -155,6 +155,8 @@ export function CheckoutForm({
   const [addressNotCovered, setAddressNotCovered] = useState(false);
   const [tipAmount, setTipAmount] = useState(0);
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [deliveryOptionsOpen, setDeliveryOptionsOpen] = useState(true);
+  const [offersSectionOpen, setOffersSectionOpen] = useState(false);
 
   const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
@@ -463,8 +465,8 @@ export function CheckoutForm({
 
 
       {/* Step Progression Indicator */}
-      <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 p-4 shadow-elevation-2">
-        <div className="flex items-center justify-between">
+      <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-2 py-2.5 shadow-elevation-2">
+        <div className="flex items-center justify-center">
           {[
             { label: "Address", step: 1 },
             { label: "Delivery", step: 2 },
@@ -472,21 +474,15 @@ export function CheckoutForm({
             { label: "Review", step: 4 },
           ].map((item, idx) => (
             <div key={item.label} className="flex items-center">
-              <div className="flex flex-col items-center">
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-black text-white text-micro font-bold">
-                  {item.step}
-                </div>
-                <span className="mt-1 text-micro font-semibold text-neutral-600 dark:text-neutral-400">{item.label}</span>
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-white text-[10px] font-bold">
+                {item.step}
               </div>
               {idx < 3 && (
-                <div className="mx-1.5 h-[2px] w-6 sm:w-10 bg-neutral-200 dark:bg-neutral-700" />
+                <div className="mx-1 h-[2px] w-5 sm:w-7 bg-neutral-200 dark:bg-neutral-700" />
               )}
             </div>
           ))}
         </div>
-        <p className="mt-3 text-center text-micro text-neutral-500 dark:text-neutral-400">
-          Fill in all sections below to place your order
-        </p>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1fr_min(420px,40vw)] lg:gap-8">
@@ -530,52 +526,118 @@ export function CheckoutForm({
             deliveryRadiusKm={deliveryRadiusKm}
           />
 
-          {/* Delivery Mode Selector */}
-          <DeliveryModeSelector
-            deliveryMode={deliveryMode}
-            onModeChange={setDeliveryMode}
-            deliverySlotId={deliverySlotId}
-            onSlotChange={setDeliverySlotId}
-            scheduledEnabled={allowScheduledDelivery}
-            instantEnabled={allowInstantDelivery}
-          />
+          {/* Delivery Options Accordion */}
+          <section className="rounded-2xl border border-neutral-100 bg-white dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setDeliveryOptionsOpen(!deliveryOptionsOpen)}
+              className="flex w-full items-center justify-between px-4 py-3 text-left"
+            >
+              <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery Options</h2>
+              <motion.div
+                animate={{ rotate: deliveryOptionsOpen ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <svg className="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+              </motion.div>
+            </button>
+            <AnimatePresence>
+              {deliveryOptionsOpen && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-4 pb-4 space-y-4">
+                    <DeliveryModeSelector
+                      deliveryMode={deliveryMode}
+                      onModeChange={setDeliveryMode}
+                      deliverySlotId={deliverySlotId}
+                      onSlotChange={setDeliverySlotId}
+                      scheduledEnabled={allowScheduledDelivery}
+                      instantEnabled={allowInstantDelivery}
+                    />
+                    {tipEnabled && <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />}
+                    <DeliveryInstructions
+                      instructions={deliveryInstructions}
+                      onInstructionsChange={setDeliveryInstructions}
+                    />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </section>
 
-          {/* Tip for delivery partner */}
-          {tipEnabled && <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />}
-
-          {/* Delivery instructions */}
-          <DeliveryInstructions
-            instructions={deliveryInstructions}
-            onInstructionsChange={setDeliveryInstructions}
-          />
-
-          {rewardsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
-            <h2 className="text-sm font-black text-neutral-900 dark:text-white">Offers and rewards</h2>
-            <label className="mt-3 block text-xs font-bold text-muted-foreground">Promo code</label>
-            {promoApplied && promoDiscount > 0 ? (
-              <div className="mt-1 flex items-center justify-between rounded-xl bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-200 dark:border-secondary-800 px-3 py-2.5">
+          {/* Offers and Rewards - Collapsible */}
+          {rewardsEnabled && (
+            <section className="rounded-2xl border border-neutral-100 bg-white dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
+              <button
+                type="button"
+                onClick={() => setOffersSectionOpen(!offersSectionOpen)}
+                className="flex w-full items-center justify-between px-4 py-3 text-left"
+              >
                 <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-4 w-4 text-secondary-600" />
-                  <span className="text-sm font-bold text-secondary-700 dark:text-secondary-300">{promoCode.toUpperCase()}</span>
-                  {promoDescription && <span className="text-caption text-neutral-500">— {promoDescription}</span>}
+                  <h2 className="text-sm font-black text-neutral-900 dark:text-white">Offers & Rewards</h2>
+                  {promoApplied && promoDiscount > 0 && (
+                    <span className="text-[10px] font-bold text-secondary-600 bg-secondary-50 dark:bg-secondary-900/20 px-2 py-0.5 rounded-full">
+                      1 coupon
+                    </span>
+                  )}
                 </div>
-                <button type="button" onClick={() => { setPromoCode(""); setPromoApplied(false); setPromoDiscount(0); setPromoDescription(""); setPromoError(""); }} className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors">
-                  <X className="h-3.5 w-3.5 text-neutral-400 hover:text-red-500" />
-                </button>
-              </div>
-            ) : (
-              <div className="mt-1 relative">
-                <input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" placeholder="Enter coupon code" />
-                {promoLoading && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}
-              </div>
-            )}
-            {promoError && !promoApplied && <p className="mt-1.5 text-micro text-red-500 flex items-center gap-1"><X className="h-3 w-3" />{promoError}</p>}
-            {promoApplied && promoDiscount > 0 && (
-              <p className="mt-1.5 text-micro font-semibold text-secondary-600 flex items-center gap-1"><Tag className="h-3 w-3" />You save {formatCurrency(promoDiscount)} on this order</p>
-            )}
-            <label className="mt-4 block text-xs font-bold text-muted-foreground">Use points ({loyaltyBalance} available)<input type="number" min="0" max={loyaltyBalance} value={loyaltyPoints} onChange={(event) => setLoyaltyPoints(Math.min(loyaltyBalance, Math.max(0, Number(event.target.value))))} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" /></label>
-            <p className="mt-2 text-xs text-muted-foreground">Each point is worth ₹{loyaltyRules.pointValueRupees}. Up to {loyaltyRules.maxRedemptionPercent}% of the order can be paid with points. Final discounts are verified securely when you place the order.</p>
-          </section>}
+                <motion.div
+                  animate={{ rotate: offersSectionOpen ? 180 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <svg className="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {offersSectionOpen && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.2 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-4 pb-4 space-y-3">
+                      <div>
+                        <label className="block text-xs font-bold text-muted-foreground mb-1">Promo code</label>
+                        {promoApplied && promoDiscount > 0 ? (
+                          <div className="flex items-center justify-between rounded-xl bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-200 dark:border-secondary-800 px-3 py-2.5">
+                            <div className="flex items-center gap-2">
+                              <CheckCircle2 className="h-4 w-4 text-secondary-600" />
+                              <span className="text-sm font-bold text-secondary-700 dark:text-secondary-300">{promoCode.toUpperCase()}</span>
+                              {promoDescription && <span className="text-caption text-neutral-500">— {promoDescription}</span>}
+                            </div>
+                            <button type="button" onClick={() => { setPromoCode(""); setPromoApplied(false); setPromoDiscount(0); setPromoDescription(""); setPromoError(""); }} className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors">
+                              <X className="h-3.5 w-3.5 text-neutral-400 hover:text-red-500" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="relative">
+                            <input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" placeholder="Enter coupon code" />
+                            {promoLoading && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}
+                          </div>
+                        )}
+                        {promoError && !promoApplied && <p className="mt-1.5 text-micro text-red-500 flex items-center gap-1"><X className="h-3 w-3" />{promoError}</p>}
+                        {promoApplied && promoDiscount > 0 && (
+                          <p className="mt-1.5 text-micro font-semibold text-secondary-600 flex items-center gap-1"><Tag className="h-3 w-3" />You save {formatCurrency(promoDiscount)} on this order</p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-muted-foreground mb-1">Use points ({loyaltyBalance} available)</label>
+                        <input type="number" min="0" max={loyaltyBalance} value={loyaltyPoints} onChange={(event) => setLoyaltyPoints(Math.min(loyaltyBalance, Math.max(0, Number(event.target.value))))} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" />
+                        <p className="mt-2 text-xs text-muted-foreground">Each point is worth ₹{loyaltyRules.pointValueRupees}. Up to {loyaltyRules.maxRedemptionPercent}% of the order can be paid with points.</p>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </section>
+          )}
 
           {/* Payment Method */}
           <PaymentMethodSelector

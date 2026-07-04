@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pencil, Save, X } from "lucide-react";
 import { useToast } from "@/components/toast-provider";
+import { formatIstDateTimeLocal } from "@/lib/ist-datetime";
 
 type Slot = {
   id: string;
@@ -19,10 +20,12 @@ type EditState = {
   capacity: string;
 };
 
+// Delivery slot times are entered/edited as IST wall-clock time. Formatting via the
+// browser's local timezone getters would shift the value whenever the admin's device
+// isn't set to IST (and interacts badly with the server, which parses bare
+// datetime-local strings as IST regardless of its own runtime timezone).
 function toDateTimeInput(value: string) {
-  const date = new Date(value);
-  const pad = (part: number) => String(part).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  return formatIstDateTimeLocal(new Date(value));
 }
 
 function sortSlots(slots: Slot[]) {

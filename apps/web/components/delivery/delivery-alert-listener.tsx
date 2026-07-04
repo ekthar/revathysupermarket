@@ -131,16 +131,18 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
         setAudioReady(true);
       }
     };
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") unlock();
+    };
     window.addEventListener("click", unlock, { once: true, passive: true });
     window.addEventListener("keydown", unlock, { once: true, passive: true });
     window.addEventListener("touchstart", unlock, { once: true, passive: true });
-    document.addEventListener("visibilitychange", () => {
-      if (document.visibilityState === "visible") unlock();
-    });
+    document.addEventListener("visibilitychange", onVisibilityChange);
     return () => {
       window.removeEventListener("click", unlock);
       window.removeEventListener("keydown", unlock);
       window.removeEventListener("touchstart", unlock);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, [ensureContext]);
 
@@ -161,11 +163,11 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
       playTone(880, 0, 0.25);
       playTone(1100, 0.3, 0.25);
       playTone(1320, 0.6, 0.3);
+      // Vibrate on every cycle, not just once, so the device keeps buzzing alongside the beeps.
+      if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
     };
     beep();
     intervalRef.current = setInterval(beep, 2000);
-    // Vibration
-    if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 500]);
   }, [ensureContext]);
 
   const stopBeeping = useCallback(() => {
@@ -174,20 +176,40 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
   }, []);
 
   const checkForOrders = useCallback(async () => {
-    if (alertOpenRef.current) return;
     try {
       const res = await fetch("/api/delivery/poll", { cache: "no-store" });
       if (!res.ok) return;
       const data = await res.json();
       const orders: AlertOrder[] = data.orders ?? [];
+      const liveIds = new Set(orders.map((o) => o.id));
 
-      // Also check IndexedDB for any persisted alerts not yet shown
+      // The server's unacknowledged list is authoritative. Reconcile IndexedDB against it
+      // *before* the early-return below - any persisted alert the server no longer
+      // considers pending (accepted via the notification's "Accept" action, another
+      // device, etc.) must be purged, or it gets replayed as a phantom alarm forever.
       const persisted = await getUnackedAlertOrders();
-      const allOrders = [...orders, ...persisted.filter(p => !orders.some(o => o.id === p.id))];
+      const stale = persisted.filter((p) => !liveIds.has(p.id));
+      if (stale.length > 0) {
+        await Promise.all(stale.map((p) => clearAlertOrder(p.id).catch(() => {})));
+      }
 
-      if (allOrders.length > 0 && !alertOpenRef.current) {
+      if (alertOpenRef.current) {
+        // If the alert currently on screen was handled elsewhere in the meantime,
+        // dismiss it automatically instead of leaving it stuck until manual action.
+        setAlert((current) => {
+          if (current && !liveIds.has(current.id)) {
+            alertOpenRef.current = false;
+            stopBeeping();
+            return null;
+          }
+          return current;
+        });
+        return;
+      }
+
+      if (orders.length > 0) {
         alertOpenRef.current = true;
-        const order = allOrders[0];
+        const order = orders[0];
         setAlert(order);
         await saveAlertOrder(order); // Persist
         if (soundEnabled) {
@@ -205,7 +227,7 @@ export function DeliveryAlertListener({ partnerId }: { partnerId: string }) {
         }
       }
     } catch { /* ignore, retry next cycle */ }
-  }, [soundEnabled, startBeeping, ensureContext]);
+  }, [soundEnabled, startBeeping, stopBeeping, ensureContext]);
 
   // Poll every 10 seconds
   useEffect(() => {

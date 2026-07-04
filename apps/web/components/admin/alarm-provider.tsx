@@ -25,6 +25,11 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
   const { showToast } = useToast();
   const audioCtxRef = useRef<AudioContext | null>(null);
   const alarmTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  // Orders accepted locally but not yet confirmed absent from the server's
+  // /unacknowledged response. Without this, the 5s poll can re-add an order the admin
+  // just accepted (if the ack write hasn't propagated to that read yet), reopening the
+  // modal and restarting the siren a few seconds after it was silenced.
+  const acceptedIdsRef = useRef<Set<string>>(new Set());
 
   const ensureContext = useCallback(() => {
     if (!audioCtxRef.current) {
@@ -104,7 +109,8 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
         const res = await fetch("/api/admin/orders/unacknowledged", { cache: "no-store" });
         if (!res.ok || !active) return;
         const data = await res.json();
-        setOrders(data.orders ?? []);
+        const fresh: UnackOrder[] = data.orders ?? [];
+        setOrders(fresh.filter((o) => !acceptedIdsRef.current.has(o.id)));
       } catch {
         // silent
       }
@@ -120,7 +126,10 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
       if (event.data?.type === "HEAVY_ALARM" && event.data.payload?.type === "new_order_alert") {
         fetch("/api/admin/orders/unacknowledged", { cache: "no-store" })
           .then((r) => r.json())
-          .then((data) => setOrders(data.orders ?? []))
+          .then((data) => {
+            const fresh: UnackOrder[] = data.orders ?? [];
+            setOrders(fresh.filter((o) => !acceptedIdsRef.current.has(o.id)));
+          })
           .catch(() => undefined);
       }
     };
@@ -160,6 +169,7 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
         showToast("Order could not be accepted", "error");
         return;
       }
+      acceptedIdsRef.current.add(orderId);
       setOrders((prev) => prev.filter((o) => o.id !== orderId));
       showToast("Order accepted", "success");
     } catch {
@@ -171,16 +181,30 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
 
   const acceptAll = useCallback(async () => {
     setAcceptingAll(true);
+    const targets = orders;
     try {
-      await Promise.all(
-        orders.map((o) =>
-          fetch(`/api/admin/orders/${o.id}/acknowledge`, { method: "POST" })
-        )
+      // Track each order's own outcome instead of Promise.all - one failed acknowledge
+      // shouldn't hide the fact that the others actually succeeded.
+      const results = await Promise.allSettled(
+        targets.map((o) => fetch(`/api/admin/orders/${o.id}/acknowledge`, { method: "POST" }).then((res) => {
+          if (!res.ok) throw new Error("acknowledge failed");
+          return o.id;
+        }))
       );
-      setOrders([]);
-      showToast(`${orders.length} order${orders.length > 1 ? "s" : ""} accepted`, "success");
-    } catch {
-      showToast("Could not accept all orders", "error");
+      const succeededIds = new Set(
+        results.filter((r): r is PromiseFulfilledResult<string> => r.status === "fulfilled").map((r) => r.value)
+      );
+      succeededIds.forEach((id) => acceptedIdsRef.current.add(id));
+      setOrders((prev) => prev.filter((o) => !succeededIds.has(o.id)));
+
+      const failedCount = targets.length - succeededIds.size;
+      if (failedCount === 0) {
+        showToast(`${targets.length} order${targets.length > 1 ? "s" : ""} accepted`, "success");
+      } else if (succeededIds.size === 0) {
+        showToast("Could not accept all orders", "error");
+      } else {
+        showToast(`${succeededIds.size} accepted, ${failedCount} failed - retry the rest`, "error");
+      }
     } finally {
       setAcceptingAll(false);
     }

@@ -30,32 +30,44 @@ async function cacheNotificationSound() {
   } catch { /* ignore */ }
 }
 
-self.addEventListener("install", async () => {
+self.addEventListener("install", (event) => {
   self.skipWaiting();
-  await cacheNotificationSound();
+  event.waitUntil(cacheNotificationSound());
 });
 
-self.addEventListener("activate", async () => {
-  await cacheNotificationSound();
-  self.clients.claim();
+self.addEventListener("activate", (event) => {
+  event.waitUntil(cacheNotificationSound().then(() => self.clients.claim()));
 });
 
 // Handle background messages (when app is not in focus)
 messaging.onBackgroundMessage(async (payload) => {
   const data = payload.data || {};
-  const notification = payload.notification || {};
 
-  const title = notification.title || data.title || "New Delivery";
-  const body = notification.body || data.body || "Order assigned to you";
+  // Broadcast to all open tabs for instant UI update, regardless of how the
+  // notification itself gets displayed below.
+  const clients = await self.clients.matchAll({ includeUncontrolled: true, type: "window" });
+  clients.forEach((client) => {
+    client.postMessage({
+      type: "HEAVY_ALARM",
+      payload: { title: payload.notification?.title || data.title, ...data }
+    });
+  });
 
-  // Determine notification type
+  // If the push carries a top-level "notification" payload, the FCM SDK already displays
+  // it automatically - calling showNotification() again here would stack a second,
+  // duplicate notification (and a second vibration burst) for the same push. Only
+  // data-only messages need to be shown manually.
+  if (payload.notification) return;
+
+  const title = data.title || "New Delivery";
+  const body = data.body || "Order assigned to you";
   const isDelivery = data.type === "delivery_assignment";
   const isNewOrder = data.type === "new_order_alert";
 
   const options = {
     body,
     icon: "/icons/icon-192.png",
-    badge: "/icons/badge-72.png",
+    badge: "/icons/icon-192.png",
     tag: data.orderId ? `order-${data.orderId}` : `fcm-${Date.now()}`,
     data: {
       url: data.deepLink || data.url || (isDelivery ? "/delivery" : "/admin/orders"),
@@ -66,33 +78,19 @@ messaging.onBackgroundMessage(async (payload) => {
     renotify: true,
     vibrate: [300, 100, 300, 100, 300, 200, 500],
     timestamp: Date.now(),
+    // Most platforms (Android Chrome included) only render ~2 actions and silently drop
+    // the rest, so keep this to the two that matter most.
     actions: [
-      { action: "view", title: isDelivery ? "View Delivery" : "View Order" },
       { action: "accept", title: isDelivery ? "Accept" : "Accept Order" },
-      { action: "dismiss", title: "Dismiss" }
+      { action: "view", title: isDelivery ? "View Delivery" : "View Order" }
     ],
   };
 
-  // Android-specific: set notification channel
-  if ("setNotificationChannel" in Notification.prototype) {
-    options.channelId = isDelivery ? "deliveries" : "orders";
-  }
-
-  // Broadcast to all open tabs for instant UI update
-  const clients = await self.clients.matchAll({ includeUncontrolled: true, type: "window" });
-  clients.forEach((client) => {
-    client.postMessage({
-      type: "HEAVY_ALARM",
-      payload: { title, ...data }
-    });
-  });
-
-  // Show notification
   await self.registration.showNotification(title, options);
 });
 
 // Handle notification click / action
-self.addEventListener("notificationclick", async (event) => {
+self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
   const action = event.action;
@@ -100,27 +98,35 @@ self.addEventListener("notificationclick", async (event) => {
   const url = data.url || "/";
   const targetUrl = typeof url === "string" && url.startsWith("/") && !url.startsWith("//") ? url : "/";
 
-  // Handle "accept" action - acknowledge via API
-  if (action === "accept" && data.orderId) {
-    try {
-      await fetch(`/api/delivery/poll`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: data.orderId })
-      });
-    } catch { /* ignore */ }
-  }
+  // Admin new-order alerts and delivery assignments acknowledge through different APIs.
+  const acceptPromise =
+    action === "accept" && data.orderId
+      ? fetch(
+          data.type === "new_order_alert" ? `/api/admin/orders/${data.orderId}/acknowledge` : "/api/delivery/poll",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: data.type === "new_order_alert" ? undefined : JSON.stringify({ orderId: data.orderId })
+          }
+        ).catch(() => {})
+      : Promise.resolve();
 
+  // Both the ack request and the focus/open must be inside waitUntil - Android can
+  // terminate the service worker as soon as the browser considers the event "done",
+  // which otherwise aborts the ack fetch before it reaches the server.
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ("focus" in client && client.url.includes(targetUrl)) {
-          return client.focus();
+    Promise.all([
+      acceptPromise,
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if ("focus" in client && client.url.includes(targetUrl)) {
+            return client.focus();
+          }
         }
-      }
-      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
-      return undefined;
-    })
+        if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+        return undefined;
+      })
+    ])
   );
 });
 

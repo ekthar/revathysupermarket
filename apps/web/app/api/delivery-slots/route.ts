@@ -13,7 +13,7 @@ export async function GET() {
   const now = new Date();
   const end = new Date(now.getTime() + CUSTOMER_SLOT_WINDOW_DAYS * 24 * 60 * 60 * 1000);
   const slots = await prisma.deliverySlot.findMany({
-    where: { isActive: true, startsAt: { lt: end }, endsAt: { gt: now } },
+    where: { isActive: true, startsAt: { gt: now, lt: end } },
     orderBy: { startsAt: "asc" }
   });
   return NextResponse.json(

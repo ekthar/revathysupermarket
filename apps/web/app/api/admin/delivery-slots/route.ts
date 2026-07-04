@@ -4,20 +4,17 @@ import { z } from "zod";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { canManageSettings } from "@/lib/authz";
+import { parseIst, serviceDateFor } from "@/lib/ist-datetime";
 
-const createSchema = z.object({ startsAt: z.coerce.date(), endsAt: z.coerce.date(), capacity: z.coerce.number().int().min(1).max(500) }).refine((value) => value.endsAt > value.startsAt, { message: "End time must follow start time." });
+const istDate = z.preprocess(parseIst, z.date());
+const createSchema = z.object({ startsAt: istDate, endsAt: istDate, capacity: z.coerce.number().int().min(1).max(500) }).refine((value) => value.endsAt > value.startsAt, { message: "End time must follow start time." });
 const updateSchema = z.object({
   id: z.string(),
-  startsAt: z.coerce.date().optional(),
-  endsAt: z.coerce.date().optional(),
+  startsAt: istDate.optional(),
+  endsAt: istDate.optional(),
   capacity: z.coerce.number().int().min(1).max(500).optional(),
   isActive: z.boolean().optional()
 });
-
-function serviceDateFor(startsAt: Date) {
-  const localDate = startsAt.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-  return new Date(`${localDate}T00:00:00.000Z`);
-}
 
 export async function GET() {
   const session = await auth();

@@ -1,18 +1,25 @@
 const CACHE = "msm-supermarket-v7";
+// NOTE: only list assets that actually exist in /public. `cache.addAll` is atomic - a
+// single 404 (e.g. a badge icon or sound file that was never added) rejects the whole
+// install, so the service worker never activates and none of its logic ever runs.
 const STATIC_ASSETS = [
   "/offline",
   "/manifest.webmanifest",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
   "/icons/icon-maskable-512.png",
-  "/icons/apple-touch-icon.png",
-  "/icons/badge-72.png",
-  "/sounds/delivery-alert.mp3"
+  "/icons/apple-touch-icon.png"
 ];
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
-  event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(STATIC_ASSETS)));
+  event.waitUntil(
+    caches.open(CACHE).then((cache) =>
+      Promise.all(
+        STATIC_ASSETS.map((asset) => cache.add(asset).catch((err) => console.warn("SW: failed to cache", asset, err)))
+      )
+    )
+  );
 });
 
 self.addEventListener("message", (event) => {
@@ -106,24 +113,20 @@ self.addEventListener("push", (event) => {
   const options = {
     body: payload.body,
     icon: "/icons/icon-192.png",
-    badge: "/icons/badge-72.png",
+    badge: "/icons/icon-192.png",
     tag: payload.orderId ? `order-${payload.orderId}` : "new-order",
     data: { url: payload.url, orderId: payload.orderId, type: payload.type },
     requireInteraction: isDelivery || isNewOrder,
     renotify: true,
     vibrate: [300, 100, 300, 100, 300, 200, 500],
     timestamp: Date.now(),
+    // Most platforms (Android Chrome included) only render ~2 actions and silently drop
+    // the rest, so keep this to the two that matter most.
     actions: [
-      { action: "view", title: isDelivery ? "View Delivery" : "View Order" },
       { action: "accept", title: isDelivery ? "Accept" : "Accept Order" },
-      { action: "dismiss", title: "Dismiss" }
+      { action: "view", title: isDelivery ? "View Delivery" : "View Order" }
     ],
   };
-
-  // Android channel
-  if ("setNotificationChannel" in Notification.prototype) {
-    options.channelId = isDelivery ? "deliveries" : "orders";
-  }
 
   // Broadcast to tabs
   event.waitUntil(
@@ -146,22 +149,32 @@ self.addEventListener("notificationclick", (event) => {
   const url = data.url || "/";
   const targetUrl = typeof url === "string" && url.startsWith("/") && !url.startsWith("//") ? url : "/";
 
-  if (action === "accept" && data.orderId) {
-    fetch(`/api/delivery/poll`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ orderId: data.orderId })
-    }).catch(() => {});
-  }
+  const acceptPromise =
+    action === "accept" && data.orderId
+      ? fetch(
+          data.type === "new_order_alert" ? `/api/admin/orders/${data.orderId}/acknowledge` : "/api/delivery/poll",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: data.type === "new_order_alert" ? undefined : JSON.stringify({ orderId: data.orderId })
+          }
+        ).catch(() => {})
+      : Promise.resolve();
 
+  // Both the ack request and the focus/open must be inside waitUntil - Android can
+  // terminate the service worker as soon as the browser considers the event "done",
+  // which otherwise aborts the ack fetch before it reaches the server.
   event.waitUntil(
-    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if ("focus" in client && client.url.includes(targetUrl)) return client.focus();
-      }
-      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
-      return undefined;
-    })
+    Promise.all([
+      acceptPromise,
+      self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+        for (const client of clientList) {
+          if ("focus" in client && client.url.includes(targetUrl)) return client.focus();
+        }
+        if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+        return undefined;
+      })
+    ])
   );
 });
 

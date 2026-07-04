@@ -199,12 +199,18 @@ export function CheckoutForm({
   const canSubmit = items.length > 0 && locationOk && !addressNotCovered && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
 
   useEffect(() => {
-    if (!allowInstantDelivery && deliveryMode === "ASAP") setDeliveryMode("SCHEDULED");
-    if (!allowScheduledDelivery && deliveryMode === "SCHEDULED") {
-      setDeliveryMode("ASAP");
-      setDeliverySlotId("");
-    }
-  }, [allowInstantDelivery, allowScheduledDelivery, deliveryMode]);
+    if (!allowScheduledDelivery) setDeliverySlotId("");
+    // Nothing valid to switch to if both modes are disabled - leave deliveryMode as-is
+    // rather than ping-ponging between the two branches below on every render.
+    if (!allowInstantDelivery && !allowScheduledDelivery) return;
+    // Use the functional updater (and omit `deliveryMode` from deps) so this effect only
+    // re-runs when the *allowed* modes change, not every time it sets deliveryMode itself.
+    setDeliveryMode((current) => {
+      if (!allowInstantDelivery && current === "ASAP") return "SCHEDULED";
+      if (!allowScheduledDelivery && current === "SCHEDULED") return "ASAP";
+      return current;
+    });
+  }, [allowInstantDelivery, allowScheduledDelivery]);
 
   useEffect(() => {
     if (!tipEnabled && tipAmount > 0) setTipAmount(0);

@@ -78,6 +78,8 @@ export default async function CheckoutPage() {
         savedAddresses={addresses.map((address) => ({
           id: address.id,
           label: address.label,
+          customerName: address.customerName ?? "",
+          phone: address.phone ?? "",
           houseName: address.houseName,
           street: address.street,
           landmark: address.landmark,

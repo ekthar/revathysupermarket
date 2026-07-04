@@ -316,19 +316,21 @@ model Product {
 }
 
 model Address {
-  id        String   @id @default(cuid())
-  userId    String
-  label     String   @default("Home")
-  houseName String
-  street    String
-  landmark  String
-  pincode   String
-  latitude  Decimal  @db.Decimal(9, 6)
-  longitude Decimal  @db.Decimal(9, 6)
-  isDefault Boolean  @default(false)
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  userId       String
+  label        String   @default("Home")
+  customerName String?
+  phone        String?
+  houseName    String
+  street       String
+  landmark     String
+  pincode      String
+  latitude     Decimal  @db.Decimal(9, 6)
+  longitude    Decimal  @db.Decimal(9, 6)
+  isDefault    Boolean  @default(false)
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model Order {

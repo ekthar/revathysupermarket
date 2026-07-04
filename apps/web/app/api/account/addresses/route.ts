@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 
 const addressSchema = z.object({
   label: z.string().min(2).default("Home"),
+  customerName: z.string().min(2).optional(),
+  phone: z.string().min(8).optional(),
   houseName: z.string().min(2),
   street: z.string().min(2),
   landmark: z.string().min(2),

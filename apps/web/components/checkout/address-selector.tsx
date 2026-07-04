@@ -18,6 +18,8 @@ const PinOnMapPicker = dynamic(
 type SavedAddress = {
   id: string;
   label: string;
+  customerName: string;
+  phone: string;
   houseName: string;
   street: string;
   landmark: string;
@@ -67,6 +69,8 @@ export function AddressSelector({
   const { showToast } = useToast();
   const [showManualLocation, setShowManualLocation] = useState(false);
   const [showPinPicker, setShowPinPicker] = useState(false);
+  const [selectedAddressId, setSelectedAddressId] = useState("");
+  const [formExpanded, setFormExpanded] = useState(savedAddresses.length === 0);
 
   /** Reverse-geocodes and patches the form. Shared by GPS-detect and the pin-on-map picker. */
   async function applyPickedLocation(lat: number, lng: number, source: "GPS" | "pinned location" = "pinned location") {
@@ -95,7 +99,10 @@ export function AddressSelector({
   function applySavedAddress(addressId: string) {
     const address = savedAddresses.find((entry) => entry.id === addressId);
     if (!address) return;
+    setSelectedAddressId(addressId);
     onFormPatch({
+      customerName: address.customerName,
+      phone: address.phone,
       houseName: address.houseName,
       street: address.street,
       landmark: address.landmark,
@@ -104,8 +111,11 @@ export function AddressSelector({
       longitude: address.longitude.toString(),
     });
     onLocationStateChange("success");
+    setFormExpanded(false);
     showToast(`${address.label} address selected`, "success");
   }
+
+  const selectedAddress = savedAddresses.find((entry) => entry.id === selectedAddressId);
 
   function useCurrentLocation() {
     if (!navigator.geolocation) {
@@ -136,131 +146,180 @@ export function AddressSelector({
     >
       <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Delivery Address</h2>
 
-      {savedAddresses.length > 0 && (
-        <div className="mb-4">
-          <select
-            defaultValue=""
-            onChange={(event) => applySavedAddress(event.target.value)}
-            aria-label="Choose a saved delivery address"
-            className="h-11 w-full rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
-          >
-            <option value="">Choose saved address</option>
-            {savedAddresses.map((address) => (
-              <option key={address.id} value={address.id}>
-                {address.label}
-                {address.isDefault ? " (default)" : ""} - {address.houseName}
-              </option>
-            ))}
-          </select>
+      {savedAddresses.length > 0 && !formExpanded && selectedAddress && (
+        /* Collapsed summary — Swiggy-style */
+        <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden mb-4">
+          <div className="flex items-start justify-between bg-neutral-50 dark:bg-neutral-800 p-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-body font-bold text-neutral-900 dark:text-white">
+                {selectedAddress.label}{selectedAddress.isDefault ? " (default)" : ""}
+              </p>
+              <p className="text-caption text-neutral-600 dark:text-neutral-400 mt-0.5">
+                {selectedAddress.houseName}, {selectedAddress.street}, {selectedAddress.landmark} — {selectedAddress.pincode}
+              </p>
+              <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">
+                {selectedAddress.customerName} · {selectedAddress.phone}
+              </p>
+            </div>
+            <button type="button" onClick={() => setFormExpanded(true)} className="shrink-0 text-caption font-bold text-primary hover:underline press">
+              Change
+            </button>
+          </div>
+          {/* GPS status bar */}
+          <div className="flex items-center gap-2 px-4 py-2.5 border-t border-neutral-100 dark:border-neutral-700">
+            <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-secondary-100 text-secondary-600" : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400"}`}>
+              {locationOk ? <CheckCircle2 className="h-3.5 w-3.5" /> : <Navigation className="h-3.5 w-3.5" />}
+            </div>
+            <span className="text-micro font-semibold text-neutral-500">
+              {locationOk ? `Verified (${distance?.toFixed(1)} KM)` : "GPS needed"}
+            </span>
+            {locationOk && (
+              <button type="button" onClick={useCurrentLocation} className="ml-auto text-micro font-bold text-primary hover:underline press">
+                Refresh
+              </button>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Location detection */}
-      <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800 p-4 mb-4">
-        <div className="flex items-center gap-3">
+      <AnimatePresence initial={false}>
+        {(!selectedAddressId || formExpanded) && (
           <motion.div
-            animate={locationOk ? { scale: [1, 1.1, 1] } : {}}
-            transition={{ duration: 0.3 }}
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-secondary-100 text-secondary-700" : "bg-black text-white"}`}
+            key="address-form"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
           >
-            {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
-          </motion.div>
-          <div className="flex-1 min-w-0">
-            <p className="text-body font-bold text-neutral-800 dark:text-white">
-              {locationOk ? `${distance?.toFixed(1)} KM from store` : "GPS verification needed"}
-            </p>
-            <p className="text-caption text-neutral-500 mt-0.5">
-              Delivery within {deliveryRadiusKm} KM only
-            </p>
-          </div>
-          <motion.button
-            type="button"
-            onClick={useCurrentLocation}
-            disabled={locationState === "loading"}
-            whileTap={{ scale: 0.9 }}
-            aria-label="Detect delivery location using GPS"
-            className="shrink-0 rounded-full bg-black px-3 py-2 text-caption font-bold text-white"
-          >
-            {locationState === "loading" ? "Finding..." : locationOk ? "Refresh" : "Detect"}
-          </motion.button>
-        </div>
-        {isOutsideRadius && (
-          <p className="mt-3 text-caption font-semibold text-red-600 flex items-center gap-1.5">
-            <AlertCircle className="h-3.5 w-3.5" />
-            Outside delivery radius ({distance?.toFixed(1)} KM)
-          </p>
-        )}
-        {/* Swiggy-style precise pin drop — lets the user place the exact
-            house/gate on a map instead of relying only on GPS accuracy. */}
-        <button
-          type="button"
-          onClick={() => setShowPinPicker(true)}
-          className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 py-2 text-caption font-bold text-neutral-700 dark:text-neutral-300 press"
-        >
-          <MapPinned className="h-3.5 w-3.5" />
-          Pin exact location on map
-        </button>
-      </div>
+            {savedAddresses.length > 0 && (
+              <div className="mb-4">
+                <select
+                  value={selectedAddressId}
+                  onChange={(event) => {
+                    if (event.target.value) applySavedAddress(event.target.value);
+                    else { setSelectedAddressId(""); setFormExpanded(true); }
+                  }}
+                  aria-label="Choose a saved delivery address"
+                  className="h-11 w-full rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">{selectedAddressId ? "Remove selection" : "Choose saved address"}</option>
+                  {savedAddresses.map((address) => (
+                    <option key={address.id} value={address.id}>
+                      {address.label}
+                      {address.isDefault ? " (default)" : ""} - {address.houseName}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
-      {/* Address fields */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        <CheckoutField label="Customer name" value={form.customerName} onChange={(v) => onUpdate("customerName", v)} />
-        <CheckoutField label="Phone number" type="tel" value={form.phone} onChange={(v) => onUpdate("phone", v)} />
-        <CheckoutField label="House name / flat" value={form.houseName} onChange={(v) => onUpdate("houseName", v)} />
-        <CheckoutField
-          label="Pincode"
-          inputMode="numeric"
-          value={form.pincode}
-          onChange={(v) => onUpdate("pincode", v.replace(/\D/g, "").slice(0, 6))}
-        />
-        <CheckoutField label="Street / area" value={form.street} onChange={(v) => onUpdate("street", v)} className="sm:col-span-2" />
-        <CheckoutField label="Landmark" value={form.landmark} onChange={(v) => onUpdate("landmark", v)} className="sm:col-span-2" />
-      </div>
-
-      <AnimatePresence mode="wait">
-        {form.pincode && /^\d{6}$/.test(form.pincode) && (
-          <motion.p
-            key="pincode-info"
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            className="mt-3 rounded-xl px-3 py-2 text-caption font-semibold bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
-          >
-            {locationOk
-              ? `\u2713 Within delivery range (${distance?.toFixed(1)} KM)`
-              : "Tap Detect above to verify delivery eligibility"}
-          </motion.p>
-        )}
-      </AnimatePresence>
-
-      <div className="mt-3">
-        <label className="block">
-          <span className="text-caption font-bold text-neutral-600">Delivery notes</span>
-          <textarea
-            value={form.notes}
-            onChange={(event) => onUpdate("notes", event.target.value)}
-            className="mt-1.5 w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-3 text-body text-neutral-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
-            placeholder="Gate color, preferred time..."
-          />
-        </label>
-      </div>
-
-      {/* Manual coordinates */}
-      <button
-        type="button"
-        onClick={() => setShowManualLocation((c) => !c)}
-        className="mt-3 flex items-center gap-1 text-caption font-bold text-black"
-      >
-        Enter coordinates manually
-        <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showManualLocation ? "rotate-180" : ""}`} />
-      </button>
-      <AnimatePresence>
-        {showManualLocation && (
-          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <CheckoutField label="Latitude" value={form.latitude} onChange={(v) => onUpdate("latitude", v)} />
-              <CheckoutField label="Longitude" value={form.longitude} onChange={(v) => onUpdate("longitude", v)} />
+            {/* Location detection */}
+            <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800 p-4 mb-4">
+              <div className="flex items-center gap-3">
+                <motion.div
+                  animate={locationOk ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                  className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-secondary-100 text-secondary-700" : "bg-black text-white"}`}
+                >
+                  {locationOk ? <CheckCircle2 className="h-5 w-5" /> : <Navigation className="h-5 w-5" />}
+                </motion.div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-body font-bold text-neutral-800 dark:text-white">
+                    {locationOk ? `${distance?.toFixed(1)} KM from store` : "GPS verification needed"}
+                  </p>
+                  <p className="text-caption text-neutral-500 mt-0.5">
+                    Delivery within {deliveryRadiusKm} KM only
+                  </p>
+                </div>
+                <motion.button
+                  type="button"
+                  onClick={useCurrentLocation}
+                  disabled={locationState === "loading"}
+                  whileTap={{ scale: 0.9 }}
+                  aria-label="Detect delivery location using GPS"
+                  className="shrink-0 rounded-full bg-black px-3 py-2 text-caption font-bold text-white"
+                >
+                  {locationState === "loading" ? "Finding..." : locationOk ? "Refresh" : "Detect"}
+                </motion.button>
+              </div>
+              {isOutsideRadius && (
+                <p className="mt-3 text-caption font-semibold text-red-600 flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" />
+                  Outside delivery radius ({distance?.toFixed(1)} KM)
+                </p>
+              )}
+              <button
+                type="button"
+                onClick={() => setShowPinPicker(true)}
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 py-2 text-caption font-bold text-neutral-700 dark:text-neutral-300 press"
+              >
+                <MapPinned className="h-3.5 w-3.5" />
+                Pin exact location on map
+              </button>
             </div>
+
+            {/* Address fields */}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <CheckoutField label="Customer name" value={form.customerName} onChange={(v) => onUpdate("customerName", v)} />
+              <CheckoutField label="Phone number" type="tel" value={form.phone} onChange={(v) => onUpdate("phone", v)} />
+              <CheckoutField label="House name / flat" value={form.houseName} onChange={(v) => onUpdate("houseName", v)} />
+              <CheckoutField
+                label="Pincode"
+                inputMode="numeric"
+                value={form.pincode}
+                onChange={(v) => onUpdate("pincode", v.replace(/\D/g, "").slice(0, 6))}
+              />
+              <CheckoutField label="Street / area" value={form.street} onChange={(v) => onUpdate("street", v)} className="sm:col-span-2" />
+              <CheckoutField label="Landmark" value={form.landmark} onChange={(v) => onUpdate("landmark", v)} className="sm:col-span-2" />
+            </div>
+
+            <AnimatePresence mode="wait">
+              {form.pincode && /^\d{6}$/.test(form.pincode) && (
+                <motion.p
+                  key="pincode-info"
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="mt-3 rounded-xl px-3 py-2 text-caption font-semibold bg-neutral-50 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400"
+                >
+                  {locationOk
+                    ? `\u2713 Within delivery range (${distance?.toFixed(1)} KM)`
+                    : "Tap Detect above to verify delivery eligibility"}
+                </motion.p>
+              )}
+            </AnimatePresence>
+
+            <div className="mt-3">
+              <label className="block">
+                <span className="text-caption font-bold text-neutral-600">Delivery notes</span>
+                <textarea
+                  value={form.notes}
+                  onChange={(event) => onUpdate("notes", event.target.value)}
+                  className="mt-1.5 w-full rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 p-3 text-body text-neutral-900 dark:text-white outline-none resize-none h-20 focus:border-primary/40 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+                  placeholder="Gate color, preferred time..."
+                />
+              </label>
+            </div>
+
+            {/* Manual coordinates */}
+            <button
+              type="button"
+              onClick={() => setShowManualLocation((c) => !c)}
+              className="mt-3 flex items-center gap-1 text-caption font-bold text-black"
+            >
+              Enter coordinates manually
+              <ChevronDown className={`h-3.5 w-3.5 transition-transform ${showManualLocation ? "rotate-180" : ""}`} />
+            </button>
+            <AnimatePresence>
+              {showManualLocation && (
+                <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}>
+                  <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <CheckoutField label="Latitude" value={form.latitude} onChange={(v) => onUpdate("latitude", v)} />
+                    <CheckoutField label="Longitude" value={form.longitude} onChange={(v) => onUpdate("longitude", v)} />
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         )}
       </AnimatePresence>

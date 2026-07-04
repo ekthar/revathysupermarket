@@ -40,6 +40,8 @@ type LocationState = "idle" | "loading" | "success" | "denied";
 type SavedAddress = {
   id: string;
   label: string;
+  customerName: string;
+  phone: string;
   houseName: string;
   street: string;
   landmark: string;

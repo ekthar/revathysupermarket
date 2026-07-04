@@ -97,9 +97,9 @@ export async function POST(request: Request) {
       where: { userId: session.user.id, houseName: data.houseName, pincode: data.pincode, street: data.street }
     }).catch(() => null);
     if (!existingAddress) {
-      await prisma.address.create({ data: { userId: session.user.id, label: "Home", houseName: data.houseName, street: data.street, landmark: data.landmark, pincode: data.pincode, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+      await prisma.address.create({ data: { userId: session.user.id, label: "Home", customerName: data.customerName, phone: data.phone, houseName: data.houseName, street: data.street, landmark: data.landmark, pincode: data.pincode, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
     } else {
-      await prisma.address.update({ where: { id: existingAddress.id }, data: { landmark: data.landmark, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
+      await prisma.address.update({ where: { id: existingAddress.id }, data: { customerName: data.customerName, phone: data.phone, landmark: data.landmark, latitude: data.latitude, longitude: data.longitude } }).catch(() => null);
     }
 
     // Fire-and-forget side effects — run all in parallel

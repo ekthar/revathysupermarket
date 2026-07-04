@@ -53,12 +53,6 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
         sizes: "180x180",
         type: "image/png",
         purpose: "any"
-      },
-      {
-        src: "/icons/badge-72.png",
-        sizes: "72x72",
-        type: "image/png",
-        purpose: "any"
       }
     ],
     screenshots: [],

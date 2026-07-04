@@ -3,19 +3,16 @@ import { Prisma } from "@prisma/client";
 import { z } from "zod";
 import { prisma } from "@/lib/prisma";
 import { authenticateMobileRequest } from "@/lib/mobile-auth";
+import { parseIst, serviceDateFor } from "@/lib/ist-datetime";
 
+const istDate = z.preprocess(parseIst, z.date());
 const updateSchema = z.object({
   id: z.string().min(1),
-  startsAt: z.coerce.date().optional(),
-  endsAt: z.coerce.date().optional(),
+  startsAt: istDate.optional(),
+  endsAt: istDate.optional(),
   capacity: z.coerce.number().int().min(1).max(500).optional(),
   isActive: z.boolean().optional(),
 });
-
-function serviceDateFor(startsAt: Date) {
-  const localDate = startsAt.toLocaleDateString("en-CA", { timeZone: "Asia/Kolkata" });
-  return new Date(`${localDate}T00:00:00.000Z`);
-}
 
 /**
  * GET /api/mobile/v1/admin/delivery-slots
@@ -58,17 +55,25 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { serviceDate, startsAt, endsAt, capacity, isActive } = body;
+  const { startsAt, endsAt, capacity, isActive } = body;
 
-  if (!serviceDate || !startsAt || !endsAt || !capacity) {
-    return NextResponse.json({ error: "Missing required fields: serviceDate, startsAt, endsAt, capacity" }, { status: 400 });
+  if (!startsAt || !endsAt || !capacity) {
+    return NextResponse.json({ error: "Missing required fields: startsAt, endsAt, capacity" }, { status: 400 });
   }
 
+  const startsAtDate = parseIst(startsAt);
+  const endsAtDate = parseIst(endsAt);
+  if (Number.isNaN(startsAtDate.getTime()) || Number.isNaN(endsAtDate.getTime()) || endsAtDate <= startsAtDate) {
+    return NextResponse.json({ error: "Invalid slot times." }, { status: 400 });
+  }
+
+  // Always derive serviceDate from startsAt (IST calendar date) rather than trusting a
+  // client-supplied value, so it can never drift out of sync with the PATCH path below.
   const slot = await prisma.deliverySlot.create({
     data: {
-      serviceDate: new Date(serviceDate),
-      startsAt: new Date(startsAt),
-      endsAt: new Date(endsAt),
+      serviceDate: serviceDateFor(startsAtDate),
+      startsAt: startsAtDate,
+      endsAt: endsAtDate,
       capacity,
       isActive: isActive ?? true,
     },

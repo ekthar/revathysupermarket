@@ -32,7 +32,7 @@ jobs:
       - name: Sync Capacitor iOS
         run: npx cap sync ios
         env:
-          CAPACITOR_SERVER_URL: ${{ vars.CAPACITOR_SERVER_URL || 'https://revathysupermarket.com' }}
+          CAPACITOR_SERVER_URL: ${{ vars.CAPACITOR_SERVER_URL || 'https://revathysupermarket.vercel.app' }}
 
       - name: Install CocoaPods
         run: pod install

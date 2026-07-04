@@ -46,7 +46,7 @@ jobs:
       - name: Sync Capacitor Android
         run: npx cap sync android
         env:
-          CAPACITOR_SERVER_URL: ${{ vars.CAPACITOR_SERVER_URL || 'https://revathysupermarket.com' }}
+          CAPACITOR_SERVER_URL: ${{ vars.CAPACITOR_SERVER_URL || 'https://revathysupermarket.vercel.app' }}
 
       - name: Decode Keystore
         if: env.KEYSTORE_BASE64 != ''

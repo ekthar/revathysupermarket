@@ -5,7 +5,7 @@ const config: CapacitorConfig = {
   appName: "Revathy Delivery",
   webDir: "out",
   server: {
-    url: process.env.CAPACITOR_SERVER_URL || "https://revathysupermarket.com",
+    url: process.env.CAPACITOR_SERVER_URL || "https://revathysupermarket.vercel.app",
     cleartext: false,
   },
   android: {

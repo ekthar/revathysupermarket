@@ -18,13 +18,13 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   const showToast = useCallback((message: string, tone: ToastTone = "info") => {
     switch (tone) {
       case "success":
-        sonnerToast.success(message);
+        sonnerToast.success(message, { duration: 4000 });
         break;
       case "error":
-        sonnerToast.error(message);
+        sonnerToast.error(message, { duration: 6000 });
         break;
       default:
-        sonnerToast(message);
+        sonnerToast(message, { duration: 4000 });
     }
   }, []);
 

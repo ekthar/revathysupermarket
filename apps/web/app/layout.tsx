@@ -111,6 +111,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
       </head>
       <body className="pt-safe">
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[999] focus:rounded-xl focus:bg-black focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-white focus:outline-none focus:shadow-lg">
+          Skip to main content
+        </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers session={session}>
             <ViewportStability />
@@ -118,7 +121,13 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <OnboardingTour />
             <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
             <Suspense>
-              <div id="main-content" className="pb-safe route-scroll-container" tabIndex={-1}>{children}</div>
+              <div
+                id="main-content"
+                className="pb-safe route-scroll-container"
+                tabIndex={-1}
+                aria-live="polite"
+                aria-label="Page content"
+              >{children}</div>
             </Suspense>
             <Footer storeName={settings.storeName} address={settings.address} />
             <ScrollToTop />

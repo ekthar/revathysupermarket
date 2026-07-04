@@ -118,11 +118,11 @@ export function AddressSelector({
 
   const selectedAddress = savedAddresses.find((entry) => entry.id === selectedAddressId);
 
-  // Auto-select default saved address on mount. Collapse only if name+phone are present.
+  // Auto-select default saved address on mount. Always collapse to summary view.
   useEffect(() => {
     if (savedAddresses.length === 0 || selectedAddressId) return;
     const defaultAddr = savedAddresses.find((a) => a.isDefault) ?? savedAddresses[0];
-    if (defaultAddr && defaultAddr.customerName && defaultAddr.phone) {
+    if (defaultAddr) {
       applySavedAddress(defaultAddr.id);
     }
   }, []);
@@ -157,24 +157,51 @@ export function AddressSelector({
       <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Delivery Address</h2>
 
       {savedAddresses.length > 0 && !formExpanded && selectedAddress && (
-        /* Collapsed summary — Swiggy-style */
         <div className="rounded-2xl border border-neutral-200 dark:border-neutral-700 overflow-hidden mb-4">
+          {/* Collapsed summary header */}
           <div className="flex items-start justify-between bg-neutral-50 dark:bg-neutral-800 p-4">
             <div className="flex-1 min-w-0">
               <p className="text-body font-bold text-neutral-900 dark:text-white">
                 {selectedAddress.label}{selectedAddress.isDefault ? " (default)" : ""}
               </p>
               <p className="text-caption text-neutral-600 dark:text-neutral-400 mt-0.5">
-                {selectedAddress.houseName}, {selectedAddress.street}, {selectedAddress.landmark} — {selectedAddress.pincode}
+                {selectedAddress.houseName}, {selectedAddress.street}{selectedAddress.landmark ? `, ${selectedAddress.landmark}` : ""} — {selectedAddress.pincode}
               </p>
-              <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">
-                {selectedAddress.customerName} · {selectedAddress.phone}
-              </p>
+              {(form.customerName && form.phone) ? (
+                <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  {form.customerName} · {form.phone}
+                </p>
+              ) : null}
             </div>
             <button type="button" onClick={() => setFormExpanded(true)} className="shrink-0 text-caption font-bold text-primary hover:underline press">
-              Change
+              Edit
             </button>
           </div>
+
+          {/* Inline name+phone prompt for old addresses that lack them */}
+          {(!form.customerName || !form.phone) && (
+            <div className="px-4 py-3 border-t border-neutral-100 dark:border-neutral-700 bg-amber-50/50 dark:bg-amber-950/10">
+              <p className="text-micro font-semibold text-amber-700 dark:text-amber-400 mb-2">
+                Add your name & phone number for delivery
+              </p>
+              <div className="flex gap-2">
+                <input
+                  value={form.customerName}
+                  onChange={(e) => onUpdate("customerName", e.target.value)}
+                  placeholder="Your name"
+                  className="h-9 flex-1 min-w-0 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                <input
+                  value={form.phone}
+                  onChange={(e) => onUpdate("phone", e.target.value.replace(/\D/g, "").slice(0, 10))}
+                  placeholder="Phone number"
+                  type="tel"
+                  className="h-9 flex-1 min-w-0 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
+                />
+              </div>
+            </div>
+          )}
+
           {/* GPS status bar */}
           <div className="flex items-center gap-2 px-4 py-2.5 border-t border-neutral-100 dark:border-neutral-700">
             <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${locationOk ? "bg-secondary-100 text-secondary-600" : "bg-neutral-200 dark:bg-neutral-700 text-neutral-400"}`}>
@@ -189,7 +216,8 @@ export function AddressSelector({
               </button>
             )}
           </div>
-          {/* Small option to add a new address */}
+
+          {/* Deliver to a new address */}
           <button
             type="button"
             onClick={() => { setSelectedAddressId(""); setFormExpanded(true); }}
@@ -338,6 +366,17 @@ export function AddressSelector({
                 </motion.div>
               )}
             </AnimatePresence>
+
+            <div className="mt-4">
+              <motion.button
+                type="button"
+                onClick={() => setFormExpanded(false)}
+                whileTap={{ scale: 0.97 }}
+                className="flex h-11 w-full items-center justify-center rounded-xl bg-black text-sm font-bold text-white press"
+              >
+                Save address & continue
+              </motion.button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

@@ -19,12 +19,12 @@ export default function NotificationsScreen() {
       <FlatList
         data={notifications}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<View className="py-16 items-center"><Text className="text-3xl mb-2">🔔</Text><Text className="text-slate-400">No notifications</Text></View>}
+        ListEmptyComponent={<View className="py-16 items-center"><Text className="text-3xl mb-2">🔔</Text><Text className="text-neutral-400">No notifications</Text></View>}
         renderItem={({ item }) => (
-          <View className={`py-4 border-b border-slate-50 ${item.isRead ? "" : "bg-primary-50/50 -mx-2 px-2 rounded-lg"}`}>
-            <Text className="text-sm font-sans-medium text-slate-800">{item.title}</Text>
-            <Text className="text-sm text-slate-500 mt-1">{item.body}</Text>
-            <Text className="text-xs text-slate-400 mt-1">{formatDate(item.date)}</Text>
+          <View className={`py-4 border-b border-neutral-50 ${item.isRead ? "" : "bg-primary-50/50 -mx-2 px-2 rounded-lg"}`}>
+            <Text className="text-sm font-medium text-neutral-800">{item.title}</Text>
+            <Text className="text-sm text-neutral-500 mt-1">{item.body}</Text>
+            <Text className="text-xs text-neutral-400 mt-1">{formatDate(item.date)}</Text>
           </View>
         )}
       />

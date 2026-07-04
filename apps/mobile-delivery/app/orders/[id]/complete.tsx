@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { api } from "@/services/api";
 import { useDeliveryStore } from "@/stores/delivery";
@@ -15,7 +15,10 @@ export default function CompleteScreen() {
       await api.post(`/delivery/orders/${id}/complete`);
       await stopTracking();
       router.replace("/dashboard");
-    } catch {}
+    } catch (error) {
+      console.error("Failed to mark order as delivered:", error);
+      Alert.alert("Error", "Failed to mark order as delivered. Please try again.");
+    }
     setIsLoading(false);
   };
 

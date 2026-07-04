@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import {
   View,
   Text,
@@ -19,6 +19,8 @@ import { Button } from "@/components/ui/Button";
 
 export default function CheckoutScreen() {
   const [step, setStep] = useState(0);
+  const [addresses, setAddresses] = useState<{ id: string; label: string; detail: string }[]>([]);
+  const [loadingAddresses, setLoadingAddresses] = useState(true);
   const [selectedAddress, setSelectedAddress] = useState(0);
   const [selectedSlot, setSelectedSlot] = useState(-1);
   const [paymentMethod, setPaymentMethod] = useState("COD");
@@ -30,10 +32,12 @@ export default function CheckoutScreen() {
   const { items, totals, clearCart } = useCartStore();
   const { subtotal, gst, deliveryFee, total } = totals();
 
-  const addresses = [
-    { id: "1", label: "Home", detail: "Flat 4B, Green Valley Apt, MG Road" },
-    { id: "2", label: "Work", detail: "Technopark Phase 3, Kazhakkoottam" },
-  ];
+  useEffect(() => {
+    api.get("/addresses").then(({ data }) => {
+      const items = data.items || data.addresses || data || [];
+      setAddresses(items);
+    }).catch(() => {}).finally(() => setLoadingAddresses(false));
+  }, []);
   const stepTitles = ["Address", "Payment", "Review"];
   const stepIcons = [MapPin, CreditCard, Check];
 
@@ -81,7 +85,7 @@ export default function CheckoutScreen() {
   };
 
   const canProceed = () => {
-    if (step === 0) return true; // Address always valid (hardcoded for now)
+    if (step === 0) return addresses.length > 0;
     if (step === 1) return !!paymentMethod;
     return items.length > 0;
   };
@@ -142,7 +146,15 @@ export default function CheckoutScreen() {
               <Text className="text-body font-bold text-neutral-900 mb-3">
                 Delivery Address
               </Text>
-              {addresses.map((addr, i) => (
+              {loadingAddresses ? (
+                <View className="py-8 items-center">
+                  <ActivityIndicator color="#050505" />
+                </View>
+              ) : addresses.length === 0 ? (
+                <View className="py-8 items-center">
+                  <Text className="text-body text-neutral-400">No saved addresses. Add one in your account.</Text>
+                </View>
+              ) : addresses.map((addr, i) => (
                 <Pressable
                   key={addr.id}
                   onPress={() => setSelectedAddress(i)}

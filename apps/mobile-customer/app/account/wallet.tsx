@@ -21,18 +21,18 @@ export default function WalletScreen() {
         <Text className="text-white text-3xl font-heading mt-1">{formatCurrency(data?.balance ?? 0)}</Text>
       </View>
 
-      <Text className="text-base font-heading text-slate-900 mb-3">Transactions</Text>
+        <Text className="text-base font-heading text-neutral-900 mb-3">Transactions</Text>
       <FlatList
         data={data?.transactions || []}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text className="text-slate-400 text-sm">No transactions</Text>}
+        ListEmptyComponent={<Text className="text-neutral-400 text-sm">No transactions</Text>}
         renderItem={({ item }) => (
-          <View className="flex-row py-3 border-b border-slate-50">
+          <View className="flex-row py-3 border-b border-neutral-50">
             <View className="flex-1">
-              <Text className="text-sm font-sans-medium text-slate-700">{item.reason}</Text>
-              <Text className="text-xs text-slate-400">{formatDate(item.date)}</Text>
+              <Text className="text-sm font-medium text-neutral-700">{item.reason}</Text>
+              <Text className="text-xs text-neutral-400">{formatDate(item.date)}</Text>
             </View>
-            <Text className={`text-sm font-sans-bold ${item.type === "credit" ? "text-green-600" : "text-red-500"}`}>
+            <Text className={`text-sm font-bold ${item.type === "credit" ? "text-green-600" : "text-red-500"}`}>
               {item.type === "credit" ? "+" : "-"}{formatCurrency(item.amount)}
             </Text>
           </View>

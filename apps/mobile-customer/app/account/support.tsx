@@ -19,21 +19,21 @@ export default function SupportScreen() {
       <FlatList
         data={tickets}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<View className="py-16 items-center"><Text className="text-3xl mb-2">💬</Text><Text className="text-slate-400">No support tickets</Text></View>}
+        ListEmptyComponent={<View className="py-16 items-center"><Text className="text-3xl mb-2">💬</Text><Text className="text-neutral-400">No support tickets</Text></View>}
         renderItem={({ item }) => (
-          <View className="py-4 border-b border-slate-50">
+          <View className="py-4 border-b border-neutral-50">
             <View className="flex-row justify-between">
-              <Text className="text-sm font-sans-medium text-slate-800">{item.subject}</Text>
-              <View className="bg-slate-100 px-2 py-0.5 rounded">
-                <Text className="text-xs text-slate-600">{item.status.replace("_", " ")}</Text>
+              <Text className="text-sm font-medium text-neutral-800">{item.subject}</Text>
+              <View className="bg-neutral-100 px-2 py-0.5 rounded">
+                <Text className="text-xs text-neutral-600">{item.status.replace("_", " ")}</Text>
               </View>
             </View>
-            <Text className="text-xs text-slate-400 mt-1">#{item.ticketNumber} • {formatDate(item.createdAt)}</Text>
+            <Text className="text-xs text-neutral-400 mt-1">#{item.ticketNumber} • {formatDate(item.createdAt)}</Text>
           </View>
         )}
       />
       <Pressable className="mt-4 h-12 rounded-xl items-center justify-center bg-primary-600">
-        <Text className="text-white font-sans-bold">New Ticket</Text>
+        <Text className="text-white font-bold">New Ticket</Text>
       </Pressable>
     </View>
   );

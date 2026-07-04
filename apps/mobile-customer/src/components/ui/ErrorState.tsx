@@ -14,10 +14,10 @@ export function ErrorState({
   return (
     <View className="flex-1 items-center justify-center px-6 py-16">
       <Text className="text-4xl mb-3">{icon}</Text>
-      <Text className="text-base font-sans-medium text-slate-700 mb-1 text-center">
+      <Text className="text-base font-medium text-neutral-700 mb-1 text-center">
         Oops!
       </Text>
-      <Text className="text-sm text-slate-400 text-center mb-6">
+      <Text className="text-sm text-neutral-400 text-center mb-6">
         {message}
       </Text>
       {onRetry && (
@@ -25,49 +25,11 @@ export function ErrorState({
           onPress={onRetry}
           className="bg-primary-600 px-6 py-3 rounded-xl"
         >
-          <Text className="text-white font-sans-bold text-sm">Try Again</Text>
+          <Text className="text-white font-bold text-sm">Try Again</Text>
         </Pressable>
       )}
     </View>
   );
 }
 
-interface EmptyStateProps {
-  title: string;
-  subtitle?: string;
-  icon?: string;
-  actionLabel?: string;
-  onAction?: () => void;
-}
 
-export function EmptyState({
-  title,
-  subtitle,
-  icon = "📭",
-  actionLabel,
-  onAction,
-}: EmptyStateProps) {
-  return (
-    <View className="flex-1 items-center justify-center px-6 py-16">
-      <Text className="text-4xl mb-3">{icon}</Text>
-      <Text className="text-lg font-heading text-slate-700 mb-1 text-center">
-        {title}
-      </Text>
-      {subtitle && (
-        <Text className="text-sm text-slate-400 text-center mb-6">
-          {subtitle}
-        </Text>
-      )}
-      {actionLabel && onAction && (
-        <Pressable
-          onPress={onAction}
-          className="bg-primary-600 px-6 py-3 rounded-xl"
-        >
-          <Text className="text-white font-sans-bold text-sm">
-            {actionLabel}
-          </Text>
-        </Pressable>
-      )}
-    </View>
-  );
-}

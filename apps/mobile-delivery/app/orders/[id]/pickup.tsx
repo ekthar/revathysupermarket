@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, Pressable, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { api } from "@/services/api";
 
@@ -12,7 +12,10 @@ export default function PickupScreen() {
     try {
       await api.post(`/delivery/orders/${id}/pickup`);
       router.back();
-    } catch {}
+    } catch (error) {
+      console.error("Failed to confirm pickup:", error);
+      Alert.alert("Error", "Failed to confirm pickup. Please try again.");
+    }
     setIsLoading(false);
   };
 

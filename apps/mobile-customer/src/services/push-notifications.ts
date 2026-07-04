@@ -1,6 +1,7 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-notifications";
 import { Platform } from "react-native";
+import { router } from "expo-router";
 import { api } from "./api";
 
 // Configure notification handling
@@ -71,14 +72,15 @@ export async function registerForPushNotifications(): Promise<string | null> {
 /**
  * Handle notification response (user tapped notification)
  */
-export function setupNotificationListeners(
-  onNotificationTap: (data: Record<string, unknown>) => void
-) {
+export function setupNotificationListeners() {
   // When user taps notification
   const subscription = Notifications.addNotificationResponseReceivedListener(
     (response) => {
-      const data = response.notification.request.content.data;
-      onNotificationTap(data as Record<string, unknown>);
+      const data = response.notification.request.content.data as Record<string, unknown>;
+      const url = data?.url as string | undefined;
+      if (url) {
+        router.push(url);
+      }
     }
   );
 

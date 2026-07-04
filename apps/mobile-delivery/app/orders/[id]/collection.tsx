@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { api } from "@/services/api";
 import { PAYMENT_METHODS } from "@msm/shared/constants";
@@ -16,7 +16,10 @@ export default function CollectionScreen() {
     try {
       await api.post(`/delivery/orders/${id}/collection`, { amount: Number(amount), method });
       router.back();
-    } catch {}
+    } catch (error) {
+      console.error("Failed to record collection:", error);
+      Alert.alert("Error", "Failed to record collection. Please try again.");
+    }
     setIsLoading(false);
   };
 

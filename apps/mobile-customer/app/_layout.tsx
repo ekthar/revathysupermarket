@@ -7,7 +7,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { useSettingsStore } from "@/stores/settings";
 import { OfflineBanner } from "@/components/OfflineBanner";
-import { registerForPushNotifications } from "@/services/push-notifications";
+import { registerForPushNotifications, setupNotificationListeners } from "@/services/push-notifications";
 import "../global.css";
 
 // Keep splash screen visible while loading
@@ -44,6 +44,7 @@ export default function RootLayout() {
   useEffect(() => {
     if (status === "authenticated") {
       registerForPushNotifications().catch(() => {});
+      setupNotificationListeners();
     }
   }, [status]);
 

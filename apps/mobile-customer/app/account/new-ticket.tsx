@@ -60,14 +60,14 @@ export default function NewTicketScreen() {
       >
         <ScrollView className="flex-1 bg-white px-5 pt-4">
           {/* Subject */}
-          <Text className="text-sm font-sans-semibold text-slate-700 mb-1">
+          <Text className="text-sm font-semibold text-neutral-700 mb-1">
             Subject
           </Text>
           <TextInput
             value={subject}
             onChangeText={setSubject}
             placeholder="Brief description of your issue"
-            className="h-12 border border-slate-200 rounded-xl px-4 mb-1 bg-slate-50"
+            className="h-12 border border-neutral-200 rounded-xl px-4 mb-1 bg-neutral-50"
             placeholderTextColor="#94a3b8"
           />
           {errors.subject && (
@@ -76,7 +76,7 @@ export default function NewTicketScreen() {
           <View className="mb-4" />
 
           {/* Message */}
-          <Text className="text-sm font-sans-semibold text-slate-700 mb-1">
+          <Text className="text-sm font-semibold text-neutral-700 mb-1">
             Message
           </Text>
           <TextInput
@@ -86,7 +86,7 @@ export default function NewTicketScreen() {
             multiline
             numberOfLines={6}
             textAlignVertical="top"
-            className="h-32 border border-slate-200 rounded-xl px-4 py-3 mb-1 bg-slate-50"
+            className="h-32 border border-neutral-200 rounded-xl px-4 py-3 mb-1 bg-neutral-50"
             placeholderTextColor="#94a3b8"
           />
           {errors.message && (
@@ -95,14 +95,14 @@ export default function NewTicketScreen() {
           <View className="mb-4" />
 
           {/* Order ID (optional) */}
-          <Text className="text-sm font-sans-semibold text-slate-700 mb-1">
+          <Text className="text-sm font-semibold text-neutral-700 mb-1">
             Order Number (optional)
           </Text>
           <TextInput
             value={orderId}
             onChangeText={setOrderId}
             placeholder="e.g. MSM-2024-001"
-            className="h-12 border border-slate-200 rounded-xl px-4 mb-4 bg-slate-50"
+            className="h-12 border border-neutral-200 rounded-xl px-4 mb-4 bg-neutral-50"
             placeholderTextColor="#94a3b8"
           />
 
@@ -123,7 +123,7 @@ export default function NewTicketScreen() {
             {isLoading ? (
               <ActivityIndicator color="white" />
             ) : (
-              <Text className="text-white text-base font-sans-bold">
+              <Text className="text-white text-base font-bold">
                 Submit Ticket
               </Text>
             )}

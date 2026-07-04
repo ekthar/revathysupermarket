@@ -20,7 +20,7 @@ export default function LoyaltyScreen() {
   return (
     <View className="flex-1 bg-white px-5 pt-4">
       <View className="bg-amber-50 rounded-2xl p-6 mb-6 border border-amber-100">
-        <Text className="text-amber-700 text-sm font-sans-medium">{data?.tier || "Bronze"} Tier</Text>
+        <Text className="text-amber-700 text-sm font-medium">{data?.tier || "Bronze"} Tier</Text>
         <Text className="text-amber-900 text-3xl font-heading mt-1">{data?.points ?? 0} pts</Text>
         <View className="mt-4 h-2 bg-amber-200 rounded-full overflow-hidden">
           <View className="h-full bg-amber-500 rounded-full" style={{ width: `${Math.min(progress * 100, 100)}%` }} />
@@ -28,18 +28,18 @@ export default function LoyaltyScreen() {
         <Text className="text-xs text-amber-600 mt-2">{nextTier - (data?.points ?? 0)} points to next tier</Text>
       </View>
 
-      <Text className="text-base font-heading text-slate-900 mb-3">History</Text>
+      <Text className="text-base font-heading text-neutral-900 mb-3">History</Text>
       <FlatList
         data={data?.transactions || []}
         keyExtractor={(item) => item.id}
-        ListEmptyComponent={<Text className="text-slate-400 text-sm">No transactions</Text>}
+        ListEmptyComponent={<Text className="text-neutral-400 text-sm">No transactions</Text>}
         renderItem={({ item }) => (
-          <View className="flex-row py-3 border-b border-slate-50">
+          <View className="flex-row py-3 border-b border-neutral-50">
             <View className="flex-1">
-              <Text className="text-sm font-sans-medium text-slate-700">{item.reason}</Text>
-              <Text className="text-xs text-slate-400">{formatDate(item.date)}</Text>
+              <Text className="text-sm font-medium text-neutral-700">{item.reason}</Text>
+              <Text className="text-xs text-neutral-400">{formatDate(item.date)}</Text>
             </View>
-            <Text className={`text-sm font-sans-bold ${item.points > 0 ? "text-green-600" : "text-red-500"}`}>
+            <Text className={`text-sm font-bold ${item.points > 0 ? "text-green-600" : "text-red-500"}`}>
               {item.points > 0 ? "+" : ""}{item.points} pts
             </Text>
           </View>

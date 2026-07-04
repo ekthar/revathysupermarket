@@ -30,7 +30,7 @@ export function LocationGate({
 
   if (permission === "checking") {
     return (
-      <div className="flex min-h-dvh items-center justify-center bg-gradient-to-br from-emerald-600 to-emerald-800">
+      <div className="flex min-h-dvh items-center justify-center overflow-hidden bg-gradient-to-br from-emerald-600 to-emerald-800">
         <div className="flex flex-col items-center gap-4">
           <motion.div
             animate={{ scale: [1, 1.2, 1] }}
@@ -72,7 +72,7 @@ export function LocationGate({
 
   if (permission === "unsupported") {
     return (
-      <div className="flex min-h-dvh flex-col items-center justify-center gap-6 bg-slate-50 px-6 text-center dark:bg-slate-950">
+      <div className="flex min-h-dvh flex-col items-center justify-center gap-6 overflow-hidden bg-slate-50 px-6 text-center dark:bg-slate-950">
         <motion.div
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}

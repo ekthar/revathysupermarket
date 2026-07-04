@@ -18,11 +18,11 @@ type BgPlugin = {
  * Unified location hook that works in both PWA (browser Geolocation API) and
  * Capacitor native (background geolocation plugin) environments.
  *
- * When running inside a Capacitor native shell on Android/iOS, it uses the
- * @capacitor-community/background-geolocation plugin which keeps sending
- * location updates even when the app is backgrounded or the screen is off.
- * When running as a plain PWA in the browser, it falls back to
- * navigator.geolocation.watchPosition with the existing 5s-throttled publish.
+ * Strategy:
+ * 1. If running in Capacitor, try the native background geolocation plugin.
+ * 2. If the native plugin fails to load or request permission, fall back to
+ *    the standard browser Geolocation API (which still works in Capacitor's
+ *    Android WebView).
  */
 export function useDeliveryLocation(): UseDeliveryLocation {
   const [permission, setPermission] = useState<LocationPermissionState>("checking");
@@ -30,8 +30,9 @@ export function useDeliveryLocation(): UseDeliveryLocation {
   const coordsRef = useRef<LiveCoords | null>(null);
   const watchIdRef = useRef<number | null>(null);
   const bgWatcherRef = useRef<any>(null);
+  const nativeFailedRef = useRef(false);
 
-  const isNative = typeof window !== "undefined" && !!(window as any).Capacitor?.isNative;
+  const isCapacitor = typeof window !== "undefined" && !!(window as any).Capacitor;
 
   // ─── Native Capacitor background location ───
   const startNative = useCallback(async () => {
@@ -71,7 +72,10 @@ export function useDeliveryLocation(): UseDeliveryLocation {
       );
       bgWatcherRef.current = { plugin: BackgroundGeolocation, watcherId };
     } catch {
-      // Plugin not available — fall through to browser API
+      nativeFailedRef.current = true;
+      // Plugin not available — fall through to browser API below
+      // kick off the web permission check so the user isn't stuck
+      startWebPermissionCheck();
     }
   }, []);
 
@@ -85,7 +89,32 @@ export function useDeliveryLocation(): UseDeliveryLocation {
     } catch { /* ignore */ }
   }, []);
 
-  // ─── Web browser Geolocation API fallback ───
+  // ─── Web browser permission check ───
+  const startWebPermissionCheck = useCallback(() => {
+    if (!navigator.geolocation) {
+      setPermission("unsupported");
+      return;
+    }
+    if (!navigator.permissions?.query) {
+      setPermission("prompt");
+      return;
+    }
+    let active = true;
+    navigator.permissions
+      .query({ name: "geolocation" as PermissionName })
+      .then((status) => {
+        if (!active) return;
+        setPermission(status.state === "granted" ? "granted" : status.state === "denied" ? "denied" : "prompt");
+        status.onchange = () => {
+          if (!active) return;
+          setPermission(status.state === "granted" ? "granted" : status.state === "denied" ? "denied" : "prompt");
+        };
+      })
+      .catch(() => setPermission("prompt"));
+    return () => { active = false; };
+  }, []);
+
+  // ─── Web browser Geolocation API watcher ───
   const startWatching = useCallback(() => {
     if (!navigator.geolocation || watchIdRef.current !== null) return;
     let lastPublishedAt = 0;
@@ -130,45 +159,30 @@ export function useDeliveryLocation(): UseDeliveryLocation {
     }
   }, []);
 
-  // ─── On mount: detect environment & start tracking ───
+  // ─── On mount: try native, fall back to web ───
   useEffect(() => {
-    if (isNative) {
+    if (isCapacitor) {
       startNative();
       return () => { stopNative(); };
     }
-    if (!navigator.geolocation) {
-      setPermission("unsupported");
-      return;
-    }
-    if (!navigator.permissions?.query) {
-      setPermission("prompt");
-      return;
-    }
-    let active = true;
-    navigator.permissions
-      .query({ name: "geolocation" as PermissionName })
-      .then((status) => {
-        if (!active) return;
-        setPermission(status.state === "granted" ? "granted" : status.state === "denied" ? "denied" : "prompt");
-        status.onchange = () => {
-          if (!active) return;
-          setPermission(status.state === "granted" ? "granted" : status.state === "denied" ? "denied" : "prompt");
-        };
-      })
-      .catch(() => setPermission("prompt"));
-    return () => { active = false; };
-  }, [isNative, startNative, stopNative]);
+    startWebPermissionCheck();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
+  // Start/stop the web watcher when permission changes (only for web path)
   useEffect(() => {
-    if (isNative) return;
+    if (isCapacitor && !nativeFailedRef.current) return;
     if (permission !== "granted") return;
     startWatching();
     return stopWatching;
-  }, [permission, startWatching, stopWatching, isNative]);
+  }, [permission, startWatching, stopWatching, isCapacitor]);
 
   // ─── Public API ───
   const requestPermission = useCallback(() => {
-    if (isNative) { startNative(); return; }
+    if (isCapacitor && !nativeFailedRef.current) {
+      startNative();
+      return;
+    }
     if (!navigator.geolocation) { setPermission("unsupported"); return; }
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -181,11 +195,11 @@ export function useDeliveryLocation(): UseDeliveryLocation {
       },
       { enableHighAccuracy: true, timeout: 15000 }
     );
-  }, [isNative, startNative]);
+  }, [isCapacitor, startNative]);
 
   const getFreshCoords = useCallback((): Promise<LiveCoords> => {
     return new Promise((resolve, reject) => {
-      if (isNative && coordsRef.current) return resolve(coordsRef.current);
+      if (coordsRef.current) return resolve(coordsRef.current);
       if (!navigator.geolocation) return reject(new Error("Location is not available on this device."));
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -201,7 +215,7 @@ export function useDeliveryLocation(): UseDeliveryLocation {
         { enableHighAccuracy: true, timeout: 10000, maximumAge: 5000 }
       );
     });
-  }, [isNative]);
+  }, []);
 
   const forcePublish = useCallback(async () => {
     const current = coordsRef.current;

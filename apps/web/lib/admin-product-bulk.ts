@@ -87,29 +87,44 @@ export function normalizeProductSheetRow(input: Record<string, unknown>): Produc
   };
 }
 
-// Catches obviously-broken values in a free-text field (blank column shifted into
-// the wrong cell, a price/GST number pasted into a text column, garbled paste, etc.)
-// without rejecting legitimate new category/unit names - those are still allowed to
-// flow through and get auto-created, same as today.
 const NUMBERS_ONLY = /^[\d.,%\s]+$/;
 const MAX_REASONABLE_LABEL_LENGTH = 40;
+const VALID_GST_RATES = [0, 3, 5, 18, 40];
 
 function looksGarbled(value: string): boolean {
   const trimmed = value.trim();
-  if (!trimmed) return false; // emptiness is handled by the "required" checks
-  if (NUMBERS_ONLY.test(trimmed)) return true; // e.g. "18" or "18%" pasted into a text column
-  if (!/[a-zA-Z]/.test(trimmed)) return true; // no letters at all
-  if (trimmed.length > MAX_REASONABLE_LABEL_LENGTH) return true; // likely the wrong column
+  if (!trimmed) return false;
+  if (NUMBERS_ONLY.test(trimmed)) return true;
+  if (!/[a-zA-Z]/.test(trimmed)) return true;
+  if (trimmed.length > MAX_REASONABLE_LABEL_LENGTH) return true;
   return false;
 }
 
-export function validateProductSheetRow(row: ProductSheetRow) {
+export type ImportValidContext = {
+  categoryNames: Set<string>;
+  unitNames: Set<string>;
+};
+
+export async function fetchImportValidContext(): Promise<ImportValidContext> {
+  const [categories, units] = await Promise.all([
+    prisma.category.findMany({ select: { name: true } }),
+    prisma.unit.findMany({ select: { name: true } }),
+  ]);
+  return {
+    categoryNames: new Set(categories.map((c) => c.name.toLowerCase())),
+    unitNames: new Set(units.map((u) => u.name.toLowerCase())),
+  };
+}
+
+export function validateProductSheetRow(row: ProductSheetRow, ctx?: ImportValidContext) {
   const errors: string[] = [];
   if (!row.name || row.name.length < 2) errors.push("Name error: product name is required.");
   if (!row.category || row.category.length < 2) {
     errors.push("Category error: category name is required.");
   } else if (looksGarbled(row.category)) {
     errors.push(`Category error: "${row.category}" doesn't look like a valid category name.`);
+  } else if (ctx && !ctx.categoryNames.has(row.category.toLowerCase())) {
+    errors.push(`Category error: "${row.category}" is not a known category. Create it in the admin panel first.`);
   }
   if (!Number.isFinite(row.price) || row.price <= 0) errors.push("Price error: MRP must be greater than 0.");
   if (row.discountPrice !== null && row.discountPrice !== undefined && (!Number.isFinite(row.discountPrice) || row.discountPrice <= 0)) {
@@ -120,14 +135,16 @@ export function validateProductSheetRow(row: ProductSheetRow) {
   }
   if (row.gstRate != null) {
     if (!Number.isFinite(row.gstRate)) {
-      errors.push("GST error: GST rate must be a number (e.g. 5, 12, 18).");
-    } else if (row.gstRate < 0 || row.gstRate > 28) {
-      errors.push(`GST error: ${row.gstRate}% is not a valid GST rate (must be between 0 and 28).`);
+      errors.push("GST error: GST rate must be a number.");
+    } else if (!VALID_GST_RATES.includes(row.gstRate)) {
+      errors.push(`GST error: ${row.gstRate}% is not a valid GST rate (must be 0, 3, 5, 18, or 40).`);
     }
   }
   if (!Number.isInteger(row.stock) || row.stock < 0) errors.push("Stock error: stock must be a whole number 0 or above.");
   if (row.unit && looksGarbled(row.unit)) {
     errors.push(`Unit error: "${row.unit}" doesn't look like a valid unit.`);
+  } else if (row.unit && ctx && !ctx.unitNames.has(row.unit.toLowerCase())) {
+    errors.push(`Unit error: "${row.unit}" is not a known unit. Create it in the admin panel first.`);
   }
   if (!row.description || row.description.length < 10) errors.push("Description error: description must be at least 10 characters.");
   if (row.image && !isAllowedProductImageUrl(row.image)) errors.push("Image error: image must be a valid HTTPS URL or blank.");
@@ -169,13 +186,26 @@ async function findExistingProduct(row: ProductSheetRow) {
   return prisma.product.findFirst({ where: { name: { equals: row.name, mode: "insensitive" } }, select: { id: true } });
 }
 
-export async function upsertProductSheetRows(rows: ProductSheetRow[]) {
+const categoryBySlugCache = new Map<string, { id: string; name: string; slug: string } | null>();
+
+async function resolveCategory(row: ProductSheetRow): Promise<{ id: string; name: string; slug: string } | null> {
+  const slug = slugify(row.category);
+  const cached = categoryBySlugCache.get(slug);
+  if (cached !== undefined) return cached;
+  const category = await prisma.category.findUnique({ where: { slug } });
+  categoryBySlugCache.set(slug, category);
+  return category;
+}
+
+export async function upsertProductSheetRows(rows: ProductSheetRow[], ctx?: ImportValidContext) {
   const results: Array<{ name: string; action: "created" | "updated"; id: string }> = [];
   const errors: Array<{ row: number; errors: string[] }> = [];
   const validRows: ProductSheetRow[] = [];
 
+  const validCtx = ctx ?? await fetchImportValidContext();
+
   for (const [index, row] of rows.entries()) {
-    const rowErrors = validateProductSheetRow(row);
+    const rowErrors = validateProductSheetRow(row, validCtx);
     if (rowErrors.length > 0) {
       errors.push({ row: index + 1, errors: rowErrors });
       continue;
@@ -183,15 +213,14 @@ export async function upsertProductSheetRows(rows: ProductSheetRow[]) {
     validRows.push(row);
   }
 
-  await ensureProductUnits(validRows.map((row) => row.unit));
+  categoryBySlugCache.clear();
 
   for (const row of validRows) {
-    const categorySlug = slugify(row.category);
-    const category = await prisma.category.upsert({
-      where: { slug: categorySlug },
-      update: { name: row.category },
-      create: { slug: categorySlug, name: row.category }
-    });
+    const category = await resolveCategory(row);
+    if (!category) {
+      errors.push({ row: 0, errors: [`Category "${row.category}" no longer exists in the database.`] });
+      continue;
+    }
     const existing = await findExistingProduct(row);
     const slug = await uniqueProductSlug(row.name, existing?.id, row.slug);
     const image = row.image ? safeProductImageUrl(row.image) : PRODUCT_IMAGE_FALLBACK;

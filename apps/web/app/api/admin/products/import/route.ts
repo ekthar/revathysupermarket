@@ -5,7 +5,7 @@ import { Readable } from "node:stream";
 import { auth } from "@/auth";
 import { writeAuditLog } from "@/lib/audit";
 import { requireProductStaff } from "@/lib/authz";
-import { normalizeProductSheetRow, upsertProductSheetRows, validateProductSheetRow } from "@/lib/admin-product-bulk";
+import { fetchImportValidContext, normalizeProductSheetRow, upsertProductSheetRows, validateProductSheetRow } from "@/lib/admin-product-bulk";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 const MAX_IMPORT_BYTES = 2 * 1024 * 1024;
@@ -48,13 +48,14 @@ export async function POST(request: Request) {
 
     const rows = await parseRows(await file.arrayBuffer(), file.name);
     if (rows.length > MAX_IMPORT_ROWS) return NextResponse.json({ error: `Import at most ${MAX_IMPORT_ROWS} products at a time.`, code: "IMPORT_ROW_LIMIT" }, { status: 400 });
-    const preview = rows.map((row, index) => ({ row: index + 1, product: row, errors: validateProductSheetRow(row) }));
+    const ctx = await fetchImportValidContext();
+    const preview = rows.map((row, index) => ({ row: index + 1, product: row, errors: validateProductSheetRow(row, ctx) }));
     const invalidRows = preview.filter((row) => row.errors.length > 0);
 
     if (!commit) return NextResponse.json({ preview, invalidRows });
     if (invalidRows.length > 0) return NextResponse.json({ error: "Fix invalid rows before importing.", preview, invalidRows }, { status: 400 });
 
-    const result = await upsertProductSheetRows(rows);
+    const result = await upsertProductSheetRows(rows, ctx);
     if (result.errors.length > 0) return NextResponse.json({ error: "Some rows are invalid.", ...result }, { status: 400 });
     revalidateTag("products");
     revalidateTag("homepage");

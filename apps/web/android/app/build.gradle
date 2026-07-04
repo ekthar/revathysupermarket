@@ -17,9 +17,28 @@ android {
         }
     }
     buildTypes {
+        debug {
+            // Debug builds are auto-signed with the Android debug keystore
+        }
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (project.hasProperty('KEYSTORE_FILE') && file(project.property('KEYSTORE_FILE')).exists()) {
+                signingConfig signingConfigs.create("release") {
+                    storeFile file(project.property('KEYSTORE_FILE'))
+                    storePassword project.property('KEYSTORE_PASSWORD')
+                    keyAlias project.property('KEY_ALIAS')
+                    keyPassword project.property('KEY_PASSWORD')
+                }
+            }
+        }
+    }
+    splits {
+        abi {
+            enable true
+            reset()
+            include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
+            universalApk true
         }
     }
 }

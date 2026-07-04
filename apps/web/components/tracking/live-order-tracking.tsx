@@ -16,7 +16,7 @@ import {
   ShoppingBag,
   CircleDot,
 } from "lucide-react";
-import { SITE, STORE_COORDINATES } from "@/lib/constants";
+import { SITE } from "@/lib/constants";
 import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
 import { estimateOrderEta, type EtaDisplayMode } from "@/lib/live-order";
 import { OrderBill } from "./order-bill";
@@ -63,6 +63,8 @@ type TrackingData = {
   tipAmount?: number;
   total?: number;
   paymentMethod?: string;
+  storeLatitude: number;
+  storeLongitude: number;
 };
 
 const TRACKING_STEPS = [
@@ -283,7 +285,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
             <DeliveryMap
               deliveryPartnerLocation={data.deliveryPartnerLocation}
               customerLocation={data.destination}
-              storeLocation={{ latitude: STORE_COORDINATES.lat, longitude: STORE_COORDINATES.lng }}
+              storeLocation={{ latitude: data.storeLatitude, longitude: data.storeLongitude }}
               className="shadow-md"
               etaMinutes={etaMinutes}
             />

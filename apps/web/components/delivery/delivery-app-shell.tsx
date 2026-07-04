@@ -243,7 +243,7 @@ function DeliveryAppShellInner({
     setLoading(null);
     if (!response.ok) return showToast(data.error ?? "Pickup update failed", "error");
     // Backend sets OUT_FOR_DELIVERY, not ARRIVING — "Arriving" now only
-    // happens once markArrived() GPS-verifies the rider is within 100m.
+    // happens once markArrived() GPS-verifies the rider is within 250m.
     setEntries((current) =>
       current.map((entry) => (entry.id === order.id ? { ...entry, status: "OUT_FOR_DELIVERY" } : entry))
     );

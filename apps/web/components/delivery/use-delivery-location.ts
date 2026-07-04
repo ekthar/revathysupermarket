@@ -10,7 +10,7 @@ export type LiveCoords = { latitude: number; longitude: number; heading?: number
  * Compulsory GPS for delivery partners.
  *
  * Location is not optional for a delivery rider: it is what proves arrival
- * at the customer's door (server-side, within 100m) and what lets the
+ * at the customer's door (server-side, within 250m) and what lets the
  * customer see the rider moving on the live map. This hook:
  *
  * 1. Reports the current permission state (checking/prompt/granted/denied).

@@ -74,7 +74,7 @@ export function DeliveryOrderActions({
         />
       )}
 
-      {/* Mark Arrived (GPS-verified, must be within 100m) - OUT_FOR_DELIVERY */}
+      {/* Mark Arrived (GPS-verified, must be within 250m) - OUT_FOR_DELIVERY */}
       {order.status === "OUT_FOR_DELIVERY" && (
         <button
           disabled={loading === order.id}

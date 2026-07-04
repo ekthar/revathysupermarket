@@ -7,7 +7,7 @@ import { calculateDistanceMeters } from "@/lib/distance";
 
 /**
  * POST /api/delivery/arrive
- * Mark order as ARRIVING when partner is within 100m of delivery address.
+ * Mark order as ARRIVING when partner is within 250m of delivery address.
  * Notifies the customer once.
  */
 export async function POST(req: Request) {
@@ -45,8 +45,8 @@ export async function POST(req: Request) {
     { lat: Number(order.latitude), lng: Number(order.longitude) }
   );
 
-  if (distanceM > 100) {
-    return NextResponse.json({ error: `Too far from delivery address (${Math.round(distanceM)}m). Must be within 100m.`, code: "TOO_FAR", distance: distanceM }, { status: 400 });
+  if (distanceM > 250) {
+    return NextResponse.json({ error: `Too far from delivery address (${Math.round(distanceM)}m). Must be within 250m.`, code: "TOO_FAR", distance: distanceM }, { status: 400 });
   }
 
   // Update order status to ARRIVING

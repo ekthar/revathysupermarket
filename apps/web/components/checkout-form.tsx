@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { CheckCircle2, Clock, Tag, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { calculateDistanceKm } from "@/lib/distance";
@@ -140,6 +140,11 @@ export function CheckoutForm({
   );
   const [deliverySlotId, setDeliverySlotId] = useState("");
   const [promoCode, setPromoCode] = useState("");
+  const [promoApplied, setPromoApplied] = useState(false);
+  const [promoDiscount, setPromoDiscount] = useState(0);
+  const [promoDescription, setPromoDescription] = useState("");
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
   const [loyaltyBalance, setLoyaltyBalance] = useState(0);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
   const [loyaltyRules, setLoyaltyRules] = useState({ pointValueRupees: 0.25, maxRedemptionPercent: 20 });
@@ -152,7 +157,7 @@ export function CheckoutForm({
   const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
   const gstAmount = gstRatePercent > 0 ? Math.round(subtotal - subtotal / (1 + gstRatePercent / 100)) : 0;
-  const totalAmount = subtotal + deliveryFee + tipAmount;
+  const totalAmount = subtotal - promoDiscount + deliveryFee + tipAmount;
 
   // Fetch wallet balance on mount
   useEffect(() => {
@@ -250,6 +255,79 @@ export function CheckoutForm({
     }, 300);
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, [form.latitude, form.longitude, locationOk, subtotal]);
+
+  // Load promo code from cart page via sessionStorage
+  useEffect(() => {
+    const savedCode = sessionStorage.getItem("msm-promo-code");
+    if (savedCode) {
+      setPromoCode(savedCode);
+      setPromoApplied(true);
+      setPromoLoading(true);
+      fetch("/api/promo-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: savedCode, subtotal })
+      }).then(async (res) => {
+        const data = await res.json();
+        if (res.ok && data.valid) {
+          setPromoDiscount(data.discount);
+          setPromoDescription(data.description || "Coupon applied");
+          setPromoApplied(true);
+        } else {
+          setPromoApplied(false);
+          setPromoDiscount(0);
+          setPromoDescription("");
+        }
+      }).catch(() => {
+        setPromoApplied(false);
+        setPromoDiscount(0);
+      }).finally(() => setPromoLoading(false));
+    }
+  }, []);
+
+  // Validate promo code when it changes (debounced)
+  const promoValidationTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  useEffect(() => {
+    if (!promoCode.trim()) {
+      setPromoApplied(false);
+      setPromoDiscount(0);
+      setPromoDescription("");
+      setPromoError("");
+      return;
+    }
+    setPromoLoading(true);
+    setPromoError("");
+    if (promoValidationTimerRef.current) clearTimeout(promoValidationTimerRef.current);
+    promoValidationTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/promo-codes/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: promoCode.trim(), subtotal })
+        });
+        const data = await res.json();
+        if (res.ok && data.valid) {
+          setPromoApplied(true);
+          setPromoDiscount(data.discount);
+          setPromoDescription(data.description || "Coupon applied");
+          setPromoError("");
+        } else {
+          setPromoApplied(false);
+          setPromoDiscount(0);
+          setPromoDescription("");
+          setPromoError(data.error || "Invalid coupon code");
+        }
+      } catch {
+        setPromoApplied(false);
+        setPromoDiscount(0);
+        setPromoDescription("");
+        setPromoError("Could not validate code");
+      } finally {
+        setPromoLoading(false);
+      }
+    }, 500);
+    return () => { if (promoValidationTimerRef.current) clearTimeout(promoValidationTimerRef.current); };
+  }, [promoCode, subtotal]);
 
   useEffect(() => {
     if (!placedOrderId) return;
@@ -471,8 +549,29 @@ export function CheckoutForm({
 
           {rewardsEnabled && <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
             <h2 className="text-sm font-black text-neutral-900 dark:text-white">Offers and rewards</h2>
-            <label className="mt-3 block text-xs font-bold text-muted-foreground">Promo code<input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" placeholder="Optional promo code" /></label>
-            <label className="mt-3 block text-xs font-bold text-muted-foreground">Use points ({loyaltyBalance} available)<input type="number" min="0" max={loyaltyBalance} value={loyaltyPoints} onChange={(event) => setLoyaltyPoints(Math.min(loyaltyBalance, Math.max(0, Number(event.target.value))))} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" /></label>
+            <label className="mt-3 block text-xs font-bold text-muted-foreground">Promo code</label>
+            {promoApplied && promoDiscount > 0 ? (
+              <div className="mt-1 flex items-center justify-between rounded-xl bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-200 dark:border-secondary-800 px-3 py-2.5">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-secondary-600" />
+                  <span className="text-sm font-bold text-secondary-700 dark:text-secondary-300">{promoCode.toUpperCase()}</span>
+                  {promoDescription && <span className="text-caption text-neutral-500">— {promoDescription}</span>}
+                </div>
+                <button type="button" onClick={() => { setPromoCode(""); setPromoApplied(false); setPromoDiscount(0); setPromoDescription(""); setPromoError(""); }} className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors">
+                  <X className="h-3.5 w-3.5 text-neutral-400 hover:text-red-500" />
+                </button>
+              </div>
+            ) : (
+              <div className="mt-1 relative">
+                <input value={promoCode} onChange={(event) => setPromoCode(event.target.value.toUpperCase())} maxLength={40} className="h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" placeholder="Enter coupon code" />
+                {promoLoading && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}
+              </div>
+            )}
+            {promoError && !promoApplied && <p className="mt-1.5 text-micro text-red-500 flex items-center gap-1"><X className="h-3 w-3" />{promoError}</p>}
+            {promoApplied && promoDiscount > 0 && (
+              <p className="mt-1.5 text-micro font-semibold text-secondary-600 flex items-center gap-1"><Tag className="h-3 w-3" />You save {formatCurrency(promoDiscount)} on this order</p>
+            )}
+            <label className="mt-4 block text-xs font-bold text-muted-foreground">Use points ({loyaltyBalance} available)<input type="number" min="0" max={loyaltyBalance} value={loyaltyPoints} onChange={(event) => setLoyaltyPoints(Math.min(loyaltyBalance, Math.max(0, Number(event.target.value))))} className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" /></label>
             <p className="mt-2 text-xs text-muted-foreground">Each point is worth ₹{loyaltyRules.pointValueRupees}. Up to {loyaltyRules.maxRedemptionPercent}% of the order can be paid with points. Final discounts are verified securely when you place the order.</p>
           </section>}
 
@@ -499,6 +598,7 @@ export function CheckoutForm({
           gstRatePercent={gstRatePercent}
           gstAmount={gstAmount}
           tipAmount={tipAmount}
+          promoDiscount={promoDiscount}
           totalAmount={totalAmount}
           canSubmit={canSubmit}
           isSubmitting={isSubmitting}

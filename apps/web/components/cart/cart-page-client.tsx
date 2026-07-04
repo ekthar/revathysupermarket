@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2, Tag, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { springPresets } from "@/lib/motion";
@@ -64,6 +64,65 @@ export function CartPageClient() {
     return sum;
   }, 0) + promoDiscount;
 
+  // Re-validate promo when subtotal changes
+  const validatingPromoRef = useRef(false);
+  useEffect(() => {
+    if (!promoApplied || !promoCode.trim()) return;
+    if (validatingPromoRef.current) return;
+    validatingPromoRef.current = true;
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch("/api/promo-codes/validate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ code: promoCode.trim(), subtotal })
+        });
+        const data = await res.json();
+        if (res.ok && data.valid) {
+          setPromoDiscount(data.discount);
+          setPromoDescription(data.description);
+        } else {
+          setPromoApplied(false);
+          setPromoDiscount(0);
+          setPromoDescription("");
+          setPromoCode("");
+          setPromoError("");
+        }
+      } catch {
+        setPromoApplied(false);
+        setPromoDiscount(0);
+        setPromoDescription("");
+        setPromoCode("");
+        setPromoError("");
+      } finally {
+        validatingPromoRef.current = false;
+      }
+    }, 300);
+    return () => { clearTimeout(timer); validatingPromoRef.current = false; };
+  }, [subtotal, promoApplied]);
+
+  // Restore promo from sessionStorage on mount
+  useEffect(() => {
+    const savedCode = sessionStorage.getItem("msm-promo-code");
+    const savedApplied = sessionStorage.getItem("msm-promo-applied") === "true";
+    if (savedCode && savedApplied) {
+      setPromoCode(savedCode);
+      setPromoApplied(true);
+      // Re-validation will trigger via the effect above when subtotal is stable
+    }
+  }, []);
+
+  // Sync promo state to sessionStorage
+  useEffect(() => {
+    if (promoApplied && promoCode.trim()) {
+      sessionStorage.setItem("msm-promo-code", promoCode.trim());
+      sessionStorage.setItem("msm-promo-applied", "true");
+    } else {
+      sessionStorage.removeItem("msm-promo-code");
+      sessionStorage.removeItem("msm-promo-applied");
+    }
+  }, [promoApplied, promoCode]);
+
   async function applyPromo() {
     const code = promoCode.trim();
     if (code.length < 3) {
@@ -115,6 +174,8 @@ export function CartPageClient() {
     setPromoDescription("");
     setPromoCode("");
     setPromoError("");
+    sessionStorage.removeItem("msm-promo-code");
+    sessionStorage.removeItem("msm-promo-applied");
   }
 
   function handleRemove(id: string) {

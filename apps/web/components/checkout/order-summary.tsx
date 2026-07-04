@@ -21,6 +21,7 @@ interface OrderSummaryProps {
   gstRatePercent: number;
   gstAmount: number;
   tipAmount?: number;
+  promoDiscount?: number;
   totalAmount: number;
   canSubmit: boolean;
   isSubmitting: boolean;
@@ -37,6 +38,7 @@ export function OrderSummary({
   gstRatePercent,
   gstAmount,
   tipAmount = 0,
+  promoDiscount = 0,
   totalAmount,
   canSubmit,
   isSubmitting,
@@ -91,6 +93,12 @@ export function OrderSummary({
             <div className="flex justify-between">
               <span className="text-neutral-500">Delivery tip</span>
               <span className="font-semibold text-neutral-700">{formatCurrency(tipAmount)}</span>
+            </div>
+          )}
+          {promoDiscount > 0 && (
+            <div className="flex justify-between">
+              <span className="text-secondary-600 font-medium">Coupon discount</span>
+              <span className="font-semibold text-secondary-600">-{formatCurrency(promoDiscount)}</span>
             </div>
           )}
           {/* Savings line */}

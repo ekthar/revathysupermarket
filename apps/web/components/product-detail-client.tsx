@@ -8,6 +8,7 @@ import { useStoreConfig } from "@/lib/use-store-config";
 import { formatCurrency } from "@/lib/utils";
 import { useCart } from "@/components/cart/cart-provider";
 import { useToast } from "@/components/toast-provider";
+import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { ProductImage } from "@/components/product-image";
 import type { Product } from "@/lib/types";
 
@@ -16,15 +17,19 @@ export function ProductDetailClient({ product }: { product: Product }) {
   const { showToast } = useToast();
   const storeConfig = useStoreConfig();
   const [liked, setLiked] = useState(false);
+  const { flyToCart } = useFlyToCart();
   const cartItem = items.find((i) => i.id === product.id);
   const price = product.discountPrice ?? product.price;
   const outOfStock = product.stock <= 0;
 
-  function handleAdd() {
+  function handleAdd(e?: React.MouseEvent<HTMLButtonElement>) {
     if (outOfStock) return;
     addItem(product);
     if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(10);
     showToast(`Added ${product.name}`, "success");
+    if (e?.currentTarget) {
+      flyToCart(product.image, e.currentTarget);
+    }
   }
 
   function handleShare() {

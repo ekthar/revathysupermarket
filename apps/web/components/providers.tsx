@@ -4,6 +4,7 @@ import { SessionProvider } from "next-auth/react";
 import type { Session } from "next-auth";
 import { ThemeProvider } from "next-themes";
 import { CartProvider } from "@/components/cart/cart-provider";
+import { FlyToCartProvider } from "@/components/ui/fly-to-cart";
 import { ServiceWorkerRegister } from "@/components/service-worker-register";
 import { PushNotificationManager } from "@/components/push-notification-manager";
 import { FcmRegistration } from "@/components/fcm-registration";
@@ -24,7 +25,9 @@ export function Providers({ children, session }: { children: React.ReactNode; se
           <MotionConfig reducedMotion="user">
             <ToastProvider>
               <CartProvider>
-                {children}
+                <FlyToCartProvider>
+                  {children}
+                </FlyToCartProvider>
                 <ProfileSync />
                 <ServiceWorkerRegister />
                 <PushNotificationManager />

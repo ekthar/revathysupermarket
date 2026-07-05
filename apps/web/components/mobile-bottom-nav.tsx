@@ -80,7 +80,9 @@ export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: S
 function CartNavTab({ href, active, onSelect, onPrefetch }: { href: string; active: boolean; onSelect: (href: string) => void; onPrefetch?: () => void }) {
   const totalItems = useCartItemCount();
   return (
-    <NavTab href={href} icon={ShoppingBag} label="Cart" active={active} badge={totalItems} onSelect={onSelect} onPrefetch={onPrefetch} />
+    <div data-cart-icon>
+      <NavTab href={href} icon={ShoppingBag} label="Cart" active={active} badge={totalItems} onSelect={onSelect} onPrefetch={onPrefetch} />
+    </div>
   );
 }
 

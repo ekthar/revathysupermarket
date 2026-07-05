@@ -3,14 +3,16 @@
 import Link from "next/link";
 import { Clock, Minus, Plus, Star } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useRef } from "react";
 import { useCartItem, useCartActions } from "@/components/cart/cart-provider";
+import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "@/components/product-image";
 import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
-import { FavoriteButton } from "@/components/favorite-button";
+import { FavoriteButton, type FavoriteButtonHandle } from "@/components/favorite-button";
+import { DoubleTapHeart } from "@/components/ui/double-tap-heart";
 import { tapScale, springPresets } from "@/lib/motion";
 import { useRoutePreload } from "@/lib/hooks/use-preload";
 
@@ -28,6 +30,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   
   // Preload product detail page on hover/touch intent
   const preload = useRoutePreload(productHref);
+  const favoriteBtnRef = useRef<FavoriteButtonHandle>(null);
 
   // Horizontal list layout
   if (horizontal) {
@@ -91,42 +94,44 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       )}
     >
       <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
-        <div className={cn(
-          "relative bg-neutral-50 overflow-hidden",
-          compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
-        )}>
-          <motion.div
-            whileHover={{ scale: 1.08 }}
-            transition={{ duration: 0.4, ease: "easeOut" }}
-            className="h-full w-full"
-          >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" />
-          </motion.div>
-          {product.isFeatured && (
-            <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-1 text-micro font-black text-white shadow-md z-10">
-              <Star className="h-2.5 w-2.5 fill-white" />
-              Featured
-            </span>
-          )}
-          {product.discountPrice && (
-            <span className={cn(
-              "absolute top-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md",
-              product.isFeatured ? "left-auto right-2" : "left-2"
-            )}>
-              <Clock className="h-2.5 w-2.5" />
-              {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
-            </span>
-          )}
-          {outOfStock && (
-            <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
-              <span className="bg-neutral-900/90 text-white text-micro font-semibold px-2.5 py-1 rounded-full">Sold out</span>
+        <DoubleTapHeart onDoubleTap={() => favoriteBtnRef.current?.toggle()}>
+          <div className={cn(
+            "relative bg-neutral-50 overflow-hidden",
+            compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
+          )}>
+            <motion.div
+              whileHover={{ scale: 1.08 }}
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="h-full w-full"
+            >
+              <ProductImage src={product.image} alt={product.name} className="object-cover" />
+            </motion.div>
+            {product.isFeatured && (
+              <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-1 text-micro font-black text-white shadow-md z-10">
+                <Star className="h-2.5 w-2.5 fill-white" />
+                Featured
+              </span>
+            )}
+            {product.discountPrice && (
+              <span className={cn(
+                "absolute top-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md",
+                product.isFeatured ? "left-auto right-2" : "left-2"
+              )}>
+                <Clock className="h-2.5 w-2.5" />
+                {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
+              </span>
+            )}
+            {outOfStock && (
+              <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
+                <span className="bg-neutral-900/90 text-white text-micro font-semibold px-2.5 py-1 rounded-full">Sold out</span>
+              </div>
+            )}
+            {/* Favorite button */}
+            <div className="absolute top-2 right-2 z-10">
+              <FavoriteButton ref={favoriteBtnRef} productId={product.id} size="sm" />
             </div>
-          )}
-          {/* Favorite button */}
-          <div className="absolute top-2 right-2 z-10">
-            <FavoriteButton productId={product.id} size="sm" />
           </div>
-        </div>
+        </DoubleTapHeart>
       </Link>
 
       <div className={cn("p-3", compact && "p-2.5")}>
@@ -169,8 +174,9 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
   const cartItem = useCartItem(product.id);
   const { addItem, updateQuantity } = useCartActions();
   const { showToast } = useToast();
+  const { flyToCart } = useFlyToCart();
 
-  const handleAdd = useCallback(() => {
+  const handleAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (outOfStock) return;
     addItem(product);
     // Haptic feedback on mobile - non-blocking
@@ -178,7 +184,8 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
       navigator.vibrate(10);
     }
     showToast(`Added ${product.name}`, "success");
-  }, [outOfStock, addItem, product, showToast]);
+    flyToCart(product.image, e.currentTarget);
+  }, [outOfStock, addItem, product, showToast, flyToCart]);
 
   const handleIncrement = useCallback(() => {
     if (cartItem) updateQuantity(product.id, cartItem.quantity + 1);

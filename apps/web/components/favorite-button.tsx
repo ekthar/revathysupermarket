@@ -2,7 +2,7 @@
 
 import { Heart } from "lucide-react";
 import { motion } from "framer-motion";
-import { memo, useCallback, useState, useTransition } from "react";
+import { forwardRef, memo, useCallback, useImperativeHandle, useState, useTransition } from "react";
 import { cn } from "@/lib/utils";
 import { useToggleFavorite } from "@/lib/queries/favorites";
 
@@ -13,16 +13,17 @@ interface FavoriteButtonProps {
   size?: "sm" | "md";
 }
 
+export type FavoriteButtonHandle = {
+  toggle: () => void;
+};
+
 // Memoized to prevent re-renders when parent ProductCard re-renders
-export const FavoriteButton = memo(function FavoriteButton({ productId, initialFavorited = false, className, size = "sm" }: FavoriteButtonProps) {
+export const FavoriteButton = memo(forwardRef<FavoriteButtonHandle, FavoriteButtonProps>(function FavoriteButton({ productId, initialFavorited = false, className, size = "sm" }, ref) {
   const [isFavorited, setIsFavorited] = useState(initialFavorited);
   const [isPending, startTransition] = useTransition();
   const toggleFavoriteMutation = useToggleFavorite();
 
-  const toggleFavorite = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const toggle = useCallback(() => {
     const newState = !isFavorited;
     setIsFavorited(newState);
 
@@ -43,6 +44,14 @@ export const FavoriteButton = memo(function FavoriteButton({ productId, initialF
     });
   }, [isFavorited, productId, toggleFavoriteMutation, startTransition]);
 
+  useImperativeHandle(ref, () => ({ toggle }), [toggle]);
+
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle();
+  }, [toggle]);
+
   const sizeClasses = size === "sm"
     ? "h-7 w-7"
     : "h-9 w-9";
@@ -52,7 +61,7 @@ export const FavoriteButton = memo(function FavoriteButton({ productId, initialF
   return (
     <motion.button
       type="button"
-      onClick={toggleFavorite}
+      onClick={handleClick}
       whileTap={{ scale: 0.8 }}
       className={cn(
         "flex items-center justify-center rounded-full transition-all press gpu-accelerated",
@@ -76,4 +85,4 @@ export const FavoriteButton = memo(function FavoriteButton({ productId, initialF
       />
     </motion.button>
   );
-});
+}));

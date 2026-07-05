@@ -200,7 +200,7 @@ export const Header = memo(function Header({
 function CartBadgeLink() {
   const totalItems = useCartItemCount();
   return (
-    <Link href="/cart" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}>
+    <Link href="/cart" data-cart-icon className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}>
       <ShoppingBag className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
       {totalItems > 0 && (
         <motion.span

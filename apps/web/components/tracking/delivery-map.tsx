@@ -64,6 +64,7 @@ export function DeliveryMap({
   
   const prevRiderPosRef = useRef<{ lng: number; lat: number } | null>(null);
   const animFrameRef = useRef<number | null>(null);
+  const isRiderFirstAppearance = useRef(true);
   const routeAbortRef = useRef<AbortController | null>(null);
   const lastRoutedAtRef = useRef<{ lng: number; lat: number } | null>(null);
   const [distanceRemaining, setDistanceRemaining] = useState<number | null>(null);
@@ -106,14 +107,14 @@ export function DeliveryMap({
   }, []);
 
   // Helper to create rider marker HTML content
-  const createRiderMarkerHtml = useCallback((eta: number | null, heading: number = 0) => {
+  const createRiderMarkerHtml = useCallback((eta: number | null, heading: number = 0, animateIn: boolean = false) => {
     const etaBadgeHtml = eta != null && eta > 0
       ? `<div class="rider-eta-badge" style="position:absolute;top:-26px;left:50%;transform:translateX(-50%);background:white;color:${BRAND_GREEN_MUTED};font-size:11px;font-weight:800;padding:2px 9px;border-radius:10px;white-space:nowrap;border:1px solid ${BRAND_GREEN}44;box-shadow:0 2px 8px rgba(34,197,94,0.2);z-index:10;">${eta} min</div>`
       : "";
 
-    return `<div class="delivery-rider-marker" style="width: 52px; height: 52px; position: relative; cursor: pointer;">
+    return `<div class="delivery-rider-marker${animateIn ? ' rider-drop-in' : ''}" style="width: 52px; height: 52px; position: relative; cursor: pointer;">
       ${etaBadgeHtml}
-      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;border-radius:50%;border:2px solid ${BRAND_GREEN};box-shadow:0 0 12px ${BRAND_GREEN}66;animation:rider-pulse 1.8s ease-out infinite;pointer-events:none;z-index:0;"></div>
+      <div class="map-pulse-ring" style="position:absolute;top:50%;left:50%;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:2px solid ${BRAND_GREEN};box-shadow:0 0 12px ${BRAND_GREEN}66;pointer-events:none;z-index:0;"></div>
       <div class="rider-rotation-wrapper" style="width: 100%; height: 100%; transition: transform 0.3s ease; position: relative; z-index: 1; transform: rotate(${heading}deg);">
         <svg viewBox="0 0 52 52" width="52" height="52" xmlns="http://www.w3.org/2000/svg">
           <defs>
@@ -253,7 +254,7 @@ export function DeliveryMap({
     const heading = deliveryPartnerLocation?.heading ?? 0;
     
     const riderIcon = L.divIcon({
-      html: createRiderMarkerHtml(etaMinutesProp ?? null, heading),
+      html: createRiderMarkerHtml(etaMinutesProp ?? null, heading, false),
       className: "",
       iconSize: [52, 52],
       iconAnchor: [26, 26],
@@ -293,7 +294,7 @@ export function DeliveryMap({
 
       if (riderMarkerRef.current) {
         const riderIcon = L.divIcon({
-          html: createRiderMarkerHtml(etaMinutesProp ?? null, heading ?? 0),
+          html: createRiderMarkerHtml(etaMinutesProp ?? null, heading ?? 0, false),
           className: "",
           iconSize: [52, 52],
           iconAnchor: [26, 26],
@@ -317,6 +318,7 @@ export function DeliveryMap({
         riderMarkerRef.current.remove();
         riderMarkerRef.current = null;
         prevRiderPosRef.current = null;
+        isRiderFirstAppearance.current = true;
       }
       lastRoutedAtRef.current = null;
       
@@ -390,13 +392,14 @@ export function DeliveryMap({
 
     if (!riderMarkerRef.current) {
       const riderIcon = L.divIcon({
-        html: createRiderMarkerHtml(etaMinutesProp ?? null, deliveryPartnerLocation.heading ?? 0),
+        html: createRiderMarkerHtml(etaMinutesProp ?? null, deliveryPartnerLocation.heading ?? 0, true),
         className: "",
         iconSize: [52, 52],
         iconAnchor: [26, 26],
       });
       riderMarkerRef.current = L.marker([newPos.lat, newPos.lng], { icon: riderIcon }).addTo(map);
       prevRiderPosRef.current = newPos;
+      isRiderFirstAppearance.current = false;
 
       const bounds = L.latLngBounds([
         [customerLocation.latitude, customerLocation.longitude],

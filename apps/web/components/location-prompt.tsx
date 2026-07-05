@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { MapPin, MapPinned, Navigation, X, AlertTriangle, Clock } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import { springs } from "@/lib/motion";
 import { calculateDistanceKm } from "@/lib/distance";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
 
@@ -217,7 +218,7 @@ export function LocationPrompt({ forceOpen = false, onClose }: { forceOpen?: boo
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 30 }}
+          transition={springs.gentle}
           className="w-full max-w-md bg-white dark:bg-neutral-900 rounded-t-3xl md:rounded-3xl p-6 pb-[calc(1.5rem+5rem)] md:pb-6 relative max-h-[85vh] overflow-y-auto"
         >
           {/* Close button (only if location already saved) */}

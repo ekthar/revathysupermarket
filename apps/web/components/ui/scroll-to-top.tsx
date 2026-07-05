@@ -4,6 +4,7 @@ import { ArrowUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
+import { springs } from "@/lib/motion";
 
 export function ScrollToTop() {
   const [show, setShow] = useState(false);
@@ -40,7 +41,7 @@ export function ScrollToTop() {
           initial={{ opacity: 0, scale: 0.8, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          transition={springs.enter}
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           className="fixed bottom-[calc(7.25rem+var(--safe-bottom))] right-[max(1rem,var(--safe-right))] z-50 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-lg press dark:border-slate-700 dark:bg-slate-800 md:bottom-8 md:right-8"

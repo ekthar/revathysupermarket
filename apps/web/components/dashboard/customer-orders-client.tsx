@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, Star, XCircle } from "lucide-react";
 import { useToast } from "@/components/toast-provider";
 import { AnimatePresence, motion } from "framer-motion";
+import { springs } from "@/lib/motion";
 import { orderStatuses, statusLabels } from "@/lib/constants";
 import { calculateDistanceKm } from "@/lib/distance";
 import { readApiResponse } from "@/lib/client-api";
@@ -366,7 +367,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                           {customerTimelineStatuses.map((status, index) => (
                             <motion.div
                               key={status}
-                              variants={{ hidden: { opacity: 0, scale: 0.7 }, visible: { opacity: 1, scale: 1, transition: { type: "spring", stiffness: 400, damping: 20 } } }}
+                              variants={{ hidden: { opacity: 0, scale: 0.7 }, visible: { opacity: 1, scale: 1, transition: springs.snappy } }}
                               className="flex items-center"
                             >
                               <div className={cn(

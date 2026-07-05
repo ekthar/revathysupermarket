@@ -5,7 +5,7 @@ import Image from "next/image";
 import { ChevronUp, Clock, Sparkles } from "lucide-react";
 import { motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import { springs } from "@/lib/motion";
+import { springs, durations, easings } from "@/lib/motion";
 
 export function HeroSection({
   storeName,
@@ -134,7 +134,7 @@ export function HeroSection({
               >
                 <motion.div
                   animate={{ y: [-4, 4, -4] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 3, repeat: Infinity, ease: easings.easeInOut }}
                   className="bg-white dark:bg-neutral-900 rounded-2xl p-3 shadow-lg max-w-[160px]"
                 >
                   <Image
@@ -158,7 +158,7 @@ export function HeroSection({
               >
                 <motion.div
                   animate={{ y: [3, -3, 3], rotate: [-1, 1, -1] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 4, repeat: Infinity, ease: easings.easeInOut }}
                   className="bg-gradient-to-r from-primary to-primary/80 text-white rounded-full px-4 py-2 text-caption font-bold shadow-premium flex items-center gap-1.5"
                 >
                   <Sparkles className="h-3.5 w-3.5" />
@@ -175,7 +175,7 @@ export function HeroSection({
               >
                 <motion.div
                   animate={{ scale: [1, 1.05, 1] }}
-                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  transition={{ duration: 2, repeat: Infinity, ease: easings.easeInOut }}
                   className="bg-red-500 text-white rounded-xl px-3 py-1.5 text-caption font-black shadow-lg flex items-center gap-1"
                 >
                   <span className="text-lg">🔥</span>
@@ -205,7 +205,7 @@ export function HeroSection({
           <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3, duration: 0.5 }}
+            transition={{ delay: 0.3, duration: durations.slow }}
             className="absolute bottom-0 left-0 right-0 p-4"
           >
             <span className="inline-block text-micro font-semibold text-white/90 bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5 mb-1.5">

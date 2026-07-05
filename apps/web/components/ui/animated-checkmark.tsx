@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { springs } from "@/lib/motion";
 
 // Animated SVG checkmark with path draw animation
 export function AnimatedCheckmark({
@@ -50,7 +51,7 @@ export function AnimatedCheckmark({
     <motion.div
       initial={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ delay: delay * 0.5, type: "spring", stiffness: 200, damping: 15 }}
+      transition={{ ...springs.enter, delay: delay * 0.5 }}
     >
       <svg
         width={size}
@@ -67,7 +68,7 @@ export function AnimatedCheckmark({
           fill="#1a1a1a"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
-          transition={{ delay: delay * 0.3, type: "spring", stiffness: 300, damping: 20 }}
+          transition={{ ...springs.enter, delay: delay * 0.3 }}
         />
 
         {/* Animated circle border */}

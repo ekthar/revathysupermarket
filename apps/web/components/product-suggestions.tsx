@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { motion } from "framer-motion";
 import { Plus, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { springs, tapScale } from "@/lib/motion";
 import { formatCurrency } from "@/lib/utils";
 import { useCartActions } from "@/components/cart/cart-provider";
 import { useToast } from "@/components/toast-provider";
@@ -105,7 +106,7 @@ export function ProductSuggestions({
             key={product.id}
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: i * 0.05 }}
+            transition={{ ...springs.enter, delay: i * 0.05 }}
             className="flex-shrink-0 w-[150px] snap-start"
           >
             <div className="rounded-xl bg-white overflow-hidden shadow-elevation-2 dark:bg-neutral-900 h-full flex flex-col">
@@ -139,7 +140,7 @@ export function ProductSuggestions({
                     )}
                   </div>
                   <motion.button
-                    whileTap={{ scale: 0.85 }}
+                    whileTap={tapScale.subtle}
                     type="button"
                     onClick={() => handleAdd(product)}
                     disabled={product.stock <= 0}

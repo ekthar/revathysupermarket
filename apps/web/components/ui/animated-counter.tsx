@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useInView } from "framer-motion";
+import { durations } from "@/lib/motion";
 
 interface AnimatedCounterProps {
   value: number;
@@ -54,7 +55,7 @@ export function AnimatedCounter({
       ref={ref}
       initial={{ opacity: 0, y: 10 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.3 }}
+      transition={{ duration: durations.normal }}
       className={className}
     >
       {prefix}{decimals > 0 ? displayValue.toFixed(decimals) : displayValue}{suffix}

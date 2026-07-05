@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Heart, Minus, Plus, Share2, ShoppingBag, Star, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
+import { springs, tapScale } from "@/lib/motion";
 import { useStoreConfig } from "@/lib/use-store-config";
 import { formatCurrency } from "@/lib/utils";
 import { useCart } from "@/components/cart/cart-provider";
@@ -56,7 +57,8 @@ export function ProductDetailClient({ product }: { product: Product }) {
             </button>
             <motion.button
               onClick={() => setLiked(!liked)}
-              whileTap={{ scale: 0.8 }}
+              whileTap={tapScale.subtle}
+              transition={springs.tap}
               className="flex h-10 w-10 items-center justify-center rounded-full bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm shadow-sm press"
             >
               <Heart className={`h-4 w-4 ${liked ? "fill-red-500 text-red-500" : "text-slate-700 dark:text-white"}`} />
@@ -69,7 +71,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           <motion.div
             initial={{ scale: 1.05, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.5 }}
+            transition={springs.enter}
             className="h-full w-full"
           >
             <ProductImage src={product.image} alt={product.name} className="object-cover" />
@@ -109,7 +111,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
           <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
+            transition={{ ...springs.enter, delay: 0.1 }}
           >
             <span className="text-caption font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">{product.category}</span>
             <h1 className="mt-4 font-display text-3xl lg:text-4xl font-black text-slate-900 dark:text-white">{product.name}</h1>
@@ -157,6 +159,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                     key="qty"
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
+                    transition={springs.enter}
                     className="flex items-center gap-4"
                   >
                     <div className="flex items-center h-12 rounded-full bg-primary overflow-hidden">
@@ -167,6 +170,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                         key={cartItem.quantity}
                         initial={{ scale: 1.3 }}
                         animate={{ scale: 1 }}
+                        transition={springs.tap}
                         className="w-8 text-center text-title font-bold text-white"
                       >
                         {cartItem.quantity}
@@ -184,7 +188,8 @@ export function ProductDetailClient({ product }: { product: Product }) {
                     key="add"
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    whileTap={{ scale: 0.95 }}
+                    transition={springs.enter}
+                    whileTap={tapScale.subtle}
                     onClick={handleAdd}
                     disabled={outOfStock}
                     className="flex items-center justify-center gap-2 h-12 px-8 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-body disabled:opacity-40 press shadow-lg"
@@ -201,7 +206,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
       {/* Mobile: Product info below image */}
       <div className="md:hidden px-4 pt-5 pb-4">
-        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
+        <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springs.enter, delay: 0.1 }}>
           <span className="text-caption font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{product.category}</span>
           <h1 className="mt-3 text-2xl font-black text-slate-900 dark:text-white">{product.name}</h1>
 
@@ -241,13 +246,14 @@ export function ProductDetailClient({ product }: { product: Product }) {
               key="qty-mobile"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
+              transition={springs.enter}
               className="flex items-center justify-between"
             >
               <div className="flex items-center h-11 rounded-full bg-primary overflow-hidden">
                 <button onClick={() => updateQuantity(product.id, cartItem.quantity - 1)} className="w-10 h-full flex items-center justify-center text-white">
                   <Minus className="h-3.5 w-3.5" />
                 </button>
-                <motion.span key={cartItem.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} className="w-7 text-center text-body font-bold text-white">
+                <motion.span key={cartItem.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} transition={springs.tap} className="w-7 text-center text-body font-bold text-white">
                   {cartItem.quantity}
                 </motion.span>
                 <button onClick={() => updateQuantity(product.id, cartItem.quantity + 1)} className="w-10 h-full flex items-center justify-center text-white">
@@ -263,7 +269,8 @@ export function ProductDetailClient({ product }: { product: Product }) {
               key="add-mobile"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              whileTap={{ scale: 0.97 }}
+              transition={springs.enter}
+              whileTap={tapScale.primary}
               onClick={handleAdd}
               disabled={outOfStock}
               className="flex items-center justify-center gap-2 h-12 w-full rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-body disabled:opacity-40 press shadow-lg"

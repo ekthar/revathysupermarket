@@ -3,6 +3,7 @@
 import { motion } from "framer-motion";
 import { Package, Search, ShoppingBag } from "lucide-react";
 import Link from "next/link";
+import { springs } from "@/lib/motion";
 
 // Empty cart illustration
 export function EmptyCartState() {
@@ -11,7 +12,7 @@ export function EmptyCartState() {
       <motion.div
         initial={{ scale: 0, rotate: -10 }}
         animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        transition={springs.enter}
         className="relative"
       >
         <div className="h-24 w-24 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
@@ -54,7 +55,7 @@ export function EmptyOrdersState() {
       <motion.div
         initial={{ scale: 0 }}
         animate={{ scale: 1 }}
-        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        transition={springs.enter}
         className="relative"
       >
         <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
@@ -87,7 +88,7 @@ export function EmptySearchState({ query }: { query?: string }) {
       <motion.div
         initial={{ scale: 0, rotate: 10 }}
         animate={{ scale: 1, rotate: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 15 }}
+        transition={springs.enter}
         className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center"
       >
         <Search className="h-9 w-9 text-slate-300 dark:text-slate-600" aria-hidden="true" />

@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { springs, easings } from "@/lib/motion";
 
 /**
  * Animated Google "G" logo with staggered color segment reveal + subtle pulse.
@@ -13,7 +14,7 @@ export function AnimatedGoogleIcon({ size = 48, className = "" }: { size?: numbe
       className={className}
       initial={{ scale: 0.5, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      transition={{ type: "spring", stiffness: 200, damping: 14, delay: 0.2 }}
+      transition={{ ...springs.enter, delay: 0.2 }}
     >
       <motion.svg
         width={size}
@@ -22,7 +23,7 @@ export function AnimatedGoogleIcon({ size = 48, className = "" }: { size?: numbe
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         animate={{ rotate: [0, 0, 360, 360] }}
-        transition={{ duration: 2.5, times: [0, 0.3, 0.7, 1], ease: "easeInOut", delay: 0.5, repeat: 0 }}
+        transition={{ duration: 2.5, times: [0, 0.3, 0.7, 1], ease: easings.easeInOut, delay: 0.5, repeat: 0 }}
       >
         {/* Blue segment (right) */}
         <motion.path
@@ -30,7 +31,7 @@ export function AnimatedGoogleIcon({ size = 48, className = "" }: { size?: numbe
           fill="#FFC107"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.3, ease: "easeOut" }}
+          transition={{ duration: 0.6, delay: 0.3, ease: easings.easeOutQuart }}
         />
         {/* Red segment (top-left) */}
         <motion.path
@@ -38,7 +39,7 @@ export function AnimatedGoogleIcon({ size = 48, className = "" }: { size?: numbe
           fill="#FF3D00"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.5, ease: easings.easeOutQuart }}
         />
         {/* Green segment (bottom-left) */}
         <motion.path
@@ -46,7 +47,7 @@ export function AnimatedGoogleIcon({ size = 48, className = "" }: { size?: numbe
           fill="#4CAF50"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.7, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.7, ease: easings.easeOutQuart }}
         />
         {/* Blue segment (right side) */}
         <motion.path
@@ -54,7 +55,7 @@ export function AnimatedGoogleIcon({ size = 48, className = "" }: { size?: numbe
           fill="#1976D2"
           initial={{ pathLength: 0, opacity: 0 }}
           animate={{ pathLength: 1, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.9, ease: "easeOut" }}
+          transition={{ duration: 0.5, delay: 0.9, ease: easings.easeOutQuart }}
         />
       </motion.svg>
     </motion.div>

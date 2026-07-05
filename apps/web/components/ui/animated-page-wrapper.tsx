@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import type { ReactNode } from "react";
+import { springs } from "@/lib/motion";
 
 interface AnimatedPageWrapperProps {
   children: ReactNode;
@@ -24,12 +25,7 @@ export function AnimatedPageWrapper({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        type: "spring",
-        stiffness: 260,
-        damping: 25,
-        delay,
-      }}
+      transition={{ ...springs.enter, delay }}
       className={className}
     >
       {children}
@@ -85,11 +81,7 @@ export function StaggeredItem({
         visible: {
           opacity: 1,
           y: 0,
-          transition: {
-            type: "spring",
-            stiffness: 260,
-            damping: 25,
-          },
+          transition: springs.enter,
         },
       }}
       className={className}

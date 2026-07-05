@@ -2,6 +2,7 @@
 
 import { forwardRef } from "react";
 import { motion, type HTMLMotionProps } from "framer-motion";
+import { springs } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 type HapticButtonProps = HTMLMotionProps<"button"> & {
@@ -36,12 +37,7 @@ export const HapticButton = forwardRef<HTMLButtonElement, HapticButtonProps>(
       <motion.button
         ref={ref}
         whileTap={{ scale: pressScale }}
-        transition={{
-          type: "spring",
-          stiffness: 500,
-          damping: 30,
-          mass: 0.8,
-        }}
+        transition={springs.snappy}
         onTapStart={(event, info) => {
           triggerHaptic();
           onTapStart?.(event, info);

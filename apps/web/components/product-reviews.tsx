@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Star, Send, ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "next-auth/react";
+import { springs, tapScale } from "@/lib/motion";
 import { useToast } from "@/components/toast-provider";
 
 type ReviewUser = { id: string; name: string | null; image: string | null };
@@ -184,7 +185,7 @@ export function ProductReviews({
           </div>
           {session?.user && (
             <motion.button
-              whileTap={{ scale: 0.95 }}
+              whileTap={tapScale.subtle}
               onClick={() => setShowForm(!showForm)}
               className="self-start rounded-full bg-black px-4 py-2 text-caption font-bold text-white hover:bg-neutral-800 transition-colors dark:bg-white dark:text-black dark:hover:bg-neutral-100"
             >
@@ -200,7 +201,7 @@ export function ProductReviews({
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+              transition={springs.gentle}
               className="overflow-hidden"
               onSubmit={handleSubmit}
             >
@@ -231,7 +232,7 @@ export function ProductReviews({
                     Cancel
                   </button>
                   <motion.button
-                    whileTap={{ scale: 0.95 }}
+                    whileTap={tapScale.subtle}
                     type="submit"
                     disabled={submitting}
                     className="flex items-center gap-1.5 rounded-full bg-black px-4 py-2 text-caption font-bold text-white hover:bg-neutral-800 disabled:opacity-50 transition-colors dark:bg-white dark:text-black dark:hover:bg-neutral-100"
@@ -253,6 +254,7 @@ export function ProductReviews({
                 key={review.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
+                transition={springs.enter}
                 className="py-4 first:pt-0"
               >
                 <div className="flex items-center gap-3">

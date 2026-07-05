@@ -2,6 +2,7 @@
 
 import { Smartphone, Wallet, Check } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { springs, tapScale } from "@/lib/motion";
 import { formatCurrency } from "@/lib/utils";
 
 interface PaymentMethodSelectorProps {
@@ -27,7 +28,7 @@ export function PaymentMethodSelector({
     <motion.section
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.1 }}
+      transition={{ ...springs.enter, delay: 0.1 }}
       className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900"
     >
       <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Payment Method</h2>
@@ -106,7 +107,7 @@ function PaymentMethodCard({
     <motion.button
       type="button"
       onClick={onClick}
-      whileTap={{ scale: 0.97 }}
+      whileTap={tapScale.primary}
       animate={active ? { borderColor: "rgba(5,5,5,1)" } : { borderColor: "rgba(241,245,249,1)" }}
       className={`w-full flex items-center gap-3 rounded-2xl p-4 text-left border-2 transition-colors ${
         active ? "bg-black/[0.03] dark:bg-white/5" : "hover:border-neutral-200 dark:hover:border-neutral-700"
@@ -135,7 +136,7 @@ function PaymentMethodCard({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               exit={{ scale: 0 }}
-              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              transition={springs.snappy}
             >
               <Check className="h-3 w-3 text-white" />
             </motion.div>

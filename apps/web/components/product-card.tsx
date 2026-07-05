@@ -13,7 +13,7 @@ import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
 import { FavoriteButton, type FavoriteButtonHandle } from "@/components/favorite-button";
 import { DoubleTapHeart } from "@/components/ui/double-tap-heart";
-import { tapScale, springPresets } from "@/lib/motion";
+import { tapScale, springs, durations, easings } from "@/lib/motion";
 import { useRoutePreload } from "@/lib/hooks/use-preload";
 
 interface ProductCardProps {
@@ -36,9 +36,9 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   if (horizontal) {
     return (
       <motion.article
-        whileTap={{ scale: 0.98 }}
+        whileTap={tapScale.gentle}
         whileHover={{ y: -2 }}
-        transition={springPresets.snappy}
+        transition={springs.snappy}
         className={cn(
           "product-list-card hover-lift",
           outOfStock && "opacity-50"
@@ -85,9 +85,9 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   // Grid / Compact card layout
   return (
     <motion.article
-      whileTap={{ scale: 0.96 }}
+      whileTap={tapScale.subtle}
       whileHover={{ y: -3 }}
-      transition={springPresets.snappy}
+      transition={springs.snappy}
       className={cn(
         "relative overflow-hidden rounded-lg bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated",
         outOfStock && "opacity-50"
@@ -101,7 +101,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
           )}>
             <motion.div
               whileHover={{ scale: 1.08 }}
-              transition={{ duration: 0.4, ease: "easeOut" }}
+              transition={{ duration: durations.slow, ease: easings.easeOutQuart }}
               className="h-full w-full"
             >
               <ProductImage src={product.image} alt={product.name} className="object-cover" />
@@ -212,7 +212,7 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.8, opacity: 0 }}
           whileTap={tapScale.primary}
-          transition={{ type: "spring", stiffness: 400, damping: 20 }}
+          transition={springs.snappy}
           type="button"
           disabled={outOfStock}
           onClick={handleAdd}
@@ -248,13 +248,14 @@ const QuantityStepper = memo(function QuantityStepper({
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 400, damping: 20 }}
+        transition={springs.snappy}
         className="flex flex-col items-center h-[72px] w-[32px] rounded-full bg-black overflow-hidden shadow-sm"
       >
         <motion.button
           type="button"
           onClick={onIncrement}
           whileTap={{ scale: 1.3 }}
+          transition={springs.tap}
           aria-label="Increase quantity"
           className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
@@ -264,7 +265,7 @@ const QuantityStepper = memo(function QuantityStepper({
           key={quantity}
           initial={{ scale: 1.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: "spring", stiffness: 500, damping: 15 }}
+          transition={springs.tap}
           className="text-caption font-bold text-white"
           aria-label={`Quantity: ${quantity}`}
         >
@@ -274,6 +275,7 @@ const QuantityStepper = memo(function QuantityStepper({
           type="button"
           onClick={onDecrement}
           whileTap={{ scale: 1.3 }}
+          transition={springs.tap}
           aria-label="Decrease quantity"
           className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
@@ -288,13 +290,14 @@ const QuantityStepper = memo(function QuantityStepper({
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
-      transition={{ type: "spring", stiffness: 400, damping: 20 }}
+      transition={springs.snappy}
       className="flex h-[36px] items-center overflow-hidden rounded-full bg-black shadow-sm"
     >
       <motion.button
         type="button"
         onClick={onDecrement}
         whileTap={{ scale: 1.4 }}
+        transition={springs.tap}
         aria-label="Decrease quantity"
         className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
@@ -304,7 +307,7 @@ const QuantityStepper = memo(function QuantityStepper({
         key={quantity}
         initial={{ scale: 1.5, opacity: 0, y: -5 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 500, damping: 15 }}
+        transition={springs.tap}
         className="w-6 text-center text-caption font-bold text-white"
         aria-label={`Quantity: ${quantity}`}
       >
@@ -314,6 +317,7 @@ const QuantityStepper = memo(function QuantityStepper({
         type="button"
         onClick={onIncrement}
         whileTap={{ scale: 1.4 }}
+        transition={springs.tap}
         aria-label="Increase quantity"
         className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >

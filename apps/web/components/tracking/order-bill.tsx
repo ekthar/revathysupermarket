@@ -2,6 +2,7 @@
 
 import { Receipt, Printer } from "lucide-react";
 import { motion } from "framer-motion";
+import { springs } from "@/lib/motion";
 
 type OrderBillItem = {
   name: string;
@@ -51,7 +52,7 @@ export function OrderBill({
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.5, type: "spring", stiffness: 240, damping: 24 }}
+      transition={{ ...springs.enter, delay: 0.5 }}
       className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900 print:shadow-none print:border print:border-neutral-200"
     >
       {/* Header */}

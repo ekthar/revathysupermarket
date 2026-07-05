@@ -4,6 +4,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import { springs } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -51,7 +52,7 @@ export function ThemeToggleIcon() {
       <motion.div
         initial={false}
         animate={{ rotate: mounted && isDark ? 180 : 0, scale: mounted && isDark ? 0.8 : 1 }}
-        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        transition={springs.enter}
       >
         {/* Show the target state you'd switch TO, matching ThemeToggle:
             in dark mode show the Sun (switch to light), in light mode the Moon. */}

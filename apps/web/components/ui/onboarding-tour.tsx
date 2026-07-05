@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowRight, Search, ShoppingBag, Sparkles, X } from "lucide-react";
+import { springs, tapScale, durations } from "@/lib/motion";
 import { lockDocumentScroll } from "@/lib/document-scroll-lock";
 
 const STORAGE_KEY = "msm-onboarding-done";
@@ -111,7 +112,7 @@ export function OnboardingTour() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -20, scale: 0.95 }}
-            transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            transition={springs.enter}
             className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-3xl p-6 shadow-2xl relative"
           >
             {/* Close button */}
@@ -129,7 +130,7 @@ export function OnboardingTour() {
               <motion.div
                 className="h-full rounded-full bg-primary"
                 animate={{ width: `${progress}%` }}
-                transition={{ duration: 0.3 }}
+                transition={{ duration: durations.normal }}
               />
             </div>
 
@@ -137,7 +138,7 @@ export function OnboardingTour() {
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 300, delay: 0.1 }}
+              transition={{ ...springs.enter, delay: 0.1 }}
               className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-4"
             >
               {currentStep.icon}
@@ -161,7 +162,7 @@ export function OnboardingTour() {
               </button>
 
               <motion.button
-                whileTap={{ scale: 0.95 }}
+                whileTap={tapScale.subtle}
                 onClick={next}
                 className="flex items-center gap-2 h-11 px-6 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-body font-bold press"
               >

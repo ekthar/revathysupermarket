@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
-import { springPresets } from "@/lib/motion";
+import { springs, tapScale } from "@/lib/motion";
 import { ExpressCheckout } from "@/components/cart/express-checkout";
 import { useTranslations } from "next-intl";
 
@@ -272,7 +272,7 @@ export function CartPageClient() {
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: removingId === item.id ? 0 : 1, x: 0 }}
                 exit={{ opacity: 0, x: -8 }}
-                transition={{ duration: 0.2 }}
+                transition={springs.layout}
                 className="px-4 py-3"
               >
                 <div className="flex items-center gap-3">
@@ -412,7 +412,7 @@ export function CartPageClient() {
 
       {/* Fixed bottom checkout button */}
       <div className="ios-floating-action md:relative md:bottom-0 md:left-auto md:right-auto md:mt-5 md:p-0">
-        <motion.div whileTap={{ scale: 0.96 }} transition={springPresets.default}>
+        <motion.div whileTap={tapScale.subtle} transition={springs.enter}>
           <Link
             href={belowMinimum ? "#" : "/checkout"}
             onClick={(e) => { if (belowMinimum) e.preventDefault(); }}

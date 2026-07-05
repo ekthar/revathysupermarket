@@ -2,7 +2,7 @@
 
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useRef } from "react";
-import { springs, stagger } from "@/lib/motion";
+import { springs, stagger, easings } from "@/lib/motion";
 
 // Staggered container - children animate in one by one
 export function StaggerContainer({
@@ -145,7 +145,7 @@ export function FloatingElement({
         duration,
         repeat: Infinity,
         repeatType: "loop",
-        ease: "easeInOut"
+        ease: easings.easeInOut
       }}
     >
       {children}

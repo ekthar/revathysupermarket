@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, Bike, CreditCard, Search } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
+import { durations } from "@/lib/motion";
 import { Button } from "@/components/ui/button";
 
 type HomeHeroProps = {
@@ -30,7 +31,7 @@ export function HomeHero({ title, subtitle, href, image, deliveryRadiusKm }: Hom
         <motion.div
           initial={reduceMotion ? false : { opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
+          transition={{ duration: durations.normal }}
           className="max-w-lg"
         >
           {/* Delivery badge */}

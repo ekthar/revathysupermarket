@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, Clock, Tag, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import { springs, tapScale } from "@/lib/motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { calculateDistanceKm } from "@/lib/distance";
 import { SITE } from "@/lib/constants";
@@ -469,7 +470,7 @@ export function CheckoutForm({
               initial={{ scale: 0.85, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.85, opacity: 0, y: 20 }}
-              transition={{ type: "spring", stiffness: 300, damping: 22 }}
+              transition={springs.enter}
               className="success-modal"
             >
               <div className="flex justify-center">
@@ -480,12 +481,12 @@ export function CheckoutForm({
                 We&apos;re preparing your order. See updates in My Orders.
               </p>
               <div className="mt-6 grid gap-3">
-                <motion.div whileTap={{ scale: 0.97 }}>
+                <motion.div whileTap={tapScale.primary}>
                   <Link href="/" className="flex h-[48px] items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white">
                     Go Home
                   </Link>
                 </motion.div>
-                <motion.div whileTap={{ scale: 0.97 }}>
+                <motion.div whileTap={tapScale.primary}>
                   <Link href="/dashboard" className="flex h-[48px] items-center justify-center rounded-full border-2 border-neutral-200 text-sm font-bold text-neutral-700">
                     Track your order
                   </Link>
@@ -571,7 +572,7 @@ export function CheckoutForm({
               <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery Options</h2>
               <motion.div
                 animate={{ rotate: deliveryOptionsOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
+                transition={springs.snappy}
               >
                 <svg className="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
               </motion.div>
@@ -583,7 +584,7 @@ export function CheckoutForm({
                   initial={{ height: 0, opacity: 0 }}
                   animate={{ height: "auto", opacity: 1 }}
                   exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={springs.snappy}
                   className="overflow-hidden"
                 >
                   <div className="px-4 pb-4 space-y-4">
@@ -626,7 +627,7 @@ export function CheckoutForm({
                 </div>
                 <motion.div
                   animate={{ rotate: offersSectionOpen ? 180 : 0 }}
-                  transition={{ duration: 0.2 }}
+                  transition={springs.snappy}
                 >
                   <svg className="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
                 </motion.div>
@@ -638,7 +639,7 @@ export function CheckoutForm({
                     initial={{ height: 0, opacity: 0 }}
                     animate={{ height: "auto", opacity: 1 }}
                     exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2 }}
+                    transition={springs.snappy}
                     className="overflow-hidden"
                   >
                     <div className="px-4 pb-4 space-y-3">

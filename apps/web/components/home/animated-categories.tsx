@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronUp } from "lucide-react";
 import { motion } from "framer-motion";
 import { memo, useMemo } from "react";
+import { durations, easings } from "@/lib/motion";
 import type { Product } from "@/lib/types";
 
 // Lighter transitions - CSS easing instead of spring physics per item
@@ -23,8 +24,8 @@ const itemVariants = {
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.3,
-      ease: [0.25, 0.1, 0.25, 1]
+      duration: durations.normal,
+      ease: easings.appleEase
     }
   }
 };
@@ -59,7 +60,7 @@ export const AnimatedCategories = memo(function AnimatedCategories({
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: durations.normal, ease: easings.appleEase }}
           className="flex items-center justify-between mb-6"
         >
           <h2 className="section-title">Popular Categories</h2>
@@ -110,7 +111,7 @@ export const AnimatedCategories = memo(function AnimatedCategories({
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          transition={{ duration: durations.normal, ease: easings.appleEase }}
           className="flex items-center justify-between"
         >
           <h2 className="text-title font-bold text-neutral-900 dark:text-white">What are you looking for?</h2>

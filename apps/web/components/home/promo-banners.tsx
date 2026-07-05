@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 import { Tag, Clock, Sparkles } from "lucide-react";
+import { durations, easings, tapScale } from "@/lib/motion";
 
 type Banner = {
   id: string;
@@ -18,8 +19,8 @@ const cardVariants = {
   visible: (i: number) => ({
     opacity: 1,
     transition: {
-      duration: 0.35,
-      ease: [0.25, 0.1, 0.25, 1],
+      duration: durations.normal,
+      ease: easings.appleEase,
       delay: i * 0.08
     }
   })
@@ -51,7 +52,7 @@ export function PromoBanners({ banners }: { banners?: Banner[] }) {
             initial="hidden"
             whileInView="visible"
             viewport={{ once: true, margin: "-30px" }}
-            whileTap={{ scale: 0.98 }}
+            whileTap={tapScale.primary}
           >
               <Wrapper
                 {...(wrapperProps as any)}

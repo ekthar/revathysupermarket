@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { Bell, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { springs } from "@/lib/motion";
 import { useToast } from "@/components/toast-provider";
 
 function publicKeyToUint8Array(publicKey: string) {
@@ -122,7 +123,7 @@ export function PushNotificationManager() {
           initial={{ opacity: 0, y: 50, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 50, scale: 0.9 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          transition={springs.gentle}
           data-hide-on-keyboard="true"
           className="fixed left-[max(1rem,var(--safe-left))] right-[max(1rem,var(--safe-right))] bottom-[calc(var(--mobile-nav-height)+var(--safe-bottom)+0.5rem)] z-[60] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl dark:border-slate-700 dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:w-[360px]"
         >

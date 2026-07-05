@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ChevronUp } from "lucide-react";
 import { motion, useInView } from "framer-motion";
 import { memo, useRef } from "react";
+import { durations, easings } from "@/lib/motion";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/types";
 
@@ -23,8 +24,8 @@ const itemVariants = {
   visible: {
     opacity: 1,
     transition: {
-      duration: 0.3,
-      ease: [0.25, 0.1, 0.25, 1]
+      duration: durations.normal,
+      ease: easings.appleEase
     }
   }
 };
@@ -67,7 +68,7 @@ export const AnimatedProductSection = memo(function AnimatedProductSection({
           <motion.div
             initial={{ opacity: 0 }}
             animate={isInView ? { opacity: 1 } : {}}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: durations.normal, ease: easings.appleEase }}
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -77,7 +78,7 @@ export const AnimatedProductSection = memo(function AnimatedProductSection({
               <motion.div
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={isInView ? { opacity: 1, scale: 1 } : {}}
-                transition={{ duration: 0.25, ease: "easeOut", delay: 0.15 }}
+                transition={{ duration: durations.fast, ease: easings.easeOutQuart, delay: 0.15 }}
               >
                 <Link href="/products" className="show-all-pill text-xs md:text-sm">
                   Show All
@@ -95,7 +96,7 @@ export const AnimatedProductSection = memo(function AnimatedProductSection({
             <motion.div
               initial={{ opacity: 0 }}
               animate={isInView ? { opacity: 1 } : {}}
-              transition={{ delay: 0.1, duration: 0.3, ease: "easeOut" }}
+              transition={{ delay: 0.1, duration: durations.normal, ease: easings.easeOutQuart }}
               className="flex gap-2 mt-4 overflow-x-auto no-scrollbar pb-1"
             >
               {categoryPills.map((label, idx) => (

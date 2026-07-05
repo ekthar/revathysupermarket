@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { motion } from "framer-motion";
+import { durations } from "@/lib/motion";
 import { cn } from "@/lib/utils";
 
 export function OtpInput({ value, onChange }: { value: string; onChange: (value: string) => void }) {
@@ -28,7 +29,7 @@ export function OtpInput({ value, onChange }: { value: string; onChange: (value:
             inputMode="numeric"
             maxLength={1}
             animate={filled ? { scale: [1, 1.08, 1] } : {}}
-            transition={{ duration: 0.15 }}
+            transition={{ duration: durations.instant }}
             onPaste={(e) => {
               e.preventDefault();
               const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);

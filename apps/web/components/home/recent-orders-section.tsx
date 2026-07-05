@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Clock, Package } from "lucide-react";
 import { motion } from "framer-motion";
+import { springs } from "@/lib/motion";
 import { formatCurrency } from "@/lib/utils";
 import { useEffect, useState } from "react";
 import { readApiResponse } from "@/lib/client-api";
@@ -81,11 +82,7 @@ export function RecentOrdersSection() {
       opacity: 1,
       x: 0,
       scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 260,
-        damping: 24,
-      },
+      transition: springs.enter,
     },
   };
 

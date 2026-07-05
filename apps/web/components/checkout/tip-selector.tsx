@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { springs, tapScale } from "@/lib/motion";
 
 const TIP_AMOUNTS = [20, 30, 50];
 
@@ -54,7 +55,7 @@ export function TipSelector({ tipAmount, onTipChange }: TipSelectorProps) {
               key={amount}
               type="button"
               onClick={() => selectPreset(amount)}
-              whileTap={{ scale: 0.92 }}
+              whileTap={tapScale.subtle}
               className={`relative h-11 rounded-xl text-sm font-bold transition-colors ${
                 isSelected
                   ? "bg-black text-white shadow-md"
@@ -65,7 +66,7 @@ export function TipSelector({ tipAmount, onTipChange }: TipSelectorProps) {
                 <motion.div
                   layoutId="tip-highlight"
                   className="absolute inset-0 rounded-xl bg-black"
-                  transition={{ type: "spring", stiffness: 400, damping: 28 }}
+                  transition={springs.snappy}
                 />
               )}
               <span className="relative z-10">{"\u20B9"}{amount}</span>

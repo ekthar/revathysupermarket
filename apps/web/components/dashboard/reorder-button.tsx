@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { RotateCcw, ShoppingCart } from "lucide-react";
 import { motion } from "framer-motion";
+import { tapScale } from "@/lib/motion";
 import { useCartActions } from "@/components/cart/cart-provider";
 import { useToast } from "@/components/toast-provider";
 import type { Product } from "@/lib/types";
@@ -96,7 +97,7 @@ export function ReorderButton({ orderId, items, className }: ReorderButtonProps)
       type="button"
       onClick={handleReorder}
       disabled={isLoading}
-      whileTap={{ scale: 0.92 }}
+      whileTap={tapScale.subtle}
       whileHover={{ scale: 1.02 }}
       className={`flex items-center justify-center gap-1.5 rounded-xl bg-black text-caption font-bold text-white disabled:opacity-50 ${className ?? "h-9 flex-1"}`}
     >

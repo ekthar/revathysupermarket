@@ -3,6 +3,7 @@
 import { useRef, useState, useEffect } from "react";
 import { CheckCircle2, ChevronRight } from "lucide-react";
 import { motion } from "framer-motion";
+import { springs } from "@/lib/motion";
 
 interface SlideToConfirmProps {
   label?: string;
@@ -65,7 +66,7 @@ export function SlideToConfirm({ label = "Slide to confirm", onConfirm, disabled
   if (confirmed) {
     return (
       <div className="flex h-16 items-center justify-center rounded-2xl bg-emerald-500">
-        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring" }}>
+        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={springs.snappy}>
           <CheckCircle2 className="h-7 w-7 text-white" />
         </motion.div>
         <span className="ml-2 font-black text-white">Confirmed!</span>

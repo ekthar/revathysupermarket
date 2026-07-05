@@ -382,7 +382,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.45, type: "spring", stiffness: 240, damping: 24 }}
+          transition={{ ...springs.enter, delay: 0.45 }}
           className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900"
         >
           <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-5">
@@ -400,12 +400,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
                   key={step.key}
                   initial={{ opacity: 0, x: -12 }}
                   animate={{ opacity: 1, x: 0 }}
-                  transition={{
-                    delay: 0.5 + index * 0.1,
-                    type: "spring",
-                    stiffness: 260,
-                    damping: 24,
-                  }}
+                  transition={{ ...springs.enter, delay: 0.5 + index * 0.1 }}
                   className="relative flex gap-4"
                 >
                   {/* Timeline line and dot */}

@@ -6,6 +6,7 @@ import { Zap, MapPin, CreditCard, Loader2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { useToast } from "@/components/toast-provider";
+import { springs, tapScale } from "@/lib/motion";
 
 type EligibilityData = {
   eligible: boolean;
@@ -97,7 +98,7 @@ export function ExpressCheckout() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 300, damping: 25 }}
+        transition={springs.enter}
         className="rounded-2xl bg-gradient-to-r from-primary/5 to-secondary-50 dark:from-primary/10 dark:to-secondary-900/20 border border-primary/20 p-4 mb-3"
       >
         <div className="flex items-center gap-2 mb-3">
@@ -128,7 +129,7 @@ export function ExpressCheckout() {
           type="button"
           onClick={handleExpressOrder}
           disabled={placing}
-          whileTap={{ scale: 0.97 }}
+          whileTap={tapScale.primary}
           className="w-full h-11 rounded-xl bg-primary text-white text-body font-bold flex items-center justify-center gap-2 disabled:opacity-50 shadow-sm"
         >
           {placing ? (

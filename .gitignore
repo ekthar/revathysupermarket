@@ -22,6 +22,7 @@ dist/
 *.log
 *.rar
 *.zip
+.idea/
 
 # prisma
 prisma/*.db

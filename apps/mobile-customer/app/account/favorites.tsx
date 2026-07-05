@@ -6,19 +6,35 @@ import { api } from "@/services/api";
 import type { Product } from "@msm/shared/types";
 import { formatCurrency } from "@msm/shared/utils";
 import { useCartStore } from "@/stores/cart";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function FavoritesScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { addItem } = useCartStore();
 
-  useEffect(() => {
-    api.get("/favorites").then(({ data }) => setProducts(data.items || [])).catch(() => {}).finally(() => setIsLoading(false));
+  const fetchFavorites = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get("/favorites");
+      setProducts(data.items || []);
+    } catch {
+      setError("Failed to load favorites. Pull down to retry.");
+    }
+    setIsLoading(false);
   }, []);
+
+  useEffect(() => {
+    fetchFavorites();
+  }, [fetchFavorites]);
 
   const handleAddToCart = useCallback((item: Product) => {
     addItem({ productId: item.id, name: item.name, image: item.image, price: item.price, discountPrice: item.discountPrice, quantity: 1, unit: item.unit, stock: item.stock });
   }, [addItem]);
+
+  if (error) return <ErrorState message={error} onRetry={fetchFavorites} />;
 
   if (isLoading) return <View className="flex-1 items-center justify-center bg-white"><ActivityIndicator color="#050505" /></View>;
 

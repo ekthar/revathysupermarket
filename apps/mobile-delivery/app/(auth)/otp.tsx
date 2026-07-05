@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { View, Text, TextInput, Pressable, ActivityIndicator } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useAuthStore } from "@/stores/auth";
+import { successHaptic } from "@/lib/haptic";
 
 const OTP_LENGTH = 6;
 
@@ -42,7 +43,8 @@ export default function DeliveryOtpScreen() {
     setIsLoading(true);
     try {
       await verifyOtp(phone || "", c);
-      router.replace("/dashboard");
+      successHaptic();
+      router.replace("/(tabs)/dashboard");
     } catch (e: any) {
       setError(e.message || e.response?.data?.error || "Invalid OTP");
       setOtp(Array(OTP_LENGTH).fill(""));

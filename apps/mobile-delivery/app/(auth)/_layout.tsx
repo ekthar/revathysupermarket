@@ -3,6 +3,6 @@ import { useAuthStore } from "@/stores/auth";
 
 export default function AuthLayout() {
   const { status } = useAuthStore();
-  if (status === "authenticated") return <Redirect href="/dashboard" />;
+  if (status === "authenticated") return <Redirect href="/(tabs)/dashboard" />;
   return <Stack screenOptions={{ headerShown: false }}><Stack.Screen name="login" /><Stack.Screen name="otp" /></Stack>;
 }

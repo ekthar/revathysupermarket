@@ -1,17 +1,28 @@
-import { useEffect } from "react";
+import { useEffect, useCallback } from "react";
 import { View } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { useFonts } from "expo-font";
 import { useAuthStore } from "@/stores/auth";
 import { notificationService } from "@/services/notifications";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { ThemeProvider } from "@/theme/ThemeProvider";
 import "../global.css";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const { initialize } = useAuthStore();
+  const [fontsLoaded] = useFonts({
+    "InterTight-Regular": require("../assets/fonts/InterTight-Regular.ttf"),
+    "InterTight-Medium": require("../assets/fonts/InterTight-Medium.ttf"),
+    "InterTight-SemiBold": require("../assets/fonts/InterTight-SemiBold.ttf"),
+    "InterTight-Bold": require("../assets/fonts/InterTight-Bold.ttf"),
+    "Manrope-Medium": require("../assets/fonts/Manrope-Medium.ttf"),
+    "Manrope-SemiBold": require("../assets/fonts/Manrope-SemiBold.ttf"),
+    "Manrope-Bold": require("../assets/fonts/Manrope-Bold.ttf"),
+  });
 
   useEffect(() => {
     async function prepare() {
@@ -28,13 +39,22 @@ export default function RootLayout() {
     prepare();
   }, []);
 
+  const onLayoutRootView = useCallback(() => {
+    if (fontsLoaded) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
-    <View className="flex-1">
-      <StatusBar style="auto" />
-      <OfflineBanner />
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="dashboard" />
+    <ThemeProvider>
+      <View className="flex-1" onLayout={onLayoutRootView}>
+        <StatusBar style="auto" />
+        <OfflineBanner />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)" />
+          <Stack.Screen name="(tabs)" />
         <Stack.Screen
           name="orders/[id]/index"
           options={{ headerShown: true, title: "Order" }}
@@ -61,5 +81,6 @@ export default function RootLayout() {
         />
       </Stack>
     </View>
+    </ThemeProvider>
   );
 }

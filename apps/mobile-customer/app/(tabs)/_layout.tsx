@@ -9,6 +9,7 @@ import {
 } from "lucide-react-native";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
+import { lightHaptic } from "@/lib/haptic";
 
 export default function TabsLayout() {
   const { status } = useAuthStore();
@@ -52,6 +53,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen
         name="home"
+        listeners={{ tabPress: () => lightHaptic() }}
         options={{
           title: "Home",
           tabBarIcon: ({ focused, color }) => (
@@ -67,6 +69,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="categories"
+        listeners={{ tabPress: () => lightHaptic() }}
         options={{
           title: "Browse",
           tabBarIcon: ({ focused, color }) => (
@@ -82,6 +85,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="cart"
+        listeners={{ tabPress: () => lightHaptic() }}
         options={{
           title: "Cart",
           tabBarIcon: ({ focused, color }) => (
@@ -97,6 +101,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="orders"
+        listeners={{ tabPress: () => lightHaptic() }}
         options={{
           title: "Orders",
           tabBarIcon: ({ focused, color }) => (
@@ -112,6 +117,7 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="account"
+        listeners={{ tabPress: () => lightHaptic() }}
         options={{
           title: "You",
           tabBarIcon: ({ focused, color }) => (

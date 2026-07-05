@@ -9,6 +9,7 @@ import { formatCurrency, formatDate, formatOrderStatus } from "@msm/shared/utils
 import { STATUS_LABELS } from "@msm/shared/constants";
 import { OrderRowSkeleton } from "@/components/ui/Skeleton";
 import { Badge } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 function statusVariant(status: string): "success" | "error" | "info" | "warning" | "default" {
   switch (status) {
@@ -23,12 +24,17 @@ function statusVariant(status: string): "success" | "error" | "info" | "warning"
 export default function OrdersScreen() {
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchOrders = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
       const { data } = await api.get("/orders");
       setOrders(data.items || data || []);
-    } catch {}
+    } catch (e) {
+      setError("Failed to load orders. Pull down to retry.");
+    }
     setIsLoading(false);
   }, []);
 
@@ -64,6 +70,10 @@ export default function OrdersScreen() {
       </View>
     </Pressable>
   ), []);
+
+  if (error && orders.length === 0) {
+    return <ErrorState message={error} onRetry={fetchOrders} />;
+  }
 
   return (
     <View className="flex-1 bg-white pt-14">

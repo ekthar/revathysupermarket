@@ -14,6 +14,8 @@ import { api } from "@/services/api";
 import { useCartStore } from "@/stores/cart";
 import type { Product, Category } from "@msm/shared/types";
 import { formatCurrency } from "@msm/shared/utils";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { showToast } from "@/components/ui/Toast";
 
 export default function CategoriesScreen() {
   const { category: selectedSlug } = useLocalSearchParams<{ category?: string }>();
@@ -21,6 +23,7 @@ export default function CategoriesScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(selectedSlug || null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const { addItem } = useCartStore();
 
   useEffect(() => {
@@ -40,11 +43,14 @@ export default function CategoriesScreen() {
 
   const fetchProducts = async () => {
     setIsLoading(true);
+    setError(null);
     try {
       const params = activeCategory ? `?category=${activeCategory}` : "";
       const { data } = await api.get(`/products${params}`);
       setProducts(data.items || data || []);
-    } catch {}
+    } catch {
+      setError("Failed to load products. Pull down to retry.");
+    }
     setIsLoading(false);
   };
 
@@ -59,6 +65,7 @@ export default function CategoriesScreen() {
       unit: product.unit,
       stock: product.stock,
     });
+    showToast(`${product.name} added to cart`, 'success');
   }, [addItem]);
 
   const renderProductCard = useCallback(({ item }: { item: Product }) => (
@@ -111,6 +118,10 @@ export default function CategoriesScreen() {
       </View>
     </Pressable>
   ), [handleAddToCart]);
+
+  if (error && products.length === 0) {
+    return <ErrorState message={error} onRetry={fetchProducts} />;
+  }
 
   return (
     <View className="flex-1 bg-white pt-14">

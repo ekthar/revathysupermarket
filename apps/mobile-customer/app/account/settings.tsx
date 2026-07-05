@@ -1,9 +1,11 @@
 import { View, Text, Switch } from "react-native";
 import { Stack } from "expo-router";
 import { useSettingsStore } from "@/stores/settings";
+import { useTheme } from "@/theme/ThemeProvider";
 
 export default function SettingsScreen() {
   const { preferences, updatePreferences } = useSettingsStore();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <>
@@ -42,8 +44,11 @@ export default function SettingsScreen() {
             <Text className="text-micro text-neutral-400">Use dark theme</Text>
           </View>
           <Switch
-            value={preferences.themeMode === "dark"}
-            onValueChange={(v) => updatePreferences({ themeMode: v ? "dark" : "system" })}
+            value={theme === 'dark'}
+            onValueChange={(v) => {
+              toggleTheme();
+              updatePreferences({ themeMode: v ? 'dark' : 'system' });
+            }}
             trackColor={{ false: "#E5E7EB", true: "#050505" }}
             thumbColor="#FFFFFF"
           />

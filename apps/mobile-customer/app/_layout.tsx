@@ -3,21 +3,25 @@ import { View, AppState, type AppStateStatus } from "react-native";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import { useFonts } from "expo-font";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { useSettingsStore } from "@/stores/settings";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { registerForPushNotifications, setupNotificationListeners } from "@/services/push-notifications";
+import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
+import { ToastProvider } from "@/components/ui/Toast";
 import "../global.css";
 
 // Keep splash screen visible while loading
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+function RootLayoutInner() {
   const { initialize, status } = useAuthStore();
   const { loadCart } = useCartStore();
   const { loadStoreConfig, loadPreferences } = useSettingsStore();
   const appState = useRef(AppState.currentState);
+  const { theme } = useTheme();
 
   useEffect(() => {
     async function prepare() {
@@ -64,9 +68,11 @@ export default function RootLayout() {
     return () => subscription.remove();
   }, []);
 
+  const isDark = theme === 'dark';
+
   return (
-    <View className="flex-1 bg-white">
-      <StatusBar style="dark" />
+    <View className={`flex-1 bg-white dark:bg-neutral-900`}>
+      <StatusBar style={isDark ? 'light' : 'dark'} />
       <OfflineBanner />
       <Stack
         screenOptions={{
@@ -112,5 +118,22 @@ export default function RootLayout() {
         <Stack.Screen name="account/new-ticket" options={{ headerShown: true, title: "New Ticket" }} />
       </Stack>
     </View>
+  );
+}
+
+export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Manrope: require("../assets/fonts/Manrope-VariableFont_wght.ttf"),
+    InterTight: require("../assets/fonts/InterTight-VariableFont_wght.ttf"),
+  });
+
+  if (!fontsLoaded) return null;
+
+  return (
+    <ThemeProvider>
+      <ToastProvider>
+        <RootLayoutInner />
+      </ToastProvider>
+    </ThemeProvider>
   );
 }

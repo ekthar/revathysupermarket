@@ -12,6 +12,8 @@ import { useLocalSearchParams, router, Stack } from "expo-router";
 import { ArrowLeft } from "lucide-react-native";
 import { useAuthStore } from "@/stores/auth";
 import { Button } from "@/components/ui/Button";
+import { showToast } from "@/components/ui/Toast";
+import { successHaptic } from "@/lib/haptic";
 
 const OTP_LENGTH = 6;
 
@@ -74,6 +76,8 @@ export default function OtpScreen() {
     setIsLoading(true);
     try {
       await verifyOtp(phone || "", code);
+      successHaptic();
+      showToast("Welcome back!", 'success');
       router.replace("/(tabs)/home");
     } catch (e: any) {
       setError(e.response?.data?.error || "Invalid OTP");

@@ -93,9 +93,21 @@ module.exports = {
         micro: ["10px", { lineHeight: "13px", letterSpacing: "0px" }],
       },
       fontFamily: {
-        sans: ["System"],
-        display: ["System"],
+        sans: ["Manrope"],
+        display: ["InterTight"],
         mono: ["Menlo", "monospace"],
+      },
+      backgroundColor: {
+        dark: {
+          DEFAULT: '#111827',
+          surface: '#1F2937',
+        },
+      },
+      textColor: {
+        dark: {
+          DEFAULT: '#F9FAFB',
+          muted: '#9CA3AF',
+        },
       },
       borderRadius: {
         sm: "6px",

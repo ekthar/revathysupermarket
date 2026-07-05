@@ -79,7 +79,7 @@ export function setupNotificationListeners() {
       const data = response.notification.request.content.data as Record<string, unknown>;
       const url = data?.url as string | undefined;
       if (url) {
-        router.push(url);
+        router.push(url as any);
       }
     }
   );

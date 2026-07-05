@@ -1,4 +1,4 @@
-import { forwardRef } from "react";
+import { forwardRef, useCallback } from "react";
 import {
   Pressable,
   Text,
@@ -12,6 +12,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { spring as springPresets, tapScale } from "@/theme/motion";
+import { lightHaptic } from "@/lib/haptic";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -87,11 +88,17 @@ export const Button = forwardRef<typeof Pressable, ButtonProps>(
       scale.value = withSpring(1, springPresets.snappy);
     };
 
+    const handlePress = useCallback((e: any) => {
+      lightHaptic();
+      props.onPress?.(e);
+    }, [props.onPress]);
+
     const isDisabled = disabled || loading;
 
     return (
       <AnimatedPressable
         {...props}
+        onPress={handlePress}
         disabled={isDisabled}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}

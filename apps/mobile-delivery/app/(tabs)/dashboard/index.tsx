@@ -7,7 +7,8 @@ import { useDeliveryStore } from "@/stores/delivery";
 import { formatCurrency, getGreeting } from "@msm/shared/utils";
 import { STATUS_LABELS } from "@msm/shared/constants";
 import { AssignmentAlert } from "@/components/AssignmentAlert";
-import { StatCardSkeleton, ListItemSkeleton } from "@/components/ui";
+import { StatCardSkeleton, ListItemSkeleton, ErrorState } from "@/components/ui";
+import { lightHaptic } from "@/lib/haptic";
 
 export default function DashboardScreen() {
   const { user, status, logout } = useAuthStore();
@@ -25,8 +26,7 @@ export default function DashboardScreen() {
   ];
 
   return (
-    <View className="flex-1 bg-white">
-      {/* Assignment Alert Overlay */}
+    <View className="flex-1 bg-white dark:bg-neutral-900">
       {pendingAssignment && <AssignmentAlert event={pendingAssignment} />}
 
       <ScrollView
@@ -36,13 +36,21 @@ export default function DashboardScreen() {
         {/* Header */}
         <View className="px-5 pt-16 pb-4 flex-row justify-between items-center">
           <View>
-            <Text className="text-sm text-slate-500">{getGreeting()}</Text>
-            <Text className="text-xl font-heading text-slate-900">{user?.name || "Partner"}</Text>
+            <Text className="text-sm text-slate-500 dark:text-neutral-400">{getGreeting()}</Text>
+            <Text className="text-xl font-heading text-slate-900 dark:text-white">{user?.name || "Partner"}</Text>
           </View>
-          <Pressable onPress={() => router.push("/alert-setup")} className="w-10 h-10 bg-slate-100 rounded-xl items-center justify-center">
+          <Pressable
+            onPress={() => { lightHaptic(); router.push("/alert-setup"); }}
+            className="w-10 h-10 bg-slate-100 dark:bg-neutral-800 rounded-xl items-center justify-center"
+          >
             <Text>🔔</Text>
           </Pressable>
         </View>
+
+        {/* Error State */}
+        {error && !dashboard && (
+          <ErrorState message={error} onRetry={fetchDashboard} />
+        )}
 
         {/* Stats Grid */}
         {isLoading && !dashboard ? (
@@ -51,7 +59,7 @@ export default function DashboardScreen() {
               <StatCardSkeleton key={i} />
             ))}
           </View>
-        ) : (
+        ) : dashboard ? (
           <Animated.View entering={FadeInDown.duration(400)} className="px-5 mb-6 flex-row flex-wrap justify-between">
             {stats.map((stat) => (
               <View key={stat.label} className={`w-[48%] mb-3 ${stat.colors} rounded-2xl p-4`}>
@@ -60,50 +68,57 @@ export default function DashboardScreen() {
               </View>
             ))}
           </Animated.View>
-        )}
+        ) : null}
 
         {/* Alert Health */}
-        <Pressable onPress={() => router.push("/alert-setup")} className="mx-5 mb-6 border border-slate-200 rounded-xl p-4 flex-row items-center">
+        <Pressable
+          onPress={() => { lightHaptic(); router.push("/alert-setup"); }}
+          className="mx-5 mb-6 border border-slate-200 dark:border-neutral-700 rounded-xl p-4 flex-row items-center"
+        >
           <View className="w-3 h-3 rounded-full bg-green-500 mr-3" />
-          <Text className="flex-1 text-sm font-sans-medium text-slate-700">Alerts Active</Text>
+          <Text className="flex-1 text-sm font-sans-medium text-slate-700 dark:text-neutral-300">Alerts Active</Text>
           <Text className="text-slate-400">›</Text>
         </Pressable>
 
         {/* Active Orders */}
         <View className="px-5 mb-4 flex-row justify-between items-center">
-          <Text className="text-lg font-heading text-slate-900">Active Orders</Text>
+          <Text className="text-lg font-heading text-slate-900 dark:text-white">Active Orders</Text>
           {(dashboard?.activeOrders?.length ?? 0) > 0 && (
-            <View className="bg-primary-100 px-2.5 py-1 rounded-full">
-              <Text className="text-xs font-sans-bold text-primary-700">{dashboard!.activeOrders.length}</Text>
+            <View className="bg-primary-100 dark:bg-primary-900/30 px-2.5 py-1 rounded-full">
+              <Text className="text-xs font-sans-bold text-primary-700 dark:text-primary-300">{dashboard!.activeOrders.length}</Text>
             </View>
           )}
         </View>
 
         {(!dashboard?.activeOrders || dashboard.activeOrders.length === 0) ? (
-          <View className="mx-5 py-12 bg-slate-50 rounded-2xl items-center">
+          <View className="mx-5 py-12 bg-slate-50 dark:bg-neutral-800 rounded-2xl items-center">
             <Text className="text-3xl mb-2">🛵</Text>
-            <Text className="text-sm text-slate-400">No active orders</Text>
-            <Text className="text-xs text-slate-300 mt-1">New orders will appear here</Text>
+            <Text className="text-sm text-slate-400 dark:text-neutral-400">No active orders</Text>
+            <Text className="text-xs text-slate-300 dark:text-neutral-500 mt-1">New orders will appear here</Text>
           </View>
         ) : (
           <View className="px-5 pb-8">
             {dashboard.activeOrders.map((order) => (
-              <Pressable key={order.id} onPress={() => router.push(`/orders/${order.id}`)} className="border border-slate-100 rounded-xl p-4 mb-3 flex-row items-center">
-                <View className="w-10 h-10 bg-blue-50 rounded-lg items-center justify-center mr-3">
+              <Pressable
+                key={order.id}
+                onPress={() => { lightHaptic(); router.push(`/orders/${order.id}`); }}
+                className="border border-slate-100 dark:border-neutral-700 rounded-xl p-4 mb-3 flex-row items-center"
+              >
+                <View className="w-10 h-10 bg-blue-50 dark:bg-blue-900/30 rounded-lg items-center justify-center mr-3">
                   <Text>🛵</Text>
                 </View>
                 <View className="flex-1">
-                  <Text className="text-sm font-sans-semibold text-slate-800">{order.customerName}</Text>
-                  <Text className="text-xs text-slate-400 mt-0.5" numberOfLines={1}>{order.address}</Text>
-                  <Text className="text-xs text-slate-300">#{order.orderNumber}</Text>
+                  <Text className="text-sm font-sans-semibold text-slate-800 dark:text-white">{order.customerName}</Text>
+                  <Text className="text-xs text-slate-400 dark:text-neutral-400 mt-0.5" numberOfLines={1}>{order.address}</Text>
+                  <Text className="text-xs text-slate-300 dark:text-neutral-500">#{order.orderNumber}</Text>
                 </View>
                 <View className="items-end">
-                  <View className="bg-blue-50 px-2 py-0.5 rounded">
-                    <Text className="text-xs font-sans-medium text-blue-700">
+                  <View className="bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded">
+                    <Text className="text-xs font-sans-medium text-blue-700 dark:text-blue-300">
                       {STATUS_LABELS[order.status as keyof typeof STATUS_LABELS] || order.status.replace(/_/g, " ")}
                     </Text>
                   </View>
-                  {order.distance && <Text className="text-xs text-primary-600 mt-1">{order.distance}</Text>}
+                  {order.distance && <Text className="text-xs text-primary-600 dark:text-primary-400 mt-1">{order.distance}</Text>}
                 </View>
               </Pressable>
             ))}

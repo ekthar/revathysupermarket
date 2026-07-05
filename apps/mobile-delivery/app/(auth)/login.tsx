@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, Text, TextInput, Pressable, KeyboardAvoidingView, Platform, ActivityIndicator } from "react-native";
 import { router } from "expo-router";
 import { useAuthStore } from "@/stores/auth";
+import { lightHaptic } from "@/lib/haptic";
 
 export default function DeliveryLoginScreen() {
   const [phone, setPhone] = useState("");
@@ -14,6 +15,7 @@ export default function DeliveryLoginScreen() {
     if (cleaned.length < 10) { setError("Enter a valid phone number"); return; }
     setError(null);
     setIsLoading(true);
+    lightHaptic();
     try {
       await loginWithPhone(cleaned);
       router.push({ pathname: "/(auth)/otp", params: { phone: cleaned } });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { View, Text, FlatList, ActivityIndicator, Pressable } from "react-native";
 import { router, Stack } from "expo-router";
 import { MapPin, Plus } from "lucide-react-native";
@@ -6,14 +6,30 @@ import { api } from "@/services/api";
 import type { Address } from "@msm/shared/types";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { ErrorState } from "@/components/ui/ErrorState";
 
 export default function AddressesScreen() {
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchAddresses = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { data } = await api.get("/addresses");
+      setAddresses(data.items || []);
+    } catch {
+      setError("Failed to load addresses. Pull down to retry.");
+    }
+    setIsLoading(false);
+  }, []);
 
   useEffect(() => {
-    api.get("/addresses").then(({ data }) => setAddresses(data.items || [])).catch(() => {}).finally(() => setIsLoading(false));
-  }, []);
+    fetchAddresses();
+  }, [fetchAddresses]);
+
+  if (error) return <ErrorState message={error} onRetry={fetchAddresses} />;
 
   if (isLoading) return <View className="flex-1 items-center justify-center bg-white"><ActivityIndicator color="#050505" /></View>;
 

@@ -15,6 +15,7 @@ import { useAuthStore } from "@/stores/auth";
 import { useGoogleAuth } from "@/services/google-auth";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
+import { showToast } from "@/components/ui/Toast";
 
 type Mode = "login" | "register" | "phone";
 
@@ -48,6 +49,7 @@ export default function LoginScreen() {
     setLoading(true);
     try {
       await loginWithEmail(email.trim(), password);
+      showToast("Welcome back!", 'success');
       router.replace("/(tabs)/home");
     } catch (e: any) {
       setError(e.response?.data?.error || e.message || "Invalid email or password");
@@ -70,6 +72,7 @@ export default function LoginScreen() {
         email: regEmail.trim(),
         password: regPassword,
       });
+      showToast("Account created successfully!", 'success');
       router.replace("/(tabs)/home");
     } catch (e: any) {
       setError(e.response?.data?.error || e.message || "Registration failed");

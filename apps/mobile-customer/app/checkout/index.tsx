@@ -16,6 +16,7 @@ import { api } from "@/services/api";
 import { formatCurrency } from "@msm/shared/utils";
 import { DELIVERY_SLOTS, PAYMENT_METHODS } from "@msm/shared/constants";
 import { Button } from "@/components/ui/Button";
+import { showToast } from "@/components/ui/Toast";
 
 export default function CheckoutScreen() {
   const [step, setStep] = useState(0);
@@ -67,6 +68,7 @@ export default function CheckoutScreen() {
         })),
       });
       await clearCart();
+      showToast("Order placed successfully!", 'success');
       router.replace("/(tabs)/orders");
     } catch (e: any) {
       orderPlacedRef.current = false; // Allow retry on failure

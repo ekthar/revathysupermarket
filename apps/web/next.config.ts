@@ -30,6 +30,17 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
   },
+  webpack: (config, { isServer }) => {
+    // Capacitor native plugins only exist inside the native shell, not in the
+    // Vercel web build. Prevent webpack from trying to resolve them at build time.
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        "@capacitor-community/background-geolocation": false,
+      };
+    }
+    return config;
+  },
   async headers() {
     return [
       {

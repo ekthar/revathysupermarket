@@ -37,7 +37,9 @@ export function useDeliveryLocation(): UseDeliveryLocation {
   // ─── Native Capacitor background location ───
   const startNative = useCallback(async () => {
     try {
-      const mod: any = await import("@capacitor-community/background-geolocation");
+      // webpackIgnore tells the bundler not to resolve this at build time —
+      // it only exists when running inside the Capacitor native shell on-device.
+      const mod: any = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation");
       const BackgroundGeolocation: BgPlugin = mod.BackgroundGeolocation ?? mod;
       const perm = await BackgroundGeolocation.requestPermission();
       if (perm !== "granted") { setPermission("denied"); return; }

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { LocateFixed, MapPin, X } from "lucide-react";
 import { motion } from "framer-motion";
+import { springs } from "@/lib/motion";
 
 type LatLng = { latitude: number; longitude: number };
 
@@ -123,11 +124,15 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
     );
   }
 
+  // Full-screen Leaflet map, deliberately excluded from the BottomSheet/Dialog
+  // migration — Vaul's rounded-t-3xl/max-h-[85dvh] chrome would break Leaflet's
+  // container sizing. Only the fade transition is aligned to the shared preset.
   const content = (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
+      transition={springs.gentle}
       className="fixed inset-0 z-[95] flex flex-col bg-white dark:bg-neutral-950"
       role="dialog"
       aria-modal="true"

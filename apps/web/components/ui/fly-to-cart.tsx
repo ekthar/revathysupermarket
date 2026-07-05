@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FlyingItem {
@@ -22,6 +22,48 @@ const FlyContext = createContext<FlyContextValue>({ flyToCart: () => {} });
 
 export function useFlyToCart() {
   return useContext(FlyContext);
+}
+
+function ClientPortal({ items }: { items: FlyingItem[] }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  if (!mounted) return null;
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999 }}>
+      <AnimatePresence>
+        {items.map((item) => (
+          <motion.img
+            key={item.id}
+            src={item.imgSrc}
+            alt=""
+            style={{
+              position: "absolute",
+              willChange: "transform, opacity",
+            }}
+            initial={{
+              left: item.startX - item.width / 2,
+              top: item.startY - item.height / 2,
+              width: item.width,
+              height: item.height,
+              borderRadius: 8,
+              opacity: 1,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+            }}
+            animate={{
+              left: item.endX - 12,
+              top: item.endY - 12,
+              width: 24,
+              height: 24,
+              borderRadius: "50%",
+              opacity: 0.6,
+            }}
+            exit={{ opacity: 0, scale: 0 }}
+            transition={{ type: "spring", stiffness: 250, damping: 22, mass: 0.6 }}
+          />
+        ))}
+      </AnimatePresence>
+    </div>
+  );
 }
 
 export function FlyToCartProvider({ children, cartSelector = "[data-cart-icon]" }: { children: ReactNode; cartSelector?: string }) {
@@ -62,42 +104,7 @@ export function FlyToCartProvider({ children, cartSelector = "[data-cart-icon]" 
   return (
     <FlyContext.Provider value={{ flyToCart }}>
       {children}
-      {typeof document !== "undefined" && (
-        <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 9999 }}>
-          <AnimatePresence>
-            {items.map((item) => (
-              <motion.img
-                key={item.id}
-                src={item.imgSrc}
-                alt=""
-                style={{
-                  position: "absolute",
-                  willChange: "transform, opacity",
-                }}
-                initial={{
-                  left: item.startX - item.width / 2,
-                  top: item.startY - item.height / 2,
-                  width: item.width,
-                  height: item.height,
-                  borderRadius: 8,
-                  opacity: 1,
-                  boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
-                }}
-                animate={{
-                  left: item.endX - 12,
-                  top: item.endY - 12,
-                  width: 24,
-                  height: 24,
-                  borderRadius: "50%",
-                  opacity: 0.6,
-                }}
-                exit={{ opacity: 0, scale: 0 }}
-                transition={{ type: "spring", stiffness: 250, damping: 22, mass: 0.6 }}
-              />
-            ))}
-          </AnimatePresence>
-        </div>
-      )}
+      <ClientPortal items={items} />
     </FlyContext.Provider>
   );
 }

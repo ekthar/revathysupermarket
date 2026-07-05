@@ -552,7 +552,7 @@ export function AdminOrdersClient({
                 <button type="button" onClick={() => saveStaffNote(order)} className="mt-2 h-9 rounded-xl bg-yellow-500 px-4 text-xs font-black text-white hover:bg-yellow-600">Save note</button>
               </div>
               {/* Bill number */}
-              <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-elevation-1">
                 <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                   🧾 Bill Number{billNumberSaving === order.id && <span className="text-primary font-bold normal-case">Saving…</span>}
                 </label>
@@ -566,7 +566,7 @@ export function AdminOrdersClient({
                 )}
               </div>
               {/* Delivery partner */}
-              <div className="rounded-2xl border border-border bg-card p-4">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-elevation-1">
                 <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                   🚴 Delivery Partner{assignLoading === order.id && <span className="text-primary font-bold normal-case">Saving…</span>}
                 </label>

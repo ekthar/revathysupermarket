@@ -366,7 +366,7 @@ function FlagCard({
   const Icon = meta.icon;
 
   return (
-    <div className="rounded-2xl border border-border bg-card p-5 flex items-center justify-between">
+    <div className="rounded-2xl border border-border bg-card p-5 flex items-center justify-between shadow-elevation-1">
       <div className="flex items-center gap-3">
         <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
           <Icon className="h-5 w-5 text-blue-600" />
@@ -504,7 +504,7 @@ function SmartConfigFlagCard({
   }
 
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-elevation-1">
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center">
@@ -576,7 +576,7 @@ function ForcedAcceptCard({
   toggleStaffOverride: (userId: string, enabled: boolean) => Promise<void>;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-elevation-1">
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-purple-50 dark:bg-purple-950 flex items-center justify-center">
@@ -627,7 +627,7 @@ function RingAlertCard({
   ringConfig: { ringtone?: string; durationSeconds?: number; escalationAfterSeconds?: number; escalationTarget?: string } | null;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-elevation-1">
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-amber-50 dark:bg-amber-950 flex items-center justify-center">
@@ -682,7 +682,7 @@ function PrintAlertCard({
   printConfig: { thresholdMinutes?: number } | null;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-elevation-1">
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-red-50 dark:bg-red-950 flex items-center justify-center">

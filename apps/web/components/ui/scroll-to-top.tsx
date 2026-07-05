@@ -44,7 +44,7 @@ export function ScrollToTop() {
           transition={springs.enter}
           type="button"
           onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="fixed bottom-[calc(7.25rem+var(--safe-bottom))] right-[max(1rem,var(--safe-right))] z-50 flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white shadow-lg press dark:border-slate-700 dark:bg-slate-800 md:bottom-8 md:right-8"
+          className="ios-glass fixed bottom-[calc(7.25rem+var(--safe-bottom))] right-[max(1rem,var(--safe-right))] z-50 flex h-10 w-10 items-center justify-center rounded-full shadow-elevation-2 press md:bottom-8 md:right-8"
           aria-label="Scroll to top"
         >
           <ArrowUp className="h-4 w-4 text-slate-600 dark:text-slate-300" />

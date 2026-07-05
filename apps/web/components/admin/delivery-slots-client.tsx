@@ -100,7 +100,7 @@ export function DeliverySlotsClient({ initialSlots }: { initialSlots: Slot[] }) 
 
   return (
     <div className="space-y-4">
-      <form onSubmit={create} className="grid gap-3 rounded-3xl border border-border bg-card p-4 sm:grid-cols-3">
+      <form onSubmit={create} className="grid gap-3 rounded-3xl border border-border bg-card p-4 sm:grid-cols-3 shadow-elevation-1">
         <label className="text-sm font-bold">
           Starts
           <input required type="datetime-local" value={startsAt} onChange={(event) => setStartsAt(event.target.value)} className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-3" />
@@ -126,7 +126,7 @@ export function DeliverySlotsClient({ initialSlots }: { initialSlots: Slot[] }) 
             const isEditing = editingId === slot.id;
             const isUpdating = updatingId === slot.id;
             return (
-              <article key={slot.id} className="rounded-2xl border border-border bg-card p-4">
+              <article key={slot.id} className="rounded-2xl border border-border bg-card p-4 shadow-elevation-1">
                 {isEditing ? (
                   <div className="grid gap-3 sm:grid-cols-[1fr_1fr_120px_auto] sm:items-end">
                     <label className="text-sm font-bold">

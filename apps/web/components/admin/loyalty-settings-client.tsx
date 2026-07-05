@@ -86,7 +86,7 @@ export function LoyaltySettingsClient({ initialConfig }: { initialConfig: Loyalt
 
   return (
     <div className="mt-5 grid gap-4">
-      <form onSubmit={save} className="rounded-3xl border border-border bg-card p-4">
+      <form onSubmit={save} className="rounded-3xl border border-border bg-card p-4 shadow-elevation-1">
         <h3 className="font-display text-2xl font-black">Loyalty &amp; referrals</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Preview: <span className="font-semibold text-foreground">{preview}</span>
@@ -117,7 +117,7 @@ export function LoyaltySettingsClient({ initialConfig }: { initialConfig: Loyalt
         </button>
       </form>
 
-      <form onSubmit={adjust} className="rounded-3xl border border-border bg-card p-4">
+      <form onSubmit={adjust} className="rounded-3xl border border-border bg-card p-4 shadow-elevation-1">
         <h3 className="font-display text-xl font-black">Manual points adjustment</h3>
         <p className="mt-1 text-sm text-muted-foreground">
           Use a positive number to add points, negative to deduct. Every adjustment is written to the

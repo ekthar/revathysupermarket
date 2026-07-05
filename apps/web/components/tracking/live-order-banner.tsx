@@ -67,7 +67,7 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
           <div className="pb-4">
           <Link
             href={`/track/${activeOrder.id}`}
-            className="block overflow-hidden rounded-2xl bg-gradient-to-r from-secondary-600 via-secondary-500 to-secondary-400 p-3.5 shadow-lg shadow-secondary-500/20 dark:shadow-secondary-900/30 press"
+            className="block overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-secondary-600/90 via-secondary-500/90 to-secondary-400/90 p-3.5 shadow-lg shadow-secondary-500/20 backdrop-blur-xl dark:shadow-secondary-900/30 press"
           >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">

@@ -6,6 +6,7 @@ import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { roleLabel } from "@/lib/roles";
 import { HIGH_RISK_PERMISSIONS, PERMISSIONS, PERMISSION_GROUPS, ROLE_PRESETS, getPermissionCeiling, type PermissionKey, type StaffRole } from "@/lib/permissions";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type StaffMember = { id: string; name: string | null; email: string | null; phone: string | null; role: string; isActive: boolean; lastLoginAt: string | null; vehicleInfo: string | null; permissions: string[] };
 const roles: Array<{ value: Exclude<StaffRole, "OWNER" | "ADMIN">; label: string }> = [{ value: "MANAGER", label: "Manager" }, { value: "STAFF", label: "Staff" }, { value: "PACKING_STAFF", label: "Packing Staff" }, { value: "DELIVERY_PARTNER", label: "Delivery Partner" }];
@@ -24,4 +25,22 @@ export function AdminStaffClient({ staff }: { staff: StaffMember[] }) {
 }
 
 function PermissionPicker({ selected, ceiling, onToggle }: { selected: PermissionKey[]; ceiling: PermissionKey[]; onToggle: (permission: PermissionKey) => void }) { return <div className="space-y-4">{Object.entries(PERMISSION_GROUPS).map(([group, permissions]) => <fieldset key={group}><legend className="text-sm font-black">{group}</legend><div className="mt-2 grid gap-2 sm:grid-cols-2">{permissions.map((permission) => { const allowed = ceiling.includes(permission); return <label key={permission} className={`flex items-start gap-3 rounded-xl border p-3 ${allowed ? "border-border" : "opacity-40"}`}><input type="checkbox" disabled={!allowed} checked={selected.includes(permission)} onChange={() => onToggle(permission)} className="mt-1"/><span><span className="text-sm font-bold">{PERMISSIONS[permission]}</span>{HIGH_RISK_PERMISSIONS.includes(permission) && <span className="ml-2 rounded bg-red-100 px-1.5 py-0.5 text-micro font-black text-red-700">HIGH RISK</span>}</span></label>; })}</div></fieldset>)}</div>; }
-function PermissionEditor({ member, onClose, onSave }: { member: StaffMember; onClose: () => void; onSave: (member: StaffMember, permissions: PermissionKey[]) => void }) { const role = member.role as StaffRole; const ceiling = getPermissionCeiling(role); const [selected, setSelected] = useState(member.permissions.filter((permission): permission is PermissionKey => permission in PERMISSIONS)); return <div className="fixed inset-0 z-[90] flex items-end justify-center bg-slate-950/60 p-2 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="permission-editor-title"><div className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-t-3xl bg-background p-5 sm:rounded-3xl"><h2 id="permission-editor-title" className="text-xl font-black">Permissions · {member.name}</h2><div className="mt-4"><PermissionPicker selected={selected} ceiling={ceiling} onToggle={(permission) => setSelected((current) => current.includes(permission) ? current.filter((item) => item !== permission) : [...current, permission])}/></div><div className="mt-5 grid grid-cols-2 gap-2"><button onClick={onClose} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button onClick={() => onSave(member, selected)} className="h-11 rounded-2xl bg-primary font-black text-white">Save & sign out user</button></div></div></div>; }
+function PermissionEditor({ member, onClose, onSave }: { member: StaffMember; onClose: () => void; onSave: (member: StaffMember, permissions: PermissionKey[]) => void }) {
+  const role = member.role as StaffRole;
+  const ceiling = getPermissionCeiling(role);
+  const [selected, setSelected] = useState(member.permissions.filter((permission): permission is PermissionKey => permission in PERMISSIONS));
+  return (
+    <Dialog open onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+      <DialogContent className="max-h-[85vh] max-w-2xl overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Permissions · {member.name}</DialogTitle>
+        </DialogHeader>
+        <PermissionPicker selected={selected} ceiling={ceiling} onToggle={(permission) => setSelected((current) => current.includes(permission) ? current.filter((item) => item !== permission) : [...current, permission])} />
+        <DialogFooter className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+          <button onClick={onClose} className="h-11 rounded-2xl border border-border font-black">Cancel</button>
+          <button onClick={() => onSave(member, selected)} className="h-11 rounded-2xl bg-primary font-black text-white">Save & sign out user</button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}

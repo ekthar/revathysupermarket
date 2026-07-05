@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Truck } from "lucide-react";
 import { readApiResponse } from "@/lib/client-api";
 import { estimateOrderEta, type ActiveOrderSummary } from "@/lib/live-order";
+import { springs } from "@/lib/motion";
 
 const statusLabels: Record<string, string> = {
   ORDER_RECEIVED: "Order received",
@@ -57,11 +58,11 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
     <AnimatePresence>
       {activeOrder && (
         <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="mx-4 overflow-hidden"
+          initial={{ opacity: 0, scale: 0.96, y: -8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: -8 }}
+          transition={springs.enter}
+          className="mx-4"
         >
           <div className="pb-4">
           <Link

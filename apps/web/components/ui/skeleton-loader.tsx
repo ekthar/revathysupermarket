@@ -20,7 +20,7 @@ export function Skeleton({ className }: { className?: string }) {
 // Product card skeleton
 export function ProductCardSkeleton({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="bg-white rounded-2xl overflow-hidden card-elevated">
+    <div className="bg-card rounded-2xl overflow-hidden card-elevated">
       <Skeleton className={cn("w-full", compact ? "aspect-square" : "aspect-[4/3.2]")} />
       <div className="p-3 space-y-2">
         <Skeleton className="h-3 w-3/4 rounded-full" />
@@ -50,7 +50,7 @@ export function CategoryCardSkeleton() {
 // Cart item skeleton
 export function CartItemSkeleton() {
   return (
-    <div className="bg-white rounded-2xl p-3.5 card-elevated">
+    <div className="bg-card rounded-2xl p-3.5 card-elevated">
       <div className="flex gap-3">
         <Skeleton className="h-[72px] w-[72px] shrink-0 rounded-xl" />
         <div className="flex-1 space-y-2">

@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 /* ─── Action Badge ─── */
 function ActionBadge({ action }: { action: string }) {
   const lower = action.toLowerCase();
-  let color = "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300";
+  let color = "bg-muted text-muted-foreground";
 
   if (lower.includes("created") || lower.includes("imported")) {
     color = "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300";
@@ -334,13 +334,13 @@ export default async function AuditLogPage({
             name="action"
             defaultValue={params.action ?? ""}
             placeholder="Filter by action"
-            className="h-12 rounded-2xl border border-white/70 bg-white/90 px-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-slate-900"
+            className="h-12 rounded-2xl border border-border bg-card/90 px-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary"
           />
           <input
             name="actor"
             defaultValue={params.actor ?? ""}
             placeholder="Filter by staff member"
-            className="h-12 rounded-2xl border border-white/70 bg-white/90 px-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-slate-900"
+            className="h-12 rounded-2xl border border-border bg-card/90 px-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary"
           />
         </form>
       </div>

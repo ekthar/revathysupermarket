@@ -25,7 +25,7 @@ export function OrderActionModal({
   ackLoading,
 }: OrderActionModalProps) {
   return (
-    <div className="fixed inset-x-3 top-4 z-50 mx-auto max-w-2xl rounded-xl border border-red-200 bg-white p-4 shadow-premium dark:border-red-500/40 dark:bg-slate-950">
+    <div className="fixed inset-x-3 top-4 z-50 mx-auto max-w-2xl rounded-xl border border-red-200 bg-card p-4 shadow-premium dark:border-red-500/40">
       <div className="flex items-start gap-3">
         <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-red-600 text-white">
           <BellRing className="h-5 w-5" />

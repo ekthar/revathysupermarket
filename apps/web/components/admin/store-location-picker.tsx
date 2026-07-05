@@ -140,7 +140,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
         </div>
 
         {/* Top-left badge */}
-        <div className="absolute left-3 top-3 z-[400] flex items-center gap-1.5 rounded-xl bg-white/95 px-3 py-1.5 shadow-md backdrop-blur-sm dark:bg-neutral-900/95">
+        <div className="absolute left-3 top-3 z-[400] flex items-center gap-1.5 rounded-xl bg-card/95 px-3 py-1.5 shadow-md backdrop-blur-sm">
           <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
           <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-300">
             Drag map to reposition
@@ -152,7 +152,7 @@ export function StoreLocationPicker({ latitude, longitude, onChange }: StoreLoca
           type="button"
           onClick={useMyLocation}
           disabled={locating}
-          className="absolute bottom-14 right-3 z-[400] flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50 dark:bg-neutral-900"
+          className="absolute bottom-14 right-3 z-[400] flex h-10 w-10 items-center justify-center rounded-xl bg-card shadow-lg transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
           aria-label="Use current GPS location"
           title="Use current GPS location"
         >

@@ -24,8 +24,8 @@ export default async function AdminPromoCodesPage() {
     <div className="space-y-5">
       <div className="rounded-2xl bg-gradient-to-br from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-slate-900 p-5">
         <p className="text-caption font-bold uppercase text-orange-600 dark:text-orange-400">Marketing</p>
-        <h1 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Promo Codes</h1>
-        <p className="text-caption text-slate-500 dark:text-slate-400 mt-1">Create and manage discount codes for customers</p>
+        <h1 className="mt-1 text-xl font-bold text-foreground">Promo Codes</h1>
+        <p className="text-caption text-muted-foreground mt-1">Create and manage discount codes for customers</p>
       </div>
 
       <PromoCodesClient

@@ -128,7 +128,7 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
         <form onSubmit={handleCreate} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-xl font-black">Create Offer</h3>
-            <button type="button" onClick={() => { setShowCreate(false); resetForm(); }}>
+            <button type="button" onClick={() => { setShowCreate(false); resetForm(); }} aria-label="Close">
               <X className="h-5 w-5 text-muted-foreground" />
             </button>
           </div>
@@ -188,13 +188,13 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-slate-900 dark:text-white truncate">{offer.title}</h4>
+                      <h4 className="font-bold text-foreground truncate">{offer.title}</h4>
                       {offer.badge && (
                         <span className="text-micro font-black bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 px-2 py-0.5 rounded-full shrink-0">
                           {offer.badge}
                         </span>
                       )}
-                      <span className={`text-micro font-bold px-2 py-0.5 rounded-full shrink-0 ${offer.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-slate-100 text-slate-500 dark:bg-slate-800"}`}>
+                      <span className={`text-micro font-bold px-2 py-0.5 rounded-full shrink-0 ${offer.isActive ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300" : "bg-muted text-muted-foreground"}`}>
                         {offer.isActive ? "Active" : "Inactive"}
                       </span>
                     </div>
@@ -207,10 +207,10 @@ export function OfferManagementClient({ offers, categories }: { offers: Offer[];
                     </p>
                   </div>
                   <div className="flex gap-1.5 shrink-0">
-                    <button type="button" onClick={() => toggleOffer(offer)} className="h-9 w-9 flex items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors" title={offer.isActive ? "Disable" : "Enable"}>
+                    <button type="button" onClick={() => toggleOffer(offer)} className="h-9 w-9 flex items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors" title={offer.isActive ? "Disable" : "Enable"} aria-label={offer.isActive ? `Disable ${offer.title}` : `Enable ${offer.title}`}>
                       {offer.isActive ? <EyeOff className="h-3.5 w-3.5 text-primary" /> : <Eye className="h-3.5 w-3.5 text-primary" />}
                     </button>
-                    <button type="button" onClick={() => deleteOffer(offer)} className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 transition-colors">
+                    <button type="button" onClick={() => deleteOffer(offer)} className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 transition-colors" aria-label={`Delete ${offer.title}`}>
                       <Trash2 className="h-3.5 w-3.5 text-red-500" />
                     </button>
                   </div>

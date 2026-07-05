@@ -267,7 +267,7 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 12 }}
               transition={{ type: "spring", stiffness: 300, damping: 26 }}
-              className="relative z-10 bg-white dark:bg-slate-900 w-full max-w-lg rounded-2xl shadow-[0_0_60px_rgba(239,68,68,0.35)] border-4 border-red-500 my-8 overflow-hidden"
+              className="relative z-10 bg-card w-full max-w-lg rounded-2xl shadow-[0_0_60px_rgba(239,68,68,0.35)] border-4 border-red-500 my-8 overflow-hidden"
             >
               {/* Header */}
               <div className="relative flex items-center gap-3 px-6 py-5 bg-gradient-to-r from-red-600 via-red-500 to-orange-500 text-white overflow-hidden">
@@ -337,18 +337,18 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, x: 40, scale: 0.95, transition: { duration: 0.2 } }}
                       transition={{ type: "spring", stiffness: 320, damping: 28, delay: index * 0.04 }}
-                      className="rounded-xl border border-slate-200 dark:border-slate-700 p-4 bg-slate-50 dark:bg-slate-800/50"
+                      className="rounded-xl border border-border p-4 bg-muted"
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <p className="font-black text-slate-900 dark:text-white">#{order.orderNumber}</p>
-                          <p className="text-sm text-slate-600 dark:text-slate-300 truncate">{order.customerName}</p>
-                          <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-slate-400">
+                          <p className="font-black text-foreground">#{order.orderNumber}</p>
+                          <p className="text-sm text-muted-foreground truncate">{order.customerName}</p>
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1"><Phone className="h-3 w-3" />{order.phone}</span>
                             <span className="flex items-center gap-1"><ShoppingBag className="h-3 w-3" />{order.itemCount} items</span>
                           </div>
                         </div>
-                        <p className="font-black text-slate-900 dark:text-white whitespace-nowrap">{formatCurrency(order.total)}</p>
+                        <p className="font-black text-foreground whitespace-nowrap">{formatCurrency(order.total)}</p>
                       </div>
                       <Button
                         type="button"
@@ -366,7 +366,7 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-700 flex flex-col gap-2">
+              <div className="px-6 py-4 border-t border-border flex flex-col gap-2">
                 {orders.length > 1 && (
                   <Button
                     type="button"
@@ -380,7 +380,7 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
                 )}
                 <Link
                   href="/admin/orders"
-                  className="w-full h-11 rounded-2xl border border-slate-300 dark:border-slate-600 flex items-center justify-center text-sm font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:-translate-y-0.5 transition"
+                  className="w-full h-11 rounded-2xl border border-border flex items-center justify-center text-sm font-semibold text-muted-foreground hover:bg-muted hover:-translate-y-0.5 transition"
                 >
                   View on Orders Page
                 </Link>

@@ -209,7 +209,7 @@ export function CartPageClient() {
       <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-md">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/products" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors press">
+            <Link href="/products" aria-label="Back to products" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors press">
               <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
             </Link>
             <div>
@@ -315,6 +315,7 @@ export function CartPageClient() {
                   <button
                     type="button"
                     onClick={() => handleRemove(item.id)}
+                    aria-label={`Remove ${item.name} from cart`}
                     className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors press shrink-0"
                   >
                     <Trash2 className="h-3 w-3 text-neutral-300 hover:text-red-400" />

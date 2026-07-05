@@ -52,3 +52,6 @@ GoogleService-Info.plist
 *.key
 *.mobileprovision
 *.orig.*
+
+# claude code local tooling
+.claude/

@@ -15,11 +15,11 @@ export function EmptyCartState() {
         className="relative"
       >
         <div className="h-24 w-24 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-          <ShoppingBag className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+          <ShoppingBag className="h-10 w-10 text-slate-300 dark:text-slate-600" aria-hidden="true" />
         </div>
         {/* Decorative dots */}
-        <motion.span animate={{ y: [-2, 2, -2] }} transition={{ duration: 2, repeat: Infinity }} className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary/30" />
-        <motion.span animate={{ y: [2, -2, 2] }} transition={{ duration: 2.5, repeat: Infinity }} className="absolute -bottom-1 -left-2 h-2 w-2 rounded-full bg-orange-300" />
+        <motion.span aria-hidden="true" animate={{ y: [-2, 2, -2] }} transition={{ duration: 2, repeat: Infinity }} className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-primary/30" />
+        <motion.span aria-hidden="true" animate={{ y: [2, -2, 2] }} transition={{ duration: 2.5, repeat: Infinity }} className="absolute -bottom-1 -left-2 h-2 w-2 rounded-full bg-orange-300" />
       </motion.div>
 
       <motion.h2
@@ -58,9 +58,9 @@ export function EmptyOrdersState() {
         className="relative"
       >
         <div className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center">
-          <Package className="h-9 w-9 text-slate-300 dark:text-slate-600" />
+          <Package className="h-9 w-9 text-slate-300 dark:text-slate-600" aria-hidden="true" />
         </div>
-        <motion.span animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }} className="absolute -top-1 right-0 h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center">
+        <motion.span aria-hidden="true" animate={{ scale: [1, 1.2, 1] }} transition={{ duration: 2, repeat: Infinity }} className="absolute -top-1 right-0 h-4 w-4 rounded-full bg-primary/20 flex items-center justify-center">
           <span className="h-2 w-2 rounded-full bg-primary" />
         </motion.span>
       </motion.div>
@@ -90,7 +90,7 @@ export function EmptySearchState({ query }: { query?: string }) {
         transition={{ type: "spring", stiffness: 200, damping: 15 }}
         className="h-20 w-20 rounded-full bg-slate-50 dark:bg-slate-900 flex items-center justify-center"
       >
-        <Search className="h-9 w-9 text-slate-300 dark:text-slate-600" />
+        <Search className="h-9 w-9 text-slate-300 dark:text-slate-600" aria-hidden="true" />
       </motion.div>
 
       <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-5 text-lg font-bold text-slate-900 dark:text-white">

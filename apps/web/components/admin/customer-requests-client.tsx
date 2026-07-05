@@ -23,7 +23,7 @@ type Counts = { open: number; urgent: number; waiting: number; resolved: number 
 
 const typeIcons = { substitution: Shuffle, support: MessageSquare, return: RotateCcw, damage: AlertCircle };
 const typeColors = { substitution: "bg-blue-100 text-blue-700", support: "bg-purple-100 text-purple-700", return: "bg-orange-100 text-orange-700", damage: "bg-red-100 text-red-700" };
-const priorityColors: Record<string, string> = { URGENT: "text-red-600", HIGH: "text-orange-600", NORMAL: "text-slate-600", LOW: "text-slate-400" };
+const priorityColors: Record<string, string> = { URGENT: "text-red-600", HIGH: "text-orange-600", NORMAL: "text-muted-foreground", LOW: "text-muted-foreground" };
 
 function timeAgo(date: string) {
   const diff = Date.now() - new Date(date).getTime();
@@ -49,8 +49,8 @@ export function CustomerRequestsClient({ requests, counts }: { requests: Request
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black text-slate-900 dark:text-white">Customer Requests</h1>
-        <span className="text-xs text-slate-500 dark:text-neutral-400">{localRequests.length} total</span>
+        <h1 className="text-xl font-black text-foreground">Customer Requests</h1>
+        <span className="text-xs text-muted-foreground">{localRequests.length} total</span>
       </div>
 
       {/* Tabs */}
@@ -66,7 +66,7 @@ export function CustomerRequestsClient({ requests, counts }: { requests: Request
             onClick={() => setTab(t.key as typeof tab)}
             className={cn(
               "flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap",
-              tab === t.key ? "bg-primary text-white shadow-sm" : "bg-card border border-border text-slate-600 dark:text-neutral-300 hover:border-primary/30"
+              tab === t.key ? "bg-primary text-white shadow-sm" : "bg-card border border-border text-muted-foreground hover:border-primary/30"
             )}
           >
             {t.label}
@@ -78,7 +78,7 @@ export function CustomerRequestsClient({ requests, counts }: { requests: Request
       {/* Request list */}
       {filtered.length === 0 ? (
         <div className="rounded-2xl bg-card border border-border p-10 text-center">
-          <p className="text-sm text-slate-400 dark:text-neutral-500">No requests in this queue</p>
+          <p className="text-sm text-muted-foreground">No requests in this queue</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -92,20 +92,20 @@ export function CustomerRequestsClient({ requests, counts }: { requests: Request
                   </span>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{req.subject}</p>
+                      <p className="text-sm font-bold text-foreground truncate">{req.subject}</p>
                       {req.priority === "URGENT" && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
                     </div>
-                    <div className="flex items-center gap-3 mt-1 text-xs text-slate-500 dark:text-neutral-400">
+                    <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                       <span className="font-medium">{req.customer}</span>
                       {req.orderNumber && (
                         <Link href={`/admin/orders/${req.orderId}`} className="text-primary hover:underline font-semibold">#{req.orderNumber}</Link>
                       )}
-                      {req.assignee && <span className="bg-slate-100 dark:bg-neutral-800 px-1.5 py-0.5 rounded text-micro font-semibold">{req.assignee}</span>}
+                      {req.assignee && <span className="bg-muted px-1.5 py-0.5 rounded text-micro font-semibold">{req.assignee}</span>}
                     </div>
                   </div>
                   <div className="text-right shrink-0">
-                    <span className={cn("text-xs font-semibold", priorityColors[req.priority] || "text-slate-500")}>{req.priority}</span>
-                    <p className="text-micro text-slate-400 dark:text-neutral-500 mt-0.5 flex items-center gap-0.5 justify-end"><Clock className="h-3 w-3" /> {timeAgo(req.createdAt)}</p>
+                    <span className={cn("text-xs font-semibold", priorityColors[req.priority] || "text-muted-foreground")}>{req.priority}</span>
+                    <p className="text-micro text-muted-foreground mt-0.5 flex items-center gap-0.5 justify-end"><Clock className="h-3 w-3" /> {timeAgo(req.createdAt)}</p>
                   </div>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">{req.type === "support" && <><button onClick={() => supportStatus(req, "WAITING_FOR_CUSTOMER")} className="h-9 rounded-xl bg-amber-100 px-3 text-caption font-black text-amber-800">Waiting</button><button onClick={() => supportStatus(req, "RESOLVED")} className="h-9 rounded-xl bg-emerald-100 px-3 text-caption font-black text-emerald-700">Resolve</button><Link href="/admin/support" className="flex h-9 items-center rounded-xl border border-border px-3 text-caption font-black">Reply</Link></>}{req.type === "return" && <Link href="/admin/returns" className="flex h-9 items-center rounded-xl bg-primary px-3 text-caption font-black text-white">Open return</Link>}{req.type === "damage" && <><button onClick={() => damageDecision(req, "approve")} className="h-9 rounded-xl bg-primary px-3 text-caption font-black text-white">Approve</button><button onClick={() => damageDecision(req, "reject")} className="h-9 rounded-xl bg-red-100 px-3 text-caption font-black text-red-700">Reject</button></>}</div>

@@ -155,7 +155,7 @@ export function LoyaltySettingsClient({ initialConfig }: { initialConfig: Loyalt
         </div>
         <button
           disabled={saving}
-          className="mt-3 h-11 rounded-2xl bg-slate-900 px-5 text-sm font-black text-white disabled:opacity-50 dark:bg-white dark:text-slate-900"
+          className="mt-3 h-11 rounded-2xl bg-foreground px-5 text-sm font-black text-background disabled:opacity-50"
         >
           Apply adjustment
         </button>

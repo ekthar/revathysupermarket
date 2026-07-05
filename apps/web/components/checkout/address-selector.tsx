@@ -295,8 +295,8 @@ export function AddressSelector({
                 </motion.button>
               </div>
               {isOutsideRadius && (
-                <p className="mt-3 text-caption font-semibold text-red-600 flex items-center gap-1.5">
-                  <AlertCircle className="h-3.5 w-3.5" />
+                <p role="alert" aria-live="polite" className="mt-3 text-caption font-semibold text-red-600 flex items-center gap-1.5">
+                  <AlertCircle className="h-3.5 w-3.5" aria-hidden="true" />
                   Outside delivery radius ({distance?.toFixed(1)} KM)
                 </p>
               )}

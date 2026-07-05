@@ -268,7 +268,7 @@ export function ProductGrid({
             value={query}
             onChange={handleQueryChange}
             placeholder="Search for items"
-            className="h-12 rounded-2xl border-0 bg-white pl-11 text-title font-semibold shadow-elevation-2 placeholder:text-neutral-400"
+            className="h-12 rounded-2xl border-0 bg-card pl-11 text-title font-semibold shadow-elevation-2 placeholder:text-muted-foreground"
           />
         </label>
         <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:hidden">
@@ -285,7 +285,7 @@ export function ProductGrid({
               key={item}
               type="button"
               onClick={() => handleCategoryChange(item)}
-              className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-black/5 bg-white px-4 text-xs font-black text-neutral-700 shadow-sm whitespace-nowrap"}
+              className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-border bg-card px-4 text-xs font-black text-muted-foreground shadow-sm whitespace-nowrap"}
             >
               {item}
             </button>

@@ -24,7 +24,7 @@ export function HomeSearch({ products }: { products: Product[] }) {
   }, [products, query]);
 
   return (
-    <div className="sticky top-[56px] md:top-[70px] z-30 bg-white/98 backdrop-blur-md px-4 py-3">
+    <div className="sticky top-[56px] md:top-[70px] z-30 bg-card/98 backdrop-blur-md px-4 py-3">
       <div className="relative max-w-2xl mx-auto flex items-center gap-2.5">
         <div className="relative flex-1">
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-[16px] w-[16px] text-neutral-400 pointer-events-none" />
@@ -34,7 +34,7 @@ export function HomeSearch({ products }: { products: Product[] }) {
             onFocus={() => setFocused(true)}
             onBlur={() => setTimeout(() => setFocused(false), 200)}
             placeholder={t("searchPlaceholder")}
-            className="w-full h-11 rounded-full bg-neutral-50 border border-neutral-100 pl-10 pr-8 text-body outline-none placeholder:text-neutral-400 focus:border-primary/40 focus:bg-white focus:shadow-sm transition-all"
+            className="w-full h-11 rounded-full bg-muted border border-border pl-10 pr-8 text-body outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:bg-card focus:shadow-sm transition-all"
           />
           {query && (
             <button type="button" onClick={() => setQuery("")} className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 press">

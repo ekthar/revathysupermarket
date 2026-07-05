@@ -66,7 +66,7 @@ export default async function AccountPage() {
       </div>
 
       {/* Wallet Balance Card */}
-      <Link href="/account/wallet" className="block rounded-lg bg-white dark:bg-neutral-900 p-4 text-neutral-950 dark:text-white shadow-elevation-3 press">
+      <Link href="/account/wallet" className="block rounded-lg bg-card p-4 text-foreground shadow-elevation-3 press">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-50 dark:bg-secondary-900/30">
@@ -82,7 +82,7 @@ export default async function AccountPage() {
       </Link>
 
       {/* My Activity */}
-      <div className="overflow-hidden rounded-lg bg-white shadow-elevation-3 dark:bg-neutral-900">
+      <div className="overflow-hidden rounded-lg bg-card shadow-elevation-3">
         <p className="px-4 pt-3.5 pb-1 text-caption font-semibold text-neutral-400 uppercase tracking-wide">My Activity</p>
         <AccountRow href="/dashboard" icon={Package} label="My Orders" detail={`${orderCount} orders`} />
         <AccountRow href="/account/edit" icon={MapPin} label="Saved Addresses" detail={`${addressCount} saved`} />
@@ -93,7 +93,7 @@ export default async function AccountPage() {
       </div>
 
       {/* Settings & Preferences */}
-      <div className="overflow-hidden rounded-lg bg-white shadow-elevation-3 dark:bg-neutral-900">
+      <div className="overflow-hidden rounded-lg bg-card shadow-elevation-3">
         <p className="px-4 pt-3.5 pb-1 text-caption font-semibold text-neutral-400 uppercase tracking-wide">Settings</p>
         <AccountRow href="/account/settings" icon={Settings} label="Preferences" detail="Notifications & theme" />
         {user?.phone && <AccountRow href="/account/edit" icon={Phone} label="Phone" detail={user.phone} />}
@@ -105,7 +105,7 @@ export default async function AccountPage() {
 
       {/* Store Links */}
       {(storeSettings.googleMapsUrl || storeSettings.instagramUrl || storeSettings.facebookUrl) && (
-        <div className="overflow-hidden rounded-lg bg-white shadow-elevation-3 dark:bg-neutral-900 p-4">
+        <div className="overflow-hidden rounded-lg bg-card shadow-elevation-3 p-4">
           <p className="mb-3 text-center text-caption font-semibold text-neutral-400 uppercase tracking-wide">Find Us</p>
           <StoreInfoLinks
             googleMapsUrl={storeSettings.googleMapsUrl}
@@ -118,7 +118,7 @@ export default async function AccountPage() {
       <form action={async () => { "use server"; await signOut({ redirectTo: "/" }); }}>
         <button
           type="submit"
-          className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-white text-body font-bold text-red-500 shadow-elevation-3 press dark:bg-neutral-900"
+          className="flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-card text-body font-bold text-red-500 shadow-elevation-3 press"
         >
           <LogOut className="h-4 w-4" />
           Logout

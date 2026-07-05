@@ -120,7 +120,7 @@ export function LoginForm({
         <div className="absolute -right-10 top-10 h-44 w-44 rounded-full bg-secondary-100 blur-3xl" />
         <div className="absolute -bottom-16 left-6 h-56 w-56 rounded-full bg-white/10 blur-3xl" />
         <div className="relative">
-          <div className="flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-black">
+          <div className="stay-light flex h-14 w-14 items-center justify-center rounded-3xl bg-white text-black">
             <ShoppingBasket className="h-7 w-7" />
           </div>
           <p className="mt-6 text-xs font-black uppercase tracking-wide text-secondary-400">{SITE.name}</p>

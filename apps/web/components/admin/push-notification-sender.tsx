@@ -57,7 +57,7 @@ const templates = [
     id: "custom",
     name: "Custom Message",
     icon: Bell,
-    color: "bg-slate-50 text-slate-600 dark:bg-slate-800",
+    color: "bg-muted text-muted-foreground",
     title: "",
     body: "",
     url: "/"
@@ -133,21 +133,21 @@ export function PushNotificationSender({
     <div className="space-y-5">
       {/* Subscriber stats */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
+        <div className="rounded-2xl bg-card border border-border p-4">
           <Users className="h-5 w-5 text-blue-600" />
-          <p className="text-heading font-bold text-slate-900 dark:text-white mt-2">{totalSubscribers}</p>
-          <p className="text-caption text-slate-400">Total subscribers</p>
+          <p className="text-heading font-bold text-foreground mt-2">{totalSubscribers}</p>
+          <p className="text-caption text-muted-foreground">Total subscribers</p>
         </div>
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
+        <div className="rounded-2xl bg-card border border-border p-4">
           <ShoppingBag className="h-5 w-5 text-primary" />
-          <p className="text-heading font-bold text-slate-900 dark:text-white mt-2">{customerSubscribers}</p>
-          <p className="text-caption text-slate-400">Customers</p>
+          <p className="text-heading font-bold text-foreground mt-2">{customerSubscribers}</p>
+          <p className="text-caption text-muted-foreground">Customers</p>
         </div>
       </div>
 
       {/* Templates */}
-      <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4">
-        <p className="text-caption font-semibold text-slate-500 dark:text-slate-400 mb-3">Choose a template or write custom</p>
+      <div className="rounded-2xl bg-card border border-border p-4">
+        <p className="text-caption font-semibold text-muted-foreground mb-3">Choose a template or write custom</p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
           {templates.map((template) => {
             const Icon = template.icon;
@@ -160,13 +160,13 @@ export function PushNotificationSender({
                 className={`flex flex-col items-center gap-2 p-3 rounded-xl transition-all press ${
                   isSelected
                     ? "bg-primary/10 border-2 border-primary dark:bg-primary/20"
-                    : "bg-slate-50 dark:bg-slate-800 border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700"
+                    : "bg-muted border-2 border-transparent hover:border-border"
                 }`}
               >
                 <div className={`h-8 w-8 rounded-lg ${template.color} flex items-center justify-center`}>
                   <Icon className="h-4 w-4" />
                 </div>
-                <span className="text-micro font-semibold text-slate-700 dark:text-slate-300">{template.name}</span>
+                <span className="text-micro font-semibold text-muted-foreground">{template.name}</span>
               </button>
             );
           })}
@@ -174,11 +174,11 @@ export function PushNotificationSender({
       </div>
 
       {/* Compose form */}
-      <form onSubmit={sendNotification} className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-5 space-y-4">
-        <p className="text-body font-bold text-slate-900 dark:text-white">Compose Notification</p>
+      <form onSubmit={sendNotification} className="rounded-2xl bg-card border border-border p-5 space-y-4">
+        <p className="text-body font-bold text-foreground">Compose Notification</p>
 
         <div>
-          <label className="text-caption font-semibold text-slate-500 mb-1 block">Title</label>
+          <label className="text-caption font-semibold text-muted-foreground mb-1 block">Title</label>
           <input
             type="text"
             value={title}
@@ -186,12 +186,12 @@ export function PushNotificationSender({
             placeholder="Notification title"
             maxLength={100}
             required
-            className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body font-medium outline-none focus:border-primary"
+            className="w-full h-10 rounded-xl border border-border bg-muted px-3 text-body font-medium outline-none focus:border-primary"
           />
         </div>
 
         <div>
-          <label className="text-caption font-semibold text-slate-500 mb-1 block">Message</label>
+          <label className="text-caption font-semibold text-muted-foreground mb-1 block">Message</label>
           <textarea
             value={body}
             onChange={(e) => setBody(e.target.value)}
@@ -199,28 +199,28 @@ export function PushNotificationSender({
             maxLength={300}
             rows={3}
             required
-            className="w-full rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-body outline-none resize-none focus:border-primary"
+            className="w-full rounded-xl border border-border bg-muted px-3 py-2 text-body outline-none resize-none focus:border-primary"
           />
-          <p className="text-micro text-slate-400 mt-1">{body.length}/300 characters</p>
+          <p className="text-micro text-muted-foreground mt-1">{body.length}/300 characters</p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="text-caption font-semibold text-slate-500 mb-1 block">Link (URL)</label>
+            <label className="text-caption font-semibold text-muted-foreground mb-1 block">Link (URL)</label>
             <input
               type="text"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="/"
-              className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body outline-none focus:border-primary"
+              className="w-full h-10 rounded-xl border border-border bg-muted px-3 text-body outline-none focus:border-primary"
             />
           </div>
           <div>
-            <label className="text-caption font-semibold text-slate-500 mb-1 block">Audience</label>
+            <label className="text-caption font-semibold text-muted-foreground mb-1 block">Audience</label>
             <select
               value={audience}
               onChange={(e) => setAudience(e.target.value as any)}
-              className="w-full h-10 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 text-body font-semibold outline-none"
+              className="w-full h-10 rounded-xl border border-border bg-muted px-3 text-body font-semibold outline-none"
             >
               <option value="all">All Subscribers ({totalSubscribers})</option>
               <option value="customers">Customers Only ({customerSubscribers})</option>
@@ -231,15 +231,15 @@ export function PushNotificationSender({
 
         {/* Preview */}
         {title && (
-          <div className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3 border border-slate-100 dark:border-slate-700">
-            <p className="text-micro font-semibold text-slate-400 uppercase mb-2">Preview</p>
+          <div className="rounded-xl bg-muted p-3 border border-border">
+            <p className="text-micro font-semibold text-muted-foreground uppercase mb-2">Preview</p>
             <div className="flex items-start gap-3">
               <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                 <Bell className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-body font-bold text-slate-900 dark:text-white">{title}</p>
-                <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5">{body}</p>
+                <p className="text-body font-bold text-foreground">{title}</p>
+                <p className="text-caption text-muted-foreground mt-0.5">{body}</p>
               </div>
             </div>
           </div>
@@ -281,22 +281,22 @@ export function PushNotificationSender({
 
       {/* Broadcast History */}
       {history.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden">
-          <p className="px-4 pt-4 pb-2 text-caption font-semibold text-slate-400 uppercase">Recent Broadcasts</p>
-          <div className="divide-y divide-slate-50 dark:divide-slate-800">
+        <div className="rounded-2xl bg-card border border-border overflow-hidden">
+          <p className="px-4 pt-4 pb-2 text-caption font-semibold text-muted-foreground uppercase">Recent Broadcasts</p>
+          <div className="divide-y divide-border">
             {history.map((item) => (
               <div key={item.id} className="px-4 py-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-caption font-semibold text-slate-800 dark:text-white truncate flex-1">{item.title}</p>
-                  <span className="text-micro text-slate-400 shrink-0 ml-2">
+                  <p className="text-caption font-semibold text-foreground truncate flex-1">{item.title}</p>
+                  <span className="text-micro text-muted-foreground shrink-0 ml-2">
                     {new Date(item.createdAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                   </span>
                 </div>
-                <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5 truncate">{item.body}</p>
+                <p className="text-caption text-muted-foreground mt-0.5 truncate">{item.body}</p>
                 <div className="flex items-center gap-3 mt-1.5">
                   <span className="text-micro font-medium text-emerald-600">{item.sent} sent</span>
                   {item.failed > 0 && <span className="text-micro font-medium text-red-500">{item.failed} failed</span>}
-                  <span className="text-micro text-slate-400">{item.audience}</span>
+                  <span className="text-micro text-muted-foreground">{item.audience}</span>
                 </div>
               </div>
             ))}

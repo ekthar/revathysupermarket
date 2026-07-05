@@ -32,51 +32,51 @@ export default async function DispatchPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-black text-slate-900">Dispatch</h1>
+        <h1 className="text-xl font-black text-foreground">Dispatch</h1>
         <span className="text-xs bg-primary/10 text-primary px-3 py-1 rounded-full font-bold">{orders.length} active</span>
       </div>
 
       {/* Partners available */}
-      <section className="rounded-2xl bg-white border border-slate-200 p-5">
-        <h2 className="text-sm font-black text-slate-900 mb-3 flex items-center gap-2"><Truck className="h-4 w-4 text-primary" /> Delivery Partners ({partners.length})</h2>
+      <section className="rounded-2xl bg-card border border-border p-5">
+        <h2 className="text-sm font-black text-foreground mb-3 flex items-center gap-2"><Truck className="h-4 w-4 text-primary" /> Delivery Partners ({partners.length})</h2>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {partners.map((p) => (
-            <div key={p.id} className="rounded-xl bg-slate-50 p-3 flex items-center gap-3">
+            <div key={p.id} className="rounded-xl bg-muted p-3 flex items-center gap-3">
               <div className="h-9 w-9 rounded-full bg-primary/10 flex items-center justify-center">
                 <User className="h-4 w-4 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-slate-800">{p.name}</p>
-                <p className="text-xs text-slate-500">{p.phone}</p>
+                <p className="text-sm font-semibold text-foreground">{p.name}</p>
+                <p className="text-xs text-muted-foreground">{p.phone}</p>
               </div>
               {p.locationUpdatedAt && (
-                <span className="ml-auto text-micro text-slate-400">
+                <span className="ml-auto text-micro text-muted-foreground">
                   {new Date(p.locationUpdatedAt).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               )}
             </div>
           ))}
-          {partners.length === 0 && <p className="text-sm text-slate-400 col-span-full">No delivery partners available</p>}
+          {partners.length === 0 && <p className="text-sm text-muted-foreground col-span-full">No delivery partners available</p>}
         </div>
       </section>
 
       {/* Active deliveries */}
       <section className="space-y-3">
         {orders.length === 0 ? (
-          <div className="rounded-2xl bg-white border border-slate-200 p-10 text-center">
-            <p className="text-sm text-slate-400">No orders ready for dispatch</p>
+          <div className="rounded-2xl bg-card border border-border p-10 text-center">
+            <p className="text-sm text-muted-foreground">No orders ready for dispatch</p>
           </div>
         ) : (
           orders.map((order) => (
-            <Link key={order.id} href={`/admin/orders/${order.id}`} className="block rounded-xl bg-white border border-slate-200 p-4 hover:border-primary/30 transition-colors">
+            <Link key={order.id} href={`/admin/orders/${order.id}`} className="block rounded-xl bg-card border border-border p-4 hover:border-primary/30 transition-colors">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-bold">#{order.orderNumber}</span>
                   <span className={`text-micro font-bold px-2 py-0.5 rounded-full ${statusColors[order.status] || ""}`}>{order.status.replace(/_/g, " ")}</span>
                 </div>
-                <span className="text-xs text-slate-500">{Number(order.distanceKm).toFixed(1)} km</span>
+                <span className="text-xs text-muted-foreground">{Number(order.distanceKm).toFixed(1)} km</span>
               </div>
-              <div className="flex items-center gap-4 text-xs text-slate-600">
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1"><User className="h-3 w-3" /> {order.customerName}</span>
                 <span className="flex items-center gap-1"><Phone className="h-3 w-3" /> {order.phone}</span>
                 <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {order.street}</span>

@@ -170,7 +170,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
       {recentlyChanged > 0 && <p className="mt-4 rounded-2xl bg-lime-fresh/25 p-3 text-sm font-black text-primary">Recently changed: {recentlyChanged} products</p>}
 
       {changedRows.length > 0 && (
-        <div className="sticky top-20 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-white/95 p-3 shadow-soft backdrop-blur dark:bg-slate-950/95">
+        <div className="sticky top-20 z-20 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/20 bg-card/95 p-3 shadow-soft backdrop-blur">
           <p className="text-sm font-black">{changedRows.length} changed rows ready for review</p>
           <Button type="button" size="sm" onClick={saveChanges} disabled={isPending || invalidRows.length > 0}>
             <Save className="h-4 w-4" />
@@ -213,7 +213,7 @@ export function ProductSpreadsheetManager({ products: initialProducts }: { produ
                         onKeyDown={(event) => {
                           if (event.key === "Escape") event.currentTarget.blur();
                         }}
-                        className={cn("min-h-10 w-full min-w-28 rounded-xl border border-transparent bg-transparent px-2 outline-none focus:border-primary focus:bg-white dark:focus:bg-slate-900", product.changed && "bg-lime-fresh/10")}
+                        className={cn("min-h-10 w-full min-w-28 rounded-xl border border-transparent bg-transparent px-2 outline-none focus:border-primary focus:bg-card", product.changed && "bg-lime-fresh/10")}
                       />
                     )}
                     {column.key === "name" && product.rowError && <p className="mt-1 text-xs font-bold text-red-600">{product.rowError}</p>}

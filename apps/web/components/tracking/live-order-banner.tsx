@@ -23,10 +23,6 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
   useEffect(() => {
     let active = true;
 
-    // TODO: This fetches all user orders and filters client-side to find active ones.
-    // For better scalability with users who have many past orders, consider adding
-    // a server-side filter (e.g. /api/orders?status=active) or a lightweight
-    // /api/orders/active endpoint to reduce payload size.
     async function fetchActiveOrder() {
       try {
         if (document.visibilityState === "hidden") return;

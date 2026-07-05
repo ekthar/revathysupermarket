@@ -409,7 +409,7 @@ export function AdminOrdersClient({
             >
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h3 className="text-title font-bold text-slate-900 dark:text-white">#{order.orderNumber}</h3>
+                  <h3 className="text-title font-bold text-foreground">#{order.orderNumber}</h3>
                   {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-red-600 px-2 py-0.5 text-micro font-bold text-white">
                       <BellRing className="h-3 w-3" /> New
@@ -420,22 +420,22 @@ export function AdminOrdersClient({
                     <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">{order.printCount > 1 ? `✓ Printed ×${order.printCount}` : "✓ Printed"}</span>
                   )}
                 </div>
-                <p suppressHydrationWarning className="text-caption text-slate-500 mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
+                <p suppressHydrationWarning className="text-caption text-muted-foreground mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
                 {order.deliveryInstructions && (
                   <p className="text-micro text-amber-600 dark:text-amber-400 mt-0.5 truncate max-w-[200px] sm:max-w-[300px]">📝 {order.deliveryInstructions}</p>
                 )}
               </div>
-              <p className="text-body font-bold text-slate-900 dark:text-white shrink-0 mr-2">{formatCurrency(order.total)}</p>
-              <ChevronDown className={cn("h-4 w-4 text-slate-400 shrink-0 transition-transform", expandedOrderIds.has(order.id) && "rotate-180")} />
+              <p className="text-body font-bold text-foreground shrink-0 mr-2">{formatCurrency(order.total)}</p>
+              <ChevronDown className={cn("h-4 w-4 text-muted-foreground shrink-0 transition-transform", expandedOrderIds.has(order.id) && "rotate-180")} />
             </button>
 
             {/* Expandable details */}
             {expandedOrderIds.has(order.id) && (
-            <div className="border-t border-slate-100 dark:border-slate-800">
+            <div className="border-t border-border">
               {/* Address bar */}
-              <div className="flex items-start gap-2 bg-slate-50 dark:bg-slate-800/50 px-4 py-2.5 sm:px-5">
-                <span className="mt-0.5 text-slate-400 shrink-0">📍</span>
-                <p className="text-xs font-semibold text-slate-600 dark:text-slate-400">{order.address}</p>
+              <div className="flex items-start gap-2 bg-muted px-4 py-2.5 sm:px-5">
+                <span className="mt-0.5 text-muted-foreground shrink-0">📍</span>
+                <p className="text-xs font-semibold text-muted-foreground">{order.address}</p>
               </div>
               {order.deliveryInstructions && (
                 <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-950/20 px-4 py-2.5 sm:px-5 border-b border-amber-100 dark:border-amber-900/30">
@@ -446,16 +446,16 @@ export function AdminOrdersClient({
               <div className="px-4 pb-5 pt-4 sm:px-5 space-y-4">
               {/* Action buttons */}
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                <a href={`tel:${order.phone}`} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">
+                <a href={`tel:${order.phone}`} className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-card text-xs font-black text-muted-foreground hover:bg-muted transition-colors">
                   <Phone className="h-3.5 w-3.5 text-blue-500" /> Call
                 </a>
                 <a href={`https://wa.me/${order.phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl bg-[#25D366] text-xs font-black text-white hover:bg-[#1ebe5d] transition-colors">
                   <Send className="h-3.5 w-3.5" /> WhatsApp
                 </a>
-                <a href={manualWhatsAppLink(order)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-xs font-black text-slate-700 dark:text-slate-200 hover:bg-slate-50 transition-colors">
+                <a href={manualWhatsAppLink(order)} target="_blank" rel="noreferrer" className="inline-flex h-10 items-center justify-center gap-1.5 rounded-xl border border-border bg-card text-xs font-black text-muted-foreground hover:bg-muted transition-colors">
                   <Send className="h-3.5 w-3.5 text-primary" /> Manual WA
                 </a>
-                <a href={`/admin/orders/${order.id}/invoice`} onClick={async (e) => { e.preventDefault(); await fetch(`/api/orders/${order.id}/print`, { method: "POST" }).catch(() => null); window.open(`/admin/orders/${order.id}/invoice`, "_blank"); }} className={cn("inline-flex h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-black transition-colors", order.printedAt ? "bg-emerald-500 text-white hover:bg-emerald-600" : "border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-slate-50")}>
+                <a href={`/admin/orders/${order.id}/invoice`} onClick={async (e) => { e.preventDefault(); await fetch(`/api/orders/${order.id}/print`, { method: "POST" }).catch(() => null); window.open(`/admin/orders/${order.id}/invoice`, "_blank"); }} className={cn("inline-flex h-10 items-center justify-center gap-1.5 rounded-xl text-xs font-black transition-colors", order.printedAt ? "bg-emerald-500 text-white hover:bg-emerald-600" : "border border-border bg-card text-muted-foreground hover:bg-muted")}>
                   <FileText className="h-3.5 w-3.5" />{order.printedAt ? (order.printCount > 1 ? "Duplicate ✓" : "Printed ✓") : "Print"}
                 </a>
               </div>
@@ -465,32 +465,32 @@ export function AdminOrdersClient({
                 </button>
               )}
               {/* Items */}
-              <div className="rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700">
+              <div className="rounded-2xl overflow-hidden border border-border">
                 <div className="flex items-center justify-between bg-slate-800 dark:bg-slate-900 px-4 py-2.5">
                   <span className="text-xs font-black uppercase tracking-wider text-slate-200">🛒 Items ({order.items.length})</span>
                   <span className="text-xs font-black text-slate-300">{formatCurrency(order.total)}</span>
                 </div>
-                <ul className="divide-y divide-slate-100 dark:divide-slate-800">
+                <ul className="divide-y divide-border">
                   {order.items.map((item, idx) => {
                     const itemTotal = item.price * item.quantity;
                     const gstRate = item.gstRate ?? 0;
                     const gstAmt = gstRate > 0 ? itemTotal - itemTotal / (1 + gstRate / 100) : 0;
-                    const rowBg = ["bg-white dark:bg-slate-800","bg-blue-50/50 dark:bg-blue-950/20","bg-emerald-50/50 dark:bg-emerald-950/20","bg-amber-50/50 dark:bg-amber-950/20","bg-purple-50/50 dark:bg-purple-950/20"][idx % 5];
+                    const rowBg = ["bg-card","bg-blue-50/50 dark:bg-blue-950/20","bg-emerald-50/50 dark:bg-emerald-950/20","bg-amber-50/50 dark:bg-amber-950/20","bg-purple-50/50 dark:bg-purple-950/20"][idx % 5];
                     return (
                       <li key={item.id} className={cn("flex items-center gap-3 px-4 py-3", rowBg)}>
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 dark:bg-slate-600 text-sm font-black text-white">{item.quantity}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-slate-900 dark:text-white truncate">{item.name}</p>
-                          {gstRate > 0 && <p className="text-[11px] text-slate-400">GST {gstRate}% · {formatCurrency(gstAmt)}</p>}
+                          <p className="text-sm font-bold text-foreground truncate">{item.name}</p>
+                          {gstRate > 0 && <p className="text-[11px] text-muted-foreground">GST {gstRate}% · {formatCurrency(gstAmt)}</p>}
                         </div>
-                        <span className="shrink-0 text-sm font-black text-slate-900 dark:text-white">{formatCurrency(itemTotal)}</span>
+                        <span className="shrink-0 text-sm font-black text-foreground">{formatCurrency(itemTotal)}</span>
                       </li>
                     );
                   })}
                 </ul>
-                <div className="bg-slate-50 dark:bg-slate-800/60 px-4 py-2.5 space-y-1">
-                  {(() => { const g = order.items.reduce((s,i) => { const t=i.price*i.quantity,r=i.gstRate??0; return s+(r>0?t-t/(1+r/100):0); },0); return g>0?<div className="flex justify-between text-xs text-slate-500"><span>GST (incl.)</span><span>{formatCurrency(g)}</span></div>:null; })()}
-                  <div className="flex justify-between text-sm font-black text-slate-900 dark:text-white pt-1 border-t border-slate-200 dark:border-slate-700">
+                <div className="bg-muted px-4 py-2.5 space-y-1">
+                  {(() => { const g = order.items.reduce((s,i) => { const t=i.price*i.quantity,r=i.gstRate??0; return s+(r>0?t-t/(1+r/100):0); },0); return g>0?<div className="flex justify-between text-xs text-muted-foreground"><span>GST (incl.)</span><span>{formatCurrency(g)}</span></div>:null; })()}
+                  <div className="flex justify-between text-sm font-black text-foreground pt-1 border-t border-border">
                     <span>Order Total</span><span>{formatCurrency(order.total)}</span>
                   </div>
                 </div>
@@ -501,10 +501,10 @@ export function AdminOrdersClient({
                   <summary className="flex items-center gap-2 px-4 py-3 bg-amber-50 dark:bg-amber-950/30 text-xs font-black text-amber-800 dark:text-amber-300 cursor-pointer hover:bg-amber-100 transition-colors">
                     ✏️ Edit Items (qty / substitute / remove)
                   </summary>
-                  <div className="px-4 pb-4 pt-3 space-y-3 bg-white dark:bg-slate-900 border-t border-amber-100 dark:border-amber-900">
+                  <div className="px-4 pb-4 pt-3 space-y-3 bg-card border-t border-amber-100 dark:border-amber-900">
                     {order.items.map((item) => (
-                      <div key={item.id} className="rounded-xl bg-slate-50 dark:bg-slate-800 p-3">
-                        <p className="text-xs font-black text-slate-800 dark:text-slate-200 mb-2">{item.name}</p>
+                      <div key={item.id} className="rounded-xl bg-muted p-3">
+                        <p className="text-xs font-black text-foreground mb-2">{item.name}</p>
                         <div className="grid gap-2 sm:grid-cols-[72px_1fr_1fr]">
                           <input value={editDrafts[item.id]?.quantity ?? item.quantity.toString()} onChange={(e) => updateDraft(item.id, { quantity: e.target.value.replace(/\D/g, "") })} className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-bold outline-none focus:ring-1 focus:ring-primary" placeholder="Qty" />
                           <select value={editDrafts[item.id]?.productId ?? ""} onChange={(e) => updateDraft(item.id, { productId: e.target.value })} className="h-9 rounded-lg border border-border bg-background px-2.5 text-xs font-semibold outline-none focus:ring-1 focus:ring-primary">
@@ -548,16 +548,16 @@ export function AdminOrdersClient({
               {/* Staff note */}
               <div className="rounded-2xl border border-yellow-200 dark:border-yellow-800 bg-yellow-50 dark:bg-yellow-950/20 p-4">
                 <label className="text-[10px] font-black uppercase tracking-wider text-yellow-700 dark:text-yellow-400">📝 Staff Note</label>
-                <textarea value={staffNotes[order.id] ?? ""} onChange={(e) => setStaffNotes((c) => ({ ...c, [order.id]: e.target.value }))} className="mt-2 min-h-16 w-full rounded-xl border border-yellow-200 dark:border-yellow-700 bg-white dark:bg-slate-900 p-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-yellow-400 resize-none" placeholder="Packing note, payment note, customer preference…" />
+                <textarea value={staffNotes[order.id] ?? ""} onChange={(e) => setStaffNotes((c) => ({ ...c, [order.id]: e.target.value }))} className="mt-2 min-h-16 w-full rounded-xl border border-yellow-200 dark:border-yellow-700 bg-card p-3 text-sm font-semibold outline-none focus:ring-2 focus:ring-yellow-400 resize-none" placeholder="Packing note, payment note, customer preference…" />
                 <button type="button" onClick={() => saveStaffNote(order)} className="mt-2 h-9 rounded-xl bg-yellow-500 px-4 text-xs font-black text-white hover:bg-yellow-600">Save note</button>
               </div>
               {/* Bill number */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                   🧾 Bill Number{billNumberSaving === order.id && <span className="text-primary font-bold normal-case">Saving…</span>}
                 </label>
                 {order.billNumber ? (
-                  <p className="mt-2 text-lg font-black text-slate-900 dark:text-white">{order.billNumber}</p>
+                  <p className="mt-2 text-lg font-black text-foreground">{order.billNumber}</p>
                 ) : (
                   <div className="mt-2 flex gap-2">
                     <input type="text" value={billNumberDrafts[order.id] ?? ""} onChange={(e) => setBillNumberDrafts((p) => ({ ...p, [order.id]: e.target.value }))} placeholder="Enter bill number" className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" />
@@ -566,8 +566,8 @@ export function AdminOrdersClient({
                 )}
               </div>
               {/* Delivery partner */}
-              <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+              <div className="rounded-2xl border border-border bg-card p-4">
+                <label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider text-muted-foreground">
                   🚴 Delivery Partner{assignLoading === order.id && <span className="text-primary font-bold normal-case">Saving…</span>}
                 </label>
                 <select value={order.deliveryPartnerId ?? ""} onChange={(e) => assignDelivery(order.id, e.target.value)} disabled={!order.billNumber} className="mt-2 h-10 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-50">
@@ -577,16 +577,16 @@ export function AdminOrdersClient({
               </div>
               {/* WhatsApp logs */}
               {order.whatsappLogs.length > 0 && (
-                <details className="rounded-2xl border border-slate-200 dark:border-slate-700 overflow-hidden">
-                  <summary className="flex items-center gap-2 px-4 py-3 bg-slate-50 dark:bg-slate-800 text-[10px] font-black uppercase tracking-wider text-slate-500 cursor-pointer hover:bg-slate-100 transition-colors">
+                <details className="rounded-2xl border border-border overflow-hidden">
+                  <summary className="flex items-center gap-2 px-4 py-3 bg-muted text-[10px] font-black uppercase tracking-wider text-muted-foreground cursor-pointer hover:bg-muted/80 transition-colors">
                     💬 WhatsApp timeline ({order.whatsappLogs.length})
                   </summary>
-                  <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                  <div className="divide-y divide-border">
                     {order.whatsappLogs.slice(0, 5).map((log) => (
                       <div key={log.id} className="flex flex-wrap justify-between gap-2 px-4 py-2.5 text-xs">
-                        <span className="font-bold text-slate-700 dark:text-slate-300">{log.template}</span>
+                        <span className="font-bold text-muted-foreground">{log.template}</span>
                         <span className={cn("font-black", log.status === "delivered" ? "text-green-600" : log.status === "failed" ? "text-red-500" : "text-primary")}>{log.status}</span>
-                        <span className="text-slate-400">{new Date(log.createdAt).toLocaleString("en-IN")}</span>
+                        <span className="text-muted-foreground">{new Date(log.createdAt).toLocaleString("en-IN")}</span>
                       </div>
                     ))}
                   </div>

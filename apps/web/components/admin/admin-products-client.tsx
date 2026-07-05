@@ -126,7 +126,7 @@ export function AdminProductsClient({
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            className="h-12 w-full rounded-2xl border border-white/70 bg-white/90 pl-11 pr-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary dark:border-white/10 dark:bg-slate-900"
+            className="h-12 w-full rounded-2xl border border-white/70 bg-white/90 pl-11 pr-4 text-sm font-semibold outline-none focus:ring-2 focus:ring-primary dark:border-white/10"
             placeholder="Search products or categories"
           />
         </label>
@@ -138,7 +138,7 @@ export function AdminProductsClient({
               onClick={() => setTab(item.key)}
               className={cn(
                 "h-10 shrink-0 rounded-full px-4 text-xs font-black transition active:scale-[0.98]",
-                tab === item.key ? "bg-primary text-white" : "border border-white/70 bg-white/80 text-foreground dark:border-white/10 dark:bg-slate-900"
+                tab === item.key ? "bg-primary text-white" : "border border-white/70 bg-white/80 text-foreground dark:border-white/10"
               )}
             >
               {item.label}

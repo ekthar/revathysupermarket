@@ -143,7 +143,7 @@ export function AccountClient({ user, addresses }: { user: { name: string; email
           <Trash2 className="h-4 w-4" />
           Delete my account
         </button>
-        <a href="/api/account/export" className="ml-2 mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-white px-4 text-sm font-black text-red-700">
+        <a href="/api/account/export" className="ml-2 mt-4 inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-red-200 bg-card px-4 text-sm font-black text-red-700 dark:text-red-200">
           <Download className="h-4 w-4" />
           Export my data
         </a>

@@ -24,7 +24,7 @@ type Category = {
 /** Inline field error message — matches the field-error class in globals.css */
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
-  return <p className="mt-1 text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">{message}</p>;
+  return <p role="alert" aria-live="polite" className="mt-1 text-xs font-semibold text-red-500 animate-in fade-in slide-in-from-top-1">{message}</p>;
 }
 
 export function CategoryManagementClient({ categories }: { categories: Category[] }) {
@@ -144,7 +144,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
         <form onSubmit={handleCreate} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10 sm:p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-display text-xl font-black">Create Category</h3>
-            <button type="button" onClick={() => setShowCreate(false)} className="text-muted-foreground hover:text-foreground">
+            <button type="button" onClick={() => setShowCreate(false)} aria-label="Close" className="text-muted-foreground hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -277,7 +277,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                     {/* Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-bold text-slate-900 dark:text-white truncate">{cat.name}</h4>
+                        <h4 className="font-bold text-foreground truncate">{cat.name}</h4>
                         <span className="text-micro font-bold text-muted-foreground bg-muted px-2 py-0.5 rounded-full shrink-0">
                           {cat.productCount} product{cat.productCount !== 1 ? "s" : ""}
                         </span>
@@ -294,6 +294,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                         type="button"
                         onClick={() => updateSortOrder(cat.id, Math.max(0, cat.sortOrder - 1))}
                         disabled={index === 0}
+                        aria-label="Move category up"
                         className="h-6 w-6 flex items-center justify-center rounded bg-muted hover:bg-muted/80 disabled:opacity-30"
                       >
                         <ArrowUp className="h-3 w-3" />
@@ -302,6 +303,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                         type="button"
                         onClick={() => updateSortOrder(cat.id, cat.sortOrder + 1)}
                         disabled={index === displayCategories.length - 1}
+                        aria-label="Move category down"
                         className="h-6 w-6 flex items-center justify-center rounded bg-muted hover:bg-muted/80 disabled:opacity-30"
                       >
                         <ArrowDown className="h-3 w-3" />
@@ -315,6 +317,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                         onClick={() => startEdit(cat)}
                         className="h-9 w-9 flex items-center justify-center rounded-xl bg-primary/10 hover:bg-primary/20 transition-colors"
                         title="Edit"
+                        aria-label={`Edit ${cat.name}`}
                       >
                         <Edit3 className="h-3.5 w-3.5 text-primary" />
                       </button>
@@ -324,6 +327,7 @@ export function CategoryManagementClient({ categories }: { categories: Category[
                         disabled={cat.hasSales}
                         className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                         title={cat.hasSales ? "Category has sales history and cannot be deleted" : "Delete"}
+                        aria-label={cat.hasSales ? `${cat.name} cannot be deleted` : `Delete ${cat.name}`}
                       >
                         <Trash2 className="h-3.5 w-3.5 text-red-500" />
                       </button>

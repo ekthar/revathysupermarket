@@ -58,9 +58,10 @@ export function FirstOrderCelebration({ show, onDismiss }: { show: boolean; onDi
           >
             <button
               onClick={onDismiss}
-              className="absolute top-4 right-4 h-7 w-7 rounded-full bg-slate-100 flex items-center justify-center"
+              aria-label="Close"
+              className="absolute top-4 right-4 h-7 w-7 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
             >
-              <X className="h-3.5 w-3.5 text-slate-500" />
+              <X className="h-3.5 w-3.5 text-slate-500 dark:text-slate-400" />
             </button>
 
             <motion.div

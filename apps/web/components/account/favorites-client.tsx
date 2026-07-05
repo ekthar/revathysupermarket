@@ -109,6 +109,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
                 <button
                   type="button"
                   onClick={() => removeFavorite(product.id)}
+                  aria-label={`Remove ${product.name} from favorites`}
                   className="h-7 w-7 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center press"
                 >
                   <Heart className="h-3.5 w-3.5 text-red-500 fill-red-500" />
@@ -122,6 +123,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
                     <button
                       type="button"
                       onClick={() => updateQuantity(product.id, cartItem.quantity - 1)}
+                      aria-label={`Decrease ${product.name} quantity`}
                       className="w-6 h-full flex items-center justify-center text-white press"
                     >
                       <Minus className="h-3 w-3" />
@@ -130,6 +132,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
                     <button
                       type="button"
                       onClick={() => updateQuantity(product.id, cartItem.quantity + 1)}
+                      aria-label={`Increase ${product.name} quantity`}
                       className="w-6 h-full flex items-center justify-center text-white press"
                     >
                       <Plus className="h-3 w-3" />

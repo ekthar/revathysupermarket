@@ -145,7 +145,7 @@ export function DeliverySlotsClient({ initialSlots }: { initialSlots: Slot[] }) 
                       <button type="button" disabled={isUpdating} onClick={() => saveEdit(slot)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white disabled:opacity-50" aria-label="Save slot">
                         <Save className="h-4 w-4" />
                       </button>
-                      <button type="button" disabled={isUpdating} onClick={() => setEditingId(null)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 disabled:opacity-50" aria-label="Cancel edit">
+                      <button type="button" disabled={isUpdating} onClick={() => setEditingId(null)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground disabled:opacity-50" aria-label="Cancel edit">
                         <X className="h-4 w-4" />
                       </button>
                     </div>
@@ -159,10 +159,10 @@ export function DeliverySlotsClient({ initialSlots }: { initialSlots: Slot[] }) 
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button type="button" onClick={() => startEdit(slot)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600" aria-label="Edit slot">
+                      <button type="button" onClick={() => startEdit(slot)} className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground" aria-label="Edit slot">
                         <Pencil className="h-4 w-4" />
                       </button>
-                      <button type="button" disabled={isUpdating} onClick={() => toggle(slot)} className={`h-10 rounded-xl px-3 text-xs font-black disabled:opacity-50 ${slot.isActive ? "bg-primary/10 text-primary" : "bg-slate-100 text-slate-500"}`}>
+                      <button type="button" disabled={isUpdating} onClick={() => toggle(slot)} className={`h-10 rounded-xl px-3 text-xs font-black disabled:opacity-50 ${slot.isActive ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground"}`}>
                         {slot.isActive ? "Active" : "Paused"}
                       </button>
                     </div>

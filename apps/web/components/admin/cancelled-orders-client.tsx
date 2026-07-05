@@ -50,19 +50,19 @@ export function CancelledOrdersClient({ orders }: { orders: CancelledOrder[] }) 
       {/* Search + Export */}
       <div className="flex items-center gap-2">
         <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search order, customer, phone..."
-            className="w-full h-10 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 pl-9 pr-4 text-body outline-none placeholder:text-slate-400 focus:border-primary/50 transition-all"
+            className="w-full h-10 rounded-xl bg-card border border-border pl-9 pr-4 text-body outline-none placeholder:text-muted-foreground focus:border-primary/50 transition-all"
           />
         </div>
         <button
           type="button"
           onClick={exportCSV}
-          className="h-10 px-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-caption font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 press"
+          className="h-10 px-4 rounded-xl bg-card border border-border text-caption font-semibold text-muted-foreground flex items-center gap-1.5 press"
         >
           <Download className="h-3.5 w-3.5" />
           Export
@@ -71,12 +71,12 @@ export function CancelledOrdersClient({ orders }: { orders: CancelledOrder[] }) 
 
       {/* Orders */}
       {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 p-10 text-center">
-          <AlertTriangle className="h-8 w-8 text-slate-300 mx-auto" />
-          <p className="mt-3 text-body font-medium text-slate-500">No cancelled orders found</p>
+        <div className="rounded-2xl border border-dashed border-border p-10 text-center">
+          <AlertTriangle className="h-8 w-8 text-muted-foreground mx-auto" />
+          <p className="mt-3 text-body font-medium text-muted-foreground">No cancelled orders found</p>
         </div>
       ) : (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 overflow-hidden divide-y divide-slate-50 dark:divide-slate-800">
+        <div className="rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
           {filtered.map((order) => (
             <div key={order.id}>
               <button
@@ -89,15 +89,15 @@ export function CancelledOrdersClient({ orders }: { orders: CancelledOrder[] }) 
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-body font-bold text-slate-900 dark:text-white">#{order.orderNumber}</span>
+                    <span className="text-body font-bold text-foreground">#{order.orderNumber}</span>
                     <span className="text-micro font-semibold text-red-600 bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">Cancelled</span>
                   </div>
-                  <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                  <p className="text-caption text-muted-foreground mt-0.5 truncate">
                     {order.customerName} &middot; {new Date(order.cancelledAt).toLocaleDateString("en-IN", { day: "2-digit", month: "short" })}
                   </p>
                 </div>
-                <span className="text-body font-bold text-slate-900 dark:text-white shrink-0">{formatCurrency(order.total)}</span>
-                <ChevronDown className={`h-4 w-4 text-slate-400 shrink-0 transition-transform ${expandedId === order.id ? "rotate-180" : ""}`} />
+                <span className="text-body font-bold text-foreground shrink-0">{formatCurrency(order.total)}</span>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${expandedId === order.id ? "rotate-180" : ""}`} />
               </button>
 
               <AnimatePresence>
@@ -116,12 +116,12 @@ export function CancelledOrdersClient({ orders }: { orders: CancelledOrder[] }) 
                       </div>
 
                       {/* Items */}
-                      <div className="rounded-lg bg-slate-50 dark:bg-slate-800 p-3">
-                        <p className="text-micro font-semibold text-slate-400 uppercase mb-2">Items</p>
+                      <div className="rounded-lg bg-muted p-3">
+                        <p className="text-micro font-semibold text-muted-foreground uppercase mb-2">Items</p>
                         {order.items.map((item, i) => (
                           <div key={i} className="flex justify-between text-caption py-1">
-                            <span className="text-slate-600 dark:text-slate-300">{item.name} x{item.quantity}</span>
-                            <span className="font-medium text-slate-700 dark:text-slate-200">{formatCurrency(item.price * item.quantity)}</span>
+                            <span className="text-muted-foreground">{item.name} x{item.quantity}</span>
+                            <span className="font-medium text-foreground">{formatCurrency(item.price * item.quantity)}</span>
                           </div>
                         ))}
                       </div>

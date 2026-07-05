@@ -101,26 +101,26 @@ export function AdminDashboardClient({
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-body font-semibold text-primary">{greeting}, {userName}!</p>
-            <h1 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">Store Dashboard</h1>
-            <p className="text-caption text-slate-500 dark:text-slate-400 mt-1">Here&apos;s what&apos;s happening today</p>
+            <h1 className="mt-1 text-xl font-bold text-foreground">Store Dashboard</h1>
+            <p className="text-caption text-muted-foreground mt-1">Here&apos;s what&apos;s happening today</p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/70 dark:bg-slate-800/70 border border-slate-200/50 dark:border-slate-700/50">
-              <Calendar className="h-3.5 w-3.5 text-slate-400" />
-              <span className="text-caption font-medium text-slate-600 dark:text-slate-300">{todayDate}</span>
+            <div className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-card/70 border border-border/50">
+              <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-caption font-medium text-muted-foreground">{todayDate}</span>
             </div>
           </div>
         </div>
 
         {/* Search bar */}
         <div className="mt-4 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search orders, products, customers..."
-            className="w-full h-10 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200/50 dark:border-slate-700/50 pl-9 pr-4 text-body text-slate-700 dark:text-white outline-none placeholder:text-slate-400 focus:border-primary/50 focus:bg-white dark:focus:bg-slate-800 transition-all"
+            className="w-full h-10 rounded-xl bg-card/80 border border-border/50 pl-9 pr-4 text-body text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/50 focus:bg-card transition-all"
           />
         </div>
       </div>
@@ -128,7 +128,7 @@ export function AdminDashboardClient({
       <section aria-labelledby="attention-heading" className="rounded-2xl border border-amber-200 bg-amber-50/70 p-4 dark:border-amber-900 dark:bg-amber-950/20">
         <h2 id="attention-heading" className="font-display text-lg font-black text-amber-900 dark:text-amber-100">Needs attention now</h2>
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-          {[{ label: "New orders", value: receivedOrders, href: "/admin/orders" }, { label: "Packing", value: packingOrders, href: "/admin/orders" }, { label: "Ready to assign", value: readyOrders, href: "/admin/orders" }, { label: "Low stock", value: lowStockProducts.length, href: "/admin/products" }].map((item) => <Link key={item.label} href={item.href} className="rounded-xl bg-white p-3 shadow-sm dark:bg-slate-900"><p className="text-2xl font-black text-slate-900 dark:text-white">{item.value}</p><p className="text-xs font-bold text-slate-500">{item.label}</p></Link>)}
+          {[{ label: "New orders", value: receivedOrders, href: "/admin/orders" }, { label: "Packing", value: packingOrders, href: "/admin/orders" }, { label: "Ready to assign", value: readyOrders, href: "/admin/orders" }, { label: "Low stock", value: lowStockProducts.length, href: "/admin/products" }].map((item) => <Link key={item.label} href={item.href} className="rounded-xl bg-card p-3 shadow-sm"><p className="text-2xl font-black text-foreground">{item.value}</p><p className="text-xs font-bold text-muted-foreground">{item.label}</p></Link>)}
         </div>
       </section>
 
@@ -178,20 +178,20 @@ export function AdminDashboardClient({
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Revenue chart - takes 3 columns on desktop */}
         {canSeeFinancials && monthlyRevenue.length > 0 && (
-          <div className="lg:col-span-3 rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 shadow-sm">
+          <div className="lg:col-span-3 rounded-2xl bg-card border border-border p-4 shadow-sm">
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h2 className="text-body font-semibold text-slate-900 dark:text-white">Revenue Overview</h2>
-                <p className="text-caption text-slate-400 mt-0.5">Last 6 months</p>
+                <h2 className="text-body font-semibold text-foreground">Revenue Overview</h2>
+                <p className="text-caption text-muted-foreground mt-0.5">Last 6 months</p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
                   <span className="h-2.5 w-2.5 rounded-full bg-primary" />
-                  <span className="text-micro text-slate-500">Revenue</span>
+                  <span className="text-micro text-muted-foreground">Revenue</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="h-2.5 w-2.5 rounded-full bg-slate-300 dark:bg-slate-600" />
-                  <span className="text-micro text-slate-500">Orders</span>
+                  <span className="h-2.5 w-2.5 rounded-full bg-muted-foreground/40" />
+                  <span className="text-micro text-muted-foreground">Orders</span>
                 </div>
               </div>
             </div>
@@ -201,9 +201,9 @@ export function AdminDashboardClient({
 
         {/* Live order status - takes 2 columns */}
         <div className={`${canSeeFinancials && monthlyRevenue.length > 0 ? "lg:col-span-2" : "lg:col-span-5"}`}>
-          <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 shadow-sm h-full">
+          <div className="rounded-2xl bg-card border border-border p-4 shadow-sm h-full">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-body font-semibold text-slate-900 dark:text-white">Live Status</h2>
+              <h2 className="text-body font-semibold text-foreground">Live Status</h2>
               <Link href="/admin/orders" className="text-caption font-semibold text-primary flex items-center gap-1">
                 View all <ArrowRight className="h-3 w-3" />
               </Link>
@@ -220,11 +220,11 @@ export function AdminDashboardClient({
                 return (
                   <div key={row.label} className="flex items-center gap-3">
                     <div className={`h-2.5 w-2.5 rounded-full shrink-0 ${row.color} ${row.ring ? "pulse-ring" : ""}`} />
-                    <span className="text-caption font-medium text-slate-600 dark:text-slate-400 w-24 shrink-0">{row.label}</span>
-                    <div className="flex-1 h-2 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                    <span className="text-caption font-medium text-muted-foreground w-24 shrink-0">{row.label}</span>
+                    <div className="flex-1 h-2 rounded-full bg-muted overflow-hidden">
                       <div className={`h-full rounded-full ${row.color} transition-all duration-1000 ease-out`} style={{ width: `${pct}%` }} />
                     </div>
-                    <span className="text-caption font-bold text-slate-700 dark:text-slate-300 w-6 text-right">{row.value}</span>
+                    <span className="text-caption font-bold text-muted-foreground w-6 text-right">{row.value}</span>
                   </div>
                 );
               })}
@@ -280,25 +280,25 @@ export function AdminDashboardClient({
       {canSeeFinancials && (categorySales.length > 0 || peakHours.length > 0) && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {categorySales.length > 0 && (
-            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 shadow-sm">
-              <h2 className="text-body font-semibold text-slate-900 dark:text-white mb-3">Category-wise Sales</h2>
+            <div className="rounded-2xl bg-card border border-border p-4 shadow-sm">
+              <h2 className="text-body font-semibold text-foreground mb-3">Category-wise Sales</h2>
               <div className="space-y-2">
                 {categorySales.map((cat, i) => {
                   const maxRev = categorySales[0]?.revenue || 1;
                   const pct = Math.round((cat.revenue / maxRev) * 100);
                   return (
                     <div key={cat.name} className="flex items-center gap-3">
-                      <span className="text-micro font-bold text-slate-400 w-4">{i + 1}</span>
+                      <span className="text-micro font-bold text-muted-foreground w-4">{i + 1}</span>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between mb-1">
-                          <span className="text-caption font-medium text-slate-700 dark:text-slate-300 truncate">{cat.name}</span>
-                          <span className="text-caption font-bold text-slate-900 dark:text-white shrink-0 ml-2">{formatCurrency(cat.revenue)}</span>
+                          <span className="text-caption font-medium text-muted-foreground truncate">{cat.name}</span>
+                          <span className="text-caption font-bold text-foreground shrink-0 ml-2">{formatCurrency(cat.revenue)}</span>
                         </div>
-                        <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                        <div className="h-1.5 rounded-full bg-muted overflow-hidden">
                           <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                         </div>
                       </div>
-                      <span className="text-micro text-slate-400 w-12 text-right shrink-0">{cat.quantity} sold</span>
+                      <span className="text-micro text-muted-foreground w-12 text-right shrink-0">{cat.quantity} sold</span>
                     </div>
                   );
                 })}
@@ -307,25 +307,25 @@ export function AdminDashboardClient({
           )}
 
           {peakHours.length > 0 && (
-            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 shadow-sm">
-              <h2 className="text-body font-semibold text-slate-900 dark:text-white mb-3">Peak Hours Today</h2>
+            <div className="rounded-2xl bg-card border border-border p-4 shadow-sm">
+              <h2 className="text-body font-semibold text-foreground mb-3">Peak Hours Today</h2>
               <div className="flex items-end gap-1 h-32">
                 {peakHours.map((h) => {
                   const maxOrders = Math.max(...peakHours.map((p) => p.orders), 1);
                   const height = Math.max(4, (h.orders / maxOrders) * 100);
                   return (
                     <div key={h.hour} className="flex-1 flex flex-col items-center gap-1">
-                      <span className="text-micro font-bold text-slate-500">{h.orders || ""}</span>
+                      <span className="text-micro font-bold text-muted-foreground">{h.orders || ""}</span>
                       <div
-                        className={`w-full rounded-t transition-all ${h.orders > 0 ? "bg-primary/70" : "bg-slate-100 dark:bg-slate-800"}`}
+                        className={`w-full rounded-t transition-all ${h.orders > 0 ? "bg-primary/70" : "bg-muted"}`}
                         style={{ height: `${height}%` }}
                       />
-                      <span className="text-micro text-slate-400">{h.hour.split(":")[0]}</span>
+                      <span className="text-micro text-muted-foreground">{h.hour.split(":")[0]}</span>
                     </div>
                   );
                 })}
               </div>
-              <p className="text-micro text-slate-400 mt-2 text-center">Orders by hour (6 AM - 10 PM)</p>
+              <p className="text-micro text-muted-foreground mt-2 text-center">Orders by hour (6 AM - 10 PM)</p>
             </div>
           )}
         </div>
@@ -337,16 +337,16 @@ export function AdminDashboardClient({
           <h2 className="text-body font-semibold text-primary">This Month</h2>
           <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div>
-              <p className="text-title font-bold text-slate-900 dark:text-white">{formatCurrency(monthRevenue)}</p>
-              <p className="text-micro text-slate-500">Revenue</p>
+              <p className="text-title font-bold text-foreground">{formatCurrency(monthRevenue)}</p>
+              <p className="text-micro text-muted-foreground">Revenue</p>
             </div>
             <div>
-              <p className="text-title font-bold text-slate-900 dark:text-white">{totalProducts}</p>
-              <p className="text-micro text-slate-500">Active Products</p>
+              <p className="text-title font-bold text-foreground">{totalProducts}</p>
+              <p className="text-micro text-muted-foreground">Active Products</p>
             </div>
             <div>
-              <p className="text-title font-bold text-slate-900 dark:text-white">{Math.round((repeatCustomers / Math.max(totalCustomers, 1)) * 100)}%</p>
-              <p className="text-micro text-slate-500">Repeat Rate</p>
+              <p className="text-title font-bold text-foreground">{Math.round((repeatCustomers / Math.max(totalCustomers, 1)) * 100)}%</p>
+              <p className="text-micro text-muted-foreground">Repeat Rate</p>
             </div>
           </div>
         </div>
@@ -354,9 +354,9 @@ export function AdminDashboardClient({
 
       {/* Recent Orders Table */}
       {recentOrders.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b border-slate-100 dark:border-slate-800">
-            <h2 className="text-body font-semibold text-slate-900 dark:text-white">Recent Orders</h2>
+        <div className="rounded-2xl bg-card border border-border shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b border-border">
+            <h2 className="text-body font-semibold text-foreground">Recent Orders</h2>
             <Link href="/admin/orders" className="text-caption font-semibold text-primary flex items-center gap-1 press">
               See all <ArrowRight className="h-3 w-3" />
             </Link>
@@ -366,41 +366,41 @@ export function AdminDashboardClient({
           <div className="hidden sm:block overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-slate-100 dark:border-slate-800">
-                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-slate-400 uppercase">Order</th>
-                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-slate-400 uppercase">Customer</th>
-                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-slate-400 uppercase">Items</th>
-                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-slate-400 uppercase">Total</th>
-                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-slate-400 uppercase">Payment</th>
-                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-slate-400 uppercase">Status</th>
-                  <th className="text-right px-4 py-2.5 text-micro font-semibold text-slate-400 uppercase">Action</th>
+                <tr className="border-b border-border">
+                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-muted-foreground uppercase">Order</th>
+                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-muted-foreground uppercase">Customer</th>
+                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-muted-foreground uppercase">Items</th>
+                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-muted-foreground uppercase">Total</th>
+                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-muted-foreground uppercase">Payment</th>
+                  <th className="text-left px-4 py-2.5 text-micro font-semibold text-muted-foreground uppercase">Status</th>
+                  <th className="text-right px-4 py-2.5 text-micro font-semibold text-muted-foreground uppercase">Action</th>
                 </tr>
               </thead>
               <tbody>
                 {recentOrders.map((order) => (
-                  <tr key={order.id} className="border-b border-slate-50 dark:border-slate-800/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                  <tr key={order.id} className="border-b border-border last:border-0 hover:bg-muted/50 transition-colors">
                     <td className="px-4 py-3">
-                      <span className="text-caption font-bold text-slate-900 dark:text-white">#{order.orderNumber.slice(-5)}</span>
-                      <p className="text-micro text-slate-400 mt-0.5">
+                      <span className="text-caption font-bold text-foreground">#{order.orderNumber.slice(-5)}</span>
+                      <p className="text-micro text-muted-foreground mt-0.5">
                         {new Date(order.createdAt).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
                       </p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-caption font-medium text-slate-700 dark:text-slate-300">{order.customerName}</span>
+                      <span className="text-caption font-medium text-muted-foreground">{order.customerName}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-caption text-slate-500 dark:text-slate-400 line-clamp-1">{order.itemNames.join(", ")}</span>
+                      <span className="text-caption text-muted-foreground line-clamp-1">{order.itemNames.join(", ")}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-caption font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</span>
+                      <span className="text-caption font-bold text-foreground">{formatCurrency(order.total)}</span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-micro font-medium text-slate-500 px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800">
+                      <span className="text-micro font-medium text-muted-foreground px-2 py-0.5 rounded-full bg-muted">
                         {order.paymentMethod === "COD" ? "COD" : "UPI"}
                       </span>
                     </td>
                     <td className="px-4 py-3">
-                      <span className={`text-micro font-semibold px-2 py-1 rounded-full ${statusColors[order.status] || "bg-slate-100 text-slate-600"}`}>
+                      <span className={`text-micro font-semibold px-2 py-1 rounded-full ${statusColors[order.status] || "bg-muted text-muted-foreground"}`}>
                         {statusLabels[order.status] || order.status}
                       </span>
                     </td>
@@ -416,21 +416,21 @@ export function AdminDashboardClient({
           </div>
 
           {/* Mobile card list */}
-          <div className="sm:hidden divide-y divide-slate-50 dark:divide-slate-800">
+          <div className="sm:hidden divide-y divide-border">
             {recentOrders.slice(0, 5).map((order) => (
               <Link key={order.id} href={`/admin/orders?search=${order.orderNumber}`} className="flex items-center gap-3 px-4 py-3 press">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-caption font-bold text-slate-900 dark:text-white">#{order.orderNumber.slice(-5)}</span>
-                    <span className={`text-micro font-semibold px-1.5 py-0.5 rounded-full ${statusColors[order.status] || "bg-slate-100 text-slate-600"}`}>
+                    <span className="text-caption font-bold text-foreground">#{order.orderNumber.slice(-5)}</span>
+                    <span className={`text-micro font-semibold px-1.5 py-0.5 rounded-full ${statusColors[order.status] || "bg-muted text-muted-foreground"}`}>
                       {statusLabels[order.status] || order.status}
                     </span>
                   </div>
-                  <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5 truncate">{order.customerName} &middot; {order.itemNames.join(", ")}</p>
+                  <p className="text-caption text-muted-foreground mt-0.5 truncate">{order.customerName} &middot; {order.itemNames.join(", ")}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-caption font-bold text-slate-900 dark:text-white">{formatCurrency(order.total)}</p>
-                  <p className="text-micro text-slate-400 mt-0.5">
+                  <p className="text-caption font-bold text-foreground">{formatCurrency(order.total)}</p>
+                  <p className="text-micro text-muted-foreground mt-0.5">
                     {new Date(order.createdAt).toLocaleString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true })}
                   </p>
                 </div>
@@ -442,7 +442,7 @@ export function AdminDashboardClient({
 
       {/* Low Stock Alerts */}
       {lowStockProducts.length > 0 && (
-        <div className="rounded-2xl bg-white dark:bg-slate-900 border border-orange-200 dark:border-orange-800/50 shadow-sm overflow-hidden">
+        <div className="rounded-2xl bg-card border border-orange-200 dark:border-orange-800/50 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between p-4 border-b border-orange-100 dark:border-orange-900/30 bg-orange-50/50 dark:bg-orange-950/20">
             <div className="flex items-center gap-2">
               <div className="h-7 w-7 rounded-lg bg-orange-100 dark:bg-orange-900/40 flex items-center justify-center">
@@ -460,10 +460,10 @@ export function AdminDashboardClient({
           <div className="divide-y divide-orange-50 dark:divide-orange-900/20">
             {lowStockProducts.slice(0, 5).map((product) => (
               <div key={product.id} className="flex items-center gap-3 px-4 py-2.5">
-                <div className="relative h-8 w-8 rounded-lg bg-slate-50 dark:bg-slate-800 overflow-hidden shrink-0">
+                <div className="relative h-8 w-8 rounded-lg bg-muted overflow-hidden shrink-0">
                   {product.image && <Image src={product.image} alt={product.name} fill sizes="32px" className="object-cover" />}
                 </div>
-                <span className="text-caption font-medium text-slate-700 dark:text-slate-300 flex-1 truncate">{product.name}</span>
+                <span className="text-caption font-medium text-muted-foreground flex-1 truncate">{product.name}</span>
                 <span className={`text-caption font-bold px-2 py-0.5 rounded-full ${
                   product.stock === 0
                     ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
@@ -479,33 +479,33 @@ export function AdminDashboardClient({
 
       {/* Quick actions */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <Link href="/admin/orders" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
+        <Link href="/admin/orders" className="rounded-2xl bg-card border border-border p-4 press hover:shadow-md transition-all group">
           <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
             <ShoppingBag className="h-4 w-4 text-primary" />
           </div>
-          <p className="text-caption font-semibold text-slate-900 dark:text-white mt-3">Manage Orders</p>
-          <p className="text-micro text-slate-400 mt-0.5">{pendingOrders} pending</p>
+          <p className="text-caption font-semibold text-foreground mt-3">Manage Orders</p>
+          <p className="text-micro text-muted-foreground mt-0.5">{pendingOrders} pending</p>
         </Link>
-        {canManageCatalogue && <Link href="/admin/products" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
+        {canManageCatalogue && <Link href="/admin/products" className="rounded-2xl bg-card border border-border p-4 press hover:shadow-md transition-all group">
           <div className="h-9 w-9 rounded-xl bg-purple-50 dark:bg-purple-950 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
             <Package className="h-4 w-4 text-purple-600" />
           </div>
-          <p className="text-caption font-semibold text-slate-900 dark:text-white mt-3">Products</p>
-          <p className="text-micro text-slate-400 mt-0.5">Add & manage</p>
+          <p className="text-caption font-semibold text-foreground mt-3">Products</p>
+          <p className="text-micro text-muted-foreground mt-0.5">Add & manage</p>
         </Link>}
-        {canSeeFinancials && <Link href="/admin/customers" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
+        {canSeeFinancials && <Link href="/admin/customers" className="rounded-2xl bg-card border border-border p-4 press hover:shadow-md transition-all group">
           <div className="h-9 w-9 rounded-xl bg-blue-50 dark:bg-blue-950 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
             <Users className="h-4 w-4 text-blue-600" />
           </div>
-          <p className="text-caption font-semibold text-slate-900 dark:text-white mt-3">Customers</p>
-          <p className="text-micro text-slate-400 mt-0.5">{totalCustomers} registered</p>
+          <p className="text-caption font-semibold text-foreground mt-3">Customers</p>
+          <p className="text-micro text-muted-foreground mt-0.5">{totalCustomers} registered</p>
         </Link>}
-        {canSeeFinancials && <Link href="/admin/reports" className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 press hover:shadow-md transition-all group">
+        {canSeeFinancials && <Link href="/admin/reports" className="rounded-2xl bg-card border border-border p-4 press hover:shadow-md transition-all group">
           <div className="h-9 w-9 rounded-xl bg-amber-50 dark:bg-amber-950 flex items-center justify-center group-hover:bg-amber-100 transition-colors">
             <TrendingUp className="h-4 w-4 text-amber-600" />
           </div>
-          <p className="text-caption font-semibold text-slate-900 dark:text-white mt-3">Reports</p>
-          <p className="text-micro text-slate-400 mt-0.5">Sales & analytics</p>
+          <p className="text-caption font-semibold text-foreground mt-3">Reports</p>
+          <p className="text-micro text-muted-foreground mt-0.5">Sales & analytics</p>
         </Link>}
       </div>
     </div>
@@ -525,7 +525,7 @@ function MetricCard({
   pulse?: boolean;
 }) {
   return (
-    <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-4 shadow-sm">
+    <div className="rounded-2xl bg-card border border-border p-4 shadow-sm">
       <div className="flex items-center justify-between">
         <div className={`h-9 w-9 rounded-xl ${iconBg} flex items-center justify-center`}>
           <Icon className={`h-4 w-4 ${iconColor}`} />
@@ -538,12 +538,12 @@ function MetricCard({
         )}
         {pulse && <span className="flex h-2.5 w-2.5 rounded-full bg-orange-500 pulse-ring" />}
       </div>
-      <p className="mt-3 text-heading font-bold text-slate-900 dark:text-white">
+      <p className="mt-3 text-heading font-bold text-foreground">
         <AnimatedCounter value={value} prefix={prefix} duration={1.2} />
       </p>
-      <p className="text-caption text-slate-500 dark:text-slate-400 mt-0.5">{label}</p>
+      <p className="text-caption text-muted-foreground mt-0.5">{label}</p>
       {change !== undefined && change !== 0 && (
-        <p className="text-micro text-slate-400 mt-0.5">vs last week</p>
+        <p className="text-micro text-muted-foreground mt-0.5">vs last week</p>
       )}
     </div>
   );

@@ -130,7 +130,7 @@ export function OrderSummary({
           </p>
         )}
         {addressNotCovered && (
-          <p className="mt-4 rounded-xl bg-red-50 dark:bg-red-950/30 p-3 text-caption font-medium text-red-600 dark:text-red-400">
+          <p role="alert" aria-live="polite" className="mt-4 rounded-xl bg-red-50 dark:bg-red-950/30 p-3 text-caption font-medium text-red-600 dark:text-red-400">
             Sorry, we are unable to deliver to your address. Please contact us for assistance.
           </p>
         )}

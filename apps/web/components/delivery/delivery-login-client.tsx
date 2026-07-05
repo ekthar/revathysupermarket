@@ -177,6 +177,8 @@ export function DeliveryLoginClient({ logoUrl }: { logoUrl?: string | null }) {
                   <motion.p
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
+                    role="alert"
+                    aria-live="polite"
                     className="mt-3 text-sm font-medium text-red-600 dark:text-red-400"
                   >
                     {error}
@@ -234,6 +236,8 @@ export function DeliveryLoginClient({ logoUrl }: { logoUrl?: string | null }) {
                   <motion.p
                     initial={{ opacity: 0, y: -5 }}
                     animate={{ opacity: 1, y: 0 }}
+                    role="alert"
+                    aria-live="polite"
                     className="mt-3 text-sm font-medium text-red-600 dark:text-red-400"
                   >
                     {error}

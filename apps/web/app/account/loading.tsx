@@ -28,7 +28,7 @@ export default function AccountLoading() {
       </div>
 
       {/* Wallet card skeleton */}
-      <div className="rounded-lg bg-white dark:bg-neutral-900 p-4 shadow-sm">
+      <div className="rounded-lg bg-card p-4 shadow-sm">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
           <div className="space-y-1.5">
@@ -39,7 +39,7 @@ export default function AccountLoading() {
       </div>
 
       {/* Menu items skeleton */}
-      <div className="rounded-lg bg-white dark:bg-neutral-900 shadow-sm overflow-hidden">
+      <div className="rounded-lg bg-card shadow-sm overflow-hidden">
         <div className="px-4 pt-3.5 pb-1">
           <div className="h-3 w-20 rounded bg-neutral-100 dark:bg-neutral-800 animate-pulse" />
         </div>

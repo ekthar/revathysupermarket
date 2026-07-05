@@ -53,7 +53,7 @@ export default async function FavoritesPage() {
       <div className="flex items-center gap-3 mb-5">
         <Link
           href="/account"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-white dark:bg-neutral-800 card-shadow press"
+          className="flex h-9 w-9 items-center justify-center rounded-full bg-card card-shadow press"
         >
           <ArrowLeft className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
         </Link>

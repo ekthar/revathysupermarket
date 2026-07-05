@@ -105,10 +105,10 @@ export function UnitManagementClient({ units }: { units: Unit[] }) {
             {units.map((unit) => (
               <div
                 key={unit.id}
-                className="flex items-center justify-between rounded-2xl border border-border p-3.5 bg-background hover:bg-slate-50 dark:hover:bg-slate-900/50 transition"
+                className="flex items-center justify-between rounded-2xl border border-border p-3.5 bg-background hover:bg-muted transition"
               >
                 <div>
-                  <p className="font-bold text-slate-900 dark:text-white">{unit.name}</p>
+                  <p className="font-bold text-foreground">{unit.name}</p>
                   <p className="text-xs text-muted-foreground">{unit.productCount} product(s)</p>
                 </div>
 
@@ -118,6 +118,7 @@ export function UnitManagementClient({ units }: { units: Unit[] }) {
                   disabled={unit.productCount > 0}
                   className="h-9 w-9 flex items-center justify-center rounded-xl bg-red-50 dark:bg-red-950/20 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                   title={unit.productCount > 0 ? "Currently assigned to products" : "Delete unit"}
+                  aria-label={unit.productCount > 0 ? `${unit.name} cannot be deleted` : `Delete ${unit.name}`}
                 >
                   <Trash2 className="h-3.5 w-3.5 text-red-500" />
                 </button>

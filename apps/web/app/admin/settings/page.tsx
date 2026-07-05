@@ -77,8 +77,8 @@ export default async function AdminSettingsPage() {
       {/* Feature Flags Section */}
       <div className="mt-8">
         <div className="rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-950 p-5 mb-4">
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white">Feature Flags</h2>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
+          <h2 className="text-2xl font-black text-foreground">Feature Flags</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
             Control app-wide feature toggles. Changes take effect immediately.
           </p>
         </div>

@@ -43,7 +43,7 @@ export function LocationGate({
             <motion.div
               animate={{ x: ["-100%", "200%"] }}
               transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-              className="h-full w-1/2 rounded-full bg-white"
+              className="stay-light h-full w-1/2 rounded-full bg-white"
             />
           </div>
         </div>
@@ -166,7 +166,7 @@ export function LocationGate({
           <button
             type="button"
             onClick={() => window.location.reload()}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-lg font-black text-emerald-700 shadow-xl active:scale-[0.97] transition-transform"
+            className="stay-light flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-lg font-black text-emerald-700 shadow-xl active:scale-[0.97] transition-transform"
           >
             <LocateFixed className="h-5 w-5" />
             I&apos;ve enabled it — Reload
@@ -178,7 +178,7 @@ export function LocationGate({
               requestPermission();
               if (navigator.vibrate) navigator.vibrate(30);
             }}
-            className="flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-lg font-black text-emerald-700 shadow-xl active:scale-[0.97] transition-transform"
+            className="stay-light flex h-14 w-full items-center justify-center gap-2 rounded-2xl bg-white text-lg font-black text-emerald-700 shadow-xl active:scale-[0.97] transition-transform"
           >
             <LocateFixed className="h-5 w-5" />
             Enable my location

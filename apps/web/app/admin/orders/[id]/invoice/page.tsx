@@ -48,7 +48,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const hasMultipleRates = uniqueRates.length > 1;
 
   return (
-    <main className="mx-auto max-w-3xl bg-white px-6 py-10 text-slate-900 print:px-4 print:py-6">
+    <main className="stay-light mx-auto max-w-3xl bg-white px-6 py-10 text-slate-900 print:px-4 print:py-6">
       {/* Back + Print buttons - hidden on print */}
       <div className="flex items-center justify-between mb-6 print:hidden">
         <a
@@ -106,7 +106,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
       {/* Items Table with GST */}
       <table className="mt-6 w-full text-left text-sm">
         <thead>
-          <tr className="border-b bg-slate-50">
+          <tr className="stay-light border-b bg-slate-50">
             <th className="py-3 px-2">Item</th>
             <th className="py-3 px-2 text-center">Qty</th>
             <th className="py-3 px-2 text-right">Rate</th>
@@ -131,7 +131,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
       {/* GST Summary */}
       <div className="mt-6 flex justify-end">
-        <div className="w-72 rounded-xl bg-slate-50 p-4">
+        <div className="stay-light w-72 rounded-xl bg-slate-50 p-4">
           {hasGst && (
             <>
               <div className="flex justify-between text-sm">
@@ -170,7 +170,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
                   </div>
                 </>
               )}
-              <div className="mt-1 flex justify-between text-sm font-semibold border-t border-slate-200 pt-1">
+              <div className="stay-light mt-1 flex justify-between text-sm font-semibold border-t border-slate-200 pt-1">
                 <span>Total GST</span>
                 <span>{formatCurrency(totalGst)}</span>
               </div>

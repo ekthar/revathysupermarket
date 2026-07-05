@@ -78,7 +78,7 @@ export function OrderListBoard({ orders, now, onSelectOrder }: OrderListBoardPro
         ] as const
       ).map(([status, label]) => {
         const columnOrders = orders.filter((order) => order.status === status);
-        const style = columnStyle[status] ?? { bg: "bg-slate-100 dark:bg-slate-900", badge: "bg-slate-600 text-white", card: "border-slate-100" };
+        const style = columnStyle[status] ?? { bg: "bg-muted", badge: "bg-slate-600 text-white", card: "border-border" };
         return (
           <section
             key={status}
@@ -104,17 +104,17 @@ export function OrderListBoard({ orders, now, onSelectOrder }: OrderListBoardPro
                     key={order.id}
                     type="button"
                     onClick={() => onSelectOrder(order.orderNumber)}
-                    className={`rounded-xl border bg-white dark:bg-slate-800 p-3 text-left shadow-sm transition-shadow hover:shadow-md ${style.card}`}
+                    className={`rounded-xl border bg-card p-3 text-left shadow-sm transition-shadow hover:shadow-md ${style.card}`}
                   >
                     <div className="flex justify-between gap-2">
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+                      <span className="text-xs font-black text-foreground">
                         #{order.orderNumber.slice(-6)}
                       </span>
                       <span className="text-xs font-black text-primary">
                         {formatCurrency(order.total)}
                       </span>
                     </div>
-                    <p className="mt-1 truncate text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    <p className="mt-1 truncate text-xs font-semibold text-muted-foreground">
                       {order.customerName}
                     </p>
                     <p className="mt-1 text-[11px] text-muted-foreground">

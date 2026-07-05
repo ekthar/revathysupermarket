@@ -669,7 +669,7 @@ export function CheckoutForm({
                               <span className="text-sm font-bold text-secondary-700 dark:text-secondary-300">{promoCode.toUpperCase()}</span>
                               {promoDescription && <span className="text-caption text-neutral-500">— {promoDescription}</span>}
                             </div>
-                            <button type="button" onClick={() => { setPromoCode(""); setPromoApplied(false); setPromoDiscount(0); setPromoDescription(""); setPromoError(""); }} className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors">
+                            <button type="button" onClick={() => { setPromoCode(""); setPromoApplied(false); setPromoDiscount(0); setPromoDescription(""); setPromoError(""); }} aria-label="Remove coupon code" className="p-1 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-full transition-colors">
                               <X className="h-3.5 w-3.5 text-neutral-400 hover:text-red-500" />
                             </button>
                           </div>
@@ -679,7 +679,7 @@ export function CheckoutForm({
                             {promoLoading && <div className="absolute right-3 top-1/2 -translate-y-1/2"><div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" /></div>}
                           </div>
                         )}
-                        {promoError && !promoApplied && <p className="mt-1.5 text-micro text-red-500 flex items-center gap-1"><X className="h-3 w-3" />{promoError}</p>}
+                        {promoError && !promoApplied && <p role="alert" aria-live="polite" className="mt-1.5 text-micro text-red-500 flex items-center gap-1"><X className="h-3 w-3" aria-hidden="true" />{promoError}</p>}
                         {promoApplied && promoDiscount > 0 && (
                           <p className="mt-1.5 text-micro font-semibold text-secondary-600 flex items-center gap-1"><Tag className="h-3 w-3" />You save {formatCurrency(promoDiscount)} on this order</p>
                         )}

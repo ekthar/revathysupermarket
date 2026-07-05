@@ -8,12 +8,7 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useCartItemCount } from "@/components/cart/cart-provider";
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { cn } from "@/lib/utils";
-
-// Snappy spring tuned for an indicator that must feel instantaneous — high
-// stiffness + low mass so it launches immediately, high damping so it settles
-// in one motion without wobble. Runs purely on GPU transforms (layout
-// projection), so it never blocks the main thread during navigation.
-const INDICATOR_SPRING = { type: "spring", stiffness: 520, damping: 36, mass: 0.7 } as const;
+import { springs } from "@/lib/motion";
 
 export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
@@ -114,7 +109,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
           layoutId="nav-active-indicator"
           className="absolute inset-0 rounded-2xl bg-black shadow-elevation-3"
           style={{ willChange: "transform" }}
-          transition={INDICATOR_SPRING}
+          transition={springs.indicator}
           initial={false}
         />
       )}
@@ -124,7 +119,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
       <motion.span
         className="relative z-10 flex flex-col items-center gap-0.5"
         whileTap={{ scale: 0.88 }}
-        transition={{ type: "spring", stiffness: 600, damping: 30, mass: 0.5 }}
+        transition={springs.tap}
       >
         <span className="relative">
           <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.8} />

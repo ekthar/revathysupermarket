@@ -16,6 +16,7 @@ import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-sett
 import { Inter_Tight, Manrope } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { ViewportStability } from "@/components/ui/viewport-stability";
+import { RouteTransition } from "@/components/ui/route-transition";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -126,7 +127,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 tabIndex={-1}
                 aria-live="polite"
                 aria-label="Page content"
-              >{children}</div>
+              ><RouteTransition>{children}</RouteTransition></div>
             </Suspense>
             <Footer storeName={settings.storeName} address={settings.address} />
             <ScrollToTop />

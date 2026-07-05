@@ -59,6 +59,25 @@ export const springs = {
     damping: 18,
     mass: 1.2,
   } satisfies Transition,
+
+  /** Shared-layout indicators — nav pills, active-tab underlines. High
+   *  stiffness + low mass so it launches immediately, high damping so it
+   *  settles without wobble. Settles in ~150ms. */
+  indicator: {
+    type: "spring",
+    stiffness: 520,
+    damping: 36,
+    mass: 0.7,
+  } satisfies Transition,
+
+  /** Micro tap-in on small icon/label content — faster and lighter than
+   *  `snappy`, for the tiniest tappable elements (nav icons, chips). */
+  tap: {
+    type: "spring",
+    stiffness: 600,
+    damping: 30,
+    mass: 0.5,
+  } satisfies Transition,
 } as const;
 
 /** @deprecated Use `springs` instead. Backwards-compatible alias. */

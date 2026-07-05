@@ -1,12 +1,15 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { UserCog, Mail, Lock, Eye, EyeOff, ArrowRight, RefreshCw } from "lucide-react";
 import { motion } from "framer-motion";
 
 export function StaffLoginClient({ logoUrl }: { logoUrl?: string | null }) {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -36,9 +39,9 @@ export function StaffLoginClient({ logoUrl }: { logoUrl?: string | null }) {
     const role = session?.user?.role;
 
     if (role === "DELIVERY_PARTNER") {
-      window.location.href = "/delivery";
+      router.push("/delivery");
     } else {
-      window.location.href = "/admin";
+      router.push("/admin");
     }
   }
 
@@ -133,9 +136,9 @@ export function StaffLoginClient({ logoUrl }: { logoUrl?: string | null }) {
         {/* Help text */}
         <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
           Not a staff member?{" "}
-          <a href="/login" className="font-bold text-emerald-600 hover:underline dark:text-emerald-400">
+          <Link href="/login" className="font-bold text-emerald-600 hover:underline dark:text-emerald-400">
             Customer login
-          </a>
+          </Link>
         </p>
       </motion.div>
     </main>

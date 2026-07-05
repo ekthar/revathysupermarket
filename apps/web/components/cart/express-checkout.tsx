@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Zap, MapPin, CreditCard, Loader2 } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
@@ -23,6 +24,7 @@ type EligibilityData = {
 };
 
 export function ExpressCheckout() {
+  const router = useRouter();
   const { items, subtotal, clearCart } = useCart();
   const { showToast } = useToast();
   const [eligibility, setEligibility] = useState<EligibilityData | null>(null);
@@ -70,7 +72,7 @@ export function ExpressCheckout() {
       if (res.ok) {
         clearCart();
         showToast("Order placed successfully!", "success");
-        window.location.href = "/dashboard";
+        router.push("/dashboard");
       } else {
         const data = await res.json().catch(() => ({}));
         showToast(data.error || "Could not place order", "error");

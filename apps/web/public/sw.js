@@ -73,8 +73,7 @@ self.addEventListener("fetch", (event) => {
 
   const isPublicAsset = url.pathname.startsWith("/_next/static/") || 
                         url.pathname.startsWith("/icons/") || 
-                        url.pathname === "/manifest.webmanifest" ||
-                        url.pathname.startsWith("/sounds/");
+                        url.pathname === "/manifest.webmanifest";
   if (!isPublicAsset) return;
 
   event.respondWith(

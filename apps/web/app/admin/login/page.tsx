@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { AdminLoginForm } from "@/components/auth/admin-login-form";
@@ -44,7 +45,7 @@ export default async function AdminLoginPage({
         </div>
         <AdminLoginForm callbackUrl={safeCallback} />
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Customer? <a href="/login" className="font-semibold text-primary hover:underline">Use customer login</a>
+          Customer? <Link href="/login" className="font-semibold text-primary hover:underline">Use customer login</Link>
         </p>
       </div>
     </main>

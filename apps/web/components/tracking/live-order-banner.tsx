@@ -55,61 +55,62 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
   }, []);
 
   return (
-    <AnimatePresence>
-      {activeOrder && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.96, y: -8 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.96, y: -8 }}
-          transition={springs.enter}
-          className="mx-4"
-        >
-          <div className="pb-4">
-          <Link
-            href={`/track/${activeOrder.id}`}
-            className="block overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-secondary-600/90 via-secondary-500/90 to-secondary-400/90 p-3.5 shadow-lg shadow-secondary-500/20 backdrop-blur-xl dark:shadow-secondary-900/30 press"
+    <div className="mx-4 min-h-[80px]">
+      <AnimatePresence>
+        {activeOrder && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96, y: -8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: -8 }}
+            transition={springs.enter}
           >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {/* Pulse dot */}
-                <div className="relative flex h-2.5 w-2.5">
-                  <span className="stay-light absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                  <span className="stay-light relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
-                </div>
-                <div>
-                  <p className="text-micro font-bold uppercase tracking-wider text-white/90">
-                    Live Order
-                  </p>
-                  <p className="text-body font-bold text-white">
-                    {statusLabels[activeOrder.status] || activeOrder.status}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                {activeOrder.eta && (
-                  <div className="text-right">
-                    <p className="text-lg font-black text-white">
-                      ~{activeOrder.eta} min
+            <div className="pb-4">
+            <Link
+              href={`/track/${activeOrder.id}`}
+              className="block overflow-hidden rounded-2xl border border-white/15 bg-gradient-to-r from-secondary-600/90 via-secondary-500/90 to-secondary-400/90 p-3.5 shadow-lg shadow-secondary-500/20 backdrop-blur-xl dark:shadow-secondary-900/30 press"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {/* Pulse dot */}
+                  <div className="relative flex h-2.5 w-2.5">
+                    <span className="stay-light absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
+                    <span className="stay-light relative inline-flex h-2.5 w-2.5 rounded-full bg-white" />
+                  </div>
+                  <div>
+                    <p className="text-micro font-bold uppercase tracking-wider text-white/90">
+                      Live Order
                     </p>
-                    <p className="text-micro font-medium text-white/80">
-                      {["OUT_FOR_DELIVERY", "ARRIVING"].includes(activeOrder.status) ? "delivery" : "est. total"}
+                    <p className="text-body font-bold text-white">
+                      {statusLabels[activeOrder.status] || activeOrder.status}
                     </p>
                   </div>
-                )}
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
-                  <Truck className="h-4 w-4 text-white" />
+                </div>
+                <div className="flex items-center gap-2">
+                  {activeOrder.eta && (
+                    <div className="text-right">
+                      <p className="text-lg font-black text-white">
+                        ~{activeOrder.eta} min
+                      </p>
+                      <p className="text-micro font-medium text-white/80">
+                        {["OUT_FOR_DELIVERY", "ARRIVING"].includes(activeOrder.status) ? "delivery" : "est. total"}
+                      </p>
+                    </div>
+                  )}
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/20">
+                    <Truck className="h-4 w-4 text-white" />
+                  </div>
                 </div>
               </div>
+              <p className="mt-1.5 text-micro font-semibold uppercase tracking-widest text-white/80">
+                Tap to track
+              </p>
+              {/* Decorative */}
+              <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/10 pointer-events-none" />
+            </Link>
             </div>
-            <p className="mt-1.5 text-micro font-semibold uppercase tracking-widest text-white/80">
-              Tap to track
-            </p>
-            {/* Decorative */}
-            <div className="absolute -right-4 -top-4 h-16 w-16 rounded-full bg-white/10 pointer-events-none" />
-          </Link>
-          </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

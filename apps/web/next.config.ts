@@ -23,6 +23,7 @@ const contentSecurityPolicy = [
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "frame-ancestors 'self'",
   production ? "upgrade-insecure-requests" : ""
 ].filter(Boolean).join("; ");
 

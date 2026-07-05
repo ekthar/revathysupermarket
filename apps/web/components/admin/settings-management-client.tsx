@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Camera, Eye, EyeOff, ImagePlus, MapPin, Megaphone, MessageCircle, Save, Search, Settings, Trash2, Upload } from "lucide-react";
@@ -251,7 +252,7 @@ export function SettingsManagementClient({
             <p className="text-xs font-bold text-muted-foreground">Delivery fee, free delivery threshold, and minimum order value.</p>
           </div>
         </div>
-        <div className="rounded-2xl border border-border bg-muted p-3 text-sm"><p className="font-black">Distance-based delivery pricing is active</p><a href="/admin/pricing" className="mt-1 inline-block font-bold text-primary underline">Manage delivery fee ranges</a></div>
+        <div className="rounded-2xl border border-border bg-muted p-3 text-sm"><p className="font-black">Distance-based delivery pricing is active</p><Link href="/admin/pricing" className="mt-1 inline-block font-bold text-primary underline">Manage delivery fee ranges</Link></div>
         <FieldGroup label="Free Delivery Above (₹)" hint="Set to 0 for never free">
           <Input value={form.freeDeliveryThreshold} onChange={(event) => update("freeDeliveryThreshold", Number(event.target.value))} type="number" min="0" max="50000" step="1" placeholder="e.g. 500" className="h-12 rounded-2xl" />
         </FieldGroup>

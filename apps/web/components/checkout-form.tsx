@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CheckCircle2, Clock, Tag, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -336,13 +337,14 @@ export function CheckoutForm({
     return () => { if (promoValidationTimerRef.current) clearTimeout(promoValidationTimerRef.current); };
   }, [promoCode, subtotal]);
 
+  const router = useRouter();
   useEffect(() => {
     if (!placedOrderId) return;
     const timeout = window.setTimeout(() => {
-      window.location.href = "/dashboard";
+      router.push("/dashboard");
     }, 4000);
     return () => window.clearTimeout(timeout);
-  }, [placedOrderId]);
+  }, [placedOrderId, router]);
 
 
   function update(name: keyof CheckoutState, value: string) {

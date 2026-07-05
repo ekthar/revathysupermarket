@@ -71,25 +71,29 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
       }).addTo(map);
 
       const syncCenter = () => {
-        const c = map.getCenter();
-        setCenter({ latitude: c.lat, longitude: c.lng });
+        try {
+          const c = map.getCenter();
+          setCenter({ latitude: c.lat, longitude: c.lng });
+        } catch {}
       };
 
       map.on("moveend", syncCenter);
       
-      // Leaflet is ready to render tiles immediately
       syncCenter();
       setMapLoaded(true);
 
       // Handle container resizing
       resizeObserver = new ResizeObserver(() => {
-        map?.invalidateSize();
+        try { map?.invalidateSize(); } catch {}
       });
       resizeObserver.observe(containerRef.current);
 
-      // Settle size after modal animation opens
+      // Ensure map is properly sized after layout settles
+      const frame = requestAnimationFrame(() => {
+        try { map?.invalidateSize(); } catch {}
+      });
       settleTimer = window.setTimeout(() => {
-        map?.invalidateSize();
+        try { map?.invalidateSize(); } catch {}
       }, 350);
     };
 

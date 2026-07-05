@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { formatCurrency } from "@/lib/utils";
@@ -181,9 +182,9 @@ export default async function StaffCollectionVerificationPage() {
         ))
       )}
 
-      <a href="/admin/reports" className="inline-flex h-11 w-fit items-center rounded-2xl border border-border px-5 text-sm font-black">
+      <Link href="/admin/reports" className="inline-flex h-11 w-fit items-center rounded-2xl border border-border px-5 text-sm font-black">
         ← Back to Reports
-      </a>
+      </Link>
     </main>
   );
 }

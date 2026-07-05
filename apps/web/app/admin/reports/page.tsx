@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { formatCurrency } from "@/lib/utils";
 import { ReportsTimeSelector } from "@/components/admin/reports-time-selector";
@@ -79,15 +80,15 @@ export default async function AdminReportsPage() {
         <a href="/api/admin/export/orders" className="inline-flex h-11 items-center rounded-2xl bg-primary px-5 text-sm font-black text-white">
           Download orders CSV
         </a>
-        <a href="/admin/reports/cancelled" className="inline-flex h-11 items-center rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 px-5 text-sm font-black text-red-700 dark:text-red-300">
+        <Link href="/admin/reports/cancelled" className="inline-flex h-11 items-center rounded-2xl border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 px-5 text-sm font-black text-red-700 dark:text-red-300">
           Cancelled Orders Report
-        </a>
-        <a href="/admin/reports/returns" className="inline-flex h-11 items-center rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 px-5 text-sm font-black text-amber-700 dark:text-amber-300">
+        </Link>
+        <Link href="/admin/reports/returns" className="inline-flex h-11 items-center rounded-2xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/20 px-5 text-sm font-black text-amber-700 dark:text-amber-300">
           Daily Returns Report
-        </a>
-        <a href="/admin/reports/collections" className="inline-flex h-11 items-center rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 px-5 text-sm font-black text-blue-700 dark:text-blue-300">
+        </Link>
+        <Link href="/admin/reports/collections" className="inline-flex h-11 items-center rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 px-5 text-sm font-black text-blue-700 dark:text-blue-300">
           Staff Collection Verification
-        </a>
+        </Link>
       </div>
     </main>
   );

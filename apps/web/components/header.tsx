@@ -218,7 +218,7 @@ function CartBadgeLink() {
 
 // Location indicator - shows saved delivery address with ETA
 function LocationIndicator({ onOpenLocationPrompt, compact }: { onOpenLocationPrompt?: () => void; compact?: boolean }) {
-  const [location, setLocation] = useState<DeliveryLocation | null>(null);
+  const [location, setLocation] = useState<DeliveryLocation | null>(() => getSavedLocation());
 
   useEffect(() => {
     setLocation(getSavedLocation());

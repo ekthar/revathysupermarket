@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { Download, Share, Plus, X } from "lucide-react";
@@ -34,6 +34,7 @@ export function InstallAppPrompt() {
   const [event, setEvent] = useState<InstallEvent | null>(null);
   const [visible, setVisible] = useState(false);
   const [ios, setIos] = useState(false);
+  const capturedRef = useRef(false);
 
   useEffect(() => {
     if (process.env.NEXT_PUBLIC_ENABLE_INSTALL_PROMPT === "false") return;
@@ -70,6 +71,8 @@ export function InstallAppPrompt() {
     // For Chrome/Edge/etc: wait for beforeinstallprompt
     const timer = window.setTimeout(() => { if (isIos) reveal(); }, 7000);
     const capture = (value: Event) => {
+      if (capturedRef.current) return;
+      capturedRef.current = true;
       value.preventDefault();
       setEvent(value as InstallEvent);
       window.setTimeout(reveal, 5000);

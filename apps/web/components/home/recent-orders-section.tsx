@@ -64,7 +64,28 @@ export function RecentOrdersSection() {
     fetchOrders();
   }, []);
 
-  if (loading || orders.length === 0) return null;
+  if (loading) {
+    return (
+      <section className="pt-5 md:hidden">
+        <div className="px-4 mb-3">
+          <div className="h-5 w-32 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse" />
+        </div>
+        <div className="flex gap-3 px-4 overflow-x-hidden">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="w-[200px] shrink-0">
+              <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-800 p-3">
+                <div className="h-4 w-24 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse mb-2" />
+                <div className="h-3 w-32 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse mb-3" />
+                <div className="h-3 w-20 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    );
+  }
+
+  if (orders.length === 0) return null;
 
   const containerVariants = {
     hidden: {},

@@ -66,9 +66,24 @@ export function ProductSuggestions({
     fetchSuggestions();
   }, [fetchSuggestions]);
 
-  if (loading || suggestions.length === 0) {
-    return null;
+  if (loading) {
+    return (
+      <section className="max-w-7xl mx-auto px-4 pb-8 pt-4 md:px-6 lg:px-8">
+        <div className="h-5 w-48 bg-neutral-200 dark:bg-neutral-700 rounded-lg animate-pulse mb-4" />
+        <div className="flex gap-3 overflow-x-hidden">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex-shrink-0 w-[150px]">
+              <div className="aspect-square rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse mb-2" />
+              <div className="h-4 w-20 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse mb-1" />
+              <div className="h-3 w-14 bg-neutral-200 dark:bg-neutral-700 rounded animate-pulse" />
+            </div>
+          ))}
+        </div>
+      </section>
+    );
   }
+
+  if (suggestions.length === 0) return null;
 
   function handleAdd(product: SuggestionProduct) {
     if (product.stock <= 0) return;

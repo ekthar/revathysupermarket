@@ -12,7 +12,14 @@ import { SITE, STORE_COORDINATES } from "@/lib/constants";
 // homepage's initial bundle. It only downloads when the user opens the picker.
 const PinOnMapPicker = dynamic(
   () => import("@/components/checkout/pin-on-map-picker").then((m) => ({ default: m.PinOnMapPicker })),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-[300px] w-full items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-neutral-400 border-t-neutral-900 dark:border-neutral-600 dark:border-t-neutral-200" />
+      </div>
+    ),
+  }
 );
 
 const STORAGE_KEY = "msm-delivery-location";

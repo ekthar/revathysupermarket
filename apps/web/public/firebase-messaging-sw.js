@@ -17,26 +17,12 @@ firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
-// Pre-cache notification sound for offline playback
-const NOTIFICATION_SOUND_URL = "/sounds/delivery-alert.mp3";
-let soundCached = false;
-
-async function cacheNotificationSound() {
-  if (soundCached) return;
-  try {
-    const cache = await caches.open("msm-fcm-cache");
-    await cache.add(NOTIFICATION_SOUND_URL);
-    soundCached = true;
-  } catch { /* ignore */ }
-}
-
 self.addEventListener("install", (event) => {
   self.skipWaiting();
-  event.waitUntil(cacheNotificationSound());
 });
 
 self.addEventListener("activate", (event) => {
-  event.waitUntil(cacheNotificationSound().then(() => self.clients.claim()));
+  event.waitUntil(self.clients.claim());
 });
 
 // Handle background messages (when app is not in focus)

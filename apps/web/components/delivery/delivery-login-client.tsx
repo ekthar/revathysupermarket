@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { Bike, Phone, Shield, ArrowRight, RefreshCw } from "lucide-react";
@@ -9,6 +11,7 @@ import { motion, AnimatePresence } from "framer-motion";
 type Step = "phone" | "otp";
 
 export function DeliveryLoginClient({ logoUrl }: { logoUrl?: string | null }) {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -99,7 +102,7 @@ export function DeliveryLoginClient({ logoUrl }: { logoUrl?: string | null }) {
       }
 
       if (navigator.vibrate) navigator.vibrate(50);
-      window.location.href = "/delivery";
+      router.push("/delivery");
     } catch {
       setError("Verification failed. Try again.");
     } finally {
@@ -287,9 +290,9 @@ export function DeliveryLoginClient({ logoUrl }: { logoUrl?: string | null }) {
         {/* Help text */}
         <p className="mt-6 text-center text-xs text-slate-400 dark:text-slate-500">
           Not a delivery partner?{" "}
-          <a href="/login" className="font-bold text-emerald-600 hover:underline dark:text-emerald-400">
+          <Link href="/login" className="font-bold text-emerald-600 hover:underline dark:text-emerald-400">
             Customer login
-          </a>
+          </Link>
         </p>
       </motion.div>
     </main>

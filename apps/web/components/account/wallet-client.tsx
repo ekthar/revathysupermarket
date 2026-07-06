@@ -1,6 +1,7 @@
 "use client";
 
-import { ArrowDownLeft, ArrowUpRight, IndianRupee, Receipt, ShoppingBag, Wallet } from "lucide-react";
+import { useState } from "react";
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, IndianRupee, Receipt, ShoppingBag, Wallet } from "lucide-react";
 import { motion } from "framer-motion";
 import { formatCurrency } from "@/lib/utils";
 
@@ -20,7 +21,23 @@ interface WalletClientProps {
   transactions: Transaction[];
 }
 
+const PAGE_SIZE = 10;
+
 export function WalletClient({ balance, totalCredits, totalDebits, transactions }: WalletClientProps) {
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
+
+  function toggleExpand(id: string) {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  const visibleTxns = transactions.slice(0, visibleCount);
+  const hasMore = visibleCount < transactions.length;
+
   return (
     <div className="space-y-4">
       {/* Balance Card */}
@@ -102,54 +119,75 @@ export function WalletClient({ balance, totalCredits, totalDebits, transactions 
           </div>
         ) : (
           <div className="divide-y divide-neutral-50 dark:divide-neutral-800">
-            {transactions.map((txn, index) => (
-              <motion.div
-                key={txn.id}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.03 }}
-                className="flex items-center gap-3 px-4 py-3.5"
-              >
-                {/* Icon */}
-                <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 ${
-                  txn.type === "credit"
-                    ? "bg-secondary-50 dark:bg-secondary-900/30"
-                    : "bg-red-50 dark:bg-red-950/30"
-                }`}>
-                  {txn.type === "credit" ? (
-                    <ArrowDownLeft className="h-4 w-4 text-secondary-600" />
-                  ) : (
-                    <ArrowUpRight className="h-4 w-4 text-red-500" />
-                  )}
-                </div>
+            {visibleTxns.map((txn, index) => {
+              const expanded = expandedIds.has(txn.id);
+              return (
+                <motion.div
+                  key={txn.id}
+                  initial={{ opacity: 0, y: 5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="flex items-start gap-3 px-4 py-3.5"
+                >
+                  {/* Icon */}
+                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                    txn.type === "credit"
+                      ? "bg-secondary-50 dark:bg-secondary-900/30"
+                      : "bg-red-50 dark:bg-red-950/30"
+                  }`}>
+                    {txn.type === "credit" ? (
+                      <ArrowDownLeft className="h-4 w-4 text-secondary-600" />
+                    ) : (
+                      <ArrowUpRight className="h-4 w-4 text-red-500" />
+                    )}
+                  </div>
 
-                {/* Details */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-body font-medium text-neutral-800 dark:text-white truncate">
-                    {txn.reason}
-                  </p>
-                  <p className="text-micro text-neutral-400 mt-0.5">
-                    {txn.orderNumber ? `Order #${txn.orderNumber}` : ""}
-                    {txn.orderNumber ? " · " : ""}
-                    {new Date(txn.createdAt).toLocaleDateString("en-IN", {
-                      day: "2-digit",
-                      month: "short",
-                      year: "numeric"
-                    })}
-                  </p>
-                </div>
+                  {/* Details */}
+                  <div className="flex-1 min-w-0">
+                    <button
+                      type="button"
+                      onClick={() => toggleExpand(txn.id)}
+                      className="w-full text-left"
+                    >
+                      <p className={`text-body font-medium text-neutral-800 dark:text-white ${
+                        expanded ? "" : "truncate"
+                      }`}>
+                        {txn.reason}
+                      </p>
+                    </button>
+                    <p className="text-micro text-neutral-400 mt-0.5">
+                      {txn.orderNumber ? `Order #${txn.orderNumber}` : ""}
+                      {txn.orderNumber ? " · " : ""}
+                      {new Date(txn.createdAt).toLocaleDateString("en-IN", {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric"
+                      })}
+                    </p>
+                  </div>
 
-                {/* Amount */}
-                <span className={`text-body font-bold shrink-0 ${
-                  txn.type === "credit"
-                    ? "text-secondary-600 dark:text-secondary-400"
-                    : "text-red-500 dark:text-red-400"
-                }`}>
-                  {txn.type === "credit" ? "+" : "-"}{formatCurrency(txn.amount)}
-                </span>
-              </motion.div>
-            ))}
+                  {/* Amount */}
+                  <span className={`text-body font-bold shrink-0 ${
+                    txn.type === "credit"
+                      ? "text-secondary-600 dark:text-secondary-400"
+                      : "text-red-500 dark:text-red-400"
+                  }`}>
+                    {txn.type === "credit" ? "+" : "-"}{formatCurrency(txn.amount)}
+                  </span>
+                </motion.div>
+              );
+            })}
           </div>
+        )}
+        {hasMore && (
+          <button
+            type="button"
+            onClick={() => setVisibleCount((c) => c + PAGE_SIZE)}
+            className="flex w-full items-center justify-center gap-2 border-t border-neutral-50 dark:border-neutral-800 py-3 text-caption font-semibold text-primary hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+          >
+            <ChevronDown className="h-4 w-4" />
+            Load more ({transactions.length - visibleCount} remaining)
+          </button>
         )}
       </div>
     </div>

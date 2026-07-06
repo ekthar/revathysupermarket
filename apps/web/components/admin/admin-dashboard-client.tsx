@@ -69,11 +69,11 @@ const statusColors: Record<string, string> = {
 };
 
 const statusLabels: Record<string, string> = {
-  ORDER_RECEIVED: "New",
+  ORDER_RECEIVED: "New Order",
   ACCEPTED: "Accepted",
   PACKING: "Packing",
-  READY_FOR_DELIVERY: "Ready",
-  OUT_FOR_DELIVERY: "On Way",
+  READY_FOR_DELIVERY: "Ready for Pickup",
+  OUT_FOR_DELIVERY: "Out for Delivery",
   DELIVERED: "Delivered",
   CANCELLED: "Cancelled"
 };

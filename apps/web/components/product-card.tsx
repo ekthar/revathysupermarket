@@ -121,24 +121,25 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
                 {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
               </span>
             )}
-            {outOfStock && (
-              <div className="absolute inset-0 bg-white/80 backdrop-blur-[2px] flex items-center justify-center">
-                <span className="bg-neutral-900/90 text-white text-micro font-semibold px-2.5 py-1 rounded-full">Sold out</span>
-              </div>
-            )}
-            {/* Favorite button */}
-            <div className="absolute top-2 right-2 z-10">
+            {/* Favorite button - shift left when discount badge occupies top-right */}
+            <div className={cn("absolute top-2 z-10", product.discountPrice && product.isFeatured ? "right-2" : product.discountPrice ? "right-2 top-9" : "right-2")}>
               <FavoriteButton ref={favoriteBtnRef} productId={product.id} size="sm" />
             </div>
           </div>
         </DoubleTapHeart>
       </Link>
 
+      {outOfStock && (
+        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5">
+          <span className="h-2 w-2 rounded-full bg-neutral-400" />
+          <span className="text-micro font-semibold text-neutral-500">Out of stock</span>
+        </div>
+      )}
       <div className={cn("p-3", compact && "p-2.5")}>
         <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
           <h3 className={cn(
             "font-semibold text-neutral-800 leading-snug line-clamp-2",
-            compact ? "text-caption" : "text-caption"
+            compact ? "text-caption" : "text-body"
           )}>{product.name}</h3>
           <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pack"}</p>
           {product.avgRating && product.avgRating > 0 && (
@@ -173,7 +174,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
 function CartControls({ product, outOfStock, variant }: { product: Product; outOfStock: boolean; variant: "grid" | "horizontal" }) {
   const cartItem = useCartItem(product.id);
   const { addItem, updateQuantity } = useCartActions();
-  const { showToast } = useToast();
   const { flyToCart } = useFlyToCart();
 
   const handleAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
@@ -183,7 +183,6 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(10);
     }
-    showToast(`Added ${product.name}`, "success");
     flyToCart(product.image, e.currentTarget);
   }, [outOfStock, addItem, product, showToast, flyToCart]);
 

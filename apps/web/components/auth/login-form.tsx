@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { getSession, signIn, signOut } from "next-auth/react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, LockKeyhole, Mail, Phone, ShoppingBasket, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, Phone, ShoppingBasket, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SITE } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
@@ -29,7 +29,7 @@ export function LoginForm({
   const { showToast } = useToast();
   const [mode, setMode] = useState<Mode>(initialMode);
   const [login, setLogin] = useState({ email: "", password: "" });
-  const [register, setRegister] = useState({ name: "", phone: "", email: "", password: "" });
+  const [register, setRegister] = useState({ name: "", phone: "", email: "", password: "", confirmPassword: "" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -72,7 +72,6 @@ export function LoginForm({
     } catch (error) {
       const nextMessage = error instanceof Error ? error.message : "Login failed.";
       setMessage(nextMessage);
-      showToast(nextMessage, "error");
     } finally {
       setLoading(false);
     }
@@ -92,7 +91,12 @@ export function LoginForm({
     if (!response.ok) {
       setLoading(false);
       setMessage(data.error ?? "Account could not be created.");
-      showToast(data.error ?? "Account could not be created", "error");
+      return;
+    }
+
+    if (register.password !== register.confirmPassword) {
+      setLoading(false);
+      setMessage("Passwords do not match.");
       return;
     }
 
@@ -147,7 +151,7 @@ export function LoginForm({
       </motion.div>
 
       <div className="rounded-xl border border-white/70 bg-white/95 p-4 shadow-premium backdrop-blur dark:border-white/10 dark:bg-neutral-900 sm:p-5">
-        <div className="grid grid-cols-2 rounded-2xl bg-muted p-1">
+        <div role="tablist" aria-label="Login or register" className="grid grid-cols-2 rounded-2xl bg-muted p-1">
           {[
             ["login", "Login"],
             ["register", "Create account"]
@@ -155,6 +159,8 @@ export function LoginForm({
             <button
               key={value}
               type="button"
+              role="tab"
+              aria-selected={mode === value}
               onClick={() => {
                 setMode(value as Mode);
                 setMessage("");
@@ -190,7 +196,7 @@ export function LoginForm({
               </div>
               <AuthInput icon={Mail} label="Email" type="email" value={login.email} onChange={(value) => setLogin((current) => ({ ...current, email: value }))} />
               <AuthInput icon={LockKeyhole} label="Password" type="password" value={login.password} onChange={(value) => setLogin((current) => ({ ...current, password: value }))} />
-              {message && <p className="mt-4 rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p>}
+              {message && <p className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm font-bold text-destructive">{message}</p>}
               <Button className="mt-5 w-full bg-black text-white hover:bg-black/90" size="lg" disabled={loading}>
                 {loading ? "Signing in" : "Login"}
                 <ArrowRight className="h-4 w-4" />
@@ -199,9 +205,11 @@ export function LoginForm({
                 <button type="button" onClick={() => setMode("register")} className="text-black">Create account</button>
                 <Link href="/forgot-password" className="text-black">Forgot password</Link>
               </div>
-              <Link href="/admin/login" className="mt-4 block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-black">
-                Staff member? Use Staff Login
-              </Link>
+              <div className="mt-4 border-t border-border pt-4">
+                <Link href="/admin/login" className="block rounded-2xl border border-border bg-background/70 p-3 text-center text-sm font-black text-black">
+                  Staff member? Use Staff Login →
+                </Link>
+              </div>
             </motion.form>
           ) : (
             <motion.form
@@ -222,10 +230,11 @@ export function LoginForm({
                 </div>
               </div>
               <AuthInput icon={UserRound} label="Full name" value={register.name} onChange={(value) => setRegister((current) => ({ ...current, name: value }))} />
-              <AuthInput icon={Phone} label="Phone number" type="tel" value={register.phone} onChange={(value) => setRegister((current) => ({ ...current, phone: value }))} />
+              <AuthInput icon={Phone} label="Phone number" type="tel" placeholder="+91 XXXXXXXXXX" value={register.phone} onChange={(value) => setRegister((current) => ({ ...current, phone: value }))} />
               <AuthInput icon={Mail} label="Email" type="email" value={register.email} onChange={(value) => setRegister((current) => ({ ...current, email: value }))} />
               <AuthInput icon={LockKeyhole} label="Password" type="password" value={register.password} onChange={(value) => setRegister((current) => ({ ...current, password: value }))} />
-              {message && <p className="mt-4 rounded-2xl bg-muted p-3 text-sm font-bold">{message}</p>}
+              <AuthInput icon={LockKeyhole} label="Confirm password" type="password" value={register.confirmPassword} onChange={(value) => setRegister((current) => ({ ...current, confirmPassword: value }))} />
+              {message && <p className="mt-4 rounded-2xl bg-destructive/10 p-3 text-sm font-bold text-destructive">{message}</p>}
               <Button className="mt-5 w-full bg-black text-white hover:bg-black/90" size="lg" disabled={loading}>
                 {loading ? "Creating account" : "Create account"}
                 <ArrowRight className="h-4 w-4" />
@@ -245,21 +254,36 @@ function AuthInput({
   icon: Icon,
   label,
   type = "text",
+  placeholder,
   value,
   onChange
 }: {
   icon: React.ElementType;
   label: string;
   type?: string;
+  placeholder?: string;
   value: string;
   onChange: (value: string) => void;
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === "password";
+  const inputType = isPassword ? (showPassword ? "text" : "password") : type;
   return (
     <label className="mt-4 block">
       <span className="text-sm font-bold">{label}</span>
       <span className="relative mt-2 block">
         <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-neutral-400" />
-        <Input type={type} value={value} onChange={(event) => onChange(event.target.value)} required className="h-12 rounded-2xl pl-11" />
+        <Input type={inputType} value={value} placeholder={placeholder} onChange={(event) => onChange(event.target.value)} required className="h-12 rounded-2xl pl-11 pr-11" />
+        {isPassword && (
+          <button
+            type="button"
+            onClick={() => setShowPassword((v) => !v)}
+            className="absolute right-4 top-3.5 text-neutral-400 hover:text-neutral-600"
+            aria-label={showPassword ? "Hide password" : "Show password"}
+          >
+            {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        )}
       </span>
     </label>
   );

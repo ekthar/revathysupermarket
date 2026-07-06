@@ -27,6 +27,8 @@ export default function CheckoutScreen() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoLoading, setPromoLoading] = useState(false);
+  const [promoError, setPromoError] = useState("");
   const [isPlacing, setIsPlacing] = useState(false);
   const [error, setError] = useState("");
   const orderPlacedRef = useRef(false); // Prevent duplicate submissions
@@ -113,26 +115,31 @@ export default function CheckoutScreen() {
             const StepIcon = stepIcons[i];
             return (
               <View key={i} className="flex-row items-center flex-1">
-                <View
-                  className={`w-8 h-8 rounded-full items-center justify-center ${
-                    i <= step ? "bg-primary-900" : "bg-neutral-200"
-                  }`}
-                >
-                  {i < step ? (
-                    <Check size={14} color="#FFFFFF" strokeWidth={3} />
-                  ) : (
-                    <Text
-                      className={`text-micro font-black ${
-                        i <= step ? "text-white" : "text-neutral-500"
-                      }`}
-                    >
-                      {i + 1}
-                    </Text>
-                  )}
+                <View className="items-center">
+                  <View
+                    className={`w-8 h-8 rounded-full items-center justify-center ${
+                      i <= step ? "bg-primary-900" : "bg-neutral-200"
+                    }`}
+                  >
+                    {i < step ? (
+                      <Check size={14} color="#FFFFFF" strokeWidth={3} />
+                    ) : (
+                      <Text
+                        className={`text-micro font-black ${
+                          i <= step ? "text-white" : "text-neutral-500"
+                        }`}
+                      >
+                        {i + 1}
+                      </Text>
+                    )}
+                  </View>
+                  <Text className={`text-micro mt-1 font-semibold ${
+                    i <= step ? "text-primary-900" : "text-neutral-400"
+                  }`}>{title}</Text>
                 </View>
                 {i < 2 && (
                   <View
-                    className={`flex-1 h-0.5 mx-1.5 rounded-full ${
+                    className={`flex-1 h-0.5 mx-1.5 mb-4 rounded-full ${
                       i < step ? "bg-primary-900" : "bg-neutral-200"
                     }`}
                   />
@@ -153,8 +160,11 @@ export default function CheckoutScreen() {
                   <ActivityIndicator color="#050505" />
                 </View>
               ) : addresses.length === 0 ? (
-                <View className="py-8 items-center">
-                  <Text className="text-body text-neutral-400">No saved addresses. Add one in your account.</Text>
+                <View className="py-8 items-center gap-3">
+                  <Text className="text-body text-neutral-400 text-center">No saved addresses. Add one in your account.</Text>
+                  <Pressable onPress={() => router.push("/(tabs)/account")} className="bg-primary-900 px-5 py-2.5 rounded-xl">
+                    <Text className="text-white font-bold text-caption">Go to Account</Text>
+                  </Pressable>
                 </View>
               ) : addresses.map((addr, i) => (
                 <Pressable
@@ -258,7 +268,7 @@ export default function CheckoutScreen() {
               <View className="flex-row">
                 <TextInput
                   value={promoCode}
-                  onChangeText={(t) => setPromoCode(t.toUpperCase())}
+                  onChangeText={(t) => { setPromoCode(t.toUpperCase()); setPromoError(""); }}
                   placeholder="Enter code"
                   placeholderTextColor="#9CA3AF"
                   className="flex-1 h-12 border border-neutral-200 rounded-xl px-4 mr-2 bg-neutral-50 text-body font-medium text-neutral-900"
@@ -266,14 +276,40 @@ export default function CheckoutScreen() {
                   autoCapitalize="characters"
                 />
                 <Pressable
-                  onPress={() => setPromoApplied(!promoApplied)}
+                  onPress={async () => {
+                    if (promoApplied) {
+                      setPromoApplied(false);
+                      setPromoCode("");
+                      setPromoError("");
+                      return;
+                    }
+                    if (!promoCode.trim()) { setPromoError("Enter a promo code"); return; }
+                    setPromoLoading(true);
+                    setPromoError("");
+                    try {
+                      const { data } = await api.post("/promo-codes/validate", { code: promoCode.trim(), subtotal });
+                      if (data.valid) { setPromoApplied(true); }
+                      else { setPromoError(data.error || "Invalid or expired code"); }
+                    } catch {
+                      setPromoError("Could not validate code. Try again.");
+                    } finally {
+                      setPromoLoading(false);
+                    }
+                  }}
                   className="bg-primary-900 h-12 px-5 rounded-xl justify-center"
+                  disabled={promoLoading}
                 >
-                  <Text className="text-white font-bold text-caption">
-                    {promoApplied ? "Remove" : "Apply"}
-                  </Text>
+                  {promoLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text className="text-white font-bold text-caption">
+                      {promoApplied ? "Remove" : "Apply"}
+                    </Text>
+                  )}
                 </Pressable>
               </View>
+              {promoError ? <Text className="text-micro text-red-500 mt-1.5">{promoError}</Text> : null}
+              {promoApplied ? <Text className="text-micro text-green-600 mt-1.5">Promo code applied!</Text> : null}
             </Animated.View>
           )}
 
@@ -320,7 +356,7 @@ export default function CheckoutScreen() {
                 <View className="flex-row justify-between mb-1.5">
                   <Text className="text-caption text-neutral-500">Delivery</Text>
                   <Text className="text-caption font-medium text-neutral-700">
-                    {selectedSlot >= 0 ? DELIVERY_SLOTS[selectedSlot].label : "ASAP"}
+                    {selectedSlot >= 0 ? DELIVERY_SLOTS[selectedSlot].label : "ASAP (as soon as possible)"}
                   </Text>
                 </View>
                 <View className="flex-row justify-between">

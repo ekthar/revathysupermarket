@@ -48,8 +48,8 @@ export function CartPageClient() {
 
   // Calculate dynamic values
   const qualifiesFreeDelivery = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold;
-  // The exact fee depends on the checkout address and is calculated server-side.
-  const deliveryFee = 0;
+  // Show estimated delivery fee; exact fee is confirmed at checkout based on address.
+  const deliveryFee = qualifiesFreeDelivery ? 0 : config.deliveryFee;
   
   // GST is inclusive (already in price) - show breakdown for transparency
   const gstRate = config.gstRatePercent;
@@ -86,14 +86,14 @@ export function CartPageClient() {
           setPromoDiscount(0);
           setPromoDescription("");
           setPromoCode("");
-          setPromoError("");
+          setPromoError("Your promo code was removed because it is no longer valid for this cart.");
         }
       } catch {
         setPromoApplied(false);
         setPromoDiscount(0);
         setPromoDescription("");
         setPromoCode("");
-        setPromoError("");
+        setPromoError("Your promo code was removed because it is no longer valid for this cart.");
       } finally {
         validatingPromoRef.current = false;
       }
@@ -130,11 +130,6 @@ export function CartPageClient() {
       return;
     }
 
-    // Optimistic: show coupon applied immediately with estimated discount
-    const estimatedDiscount = Math.min(subtotal * 0.1, 50); // Optimistic estimate
-    setPromoApplied(true);
-    setPromoDiscount(estimatedDiscount);
-    setPromoDescription("Validating...");
     setPromoError("");
     setPromoLoading(true);
 
@@ -146,23 +141,21 @@ export function CartPageClient() {
       });
       const data = await res.json();
       if (res.ok && data.valid) {
-        // Update with actual server values
+        setPromoApplied(true);
         setPromoDiscount(data.discount);
         setPromoDescription(data.description);
         setPromoError("");
       } else {
-        // Rollback: coupon invalid
         setPromoApplied(false);
         setPromoDiscount(0);
         setPromoDescription("");
-        setPromoError(data.error || "Invalid code");
+        setPromoError(data.error || "Invalid or expired code");
       }
     } catch {
-      // Rollback: network error
       setPromoApplied(false);
       setPromoDiscount(0);
       setPromoDescription("");
-      setPromoError("Could not validate code");
+      setPromoError("Could not validate code. Please try again.");
     } finally {
       setPromoLoading(false);
     }
@@ -387,11 +380,13 @@ export function CartPageClient() {
           <div className="flex justify-between">
             <span className="text-neutral-500 dark:text-neutral-400">Delivery fee</span>
             <span className="font-medium text-neutral-700 dark:text-neutral-300">
-              {qualifiesFreeDelivery ? <span className="text-secondary-600">FREE</span> : <span>Calculated at checkout</span>}
+              {qualifiesFreeDelivery ? <span className="text-secondary-600">FREE</span> : <span>~{formatCurrency(deliveryFee)}</span>}
             </span>
           </div>
-          {qualifiesFreeDelivery && (
+          {qualifiesFreeDelivery ? (
             <p className="text-micro text-secondary-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
+          ) : (
+            <p className="text-micro text-neutral-400 -mt-1">Estimated fee — exact amount confirmed at checkout based on your address.</p>
           )}
           <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 flex justify-between">
             <span className="font-bold text-neutral-900 dark:text-white">Cart total</span>

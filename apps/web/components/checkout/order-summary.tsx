@@ -145,7 +145,7 @@ export function OrderSummary({
         </motion.button>
         {!canSubmit && (
           <p className="mt-3 text-center text-caption font-medium text-neutral-400">
-            {!subtotal || subtotal < minimumOrderValue ? `Minimum order value is ${formatCurrency(minimumOrderValue)}` : "Complete address, pincode & GPS to proceed"}
+            Complete address, pincode & GPS to proceed
           </p>
         )}
       </section>

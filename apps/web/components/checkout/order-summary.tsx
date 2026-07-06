@@ -137,15 +137,15 @@ export function OrderSummary({
         <motion.button
           type="submit"
           disabled={!canSubmit}
-          whileTap={{ scale: 0.97 }}
-          whileHover={{ scale: canSubmit ? 1.01 : 1 }}
+          whileTap={canSubmit ? { scale: 0.97 } : undefined}
+          whileHover={canSubmit ? { scale: 1.01 } : undefined}
           className="mt-5 flex h-[52px] w-full items-center justify-center rounded-2xl bg-black text-body font-black text-white shadow-premium transition-opacity disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
         >
           {isSubmitting ? "Placing order..." : `Place Order - ${formatCurrency(totalAmount)}`}
         </motion.button>
         {!canSubmit && (
           <p className="mt-3 text-center text-caption font-medium text-neutral-400">
-            Complete address, pincode & GPS to proceed
+            {!subtotal || subtotal < minimumOrderValue ? `Minimum order value is ${formatCurrency(minimumOrderValue)}` : "Complete address, pincode & GPS to proceed"}
           </p>
         )}
       </section>

@@ -152,7 +152,7 @@ export function PinOnMapPicker({ initial, onClose, onConfirm }: PinOnMapPickerPr
           type="button"
           onClick={onClose}
           aria-label="Close map picker"
-          className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 press"
+          className="flex h-11 w-11 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 press"
         >
           <X className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
         </button>

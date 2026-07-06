@@ -31,7 +31,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
                 type="button"
                 aria-label="Close"
                 onClick={onClose}
-                className="h-8 w-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
+                className="h-11 w-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
               >
                 <X className="h-4 w-4 text-slate-500" />
               </button>

@@ -236,7 +236,7 @@ export function AddressSelector({
           {/* Deliver to a new address */}
           <button
             type="button"
-            onClick={() => { setSelectedAddressId(""); setFormExpanded(true); }}
+            onClick={() => { setSelectedAddressId(""); onFormPatch({ houseName: "", street: "", landmark: "", pincode: "", latitude: "", longitude: "", customerName: "", phone: "" }); setFormExpanded(true); }}
             className="flex w-full items-center justify-center gap-1 border-t border-neutral-100 dark:border-neutral-700 py-2.5 text-micro font-semibold text-neutral-500 hover:text-primary hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors press"
           >
             + Deliver to a new address
@@ -323,7 +323,7 @@ export function AddressSelector({
                   type="button"
                   onClick={() => { haptic("medium"); detectCurrentLocation(); }}
                   disabled={locationState === "loading"}
-                  whileTap={{ scale: 0.9 }}
+                  whileTap={locationState !== "loading" ? { scale: 0.9 } : undefined}
                   aria-label="Detect delivery location using GPS"
                   className="shrink-0 rounded-full bg-black px-3 py-2 text-caption font-bold text-white"
                 >
@@ -412,7 +412,13 @@ export function AddressSelector({
             <div className="mt-4">
               <motion.button
                 type="button"
-                onClick={() => setFormExpanded(false)}
+                onClick={() => {
+                  if (!form.customerName.trim() || !form.phone.trim() || !form.pincode.trim()) {
+                    showToast("Please fill in your name, phone number and pincode", "error");
+                    return;
+                  }
+                  setFormExpanded(false);
+                }}
                 whileTap={{ scale: 0.97 }}
                 className="flex h-11 w-full items-center justify-center rounded-xl bg-black text-sm font-bold text-white press"
               >

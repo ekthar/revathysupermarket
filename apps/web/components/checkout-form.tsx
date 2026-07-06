@@ -374,6 +374,8 @@ export function CheckoutForm({
   }
 
   async function placeOrder() {
+    if (isSubmitting) return;
+    if (items.length === 0) { showToast("Your cart is empty", "error"); return; }
     setShowConfirm(false);
 
     // Save customer info for next time (onboarding persistence)
@@ -455,9 +457,10 @@ export function CheckoutForm({
           <button
             type="button"
             onClick={() => { haptic("heavy"); placeOrder(); }}
-            className="h-12 rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-neutral-800"
+            disabled={isSubmitting}
+            className="h-12 rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
           >
-            Confirm & Place
+            {isSubmitting ? "Placing..." : "Confirm & Place"}
           </button>
         </div>
       </BottomSheet>

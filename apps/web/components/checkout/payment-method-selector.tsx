@@ -61,7 +61,15 @@ export function PaymentMethodSelector({
           description="Pay via Debit/Credit card on delivery"
           onClick={() => onMethodChange("CARD")}
         />
-        {!walletLoading && walletBalance > 0 && (
+        {walletLoading ? (
+          <div className="flex items-center gap-3 rounded-2xl p-4 border-2 border-neutral-100 dark:border-neutral-800">
+            <div className="h-10 w-10 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-700" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-28 animate-pulse rounded bg-neutral-200 dark:bg-neutral-700" />
+              <div className="h-3 w-20 animate-pulse rounded bg-neutral-100 dark:bg-neutral-800" />
+            </div>
+          </div>
+        ) : walletBalance > 0 ? (
           <PaymentMethodCard
             active={paymentMethod === "WALLET"}
             icon={<Wallet className="h-5 w-5" />}
@@ -74,7 +82,7 @@ export function PaymentMethodSelector({
             }
             onClick={() => onMethodChange("WALLET")}
           />
-        )}
+        ) : null}
       </div>
       {paymentMethod === "WALLET" && walletBalance < totalAmount && (
         <div className="mt-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3">

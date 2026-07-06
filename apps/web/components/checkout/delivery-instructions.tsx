@@ -64,7 +64,7 @@ export function DeliveryInstructions({ instructions, onInstructionsChange }: Del
               type="button"
               onClick={() => toggleChip(chip.id)}
               whileTap={{ scale: 0.92 }}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-bold transition-colors ${
+              className={`flex items-center gap-1.5 rounded-full px-4 py-2.5 text-sm font-bold transition-colors ${
                 isSelected
                   ? "bg-black text-white shadow-sm"
                   : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
@@ -87,7 +87,7 @@ export function DeliveryInstructions({ instructions, onInstructionsChange }: Del
           className="w-full rounded-xl border border-border bg-background p-3 text-sm placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-black/20 resize-none"
         />
         <p className="mt-1 text-right text-micro text-neutral-400">
-          {instructions.length}/200
+          {instructions.length}/150
         </p>
       </div>
     </section>

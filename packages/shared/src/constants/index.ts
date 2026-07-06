@@ -137,3 +137,59 @@ export const ALARM_CONSTANTS = {
 export const POLLING_CONSTANTS = {
   ASSIGNMENT_POLL_INTERVAL_MS: 30000,
 };
+
+// ============================================
+// Staff Status Labels & Colors
+// ============================================
+
+export const STAFF_STATUS_LABELS: Record<string, string> = {
+  ORDER_RECEIVED: "New",
+  AWAITING_CUSTOMER_APPROVAL: "Awaiting Approval",
+  ACCEPTED: "Accepted",
+  PACKING: "Packing",
+  READY_FOR_DELIVERY: "Ready",
+  OUT_FOR_DELIVERY: "Out for Delivery",
+  ARRIVING: "Arriving",
+  CUSTOMER_UNAVAILABLE: "Unavailable",
+  RETURNED_TO_STORE: "Returned to Store",
+  DELIVERED: "Delivered",
+  CANCELLED: "Cancelled",
+};
+
+export const STAFF_STATUS_COLORS: Record<string, { bg: string; text: string }> = {
+  ORDER_RECEIVED: { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-300" },
+  ACCEPTED: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300" },
+  PACKING: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-300" },
+  READY_FOR_DELIVERY: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300" },
+  OUT_FOR_DELIVERY: { bg: "bg-cyan-100 dark:bg-cyan-900/30", text: "text-cyan-700 dark:text-cyan-300" },
+  ARRIVING: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-300" },
+  DELIVERED: { bg: "bg-emerald-100 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-300" },
+  CANCELLED: { bg: "bg-red-100 dark:bg-red-900/30", text: "text-red-700 dark:text-red-300" },
+  CUSTOMER_UNAVAILABLE: { bg: "bg-slate-200 dark:bg-slate-800", text: "text-slate-700 dark:text-slate-300" },
+};
+
+// ============================================
+// Staff Admin Tab Filters
+// ============================================
+
+export const ADMIN_ORDER_TABS = ["all", "new", "packing", "ready", "delivering", "delivered"] as const;
+
+export const TAB_FILTER_MAP: Record<string, string[]> = {
+  all: [],
+  new: ["ORDER_RECEIVED"],
+  packing: ["ACCEPTED", "PACKING"],
+  ready: ["READY_FOR_DELIVERY"],
+  delivering: ["OUT_FOR_DELIVERY", "ARRIVING"],
+  delivered: ["DELIVERED"],
+};
+
+// ============================================
+// Sort Options for Products
+// ============================================
+
+export const SORT_OPTIONS = [
+  { value: "", label: "Popular" },
+  { value: "price_asc", label: "Price: Low to High" },
+  { value: "price_desc", label: "Price: High to Low" },
+  { value: "name_asc", label: "Name A-Z" },
+] as const;

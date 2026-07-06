@@ -1,93 +1,68 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCcw } from "lucide-react";
+import { useCallback, useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 interface PullToRefreshProps {
   onRefresh: () => Promise<void>;
   children: React.ReactNode;
 }
 
+const THRESHOLD = 80;
+
 export function PullToRefresh({ onRefresh, children }: PullToRefreshProps) {
-  const [pulling, setPulling] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
   const [pullDistance, setPullDistance] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const startY = useRef(0);
-  const containerRef = useRef<HTMLDivElement>(null);
+  const isTracking = useRef(false);
 
-  const threshold = 80;
-
-  const handleTouchStart = useCallback((e: TouchEvent) => {
-    if (window.scrollY === 0) {
-      startY.current = e.touches[0].clientY;
-      setPulling(true);
-    }
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (window.scrollY > 0) return;
+    startY.current = e.touches[0].clientY;
+    isTracking.current = true;
   }, []);
 
-  const handleTouchMove = useCallback((e: TouchEvent) => {
-    if (!pulling || refreshing) return;
-    const currentY = e.touches[0].clientY;
-    const diff = Math.max(0, currentY - startY.current);
-    // Dampen the pull distance
-    setPullDistance(Math.min(diff * 0.4, 120));
-  }, [pulling, refreshing]);
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!isTracking.current || refreshing) return;
+    const dy = e.touches[0].clientY - startY.current;
+    if (dy < 0) {
+      setPullDistance(0);
+      return;
+    }
+    const eased = Math.min(dy * 0.4, 120);
+    setPullDistance(eased);
+  }, [refreshing]);
 
   const handleTouchEnd = useCallback(async () => {
-    if (pullDistance >= threshold && !refreshing) {
+    isTracking.current = false;
+    if (pullDistance >= THRESHOLD && !refreshing) {
       setRefreshing(true);
-      setPullDistance(threshold * 0.5);
-      await onRefresh();
-      setRefreshing(false);
+      setPullDistance(THRESHOLD);
+      try {
+        await onRefresh();
+      } finally {
+        setRefreshing(false);
+        setPullDistance(0);
+      }
+    } else {
+      setPullDistance(0);
     }
-    setPulling(false);
-    setPullDistance(0);
   }, [pullDistance, refreshing, onRefresh]);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    container.addEventListener("touchstart", handleTouchStart, { passive: true });
-    container.addEventListener("touchmove", handleTouchMove, { passive: true });
-    container.addEventListener("touchend", handleTouchEnd);
-
-    return () => {
-      container.removeEventListener("touchstart", handleTouchStart);
-      container.removeEventListener("touchmove", handleTouchMove);
-      container.removeEventListener("touchend", handleTouchEnd);
-    };
-  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
-
   return (
-    <div ref={containerRef} className="relative">
-      {/* Pull indicator */}
-      <AnimatePresence>
-        {(pullDistance > 10 || refreshing) && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-x-0 -top-2 flex justify-center z-10"
-            style={{ transform: `translateY(${pullDistance}px)` }}
-          >
-            <motion.div
-              animate={refreshing ? { rotate: 360 } : { rotate: pullDistance * 3 }}
-              transition={refreshing ? { duration: 0.8, repeat: Infinity, ease: "linear" } : { duration: 0 }}
-              className={`flex h-8 w-8 items-center justify-center rounded-full shadow-md ${
-                pullDistance >= threshold ? "bg-primary text-white" : "bg-white dark:bg-slate-800 text-slate-400"
-              }`}
-            >
-              <RefreshCcw className="h-4 w-4" />
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Content */}
-      <div style={{ transform: `translateY(${pullDistance > 0 ? pullDistance * 0.3 : 0}px)`, transition: pulling ? "none" : "transform 0.3s ease" }}>
-        {children}
-      </div>
+    <div onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} className="relative">
+      <motion.div
+        animate={{ height: pullDistance, opacity: pullDistance > 0 ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
+        className="flex items-center justify-center overflow-hidden"
+      >
+        <motion.div
+          animate={{ rotate: refreshing ? 360 : Math.min(pullDistance / THRESHOLD, 1) * 180 }}
+          transition={{ duration: refreshing ? 0.6 : 0.2, repeat: refreshing ? Infinity : 0, ease: "linear" }}
+          className="h-6 w-6 rounded-full border-2 border-primary border-t-transparent"
+        />
+      </motion.div>
+      {children}
     </div>
   );
 }

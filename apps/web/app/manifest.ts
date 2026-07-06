@@ -1,5 +1,8 @@
 import type { MetadataRoute } from "next";
+import { cookies } from "next/headers";
 import { getPublicStoreSettings } from "@/lib/store-settings";
+
+export const dynamic = "force-dynamic";
 
 export default async function manifest(): Promise<MetadataRoute.Manifest> {
   let storeName = "Revathy Supermarket";
@@ -7,6 +10,26 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     const settings = await getPublicStoreSettings();
     storeName = settings.storeName || storeName;
   } catch {}
+
+  const cookieStore = await cookies();
+  const sessionCookie = cookieStore.get("next-auth.session-token") || cookieStore.get("__Secure-next-auth.session-token");
+  const isLoggedIn = !!sessionCookie?.value;
+
+  const shortcuts: MetadataRoute.Manifest["shortcuts"] = [
+    { name: "Search products", short_name: "Search", url: "/products", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+    { name: "Open cart", short_name: "Cart", url: "/cart", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+  ];
+
+  if (isLoggedIn) {
+    shortcuts.push(
+      { name: "My orders", short_name: "Orders", url: "/dashboard", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+      { name: "My account", short_name: "Account", url: "/account", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
+    );
+  } else {
+    shortcuts.push(
+      { name: "Sign in", short_name: "Login", url: "/login", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
+    );
+  }
 
   return {
     id: "/",
@@ -23,12 +46,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     dir: "ltr",
     lang: "en",
     prefer_related_applications: false,
-    shortcuts: [
-      { name: "Search products", short_name: "Search", url: "/products", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "My orders", short_name: "Orders", url: "/dashboard", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "Open cart", short_name: "Cart", url: "/cart", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "Delivery login", short_name: "Deliver", url: "/delivery/login", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
-    ],
+    shortcuts,
     background_color: "#F7F7FA",
     theme_color: "#020617",
     icons: [

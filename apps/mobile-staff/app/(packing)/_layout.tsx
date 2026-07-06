@@ -37,7 +37,9 @@ export default function PackingLayout() {
         }}
       />
       {/* Hide order sub-screens from tab bar */}
-      <Tabs.Screen name="order/[id]" options={{ href: null }} />
+      <Tabs.Screen name="order/[id]/index" options={{ href: null }} />
+      <Tabs.Screen name="order/[id]/damage" options={{ href: null }} />
+      <Tabs.Screen name="order/[id]/collection" options={{ href: null }} />
     </Tabs>
   );
 }

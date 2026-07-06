@@ -7,7 +7,17 @@ import {
   Image,
   TextInput,
 } from "react-native";
-import Animated, { FadeInDown, FadeOutLeft, Layout } from "react-native-reanimated";
+import Animated, {
+  FadeInDown,
+  FadeOutLeft,
+  Layout,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+  withTiming,
+  runOnJS,
+} from "react-native-reanimated";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { router } from "expo-router";
 import {
   Minus,
@@ -24,6 +34,129 @@ import { formatCurrency } from "@msm/shared/utils";
 import { validatePromoCode } from "@/services/promo";
 import { Button } from "@/components/ui/Button";
 import { EmptyState } from "@/components/ui/EmptyState";
+
+type CartItem = {
+  productId: string;
+  image?: string;
+  name: string;
+  unit: string;
+  price: number;
+  discountPrice: number | null;
+  quantity: number;
+};
+
+function SwipeableCartItem({
+  item,
+  onRemove,
+  onUpdateQuantity,
+  onPress,
+}: {
+  item: CartItem;
+  onRemove: () => void;
+  onUpdateQuantity: (delta: number) => void;
+  onPress: () => void;
+}) {
+  const translationX = useSharedValue(0);
+
+  const panGesture = Gesture.Pan()
+    .onUpdate((event) => {
+      translationX.value = Math.max(-150, Math.min(0, event.translationX));
+    })
+    .onEnd(() => {
+      if (translationX.value < -100) {
+        translationX.value = withTiming(-300, { duration: 250 }, (finished) => {
+          if (finished) {
+            runOnJS(onRemove)();
+          }
+        });
+      } else {
+        translationX.value = withSpring(0);
+      }
+    })
+    .activeOffsetX([-10, 10]);
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: translationX.value }],
+  }));
+
+  const price = item.discountPrice || item.price;
+
+  return (
+    <View className="relative">
+      {/* Delete Background */}
+      <View className="absolute inset-0 bg-error-500 flex-row items-center justify-end pr-5 rounded-xl">
+        <Trash2 size={20} color="#FFFFFF" />
+      </View>
+
+      {/* Foreground swipeable content */}
+      <GestureDetector gesture={panGesture}>
+        <Animated.View
+          style={animatedStyle}
+          className="flex-row py-3 border-b border-neutral-50 items-center bg-white"
+        >
+          {/* Image */}
+          <Pressable
+            onPress={onPress}
+            className="w-14 h-14 bg-neutral-50 rounded-xl overflow-hidden mr-3"
+          >
+            {item.image ? (
+              <Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
+            ) : (
+              <View className="flex-1 items-center justify-center">
+                <ShoppingBag size={16} color="#9CA3AF" />
+              </View>
+            )}
+          </Pressable>
+
+          {/* Details */}
+          <View className="flex-1 min-w-0">
+            <Text className="text-body font-semibold text-neutral-800" numberOfLines={1}>
+              {item.name}
+            </Text>
+            <Text className="text-micro text-neutral-400">{item.unit}</Text>
+            <View className="flex-row items-center mt-0.5">
+              <Text className="text-body font-bold text-neutral-900">
+                {formatCurrency(price * item.quantity)}
+              </Text>
+              {item.discountPrice && (
+                <Text className="text-micro text-neutral-400 line-through ml-2">
+                  {formatCurrency(item.price * item.quantity)}
+                </Text>
+              )}
+            </View>
+          </View>
+
+          {/* Quantity Stepper */}
+          <View className="flex-row items-center h-[30px] rounded-full bg-primary-900 mx-2">
+            <Pressable
+              onPress={() => onUpdateQuantity(-1)}
+              className="w-7 h-full items-center justify-center"
+            >
+              <Minus size={12} color="#FFFFFF" strokeWidth={2.5} />
+            </Pressable>
+            <Text className="w-5 text-center text-caption font-bold text-white">
+              {item.quantity}
+            </Text>
+            <Pressable
+              onPress={() => onUpdateQuantity(1)}
+              className="w-7 h-full items-center justify-center"
+            >
+              <Plus size={12} color="#FFFFFF" strokeWidth={2.5} />
+            </Pressable>
+          </View>
+
+          {/* Remove */}
+          <Pressable
+            onPress={onRemove}
+            className="h-7 w-7 rounded-full items-center justify-center ml-1"
+          >
+            <Trash2 size={14} color="#D1D5DB" />
+          </Pressable>
+        </Animated.View>
+      </GestureDetector>
+    </View>
+  );
+}
 
 export default function CartScreen() {
   const { items, updateQuantity, removeItem, totals } = useCartStore();
@@ -131,75 +264,19 @@ export default function CartScreen() {
         data={items}
         keyExtractor={(item) => item.productId}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 320 }}
-        renderItem={({ item }) => {
-          const price = item.discountPrice || item.price;
-          return (
-            <Animated.View
-              layout={Layout.springify()}
-              exiting={FadeOutLeft.duration(200)}
-              className="flex-row py-3 border-b border-neutral-50 items-center"
-            >
-              {/* Image */}
-              <Pressable
-                onPress={() => router.push(`/product/${item.productId}`)}
-                className="w-14 h-14 bg-neutral-50 rounded-xl overflow-hidden mr-3"
-              >
-                {item.image ? (
-                  <Image source={{ uri: item.image }} className="w-full h-full" resizeMode="cover" />
-                ) : (
-                  <View className="flex-1 items-center justify-center">
-                    <ShoppingBag size={16} color="#9CA3AF" />
-                  </View>
-                )}
-              </Pressable>
-
-              {/* Details */}
-              <View className="flex-1 min-w-0">
-                <Text className="text-body font-semibold text-neutral-800" numberOfLines={1}>
-                  {item.name}
-                </Text>
-                <Text className="text-micro text-neutral-400">{item.unit}</Text>
-                <View className="flex-row items-center mt-0.5">
-                  <Text className="text-body font-bold text-neutral-900">
-                    {formatCurrency(price * item.quantity)}
-                  </Text>
-                  {item.discountPrice && (
-                    <Text className="text-micro text-neutral-400 line-through ml-2">
-                      {formatCurrency(item.price * item.quantity)}
-                    </Text>
-                  )}
-                </View>
-              </View>
-
-              {/* Quantity Stepper */}
-              <View className="flex-row items-center h-[30px] rounded-full bg-primary-900 mx-2">
-                <Pressable
-                  onPress={() => updateQuantity(item.productId, item.quantity - 1)}
-                  className="w-7 h-full items-center justify-center"
-                >
-                  <Minus size={12} color="#FFFFFF" strokeWidth={2.5} />
-                </Pressable>
-                <Text className="w-5 text-center text-caption font-bold text-white">
-                  {item.quantity}
-                </Text>
-                <Pressable
-                  onPress={() => updateQuantity(item.productId, item.quantity + 1)}
-                  className="w-7 h-full items-center justify-center"
-                >
-                  <Plus size={12} color="#FFFFFF" strokeWidth={2.5} />
-                </Pressable>
-              </View>
-
-              {/* Remove */}
-              <Pressable
-                onPress={() => removeItem(item.productId)}
-                className="h-7 w-7 rounded-full items-center justify-center ml-1"
-              >
-                <Trash2 size={14} color="#D1D5DB" />
-              </Pressable>
-            </Animated.View>
-          );
-        }}
+        renderItem={({ item }) => (
+          <Animated.View
+            layout={Layout.springify()}
+            exiting={FadeOutLeft.duration(200)}
+          >
+            <SwipeableCartItem
+              item={item}
+              onRemove={() => removeItem(item.productId)}
+              onUpdateQuantity={(delta) => updateQuantity(item.productId, item.quantity + delta)}
+              onPress={() => router.push(`/product/${item.productId}`)}
+            />
+          </Animated.View>
+        )}
       />
 
       {/* Bottom Summary */}

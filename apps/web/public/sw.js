@@ -1,8 +1,4 @@
-// AUTO-INCREMENT this version string (e.g., v8, v9) in CI or before each deploy to force re-cache
-const CACHE = "msm-supermarket-v7";
-// NOTE: only list assets that actually exist in /public. `cache.addAll` is atomic - a
-// single 404 (e.g. a badge icon or sound file that was never added) rejects the whole
-// install, so the service worker never activates and none of its logic ever runs.
+const CACHE = "msm-supermarket-v8";
 const STATIC_ASSETS = [
   "/offline",
   "/manifest.webmanifest",
@@ -43,21 +39,38 @@ async function registerPeriodicSync() {
   if ("periodicSync" in self.registration) {
     try {
       await self.registration.periodicSync.register("delivery-poll", { minInterval: 30000 });
-      console.info("Periodic sync registered for delivery-poll");
-    } catch (e) {
-      console.log("Periodic sync registration failed:", e);
-    }
+    } catch {}
   }
 }
+
+const API_CACHE = "msm-api-cache-v1";
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin || url.pathname.startsWith("/api/")) return;
+  if (url.origin !== self.location.origin) return;
 
   if (event.request.headers.get("range")) return;
-  if (url.protocol !== "https:" && url.protocol !== "http:") return;
+
+  if (url.pathname.startsWith("/api/")) {
+    if (url.pathname === "/api/products" || url.pathname.startsWith("/api/products?") || url.pathname.startsWith("/api/categories") || url.pathname === "/api/settings/public") {
+      event.respondWith(
+        caches.open(API_CACHE).then((cache) =>
+          fetch(event.request)
+            .then((response) => {
+              if (response.ok) {
+                cache.put(event.request, response.clone());
+              }
+              return response;
+            })
+            .catch(() => cache.match(event.request).then((cached) => cached || new Response(JSON.stringify({ error: "Offline" }), { status: 503, headers: { "Content-Type": "application/json" } })))
+        )
+      );
+      return;
+    }
+    return;
+  }
 
   if (event.request.mode === "navigate") {
     event.respondWith(
@@ -85,7 +98,6 @@ self.addEventListener("fetch", (event) => {
         }
         return response;
       }).catch(() => new Response("", { status: 404 }));
-      // Stale-while-revalidate: return cached immediately, fetch latest in background
       if (cached) {
         fetchPromise.catch(() => {});
         return cached;
@@ -95,7 +107,6 @@ self.addEventListener("fetch", (event) => {
   );
 });
 
-// Push notification handler (Web Push API fallback / VAPID)
 self.addEventListener("push", (event) => {
   let payload = {
     title: "New order!",
@@ -125,15 +136,12 @@ self.addEventListener("push", (event) => {
     renotify: true,
     vibrate: [300, 100, 300, 100, 300, 200, 500],
     timestamp: Date.now(),
-    // Most platforms (Android Chrome included) only render ~2 actions and silently drop
-    // the rest, so keep this to the two that matter most.
     actions: [
       { action: "accept", title: isDelivery ? "Accept" : "Accept Order" },
       { action: "view", title: isDelivery ? "View Delivery" : "View Order" }
     ],
   };
 
-  // Broadcast to tabs
   event.waitUntil(
     Promise.all([
       self.registration.showNotification(payload.title, options),
@@ -166,9 +174,6 @@ self.addEventListener("notificationclick", (event) => {
         ).catch(() => {})
       : Promise.resolve();
 
-  // Both the ack request and the focus/open must be inside waitUntil - Android can
-  // terminate the service worker as soon as the browser considers the event "done",
-  // which otherwise aborts the ack fetch before it reaches the server.
   event.waitUntil(
     Promise.all([
       acceptPromise,
@@ -183,22 +188,65 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
-// Periodic background sync handler
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "delivery-poll") {
     event.waitUntil(pollForDeliveries());
+  }
+  if (event.tag === "sync-orders") {
+    event.waitUntil(syncOfflineOrders());
+  }
+});
+
+self.addEventListener("sync", (event) => {
+  if (event.tag === "place-order") {
+    event.waitUntil(syncOfflineOrders());
+  }
+  if (event.tag === "update-delivery") {
+    event.waitUntil(syncOfflineOrders());
   }
 });
 
 async function pollForDeliveries() {
   try {
-    // Note: In SW context, we don't have auth cookies.
-    // This is a placeholder. For true background polling when app is closed,
-    // we rely on FCM push (firebase-messaging-sw.js) which runs in its own SW scope.
-    // Or use Capacitor native plugin for true native background execution.
-    
-    // However, we can attempt to fetch with credentials if the SW is in the same origin
-    // and the user has an active session (unlikely when fully closed).
-    console.log("Periodic sync: delivery-poll triggered");
-  } catch { /* ignore */ }
+    const cache = await caches.open(API_CACHE);
+    const response = await fetch("/api/delivery/poll", { credentials: "include" });
+    if (response.ok) {
+      cache.put("/api/delivery/poll", response.clone());
+      const data = await response.json();
+      if (data.orders?.length > 0) {
+        const title = "New delivery assignment!";
+        self.registration.showNotification(title, {
+          body: `You have ${data.orders.length} order(s) ready for delivery`,
+          icon: "/icons/icon-192.png",
+          badge: "/icons/icon-192.png",
+          requireInteraction: true,
+          vibrate: [300, 100, 300],
+          data: { url: "/delivery", type: "delivery_assignment" }
+        });
+      }
+    }
+  } catch {}
+}
+
+async function syncOfflineOrders() {
+  try {
+    const cache = await caches.open("offline-orders-v1");
+    const keys = await cache.keys();
+    for (const request of keys) {
+      const entry = await cache.match(request);
+      if (!entry) continue;
+      const data = await entry.json();
+      try {
+        const response = await fetch(request.url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
+          credentials: "include"
+        });
+        if (response.ok) {
+          await cache.delete(request);
+        }
+      } catch {}
+    }
+  } catch {}
 }

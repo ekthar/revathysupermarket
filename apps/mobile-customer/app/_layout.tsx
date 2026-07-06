@@ -26,13 +26,11 @@ function RootLayoutInner() {
   useEffect(() => {
     async function prepare() {
       try {
-        // Initialize auth, cart, and settings in parallel
         await Promise.all([
           initialize(),
           loadCart(),
           loadPreferences(),
         ]);
-        // Non-blocking: load store config
         loadStoreConfig().catch(() => {});
       } catch (e) {
         console.warn("App initialization error:", e);
@@ -44,7 +42,6 @@ function RootLayoutInner() {
     prepare();
   }, []);
 
-  // Register push notifications after auth completes
   useEffect(() => {
     if (status === "authenticated") {
       registerForPushNotifications().catch(() => {});
@@ -52,14 +49,12 @@ function RootLayoutInner() {
     }
   }, [status]);
 
-  // Re-validate auth when app returns from background
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (nextState: AppStateStatus) => {
       if (
         appState.current.match(/inactive|background/) &&
         nextState === "active"
       ) {
-        // Silent re-check on foreground return — token refresh happens in interceptor
         // No-op: the axios interceptor handles 401 → refresh automatically
       }
       appState.current = nextState;
@@ -68,11 +63,9 @@ function RootLayoutInner() {
     return () => subscription.remove();
   }, []);
 
-  const isDark = theme === 'dark';
-
   return (
-    <View className={`flex-1 bg-white dark:bg-neutral-900`}>
-      <StatusBar style={isDark ? 'light' : 'dark'} />
+    <View className="flex-1 bg-white">
+      <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <OfflineBanner />
       <Stack
         screenOptions={{
@@ -97,6 +90,10 @@ function RootLayoutInner() {
         />
         <Stack.Screen
           name="checkout/index"
+          options={{ headerShown: false }}
+        />
+        <Stack.Screen
+          name="checkout/success"
           options={{ headerShown: false }}
         />
         <Stack.Screen

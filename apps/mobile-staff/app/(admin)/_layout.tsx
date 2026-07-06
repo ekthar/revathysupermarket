@@ -37,6 +37,15 @@ export default function AdminLayout() {
         }}
       />
       <Tabs.Screen
+        name="dispatch"
+        options={{
+          title: "Dispatch",
+          tabBarIcon: ({ color, focused }) => (
+            <AnimatedTabIcon icon="🚚" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="reports"
         options={{
           title: "Reports",

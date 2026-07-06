@@ -13,6 +13,7 @@ import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
 import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole, roleLabel } from "@/lib/roles";
+import { haptic } from "@/lib/haptics";
 
 type Mode = "login" | "register";
 
@@ -58,6 +59,7 @@ export function LoginForm({
 
   async function submitLogin(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    haptic("medium");
     setLoading(true);
     setMessage("");
     try {
@@ -79,6 +81,7 @@ export function LoginForm({
 
   async function submitRegister(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    haptic("medium");
     setLoading(true);
     setMessage("");
     const response = await fetch("/api/register", {

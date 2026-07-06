@@ -184,7 +184,7 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
       navigator.vibrate(10);
     }
     flyToCart(product.image, e.currentTarget);
-  }, [outOfStock, addItem, product, showToast, flyToCart]);
+  }, [outOfStock, addItem, product, flyToCart]);
 
   const handleIncrement = useCallback(() => {
     if (cartItem) updateQuantity(product.id, cartItem.quantity + 1);

@@ -9,11 +9,13 @@ import {
 import { router } from "expo-router";
 import { api } from "@/services/api";
 import { useAuthStore } from "@/stores/auth";
+import { useDeliveryStore } from "@/stores/delivery";
 import { ErrorBanner } from "@/components/ErrorBanner";
 import { AnimatedScreen } from "@/components/AnimatedScreen";
 import { AnimatedPressable } from "@/components/AnimatedPressable";
 import { AnimatedFadeIn } from "@/components/AnimatedFadeIn";
 import { OrderRowSkeleton } from "@/components/ui";
+import { AssignmentAlert } from "@/components/AssignmentAlert";
 
 interface DeliveryOrder {
   id: string;
@@ -40,6 +42,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 
 export default function DeliveryOrdersScreen() {
   const { user } = useAuthStore();
+  const { pendingAssignment, startPolling, stopPolling } = useDeliveryStore();
   const [orders, setOrders] = useState<DeliveryOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -64,6 +67,12 @@ export default function DeliveryOrdersScreen() {
     const interval = setInterval(fetchOrders, 30000);
     return () => clearInterval(interval);
   }, [fetchOrders]);
+
+  // Start polling for assignment alerts
+  useEffect(() => {
+    startPolling();
+    return () => stopPolling();
+  }, []);
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -157,6 +166,8 @@ export default function DeliveryOrdersScreen() {
           }}
         />
       )}
+      {/* Assignment Alert overlay */}
+      {pendingAssignment && <AssignmentAlert event={pendingAssignment} />}
     </AnimatedScreen>
   );
 }

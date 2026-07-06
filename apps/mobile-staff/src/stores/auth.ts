@@ -18,7 +18,8 @@ const STAFF_ROLES = [
 ];
 
 /** Map user role to the device token role for push targeting */
-export function getDeviceTokenRole(userRole: string): "admin" | "staff" {
+export function getDeviceTokenRole(userRole?: string): "admin" | "staff" {
+  if (!userRole) return "staff";
   if (["ADMIN", "OWNER", "MANAGER"].includes(userRole)) return "admin";
   return "staff";
 }

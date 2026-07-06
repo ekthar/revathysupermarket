@@ -13,6 +13,7 @@ import { formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { useTranslations } from "next-intl";
+import { haptic } from "@/lib/haptics";
 import type { StoreSettings } from "@/lib/store-settings";
 import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
@@ -358,6 +359,7 @@ export function CheckoutForm({
 
   function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    haptic("medium");
     setMessage("");
     if (items.length === 0) {
       showToast("Your cart is empty", "error");
@@ -452,7 +454,7 @@ export function CheckoutForm({
           </button>
           <button
             type="button"
-            onClick={placeOrder}
+            onClick={() => { haptic("heavy"); placeOrder(); }}
             className="h-12 rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-neutral-800"
           >
             Confirm & Place

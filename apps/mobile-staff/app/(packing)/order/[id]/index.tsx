@@ -45,7 +45,6 @@ export default function PackOrderScreen() {
   }
 
   async function markReady() {
-    // Confirmation before irreversible status change
     const confirmed = await new Promise<boolean>((resolve) => {
       Alert.alert(
         "Mark as ready?",
@@ -104,7 +103,6 @@ export default function PackOrderScreen() {
         <Text className="text-2xl font-bold text-slate-900 dark:text-white">Pack #{order.orderNumber}</Text>
         <Text className="text-sm text-slate-500 dark:text-slate-400 mt-1">{order.customerName} • ₹{Number(order.total).toFixed(2)}</Text>
 
-        {/* Item Checklist */}
         <View className="mt-6 gap-2">
           <Text className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase mb-2">
             Items ({packedItems.size}/{order.items.length} packed)
@@ -142,7 +140,6 @@ export default function PackOrderScreen() {
           })}
         </View>
 
-        {/* Actions */}
         <View className="mt-8 gap-3">
           <AnimatedPressable
             onPress={printInvoice}
@@ -169,6 +166,15 @@ export default function PackOrderScreen() {
                 {allPacked ? "✓ Mark Ready for Delivery" : "Pack all items first"}
               </Text>
             )}
+          </AnimatedPressable>
+
+          <AnimatedPressable
+            onPress={() => router.push(`/(packing)/order/${id}/damage` as any)}
+            className="h-12 border border-red-200 dark:border-red-800 rounded-xl items-center justify-center"
+            accessibilityRole="button"
+            accessibilityLabel="Report damaged items"
+          >
+            <Text className="text-red-500 dark:text-red-400 font-bold">⚠️ Report Damaged Items</Text>
           </AnimatedPressable>
         </View>
       </ScrollView>

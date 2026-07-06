@@ -129,3 +129,104 @@ export function getGreeting(): string {
   if (hour < 17) return "Good afternoon";
   return "Good evening";
 }
+
+// ============================================
+// Delivery Fee Calculation
+// ============================================
+
+export function calculateDeliveryFee(
+  distanceKm: number,
+  baseFee: number,
+  freeThreshold: number,
+  subtotal: number,
+  perKmRate: number = 5
+): number {
+  if (subtotal >= freeThreshold) return 0;
+  return Math.max(baseFee, distanceKm * perKmRate);
+}
+
+// ============================================
+// GST Calculation
+// ============================================
+
+export function calculateGst(
+  subtotal: number,
+  gstRatePercent: number,
+  taxableTotal: number = subtotal
+): number {
+  return taxableTotal * (gstRatePercent / 100);
+}
+
+// ============================================
+// Loyalty Points Calculation
+// ============================================
+
+export function calculateLoyaltyDiscount(
+  points: number,
+  pointValueRupees: number,
+  maxRedemptionPercent: number,
+  subtotal: number
+): number {
+  const maxDiscount = subtotal * (maxRedemptionPercent / 100);
+  const pointsValue = points * pointValueRupees;
+  return Math.min(pointsValue, maxDiscount);
+}
+
+export function calculateEarnedPoints(
+  orderAmount: number,
+  earnRupeesPerPoint: number
+): number {
+  return Math.floor(orderAmount / earnRupeesPerPoint);
+}
+
+// ============================================
+// Time Helpers
+// ============================================
+
+export function timeAgo(dateString: string): string {
+  const now = Date.now();
+  const date = new Date(dateString).getTime();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  
+  if (diffMins < 1) return "Just now";
+  if (diffMins < 60) return `${diffMins}m ago`;
+  
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  
+  const diffDays = Math.floor(diffHours / 24);
+  if (diffDays < 7) return `${diffDays}d ago`;
+  
+  return new Date(dateString).toLocaleDateString("en-IN", {
+    day: "numeric",
+    month: "short",
+  });
+}
+
+export function formatPhoneNumber(phone: string): string {
+  const cleaned = phone.replace(/\D/g, "");
+  if (cleaned.length === 10) {
+    return `+91 ${cleaned.slice(0, 5)} ${cleaned.slice(5)}`;
+  }
+  return phone;
+}
+
+// ============================================
+// Validation Helpers
+// ============================================
+
+export function isValidOtp(otp: string): boolean {
+  return /^\d{6}$/.test(otp);
+}
+
+export function isValidPinCode(pincode: string): boolean {
+  return /^\d{6}$/.test(pincode);
+}
+
+export function isInDeliveryRadius(
+  distanceKm: number,
+  maxRadiusKm: number
+): boolean {
+  return distanceKm <= maxRadiusKm;
+}

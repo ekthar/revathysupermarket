@@ -5,6 +5,8 @@ import { AlertCircle, CheckCircle2, ChevronDown, MapPinned, Navigation } from "l
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
 import { useToast } from "@/components/toast-provider";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { haptic } from "@/lib/haptics";
 import { STORE_COORDINATES } from "@/lib/constants";
 
 // Lazy-load the map picker: it pulls in maplibre-gl (~200KB gzipped), which
@@ -79,6 +81,7 @@ export function AddressSelector({
   const [selectedAddressId, setSelectedAddressId] = useState("");
 
   const [formExpanded, setFormExpanded] = useState(true);
+  const [showAddressSheet, setShowAddressSheet] = useState(false);
 
   /** Reverse-geocodes and patches the form. Shared by GPS-detect and the pin-on-map picker. */
   async function applyPickedLocation(lat: number, lng: number, source: "GPS" | "pinned location" = "pinned location") {
@@ -252,23 +255,49 @@ export function AddressSelector({
           >
             {savedAddresses.length > 0 && (
               <div className="mb-4">
-                <select
-                  value={selectedAddressId}
-                  onChange={(event) => {
-                    if (event.target.value) applySavedAddress(event.target.value);
-                    else { setSelectedAddressId(""); setFormExpanded(true); }
-                  }}
-                  aria-label="Choose a saved delivery address"
-                  className="h-11 w-full rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
+                <button
+                  type="button"
+                  onClick={() => { setShowAddressSheet(true); haptic("light"); }}
+                  className="flex h-11 w-full items-center justify-between rounded-full border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-4 text-sm font-semibold text-neutral-900 dark:text-white outline-none focus:ring-2 focus:ring-primary/30"
                 >
-                  <option value="">{selectedAddressId ? "Remove selection" : "Choose saved address"}</option>
-                  {savedAddresses.map((address) => (
-                    <option key={address.id} value={address.id}>
-                      {address.label}
-                      {address.isDefault ? " (default)" : ""} - {address.houseName}
-                    </option>
-                  ))}
-                </select>
+                  <span>{selectedAddressId ? (savedAddresses.find((a) => a.id === selectedAddressId)?.label ?? "Choose saved address") : "Choose saved address"}</span>
+                  <ChevronDown className="h-4 w-4 text-neutral-500" />
+                </button>
+
+                <BottomSheet open={showAddressSheet} onClose={() => setShowAddressSheet(false)} title="Saved addresses">
+                  <div className="space-y-2">
+                    {savedAddresses.map((address) => (
+                      <button
+                        key={address.id}
+                        type="button"
+                        onClick={() => {
+                          setShowAddressSheet(false);
+                          haptic("medium");
+                          if (address.id !== selectedAddressId) applySavedAddress(address.id);
+                          else { setSelectedAddressId(""); setFormExpanded(true); }
+                        }}
+                        className={`w-full rounded-2xl p-4 text-left transition-colors ${
+                          address.id === selectedAddressId
+                            ? "bg-primary/10 border border-primary/30"
+                            : "bg-neutral-50 dark:bg-neutral-800 border border-transparent hover:border-neutral-200 dark:hover:border-neutral-700"
+                        }`}
+                      >
+                        <p className="font-bold text-neutral-900 dark:text-white">
+                          {address.label}{address.isDefault ? " (default)" : ""}
+                        </p>
+                        <p className="mt-0.5 text-sm text-neutral-500">{address.houseName}, {address.street}</p>
+                        <p className="text-sm text-neutral-400">{address.pincode}</p>
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() => { setShowAddressSheet(false); setSelectedAddressId(""); setFormExpanded(true); haptic("light"); }}
+                      className="w-full rounded-2xl border border-dashed border-neutral-300 dark:border-neutral-600 p-4 text-center text-sm font-semibold text-neutral-500 hover:text-primary"
+                    >
+                      + Deliver to a new address
+                    </button>
+                  </div>
+                </BottomSheet>
               </div>
             )}
 
@@ -292,7 +321,7 @@ export function AddressSelector({
                 </div>
                 <motion.button
                   type="button"
-                  onClick={useCurrentLocation}
+                  onClick={() => { haptic("medium"); useCurrentLocation(); }}
                   disabled={locationState === "loading"}
                   whileTap={{ scale: 0.9 }}
                   aria-label="Detect delivery location using GPS"

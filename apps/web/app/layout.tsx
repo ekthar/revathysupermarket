@@ -17,6 +17,7 @@ import { Inter_Tight, Manrope } from "next/font/google";
 import { Footer } from "@/components/footer";
 import { ViewportStability } from "@/components/ui/viewport-stability";
 import { RouteTransition } from "@/components/ui/route-transition";
+import { SwipeBack } from "@/components/ui/swipe-back";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -109,6 +110,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         {/* Preconnect to image CDN for faster LCP */}
         <link rel="preconnect" href="https://images.unsplash.com" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        {/* Preload default hero image for LCP optimization */}
+        <link rel="preload" as="image" href="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop" fetchPriority="high" />
       </head>
       <body className="pt-safe">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[999] focus:rounded-xl focus:bg-black focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-white focus:outline-none focus:shadow-lg">
@@ -127,7 +130,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 tabIndex={-1}
                 aria-live="polite"
                 aria-label="Page content"
-              ><RouteTransition>{children}</RouteTransition></div>
+              ><RouteTransition><SwipeBack>{children}</SwipeBack></RouteTransition></div>
             </Suspense>
             <Footer storeName={settings.storeName} address={settings.address} />
             <ScrollToTop />

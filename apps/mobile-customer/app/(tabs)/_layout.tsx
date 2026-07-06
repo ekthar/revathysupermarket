@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Redirect, Tabs } from "expo-router";
 import { View, Text } from "react-native";
 import {
@@ -6,14 +7,30 @@ import {
   ShoppingBag,
   ClipboardList,
   User,
+  Bell,
 } from "lucide-react-native";
 import { useAuthStore } from "@/stores/auth";
 import { useCartStore } from "@/stores/cart";
 import { lightHaptic } from "@/lib/haptic";
+import { api } from "@/services/api";
 
 export default function TabsLayout() {
   const { status } = useAuthStore();
   const itemCount = useCartStore((s) => s.items.length);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    api.get("/notifications/unread/count").then(({ data }) => {
+      setNotificationCount(data.count ?? 0);
+    }).catch(() => {});
+    const interval = setInterval(() => {
+      api.get("/notifications/unread/count").then(({ data }) => {
+        setNotificationCount(data.count ?? 0);
+      }).catch(() => {});
+    }, 30000);
+    return () => clearInterval(interval);
+  }, [status]);
 
   // Redirect unauthenticated users to login
   if (status === "unauthenticated") {
@@ -105,7 +122,7 @@ export default function TabsLayout() {
         options={{
           title: "Orders",
           tabBarIcon: ({ focused, color }) => (
-            <TabIcon focused={focused}>
+            <TabIcon focused={focused} badge={notificationCount}>
               <ClipboardList
                 size={20}
                 color={color}

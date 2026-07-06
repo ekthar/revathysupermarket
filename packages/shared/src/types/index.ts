@@ -359,3 +359,166 @@ export interface PaginatedResponse<T> {
   pageSize: number;
   hasMore: boolean;
 }
+
+// ============================================
+// Staff Admin Types
+// ============================================
+
+export interface DashboardStats {
+  todayOrders: number;
+  todayRevenue: number;
+  pendingOrders: number;
+  deliveredOrders: number;
+  unprintedOrders: number;
+}
+
+export interface AdminOrder {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  total: number;
+  status: string;
+  createdAt: string;
+  printedAt: string | null;
+}
+
+export interface DeliveryPartner {
+  id: string;
+  name: string;
+  phone: string;
+  lastSeenAt: string | null;
+  isOnline: boolean;
+}
+
+export interface AdminOrderDetail {
+  id: string;
+  orderNumber: string;
+  status: string;
+  acknowledgedAt: string | null;
+  customerName: string;
+  phone: string;
+  address: string;
+  items: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    image?: string;
+  }>;
+  subtotal: number;
+  discount: number;
+  deliveryFee: number;
+  tip: number;
+  total: number;
+  paymentMethod: string;
+  paymentStatus: string;
+  statusEvents: Array<{
+    status: string;
+    timestamp: string;
+    note?: string;
+  }>;
+  createdAt: string;
+}
+
+// ============================================
+// Packing Types
+// ============================================
+
+export interface PackingOrder {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  itemCount: number;
+  total: number;
+  status: string;
+  createdAt: string;
+  items?: PackingItem[];
+}
+
+export interface PackingItem {
+  id: string;
+  name: string;
+  quantity: number;
+  price: number;
+  image?: string;
+  packed: boolean;
+}
+
+// ============================================
+// Delivery Types (Staff App)
+// ============================================
+
+export interface DeliveryOrder {
+  id: string;
+  orderNumber: string;
+  customerName: string;
+  phone: string;
+  address: string;
+  total: number;
+  status: string;
+  itemCount: number;
+  items: Array<{
+    name: string;
+    quantity: number;
+    price: number;
+  }>;
+  latitude?: number;
+  longitude?: number;
+  createdAt: string;
+  statusEvents?: Array<{
+    status: string;
+    timestamp: string;
+  }>;
+}
+
+export interface DeliveryDashboard {
+  orders: DeliveryOrder[];
+  stats?: {
+    deliveriesToday: number;
+    cashCollected: number;
+    upiCollected: number;
+  };
+}
+
+export interface CollectionPayload {
+  orderId: string;
+  cashCollected: number;
+  upiCollected: number;
+  upiReference?: string;
+}
+
+export interface CompletionPayload {
+  orderId: string;
+  otp: string;
+}
+
+// ============================================
+// Device Token Types
+// ============================================
+
+export interface DeviceRegistration {
+  token: string;
+  platform: string;
+  installationId: string;
+  role: "customer" | "admin" | "staff";
+}
+
+// ============================================
+// Trackings Types
+// ============================================
+
+export interface TrackingData {
+  orderId: string;
+  status: string;
+  estimatedArrival?: string;
+  deliveryPartner?: {
+    name: string;
+    phone: string;
+    latitude: number;
+    longitude: number;
+  };
+  statusHistory: Array<{
+    status: string;
+    timestamp: string;
+  }>;
+}

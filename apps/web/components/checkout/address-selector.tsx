@@ -138,7 +138,7 @@ export function AddressSelector({
     }
   }, []);
 
-  function useCurrentLocation() {
+  function detectCurrentLocation() {
     if (!navigator.geolocation) {
       onLocationStateChange("denied");
       showToast("Location is not available", "error");
@@ -227,7 +227,7 @@ export function AddressSelector({
               {locationOk ? `Verified (${distance?.toFixed(1)} KM)` : "GPS needed"}
             </span>
             {locationOk && (
-              <button type="button" onClick={useCurrentLocation} className="ml-auto text-micro font-bold text-primary hover:underline press">
+              <button type="button" onClick={detectCurrentLocation} className="ml-auto text-micro font-bold text-primary hover:underline press">
                 Refresh
               </button>
             )}
@@ -321,7 +321,7 @@ export function AddressSelector({
                 </div>
                 <motion.button
                   type="button"
-                  onClick={() => { haptic("medium"); useCurrentLocation(); }}
+                  onClick={() => { haptic("medium"); detectCurrentLocation(); }}
                   disabled={locationState === "loading"}
                   whileTap={{ scale: 0.9 }}
                   aria-label="Detect delivery location using GPS"

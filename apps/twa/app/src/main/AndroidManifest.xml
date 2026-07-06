@@ -1,21 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="${launcherName}"
         android:supportsRtl="true"
-        android:theme="@style/Theme.RevathySupermarket">
+        android:theme="@style/Theme.RevathySupermarket"
+        android:windowSoftInputMode="adjustResize"
+        android:usesCleartextTraffic="false">
 
         <meta-data
             android:name="asset_statements"
             android:value="${assetStatements}" />
 
+        <meta-data
+            android:name="android.support.customtabs.trusted.NOTIFICATION_CHANNEL_NAME"
+            android:value="Orders" />
+
+        <meta-data
+            android:name="android.support.customtabs.trusted.NOTIFICATION_CHANNEL_DESCRIPTION"
+            android:value="Order updates and delivery alerts" />
+
         <activity
             android:name="com.google.androidbrowserhelper.trusted.LauncherActivity"
             android:exported="true"
-            android:theme="@style/Theme.RevathySupermarket.Launch">
+            android:theme="@style/Theme.RevathySupermarket.Launch"
+            android:windowSoftInputMode="adjustResize">
 
             <meta-data
                 android:name="android.support.customtabs.trusted.DEFAULT_URL"
@@ -45,11 +61,13 @@
                 android:name="android.support.customtabs.trusted.SCREEN_ORIENTATION"
                 android:value="portrait" />
 
+            <!-- Launcher intent -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Deep link / app link intent filter -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

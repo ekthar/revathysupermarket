@@ -4,9 +4,14 @@
         <item name="android:windowBackground">@color/backgroundColor</item>
         <item name="android:statusBarColor">@color/colorPrimary</item>
         <item name="android:navigationBarColor">@color/navigationColor</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="android:windowTranslucentStatus">false</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
     </style>
 
     <style name="Theme.RevathySupermarket.Launch" parent="Theme.RevathySupermarket">
         <item name="android:windowBackground">@drawable/splash</item>
+        <item name="android:windowAnimationStyle">@null</item>
     </style>
 </resources>

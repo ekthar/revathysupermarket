@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { BellRing, ChevronDown, FileText, Phone, Send } from "lucide-react";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { statusLabels } from "@/lib/constants";
@@ -81,12 +81,16 @@ export function AdminOrdersClient({
   const [billNumberSaving, setBillNumberSaving] = useState<string | null>(null);
   const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
   const [soundUnlocked, setSoundUnlocked] = useState(false);
+  const audioCtxRef = useRef<AudioContext | null>(null);
   const [expandedOrderIds, setExpandedOrderIds] = useState<Set<string>>(() => {
     // Only expand undelivered/uncancelled orders. Delivered = collapsed by default
     const active = new Set<string>();
+    let count = 0;
     for (const order of orders) {
       if (!["DELIVERED", "CANCELLED"].includes(order.status)) {
         active.add(order.id);
+        count++;
+        if (count >= 10) break;
       }
     }
     return active;
@@ -115,7 +119,7 @@ export function AdminOrdersClient({
   }), [localOrders, unacknowledgedNewOrders.length]);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    const timer = window.setInterval(() => setNow(Date.now()), 30000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -134,6 +138,15 @@ export function AdminOrdersClient({
   }, []);
 
   useEffect(() => {
+    return () => {
+      if (audioCtxRef.current) {
+        audioCtxRef.current.close().catch(() => {});
+        audioCtxRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     if (unacknowledgedNewOrders.length === 0) return;
 
     const originalTitle = document.title;
@@ -148,7 +161,10 @@ export function AdminOrdersClient({
       try {
         const BrowserAudioContext = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof window.AudioContext }).webkitAudioContext;
         if (!BrowserAudioContext) return;
-        const audioContext = new BrowserAudioContext();
+        if (!audioCtxRef.current || audioCtxRef.current.state === "closed") {
+          audioCtxRef.current = new BrowserAudioContext();
+        }
+        const audioContext = audioCtxRef.current;
         const oscillator = audioContext.createOscillator();
         const gain = audioContext.createGain();
         oscillator.frequency.value = 880;
@@ -157,8 +173,9 @@ export function AdminOrdersClient({
         gain.connect(audioContext.destination);
         oscillator.start();
         window.setTimeout(() => {
-          oscillator.stop();
-          audioContext.close();
+          try {
+            oscillator.stop();
+          } catch {}
         }, 180);
       } catch {
         window.clearInterval(audioTimer);
@@ -227,7 +244,7 @@ export function AdminOrdersClient({
       return;
     }
     showToast(data.requiresCustomerApproval ? "Edit saved and customer approval is pending" : "Order updated", "success");
-    window.location.reload();
+    queryClient.invalidateQueries({ queryKey: ADMIN_ORDERS_QUERY_KEY });
   }
 
   function updateDraft(itemId: string, patch: Partial<{ quantity: string; productId: string; reason: string }>) {

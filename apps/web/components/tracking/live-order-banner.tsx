@@ -45,17 +45,28 @@ export function LiveOrderBanner({ initialOrder = null }: { initialOrder?: Active
     }
 
     fetchActiveOrder();
-    const interval = setInterval(fetchActiveOrder, 30000);
-    document.addEventListener("visibilitychange", fetchActiveOrder);
+    let interval: ReturnType<typeof setInterval> | undefined = setInterval(fetchActiveOrder, 30000);
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        fetchActiveOrder();
+        if (interval) clearInterval(interval);
+        interval = setInterval(fetchActiveOrder, 30000);
+      } else {
+        if (interval) clearInterval(interval);
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibility);
     return () => {
       active = false;
-      clearInterval(interval);
-      document.removeEventListener("visibilitychange", fetchActiveOrder);
+      if (interval) clearInterval(interval);
+      document.removeEventListener("visibilitychange", handleVisibility);
     };
   }, []);
 
   return (
-    <div className="mx-4 min-h-[80px]">
+    <div className="mx-4">
       <AnimatePresence>
         {activeOrder && (
           <motion.div

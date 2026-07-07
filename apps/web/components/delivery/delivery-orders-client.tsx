@@ -27,6 +27,7 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
   // and collection are intentionally not gated by distance while that feature
   // is temporarily disabled.
   useEffect(() => {
+    if (!entries || entries.length === 0) return;
     if (!navigator.geolocation) return;
     let lastPublishedAt = 0;
     let request: AbortController | null = null;
@@ -47,7 +48,7 @@ export function DeliveryOrdersClient({ orders }: { orders: DeliveryOrder[] }) {
       request?.abort();
       navigator.geolocation.clearWatch(watch);
     };
-  }, []);
+  }, [entries.length]);
 
   // Countdown tick for customer unavailable timers
   useEffect(() => {

@@ -53,7 +53,7 @@ const config: Config = {
           900: "#0E5429"
         },
         success: {
-          DEFAULT: "#22C55E",
+          DEFAULT: "#16A34A",
           foreground: "#FFFFFF",
           100: "#DCFCE7",
           300: "#86EFAC",
@@ -130,6 +130,10 @@ const config: Config = {
         premium: "0 24px 80px -42px rgba(5, 5, 5, 0.65)",
         soft: "0 18px 45px -30px rgba(5, 5, 5, 0.35)"
       },
+      // NOTE: These override Tailwind defaults significantly.
+      // rounded-lg = 20px (Tailwind default: 8px)
+      // rounded-xl = 28px (Tailwind default: 12px)
+      // Use these intentionally; check Tailwind docs for default values.
       borderRadius: {
         sm: "6px",
         md: "12px",

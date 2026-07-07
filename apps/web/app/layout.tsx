@@ -64,6 +64,20 @@ export async function generateMetadata(): Promise<Metadata> {
       ]
     },
     manifest: "/manifest.webmanifest",
+    openGraph: {
+      type: 'website' as const,
+      siteName: settings.storeName,
+      title: `${settings.storeName} | Fresh Groceries`,
+      description: `Order fresh groceries from ${settings.storeName}. COD & UPI on delivery.`,
+      images: [{ url: '/icons/icon-512.png', width: 512, height: 512, alt: settings.storeName }],
+    },
+    twitter: {
+      card: 'summary_large_image' as const,
+      title: `${settings.storeName} | Fresh Groceries`,
+      description: `Order fresh groceries from ${settings.storeName}. COD & UPI on delivery.`,
+      images: ['/icons/icon-512.png'],
+    },
+    robots: { index: true, follow: true },
     other: {
       "mobile-web-app-capable": "yes",
       "apple-mobile-web-app-capable": "yes",
@@ -106,13 +120,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang={locale} suppressHydrationWarning className={`${interTight.variable} ${manrope.variable}`}>
-      <head>
-        {/* Preconnect to image CDN for faster LCP */}
-        <link rel="preconnect" href="https://images.unsplash.com" />
-        <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        {/* Preload default hero image for LCP optimization */}
-        <link rel="preload" as="image" href="https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop" fetchPriority="high" />
-      </head>
       <body className="pt-safe">
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[999] focus:rounded-xl focus:bg-black focus:px-4 focus:py-3 focus:text-sm focus:font-bold focus:text-white focus:outline-none focus:shadow-lg">
           Skip to main content
@@ -123,7 +130,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <ScrollProgress />
             <OnboardingTour />
             <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
-            <Suspense>
+            <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
               <div
                 id="main-content"
                 className="pb-safe route-scroll-container"

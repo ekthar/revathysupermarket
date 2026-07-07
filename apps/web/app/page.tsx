@@ -128,6 +128,7 @@ export default async function HomePage() {
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);
   const offers = allProducts.filter((p) => p.discountPrice).slice(0, 8);
+  const featuredProducts = allProducts.filter((p) => p.isFeatured);
 
   const heroImage = banner?.image || "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop";
   const heroTitle = banner?.title || "Fresh Groceries Delivered Fast";
@@ -135,7 +136,7 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-neutral-950">
-      <HomeSearch products={allProducts} />
+      <HomeSearch products={allProducts.slice(0, 20)} />
 
       {/* Location Prompt - appears on first visit if no saved location */}
       <LocationPrompt />
@@ -193,13 +194,13 @@ export default async function HomePage() {
       )}
 
       {/* Featured Products — staff picks */}
-      {allProducts.filter((p) => p.isFeatured).length > 0 && (
+      {featuredProducts.length > 0 && (
         <div className="cv-auto">
           <AnimatedProductSection
             title="Staff Picks"
             subtitle="Our featured favourites of the week"
             icon={<Star className="h-5 w-5 text-yellow-500" />}
-            products={allProducts.filter((p) => p.isFeatured)}
+            products={featuredProducts}
             layout="grid"
           />
         </div>

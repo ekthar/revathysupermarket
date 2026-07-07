@@ -97,6 +97,6 @@ export const config = {
     "/cart/:path*",
     "/account/:path*",
     "/offers/:path*",
-    "/api/:path*"
+    '/api/((?!products|store-settings|promo-codes|offers|categories|banners|mobile).*)'
   ]
 };

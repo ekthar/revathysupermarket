@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2, Tag, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { springs, tapScale } from "@/lib/motion";
@@ -28,7 +28,6 @@ export function CartPageClient() {
   const [promoDescription, setPromoDescription] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
-  const [removingId, setRemovingId] = useState<string | null>(null);
   const [config, setConfig] = useState<StoreConfig>({
     gstRatePercent: 0,
     deliveryFee: 40,
@@ -37,13 +36,15 @@ export function CartPageClient() {
     storeName: "",
     gstin: ""
   });
+  const [configLoading, setConfigLoading] = useState(true);
 
   // Fetch store settings on mount
   useEffect(() => {
     fetch("/api/store-settings")
       .then((res) => res.ok ? res.json() : null)
       .then((data) => { if (data) setConfig(data); })
-      .catch(() => {});
+      .catch(() => {})
+      .finally(() => setConfigLoading(false));
   }, []);
 
   // Calculate dynamic values
@@ -171,15 +172,9 @@ export function CartPageClient() {
     sessionStorage.removeItem("msm-promo-applied");
   }
 
-  function handleRemove(id: string) {
-    // Optimistic: immediately start exit animation and remove
-    setRemovingId(id);
-    // Remove from cart state immediately (optimistic) - animation handles visual
-    requestAnimationFrame(() => {
-      removeItem(id);
-      setRemovingId(null);
-    });
-  }
+  const handleRemove = useCallback((id: string) => {
+    removeItem(id);
+  }, [removeItem]);
 
   if (items.length === 0) {
     return (
@@ -263,7 +258,7 @@ export function CartPageClient() {
                 key={item.id}
                 layout
                 initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: removingId === item.id ? 0 : 1, x: 0 }}
+                animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -8 }}
                 transition={springs.layout}
                 className="px-4 py-3"
@@ -360,42 +355,51 @@ export function CartPageClient() {
       {/* Bill Details */}
       <div className="mt-3 rounded-lg bg-white p-4 shadow-elevation-2 dark:bg-neutral-900">
         <h2 className="text-body font-bold text-neutral-900 dark:text-white mb-3">Bill Details</h2>
-        <div className="space-y-2.5 text-caption">
-          <div className="flex justify-between">
-            <span className="text-neutral-500 dark:text-neutral-400">Item total</span>
-            <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatCurrency(subtotal)}</span>
+        {configLoading ? (
+          <div className="space-y-3 py-1">
+            <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-full" />
+            <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-3/4" />
+            <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-1/2" />
+            <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 h-6 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-full" />
           </div>
-          {gstRate > 0 && (
+        ) : (
+          <div className="space-y-2.5 text-caption">
             <div className="flex justify-between">
-              <span className="text-neutral-500 dark:text-neutral-400">GST ({gstRate}% inclusive)</span>
-              <span className="font-medium text-neutral-500 dark:text-neutral-400">{formatCurrency(gstAmount)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Item total</span>
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatCurrency(subtotal)}</span>
             </div>
-          )}
-          {promoApplied && (
+            {gstRate > 0 && (
+              <div className="flex justify-between">
+                <span className="text-neutral-500 dark:text-neutral-400">GST ({gstRate}% inclusive)</span>
+                <span className="font-medium text-neutral-500 dark:text-neutral-400">{formatCurrency(gstAmount)}</span>
+              </div>
+            )}
+            {promoApplied && (
+              <div className="flex justify-between">
+                <span className="text-neutral-500 dark:text-neutral-400">Coupon discount</span>
+                <span className="font-medium text-secondary-600">-{formatCurrency(promoDiscount)}</span>
+              </div>
+            )}
             <div className="flex justify-between">
-              <span className="text-neutral-500 dark:text-neutral-400">Coupon discount</span>
-              <span className="font-medium text-secondary-600">-{formatCurrency(promoDiscount)}</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Delivery fee</span>
+              <span className="font-medium text-neutral-700 dark:text-neutral-300">
+                {qualifiesFreeDelivery ? <span className="text-secondary-600">FREE</span> : <span>~{formatCurrency(deliveryFee)}</span>}
+              </span>
             </div>
-          )}
-          <div className="flex justify-between">
-            <span className="text-neutral-500 dark:text-neutral-400">Delivery fee</span>
-            <span className="font-medium text-neutral-700 dark:text-neutral-300">
-              {qualifiesFreeDelivery ? <span className="text-secondary-600">FREE</span> : <span>~{formatCurrency(deliveryFee)}</span>}
-            </span>
+            {qualifiesFreeDelivery ? (
+              <p className="text-micro text-secondary-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
+            ) : (
+              <p className="text-micro text-neutral-400 -mt-1">Estimated fee — exact amount confirmed at checkout based on your address.</p>
+            )}
+            <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 flex justify-between">
+              <span className="font-bold text-neutral-900 dark:text-white">Cart total</span>
+              <span className="font-bold text-neutral-900 dark:text-white">{formatCurrency(totalAmount)}</span>
+            </div>
+            {gstRate > 0 && (
+              <p className="text-micro text-neutral-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>
+            )}
           </div>
-          {qualifiesFreeDelivery ? (
-            <p className="text-micro text-secondary-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
-          ) : (
-            <p className="text-micro text-neutral-400 -mt-1">Estimated fee — exact amount confirmed at checkout based on your address.</p>
-          )}
-          <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 flex justify-between">
-            <span className="font-bold text-neutral-900 dark:text-white">Cart total</span>
-            <span className="font-bold text-neutral-900 dark:text-white">{formatCurrency(totalAmount)}</span>
-          </div>
-          {gstRate > 0 && (
-            <p className="text-micro text-neutral-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>
-          )}
-        </div>
+        )}
         {totalSavings > 0 && (
           <div className="mt-3 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-100 dark:border-secondary-900 px-3 py-2">
             <p className="text-caption font-semibold text-secondary-700 dark:text-secondary-300">

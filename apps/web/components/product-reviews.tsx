@@ -36,15 +36,34 @@ function StarRating({
   const sizeMap = { sm: "h-3.5 w-3.5", md: "h-5 w-5", lg: "h-6 w-6" };
   const iconSize = sizeMap[size];
 
+  if (!interactive) {
+    return (
+      <div
+        role="img"
+        aria-label={`${value} out of 5 stars`}
+        className="flex items-center gap-0.5"
+      >
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`text-yellow-400 ${star <= Math.round(value) ? 'opacity-100' : 'opacity-25'}`}
+            style={{ fontSize: '14px' }}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+    );
+  }
+
   return (
     <div className="flex items-center gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
         <button
           key={star}
           type="button"
-          disabled={!interactive}
           onClick={() => onChange?.(star)}
-          className={interactive ? "cursor-pointer press" : "cursor-default"}
+          className="cursor-pointer press"
           aria-label={`${star} star${star > 1 ? "s" : ""}`}
         >
           <Star
@@ -96,6 +115,7 @@ export function ProductReviews({
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formRating, setFormRating] = useState(5);
   const [formComment, setFormComment] = useState("");
@@ -119,8 +139,9 @@ export function ProductReviews({
         setReviewCount(data.reviewCount);
         setTotalPages(data.totalPages);
         setPage(pageNum);
-      } catch {
-        // Silently handle fetch errors
+      } catch (err) {
+        console.error('Failed to fetch reviews:', err);
+        setError(true);
       } finally {
         setLoading(false);
       }
@@ -161,6 +182,28 @@ export function ProductReviews({
     } finally {
       setSubmitting(false);
     }
+  }
+
+  if (error) {
+    return (
+      <div className="py-8 text-center">
+        <p className="text-sm text-neutral-500 dark:text-neutral-400">Failed to load reviews.</p>
+        <button
+          onClick={() => { setError(false); fetchReviews(1); }}
+          className="mt-2 text-sm font-semibold text-primary underline"
+        >Try again</button>
+      </div>
+    );
+  }
+
+  if (loading && reviews.length === 0) {
+    return (
+      <div className="space-y-3 py-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="rounded-xl bg-neutral-100 dark:bg-neutral-800 animate-pulse h-20" />
+        ))}
+      </div>
+    );
   }
 
   return (

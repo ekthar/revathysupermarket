@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState, useTransition } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { SlidersHorizontal, Search } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
@@ -173,6 +173,8 @@ export function ProductGrid({
     hasNextPage,
     isFetchingNextPage,
     isLoading,
+    isError,
+    refetch,
   } = useInfiniteQuery({
     queryKey: ["products", category, debouncedQuery, sort, maxPrice],
     queryFn: ({ pageParam }) =>
@@ -201,7 +203,10 @@ export function ProductGrid({
       : {}),
   });
 
-  const allItems = data?.pages.flatMap((page) => page.items) ?? [];
+  const allItems = useMemo(
+    () => data?.pages.flatMap((page) => page.items) ?? [],
+    [data]
+  );
   const total = data?.pages[0]?.total ?? initialTotal;
 
   // Prefetch images for items that will be visible soon (next screen)
@@ -229,14 +234,24 @@ export function ProductGrid({
     return () => observer.disconnect();
   }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
+  useEffect(() => {
+    if (debouncedQuery.trim().length >= 3) {
+      try {
+        const saved = JSON.parse(window.localStorage.getItem("msm-search-history") || "[]") as string[];
+        window.localStorage.setItem(
+          "msm-search-history",
+          JSON.stringify([debouncedQuery.trim(), ...saved.filter((item) => item !== debouncedQuery.trim())].slice(0, 8))
+        );
+      } catch (err) {
+        console.error("Failed to save search history:", err);
+      }
+    }
+  }, [debouncedQuery]);
+
   // Memoized handlers to prevent child re-renders
   const handleQueryChange = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     setQuery(value);
-    if (value.trim().length >= 3) {
-      const saved = JSON.parse(window.localStorage.getItem("msm-search-history") || "[]") as string[];
-      window.localStorage.setItem("msm-search-history", JSON.stringify([value.trim(), ...saved.filter((item) => item !== value.trim())].slice(0, 8)));
-    }
   }, []);
 
   const handleCategoryChange = useCallback((item: string) => {
@@ -269,6 +284,7 @@ export function ProductGrid({
             onChange={handleQueryChange}
             placeholder="Search for items"
             className="h-12 rounded-2xl border-0 bg-card pl-11 text-title font-semibold shadow-elevation-2 placeholder:text-muted-foreground"
+            aria-label="Search for items"
           />
         </label>
         <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:hidden">
@@ -285,6 +301,7 @@ export function ProductGrid({
               key={item}
               type="button"
               onClick={() => handleCategoryChange(item)}
+              aria-pressed={category === item}
               className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-border bg-card px-4 text-xs font-black text-muted-foreground shadow-sm whitespace-nowrap"}
             >
               {item}
@@ -327,7 +344,17 @@ export function ProductGrid({
         </div>
       </div>
 
-      {isLoading && allItems.length === 0 ? (
+      {isError ? (
+        <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
+          <p className="text-body text-neutral-500 dark:text-neutral-400">Failed to load products. Please try again.</p>
+          <button
+            onClick={() => refetch()}
+            className="px-6 py-2.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-sm font-bold transition-opacity hover:opacity-80"
+          >
+            Retry
+          </button>
+        </div>
+      ) : isLoading && allItems.length === 0 ? (
         <div className="mt-5">
           <ProductSkeletonGrid count={8} />
         </div>

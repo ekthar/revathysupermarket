@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Bell, Clock, Heart, HelpCircle, MapPin, ShoppingBag, User } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { springs } from "@/lib/motion";
 import { memo, useCallback, useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCartItemCount } from "@/components/cart/cart-provider";
@@ -12,6 +13,13 @@ import { getSavedLocation, type DeliveryLocation } from "@/components/location-p
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslations } from "next-intl";
+
+const navLinks = [
+  { href: "/products", label: "Shop" },
+  { href: "/products?view=categories", label: "Categories" },
+  { href: "/products?sort=offers", label: "Deals" },
+  { href: "/products?category=Fruits", label: "Fresh Produce" },
+];
 
 export const Header = memo(function Header({
   user,
@@ -50,12 +58,7 @@ export const Header = memo(function Header({
   const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/support", "/checkout", "/offers"];
   const isInnerPage = innerPages.some((p) => pathname.startsWith(p)) || (pathname.startsWith("/account/") && pathname !== "/account");
 
-  const navLinks = [
-    { href: "/products", label: "Shop" },
-    { href: "/products?view=categories", label: "Categories" },
-    { href: "/products?sort=offers", label: "Deals" },
-    { href: "/products?category=Fruits", label: "Fresh Produce" },
-  ];
+
 
   return (
     <>
@@ -202,23 +205,27 @@ function CartBadgeLink() {
   return (
     <Link href="/cart" data-cart-icon className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}>
       <ShoppingBag className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
-      {totalItems > 0 && (
-        <motion.span
-          key={totalItems}
-          initial={{ scale: 0.5 }}
-          animate={{ scale: 1 }}
-          className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-micro font-bold text-white px-1"
-        >
-          {totalItems}
-        </motion.span>
-      )}
+      <AnimatePresence mode="popLayout">
+        {totalItems > 0 && (
+          <motion.span
+            key={totalItems}
+            initial={{ scale: 0.5, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={springs.tap}
+            className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-micro font-bold text-white px-1"
+          >
+            {totalItems}
+          </motion.span>
+        )}
+      </AnimatePresence>
     </Link>
   );
 }
 
 // Location indicator - shows saved delivery address with ETA
 function LocationIndicator({ onOpenLocationPrompt, compact }: { onOpenLocationPrompt?: () => void; compact?: boolean }) {
-  const [location, setLocation] = useState<DeliveryLocation | null>(() => getSavedLocation());
+  const [location, setLocation] = useState<DeliveryLocation | null>(null);
 
   useEffect(() => {
     setLocation(getSavedLocation());

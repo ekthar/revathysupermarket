@@ -119,11 +119,13 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
             {/* Rating + unit */}
             <div className="mt-4 flex items-center gap-4">
-              <div className="flex items-center gap-1">
-                <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                <span className="text-body font-bold text-slate-700 dark:text-slate-300">4.8</span>
-                <span className="text-caption text-slate-400">(120+ ratings)</span>
-              </div>
+              {product.avgRating && product.avgRating > 0 ? (
+                <div className="flex items-center gap-1">
+                  <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                  <span className="text-body font-bold text-slate-700 dark:text-slate-300">{product.avgRating.toFixed(1)}</span>
+                  <span className="text-caption text-slate-400">({product.reviewCount ?? 0} {product.reviewCount === 1 ? "rating" : "ratings"})</span>
+                </div>
+              ) : null}
               <span className="text-caption text-slate-500">Unit: {product.unit}</span>
             </div>
 
@@ -211,10 +213,12 @@ export function ProductDetailClient({ product }: { product: Product }) {
           <h1 className="mt-3 text-2xl font-black text-slate-900 dark:text-white">{product.name}</h1>
 
           <div className="mt-2 flex items-center gap-3">
-            <div className="flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-              <span className="text-caption font-bold text-slate-700 dark:text-slate-300">4.8</span>
-            </div>
+            {product.avgRating && product.avgRating > 0 ? (
+              <div className="flex items-center gap-1">
+                <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                <span className="text-caption font-bold text-slate-700 dark:text-slate-300">{product.avgRating.toFixed(1)}</span>
+              </div>
+            ) : null}
             <span className="text-caption text-slate-500">{product.unit}</span>
           </div>
 

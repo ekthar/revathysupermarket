@@ -70,11 +70,6 @@ img, video, svg {
   max-width: 100%;
 }
 
-/* Remove 300ms tap delay globally */
-a, button, input, select, textarea, [role="button"] {
-  touch-action: manipulation;
-}
-
 /* Prevent auto-zoom on input focus (iOS zooms when font-size < 16px) */
 @media screen and (max-width: 768px) {
   input[type="text"],
@@ -116,6 +111,12 @@ button, a, input, select, textarea, summary {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+  .product-card-animated,
+  .wheel-scroll-item,
+  .hover-lift,
+  .category-card-animated {
+    transition: none !important;
   }
 }
 
@@ -187,6 +188,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   border: 1px solid rgba(255, 255, 255, 0.7);
   will-change: transform;
   transform: translateZ(0);
+  contain: paint;
 }
 /* Fallback for browsers without backdrop-filter support */
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
@@ -224,7 +226,6 @@ h1, h2, h3, h4, h5, h6, .font-display {
     hsl(222 47% 9%);
 }
 .ios-native-scroll {
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
 }
 
@@ -235,7 +236,6 @@ h1, h2, h3, h4, h5, h6, .font-display {
 }
 
 .sheet-scroll-content {
-  -webkit-overflow-scrolling: touch;
   overflow-y: auto;
   overscroll-behavior: contain;
   max-height: calc(90dvh - var(--safe-bottom));
@@ -318,7 +318,6 @@ html[data-keyboard-open] .pb-safe {
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.6);
-  will-change: transform;
   transform: translateZ(0);
 }
 .dark .glass-card {
@@ -352,9 +351,15 @@ html[data-keyboard-open] .pb-safe {
   font-size: 0.8125rem;
   font-weight: 700;
   box-shadow: 0 4px 16px rgba(var(--shadow-color), 0.2);
-  transition: transform 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
 }
-.show-all-pill:hover { transform: translateY(-1px); }
+.show-all-pill:hover {
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 8px 24px rgba(var(--shadow-color), 0.3);
+}
+.show-all-pill:active {
+  transform: translateY(0px) scale(0.97);
+}
 
 /* Category card with gradient overlay */
 .category-card {
@@ -434,7 +439,7 @@ html[data-keyboard-open] .pb-safe {
 
 /* Section header with bold typography */
 .section-title {
-  font-family: "Manrope", system-ui, sans-serif;
+  font-family: var(--font-display, "Manrope"), system-ui, sans-serif;
   font-weight: 900;
   font-size: 1.5rem;
   letter-spacing: -0.03em;
@@ -545,10 +550,12 @@ html[data-keyboard-open] .pb-safe {
 .animate-gentle-pulse { animation: gentlePulse 2s ease-in-out infinite; }
 
 /* Rotate in for success icons */
+/* Potentially unused - verify with grep before deleting */
 @keyframes rotateIn {
   from { transform: rotate(-180deg) scale(0); opacity: 0; }
   to { transform: rotate(0deg) scale(1); opacity: 1; }
 }
+/* Potentially unused - verify with grep before deleting */
 .animate-rotate-in { animation: rotateIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
 
 /* Elastic pop for buttons/pills */
@@ -575,10 +582,10 @@ html[data-keyboard-open] .pb-safe {
 .animate-slide-in-right { animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 /* 3D card press effect - optimized for mobile */
+/* Potentially unused - verify with grep before deleting */
 .press-3d {
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   transform: translateZ(0);
-  will-change: transform;
 }
 .press-3d:active {
   transform: scale(0.97) translateZ(0);
@@ -589,9 +596,9 @@ html[data-keyboard-open] .pb-safe {
 .hover-lift {
   transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
   transform: translateZ(0);
-  will-change: transform;
 }
 .hover-lift:hover {
+  will-change: transform;
   transform: translateY(-4px) translateZ(0);
   box-shadow: 0 12px 28px -8px rgba(0,0,0,0.12), 0 4px 12px -4px rgba(0,0,0,0.06);
 }
@@ -600,33 +607,22 @@ html[data-keyboard-open] .pb-safe {
 .category-card-animated {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
   transform: translateZ(0);
-  will-change: transform;
 }
 .category-card-animated:hover {
   transform: translateY(-6px) translateZ(0);
   box-shadow: 0 16px 40px -12px rgba(0,0,0,0.15);
 }
 
-/* Show-all pill hover animation */
-.show-all-pill {
-  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
-}
-.show-all-pill:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 24px rgba(var(--shadow-color), 0.3);
-}
-.show-all-pill:active {
-  transform: translateY(0px) scale(0.97);
-}
+/* Show-all pill hover animation merged into main declaration */
 
 /* Product card hover for desktop */
 .product-card-animated {
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  will-change: transform;
   transform: translateZ(0);
   contain: layout style paint;
 }
 .product-card-animated:hover {
+  will-change: transform;
   transform: translateY(-3px) translateZ(0);
   box-shadow: 0 2px 8px rgba(5, 5, 5, 0.04), 0 4px 16px rgba(5, 5, 5, 0.06);
 }
@@ -638,17 +634,18 @@ html[data-keyboard-open] .pb-safe {
 .scroll-x-elastic {
   overflow-x: auto;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
 }
 .scroll-x-elastic > * { scroll-snap-align: start; }
 
 /* Animated border for active states */
+/* Potentially unused - verify with grep before deleting */
 @keyframes borderGlow {
   0%, 100% { border-color: rgba(var(--color-secondary), 0.3); }
   50% { border-color: rgba(var(--color-secondary), 0.6); }
 }
+/* Potentially unused - verify with grep before deleting */
 .border-glow-active { animation: borderGlow 2s ease-in-out infinite; }
 
 /* Ripple effect */
@@ -667,6 +664,7 @@ html[data-keyboard-open] .pb-safe {
 .ripple:active::after { opacity: 1; }
 
 /* Stagger animation delay utilities */
+/* Potentially unused - verify with grep before deleting */
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.1s; }
 .stagger-3 { animation-delay: 0.15s; }
@@ -677,6 +675,7 @@ html[data-keyboard-open] .pb-safe {
 .stagger-8 { animation-delay: 0.4s; }
 
 /* Smooth spring transition for interactive elements */
+/* Potentially unused - verify with grep before deleting */
 .spring-transition {
   transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
@@ -689,7 +688,6 @@ html[data-keyboard-open] .pb-safe {
   overflow-x: auto;
   touch-action: pan-x pan-y;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   scroll-behavior: smooth;
   scrollbar-width: none;
@@ -708,7 +706,6 @@ html[data-keyboard-open] .pb-safe {
   scroll-snap-align: center;
   flex-shrink: 0;
   transform: translateZ(0);
-  will-change: transform;
   contain: layout style paint;
 }
 
@@ -811,7 +808,6 @@ html[data-keyboard-open] .pb-safe {
   overflow-x: auto;
   touch-action: pan-x pan-y;
   scroll-snap-type: x mandatory;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   padding-inline: 1rem;
   scroll-padding-inline: 1rem;
@@ -825,15 +821,7 @@ html[data-keyboard-open] .pb-safe {
   contain: layout style paint;
 }
 
-/* Reduce motion for non-essential animations on low-end devices */
-@media (prefers-reduced-motion: reduce) {
-  .product-card-animated,
-  .wheel-scroll-item,
-  .hover-lift,
-  .category-card-animated {
-    transition: none !important;
-  }
-}
+
 
 /* Optimize fixed/sticky elements to not trigger repaints */
 .ios-bottom-bar,
@@ -934,7 +922,6 @@ html[data-keyboard-open] .pb-safe {
 /* Horizontal scroll container with fade indicators (admin data tables) */
 .scroll-x-container {
   overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
   scrollbar-width: thin;
   scroll-behavior: smooth;
@@ -962,13 +949,6 @@ html[data-keyboard-open] .pb-safe {
 
 /* Ensure no horizontal overflow on the viewport at 320px */
 @media (max-width: 360px) {
-  /* Tighter padding on very narrow screens */
-  .px-4 { padding-left: 0.75rem; padding-right: 0.75rem; }
-  .px-6 { padding-left: 1rem; padding-right: 1rem; }
-
-  /* Reduce gap in tight grids */
-  .gap-3 { gap: 0.5rem; }
-
   /* Ensure product cards don't push out */
   .product-card-animated { max-width: 100%; }
 }

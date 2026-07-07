@@ -52,7 +52,7 @@ export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: S
     <nav className="ios-bottom-bar md:hidden" data-disable-edge-swipe="true">
       <div className="ios-glass mx-auto w-full max-w-[min(24rem,calc(100vw-1.5rem))] rounded-xl p-2 shadow-elevation-3">
         <LayoutGroup>
-          <div className="grid min-h-[clamp(52px,8vh,58px)] grid-cols-4 items-center gap-1">
+          <div className="grid min-h-[52px] grid-cols-4 items-center gap-1">
             <NavTab href="/" icon={Home} label="Home" active={homeActive} onSelect={select} onPrefetch={() => router.prefetch("/")} />
             <NavTab href="/products" icon={Search} label="Browse" active={browseActive} onSelect={select} onPrefetch={() => router.prefetch("/products")} />
             <CartNavTab href="/cart" active={cartActive} onSelect={select} onPrefetch={() => router.prefetch("/cart")} />
@@ -97,7 +97,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
       }}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "relative flex min-w-0 flex-col items-center justify-center gap-0.5 rounded-2xl px-1 py-2 text-micro transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary/30",
+        "relative flex min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-micro transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary/30",
         active ? "text-white" : "text-neutral-500 hover:bg-white/65 dark:hover:bg-neutral-800/65"
       )}
     >
@@ -125,7 +125,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
           <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.8} />
           {badge ? (
             <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary-500 px-1 text-micro font-black text-white">
-              {badge}
+              {badge > 99 ? "99+" : badge}
             </span>
           ) : null}
         </span>

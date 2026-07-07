@@ -28,6 +28,7 @@ const contentSecurityPolicy = [
 ].filter(Boolean).join("; ");
 
 const nextConfig: NextConfig = {
+  serverExternalPackages: ['@prisma/client', 'bcrypt'],
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
   },
@@ -49,6 +50,7 @@ const nextConfig: NextConfig = {
         headers: [
           // Standard security headers
           { key: "X-Content-Type-Options", value: "nosniff" },
+          { key: "X-Frame-Options", value: "SAMEORIGIN" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(self)" },
           { key: "Content-Security-Policy", value: contentSecurityPolicy },
@@ -110,6 +112,7 @@ const nextConfig: NextConfig = {
     formats: ["image/avif", "image/webp"],
     deviceSizes: [375, 640, 750, 828, 1080, 1200, 1920, 2048],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    minimumCacheTTL: 86400,
   }
 };
 

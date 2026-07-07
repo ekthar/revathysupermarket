@@ -12,6 +12,7 @@ import { InstallAppButton } from "@/components/install-app-button";
 import { getAuthContext } from "@/lib/auth-guard";
 import { hasPermission, hasFullAccess, type AuthContext } from "@/lib/permissions";
 import { AlarmProvider } from "@/components/admin/alarm-provider";
+import { prisma } from "@/lib/prisma";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();

@@ -22,11 +22,13 @@ const INLINE_PLACEHOLDER =
 export const ProductImage = memo(function ProductImage({
   src,
   alt,
-  className
+  className,
+  priority
 }: {
   src?: string | null;
   alt: string;
   className?: string;
+  priority?: boolean;
 }) {
   const [currentSrc, setCurrentSrc] = useState(() => safeProductImageUrl(src));
   const retriedRef = useRef(false);
@@ -65,7 +67,8 @@ export const ProductImage = memo(function ProductImage({
           sizes="(max-width: 768px) 50vw, 25vw"
           className="object-cover"
           onError={handleError}
-          loading="lazy"
+          loading={priority ? undefined : "lazy"}
+          priority={priority}
         />
       )}
     </div>

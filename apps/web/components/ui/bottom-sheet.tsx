@@ -15,25 +15,25 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
     <Drawer.Root open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[91] bg-black/40 backdrop-blur-sm" />
-        <Drawer.Content className="fixed inset-x-0 bottom-0 z-[92] max-h-[85dvh] rounded-t-3xl bg-white dark:bg-slate-900 shadow-2xl outline-none">
+        <Drawer.Content className="fixed inset-x-0 bottom-0 z-[92] max-h-[85dvh] rounded-t-3xl bg-white dark:bg-neutral-900 shadow-2xl outline-none">
           {/* Drag handle */}
           <div className="flex justify-center pt-3 pb-2">
-            <div className="h-1 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
+            <div className="h-1 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700" />
           </div>
 
           {/* Header */}
           {title ? (
-            <div className="flex items-center justify-between px-5 pb-3 border-b border-slate-100 dark:border-slate-800">
-              <Drawer.Title className="text-title font-bold text-slate-900 dark:text-white">
+            <div className="flex items-center justify-between px-5 pb-3 border-b border-neutral-100 dark:border-neutral-800">
+              <Drawer.Title className="text-title font-bold text-neutral-900 dark:text-white">
                 {title}
               </Drawer.Title>
               <button
                 type="button"
                 aria-label="Close"
                 onClick={onClose}
-                className="h-11 w-11 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center"
+                className="h-11 w-11 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center"
               >
-                <X className="h-4 w-4 text-slate-500" />
+                <X className="h-4 w-4 text-neutral-500" />
               </button>
             </div>
           ) : (

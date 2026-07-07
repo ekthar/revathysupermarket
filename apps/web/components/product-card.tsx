@@ -20,10 +20,11 @@ interface ProductCardProps {
   product: Product;
   compact?: boolean;
   horizontal?: boolean;
+  priority?: boolean;
 }
 
 // Memoized product card - only re-renders when product prop changes
-export const ProductCard = memo(function ProductCard({ product, compact = false, horizontal = false }: ProductCardProps) {
+export const ProductCard = memo(function ProductCard({ product, compact = false, horizontal = false, priority }: ProductCardProps) {
   const price = product.discountPrice ?? product.price;
   const outOfStock = product.stock <= 0;
   const productHref = `/products/${product.slug}`;
@@ -37,24 +38,33 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
     return (
       <motion.article
         whileTap={tapScale.gentle}
-        whileHover={{ y: -2 }}
         transition={springs.snappy}
         className={cn(
           "product-list-card hover-lift",
           outOfStock && "opacity-50"
         )}
       >
-        <Link href={productHref} className="shrink-0" onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
+        <Link
+          href={productHref}
+          className={cn("shrink-0", outOfStock && "pointer-events-none")}
+          onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
+          onTouchStart={outOfStock ? undefined : preload.onTouchStart}
+        >
           <motion.div
             whileHover={{ scale: 1.05 }}
             className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
           </motion.div>
         </Link>
 
         <div className="flex-1 min-w-0">
-          <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
+          <Link
+            href={productHref}
+            className={cn(outOfStock && "pointer-events-none")}
+            onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
+            onTouchStart={outOfStock ? undefined : preload.onTouchStart}
+          >
             <h3 className="text-body font-bold text-neutral-800 leading-snug line-clamp-1">
               {product.name}
             </h3>
@@ -86,14 +96,18 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   return (
     <motion.article
       whileTap={tapScale.subtle}
-      whileHover={{ y: -3 }}
       transition={springs.snappy}
       className={cn(
         "relative overflow-hidden rounded-lg bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated shadow-elevation-1",
         outOfStock && "opacity-50"
       )}
     >
-      <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
+      <Link
+        href={productHref}
+        className={cn(outOfStock && "pointer-events-none")}
+        onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
+        onTouchStart={outOfStock ? undefined : preload.onTouchStart}
+      >
         <DoubleTapHeart onDoubleTap={() => favoriteBtnRef.current?.toggle()}>
           <div className={cn(
             "relative bg-neutral-50 overflow-hidden",
@@ -104,7 +118,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
               transition={{ duration: durations.slow, ease: easings.easeOutQuart }}
               className="h-full w-full"
             >
-              <ProductImage src={product.image} alt={product.name} className="object-cover" />
+              <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
             </motion.div>
             {product.isFeatured && (
               <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-1 text-micro font-black text-white shadow-md z-10">
@@ -136,7 +150,12 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         </div>
       )}
       <div className={cn("p-3", compact && "p-2.5")}>
-        <Link href={productHref} onMouseEnter={preload.onMouseEnter} onTouchStart={preload.onTouchStart}>
+        <Link
+          href={productHref}
+          className={cn(outOfStock && "pointer-events-none")}
+          onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
+          onTouchStart={outOfStock ? undefined : preload.onTouchStart}
+        >
           <h3 className={cn(
             "font-semibold text-neutral-800 leading-snug line-clamp-2",
             compact ? "text-caption" : "text-body"
@@ -187,8 +206,10 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
   }, [outOfStock, addItem, product, flyToCart]);
 
   const handleIncrement = useCallback(() => {
-    if (cartItem) updateQuantity(product.id, cartItem.quantity + 1);
-  }, [cartItem, updateQuantity, product.id]);
+    if (cartItem && cartItem.quantity < product.stock) {
+      updateQuantity(product.id, cartItem.quantity + 1);
+    }
+  }, [cartItem, updateQuantity, product.id, product.stock]);
 
   const handleDecrement = useCallback(() => {
     if (cartItem) updateQuantity(product.id, cartItem.quantity - 1);
@@ -203,6 +224,7 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
           onIncrement={handleIncrement}
           onDecrement={handleDecrement}
           vertical={variant === "horizontal"}
+          maxStock={product.stock}
         />
       ) : (
         <motion.button
@@ -234,12 +256,14 @@ const QuantityStepper = memo(function QuantityStepper({
   quantity,
   onIncrement,
   onDecrement,
-  vertical = false
+  vertical = false,
+  maxStock
 }: {
   quantity: number;
   onIncrement: () => void;
   onDecrement: () => void;
   vertical?: boolean;
+  maxStock: number;
 }) {
   if (vertical) {
     return (
@@ -253,10 +277,11 @@ const QuantityStepper = memo(function QuantityStepper({
         <motion.button
           type="button"
           onClick={onIncrement}
-          whileTap={{ scale: 1.3 }}
+          disabled={quantity >= maxStock}
+          whileTap={quantity < maxStock ? { scale: 1.3 } : undefined}
           transition={springs.tap}
           aria-label="Increase quantity"
-          className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+          className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <Plus className="h-3 w-3" />
         </motion.button>
@@ -315,10 +340,11 @@ const QuantityStepper = memo(function QuantityStepper({
       <motion.button
         type="button"
         onClick={onIncrement}
-        whileTap={{ scale: 1.4 }}
+        disabled={quantity >= maxStock}
+        whileTap={quantity < maxStock ? { scale: 1.4 } : undefined}
         transition={springs.tap}
         aria-label="Increase quantity"
-        className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+        className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <Plus className="h-3.5 w-3.5" />
       </motion.button>

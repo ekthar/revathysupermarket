@@ -266,9 +266,11 @@ export function CheckoutForm({
   }, [form.latitude, form.longitude, locationOk, subtotal]);
 
   // Load promo code from cart page via sessionStorage
+  const skipNextPromoValidationRef = useRef(false);
   useEffect(() => {
     const savedCode = sessionStorage.getItem("msm-promo-code");
     if (savedCode) {
+      skipNextPromoValidationRef.current = true;
       setPromoCode(savedCode);
       setPromoApplied(true);
       setPromoLoading(true);
@@ -297,6 +299,10 @@ export function CheckoutForm({
   // Validate promo code when it changes (debounced)
   const promoValidationTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   useEffect(() => {
+    if (skipNextPromoValidationRef.current) {
+      skipNextPromoValidationRef.current = false;
+      return;
+    }
     if (!promoCode.trim()) {
       setPromoApplied(false);
       setPromoDiscount(0);
@@ -339,10 +345,13 @@ export function CheckoutForm({
   }, [promoCode, subtotal]);
 
   const router = useRouter();
+  const userNavigatedRef = useRef(false);
   useEffect(() => {
     if (!placedOrderId) return;
     const timeout = window.setTimeout(() => {
-      router.push("/dashboard");
+      if (!userNavigatedRef.current) {
+        router.push("/dashboard");
+      }
     }, 4000);
     return () => window.clearTimeout(timeout);
   }, [placedOrderId, router]);
@@ -471,6 +480,9 @@ export function CheckoutForm({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="success-modal-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="success-modal-title"
           >
             <Confetti />
             <motion.div
@@ -483,18 +495,18 @@ export function CheckoutForm({
               <div className="flex justify-center">
                 <SuccessRing size={100} />
               </div>
-              <h2 className="mt-6 font-display text-2xl font-black text-neutral-900 dark:text-white">Order Successful!</h2>
+              <h2 id="success-modal-title" className="mt-6 font-display text-2xl font-black text-neutral-900 dark:text-white">Order Successful!</h2>
               <p className="mt-2 text-sm text-neutral-500 leading-relaxed">
                 We&apos;re preparing your order. See updates in My Orders.
               </p>
               <div className="mt-6 grid gap-3">
                 <motion.div whileTap={tapScale.primary}>
-                  <Link href="/" className="flex h-[48px] items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white">
+                  <Link href="/" onClick={() => { userNavigatedRef.current = true; }} className="flex h-[48px] items-center justify-center rounded-full bg-neutral-900 text-sm font-bold text-white">
                     Go Home
                   </Link>
                 </motion.div>
                 <motion.div whileTap={tapScale.primary}>
-                  <Link href="/dashboard" className="flex h-[48px] items-center justify-center rounded-full border-2 border-neutral-200 text-sm font-bold text-neutral-700">
+                  <Link href="/dashboard" onClick={() => { userNavigatedRef.current = true; }} className="flex h-[48px] items-center justify-center rounded-full border-2 border-neutral-200 text-sm font-bold text-neutral-700">
                     Track your order
                   </Link>
                 </motion.div>

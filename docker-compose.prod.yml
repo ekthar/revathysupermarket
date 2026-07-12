@@ -1,0 +1,112 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:-msm}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME:-msm_prod}
+    # Only bind to localhost to prevent public access from the internet
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-msm} -d ${DB_NAME:-msm_prod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    # Only bind to localhost to prevent public access from the internet
+    ports:
+      - "127.0.0.1:6379:6379"
+    volumes:
+      - redis_prod_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Database and Redis connections use docker service names
+      DATABASE_URL: postgresql://${DB_USER:-msm}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-msm_prod}
+      DIRECT_DATABASE_URL: postgresql://${DB_USER:-msm}:${DB_PASSWORD}@postgres:5432/${DB_NAME:-msm_prod}
+      REDIS_URL: redis://redis:6379
+      NODE_ENV: production
+
+      # Authentication
+      NEXTAUTH_SECRET: ${AUTH_SECRET}
+      AUTH_SECRET: ${AUTH_SECRET}
+      NEXTAUTH_URL: ${SITE_URL}
+      AUTH_URL: ${SITE_URL}
+      NEXT_PUBLIC_SITE_URL: ${SITE_URL}
+
+      # Store Config
+      NEXT_PUBLIC_STORE_NAME: ${NEXT_PUBLIC_STORE_NAME}
+      NEXT_PUBLIC_STORE_ADDRESS: ${NEXT_PUBLIC_STORE_ADDRESS}
+      STORE_LAT: ${STORE_LAT}
+      STORE_LNG: ${STORE_LNG}
+      ARRIVAL_RADIUS_METERS: ${ARRIVAL_RADIUS_METERS}
+
+      # Cloudflare R2
+      CLOUDFLARE_R2_PUBLIC_URL: ${CLOUDFLARE_R2_PUBLIC_URL}
+      CLOUDFLARE_R2_ACCOUNT_ID: ${CLOUDFLARE_R2_ACCOUNT_ID}
+      CLOUDFLARE_R2_ACCESS_KEY_ID: ${CLOUDFLARE_R2_ACCESS_KEY_ID}
+      CLOUDFLARE_R2_SECRET_ACCESS_KEY: ${CLOUDFLARE_R2_SECRET_ACCESS_KEY}
+      CLOUDFLARE_R2_BUCKET: ${CLOUDFLARE_R2_BUCKET}
+
+      # WhatsApp / SMS APIs
+      WHATSAPP_PHONE_NUMBER_ID: ${WHATSAPP_PHONE_NUMBER_ID}
+      WHATSAPP_API_TOKEN: ${WHATSAPP_API_TOKEN}
+      WHATSAPP_VERIFY_TOKEN: ${WHATSAPP_VERIFY_TOKEN}
+      WHATSAPP_BUSINESS_PHONE: ${WHATSAPP_BUSINESS_PHONE}
+      SMS_API_KEY: ${SMS_API_KEY}
+      SMS_SENDER_ID: ${SMS_SENDER_ID}
+      SMS_API_URL: ${SMS_API_URL}
+
+      # Social Auth & Services
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      NEXT_PUBLIC_GOOGLE_MAPS_API_KEY: ${NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}
+      WHATSAPP_APP_SECRET: ${WHATSAPP_APP_SECRET}
+
+      # OTP Config
+      OTP_EXPIRY_SECONDS: ${OTP_EXPIRY_SECONDS:-300}
+      OTP_MAX_ATTEMPTS: ${OTP_MAX_ATTEMPTS:-3}
+      OTP_RATE_LIMIT_PER_10MIN: ${OTP_RATE_LIMIT_PER_10MIN:-3}
+
+      # Firebase (Push Notifications & Web SDK)
+      FIREBASE_PROJECT_ID: ${FIREBASE_PROJECT_ID}
+      FIREBASE_SERVICE_ACCOUNT_KEY: ${FIREBASE_SERVICE_ACCOUNT_KEY}
+      NEXT_PUBLIC_FIREBASE_API_KEY: ${NEXT_PUBLIC_FIREBASE_API_KEY}
+      NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: ${NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN}
+      NEXT_PUBLIC_FIREBASE_PROJECT_ID: ${NEXT_PUBLIC_FIREBASE_PROJECT_ID}
+      NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: ${NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET}
+      NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: ${NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID}
+      NEXT_PUBLIC_FIREBASE_APP_ID: ${NEXT_PUBLIC_FIREBASE_APP_ID}
+      NEXT_PUBLIC_FIREBASE_VAPID_KEY: ${NEXT_PUBLIC_FIREBASE_VAPID_KEY}
+
+      # UI Options
+      NEXT_PUBLIC_ENABLE_INSTALL_PROMPT: ${NEXT_PUBLIC_ENABLE_INSTALL_PROMPT:-true}
+      NEXT_PUBLIC_ENABLE_REWARDS: ${NEXT_PUBLIC_ENABLE_REWARDS:-true}
+      NEXT_PUBLIC_ENABLE_DELIVERY_SLOTS: ${NEXT_PUBLIC_ENABLE_DELIVERY_SLOTS:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_prod_data:
+  redis_prod_data:

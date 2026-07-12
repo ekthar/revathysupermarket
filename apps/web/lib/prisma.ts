@@ -13,13 +13,18 @@ function createPrismaClient(): PrismaClient {
     });
   }
 
-  // Use Neon serverless driver adapter for low-latency connections
-  // This uses HTTP/WebSocket instead of TCP, eliminating cold-start
-  // TCP/TLS handshake overhead (~200-400ms savings on serverless)
-  const adapter = new PrismaNeon({ connectionString });
+  // Only use the Neon serverless adapter if connecting to a Neon database
+  if (connectionString.includes("neon.tech")) {
+    const adapter = new PrismaNeon({ connectionString });
+    return new PrismaClient({
+      adapter,
+      log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
+    });
+  }
 
+  // Fallback to standard native TCP PrismaClient for DigitalOcean, Docker, or other standard PostgreSQL servers
   return new PrismaClient({
-    adapter,
+    datasourceUrl: connectionString,
     log: process.env.NODE_ENV === "development" ? ["query", "error", "warn"] : ["error"],
   });
 }

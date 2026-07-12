@@ -4,7 +4,12 @@ import { PrismaNeon } from "@prisma/adapter-neon";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 function createPrismaClient(): PrismaClient {
-  const connectionString = process.env.DATABASE_URL;
+  let connectionString = process.env.DATABASE_URL;
+
+  if (connectionString) {
+    // Strip accidental wrapping quotes (single or double) from UI environment variables
+    connectionString = connectionString.trim().replace(/^["']|["']$/g, "");
+  }
 
   if (!connectionString) {
     // Fallback for build time (prisma generate)

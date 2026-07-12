@@ -6,6 +6,16 @@ import { useEffect, useRef } from "react";
 
 const scrollPositions = new Map<string, number>();
 
+/** Tab-level routes: skip heavy enter/exit so switches feel instant. */
+const TAB_ROUTES = new Set(["/", "/products", "/cart", "/account", "/offers"]);
+
+function isTabRoute(path: string) {
+  if (TAB_ROUTES.has(path)) return true;
+  if (path.startsWith("/products")) return true;
+  if (path.startsWith("/account")) return true;
+  return false;
+}
+
 export function RouteTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const prevPath = useRef(pathname);
@@ -24,14 +34,25 @@ export function RouteTransition({ children }: { children: React.ReactNode }) {
     }
   }, [pathname]);
 
+  const soft = isTabRoute(pathname);
+
+  // Tab navigation: no remount animation — just content swap + scroll restore.
+  if (soft) {
+    return (
+      <div key={pathname} className="route-soft-enter">
+        {children}
+      </div>
+    );
+  }
+
   return (
-    <AnimatePresence mode="popLayout">
+    <AnimatePresence mode="popLayout" initial={false}>
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, y: 6 }}
+        initial={{ opacity: 0, y: 4 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -4 }}
-        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.12, ease: [0.16, 1, 0.3, 1] }}
       >
         {children}
       </motion.div>

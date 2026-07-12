@@ -18,6 +18,8 @@ import { Footer } from "@/components/footer";
 import { ViewportStability } from "@/components/ui/viewport-stability";
 import { RouteTransition } from "@/components/ui/route-transition";
 import { SwipeBack } from "@/components/ui/swipe-back";
+import { FloatingCartBar } from "@/components/cart/floating-cart-bar";
+import { LiveOrderMiniBar } from "@/components/tracking/live-order-mini-bar";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 
@@ -130,6 +132,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <ScrollProgress />
             <OnboardingTour />
             <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
+            <LiveOrderMiniBar />
             <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
               <div
                 id="main-content"
@@ -141,6 +144,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Suspense>
             <Footer storeName={settings.storeName} address={settings.address} />
             <ScrollToTop />
+            <FloatingCartBar />
             <MobileBottomNav user={user} />
           </Providers>
         </NextIntlClientProvider>

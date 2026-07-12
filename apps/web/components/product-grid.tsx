@@ -9,10 +9,13 @@ import { Button } from "@/components/ui/button";
 // Cart import removed - was unused and causing unnecessary re-renders on cart changes
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
+import { EmptySearchState } from "@/components/ui/empty-states";
 import { categories as demoCategories } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { prefetchProductImages } from "@/lib/hooks/use-preload";
 import { useVirtualGrid } from "@/lib/hooks/use-virtual-grid";
+import { haptic } from "@/lib/haptics";
+import { cn } from "@/lib/utils";
 
 type SortMode = "popularity" | "low" | "high" | "newest";
 
@@ -254,8 +257,17 @@ export function ProductGrid({
     setQuery(value);
   }, []);
 
+  const categoryRailRef = useRef<HTMLDivElement>(null);
+  const categoryBtnRefs = useRef<Map<string, HTMLButtonElement>>(new Map());
+
   const handleCategoryChange = useCallback((item: string) => {
+    haptic("light");
     startTransition(() => setCategory(item));
+    // Scroll active chip into view
+    requestAnimationFrame(() => {
+      const btn = categoryBtnRefs.current.get(item);
+      btn?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    });
   }, [startTransition]);
 
   const handleSortChange = useCallback((event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -287,26 +299,37 @@ export function ProductGrid({
             aria-label="Search for items"
           />
         </label>
-        <div className="mt-3 flex items-center gap-2 overflow-x-auto no-scrollbar pb-1 md:hidden">
-          <button
-            type="button"
-            onClick={() => setFilterOpen(true)}
-            className="flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-black px-4 text-xs font-black text-white press"
-          >
-            <SlidersHorizontal className="h-3.5 w-3.5" />
-            Filters
-          </button>
-          {["All", ...categories].map((item) => (
+        <div className="sticky-category-rail md:hidden">
+          <div ref={categoryRailRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 snap-x snap-mandatory">
             <button
-              key={item}
               type="button"
-              onClick={() => handleCategoryChange(item)}
-              aria-pressed={category === item}
-              className={category === item ? "h-9 shrink-0 rounded-full bg-black px-4 text-xs font-black text-white whitespace-nowrap" : "h-9 shrink-0 rounded-full border border-border bg-card px-4 text-xs font-black text-muted-foreground shadow-sm whitespace-nowrap"}
+              onClick={() => setFilterOpen(true)}
+              className="flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-black px-4 text-xs font-black text-white press snap-start"
             >
-              {item}
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filters
             </button>
-          ))}
+            {["All", ...categories].map((item) => (
+              <button
+                key={item}
+                type="button"
+                ref={(el) => {
+                  if (el) categoryBtnRefs.current.set(item, el);
+                  else categoryBtnRefs.current.delete(item);
+                }}
+                onClick={() => handleCategoryChange(item)}
+                aria-pressed={category === item}
+                className={cn(
+                  "h-9 shrink-0 rounded-full px-4 text-xs font-black whitespace-nowrap snap-start transition-colors",
+                  category === item
+                    ? "bg-black text-white"
+                    : "border border-border bg-card text-muted-foreground shadow-sm"
+                )}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
         </div>
         <select
           value={category}
@@ -368,12 +391,11 @@ export function ProductGrid({
           />
         </div>
       ) : (
-        <div className="mt-10 rounded-2xl border border-dashed border-border p-10 text-center">
-          <p className="font-display text-2xl font-bold">No matching products</p>
-          <p className="mt-2 text-muted-foreground">Try a different search, category, or price range.</p>
-          <Button className="mt-5" onClick={handleResetFilters}>
-            Reset filters
-          </Button>
+        <div className="mt-6">
+          <EmptySearchState />
+          <div className="mt-4 flex justify-center">
+            <Button onClick={handleResetFilters}>Reset filters</Button>
+          </div>
         </div>
       )}
 

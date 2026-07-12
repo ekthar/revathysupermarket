@@ -1,14 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Minus, Plus, ShoppingBag, Trash2, Tag, Info } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, Tag, Info } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { toast as sonnerToast } from "sonner";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { springs, tapScale } from "@/lib/motion";
 import { ExpressCheckout } from "@/components/cart/express-checkout";
+import { FreeDeliveryProgress } from "@/components/cart/free-delivery-progress";
+import { CartSuggestions } from "@/components/cart/cart-suggestions";
+import { EmptyCartState } from "@/components/ui/empty-states";
+import { haptic } from "@/lib/haptics";
 import { useTranslations } from "next-intl";
+import type { CartItem } from "@/lib/types";
 
 type StoreConfig = {
   gstRatePercent: number;
@@ -20,7 +26,7 @@ type StoreConfig = {
 };
 
 export function CartPageClient() {
-  const { items, subtotal, removeItem, updateQuantity } = useCart();
+  const { items, subtotal, removeItem, updateQuantity, addItem } = useCart();
   const t = useTranslations("cart");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
@@ -172,21 +178,25 @@ export function CartPageClient() {
     sessionStorage.removeItem("msm-promo-applied");
   }
 
-  const handleRemove = useCallback((id: string) => {
-    removeItem(id);
-  }, [removeItem]);
+  const handleRemove = useCallback((item: CartItem) => {
+    removeItem(item.id);
+    haptic("light");
+    sonnerToast(`Removed ${item.name}`, {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          addItem(item, item.quantity);
+          haptic("medium");
+        },
+      },
+      duration: 4000,
+    });
+  }, [removeItem, addItem]);
 
   if (items.length === 0) {
     return (
-      <main className="flex min-h-[65dvh] flex-col items-center justify-center bg-background px-6 text-center">
-        <div className="h-20 w-20 rounded-full bg-neutral-50 dark:bg-neutral-800 flex items-center justify-center">
-          <ShoppingBag className="h-9 w-9 text-neutral-300 dark:text-neutral-600" />
-        </div>
-        <h1 className="mt-5 text-xl font-bold text-neutral-900 dark:text-white">{t("empty")}</h1>
-        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Add items from the store to get started</p>
-        <Link href="/products" className="mt-6 h-12 px-8 inline-flex items-center justify-center rounded-full bg-neutral-900 dark:bg-white dark:text-neutral-900 text-sm font-bold text-white hover:bg-neutral-800 dark:hover:bg-neutral-100 active:scale-[0.98] transition-all press shadow-lg">
-          {t("continueShopping")}
-        </Link>
+      <main className="min-h-[65dvh] bg-background">
+        <EmptyCartState />
       </main>
     );
   }
@@ -205,7 +215,9 @@ export function CartPageClient() {
               <h1 className="text-title font-black text-neutral-900 dark:text-white">{t("title")}</h1>
             </div>
           </div>
-          <span className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(subtotal)}</span>
+          <span className="text-body font-bold text-neutral-900 dark:text-white tabular-nums">
+            {formatCurrency(subtotal)}
+          </span>
         </div>
       </div>
 
@@ -216,6 +228,9 @@ export function CartPageClient() {
           Continue Shopping
         </Link>
       </div>
+
+      {/* Free delivery progress */}
+      <FreeDeliveryProgress subtotal={subtotal} threshold={config.freeDeliveryThreshold} />
 
       {/* Minimum order warning */}
       {belowMinimum && (
@@ -302,7 +317,7 @@ export function CartPageClient() {
 
                   <button
                     type="button"
-                    onClick={() => handleRemove(item.id)}
+                    onClick={() => handleRemove(item)}
                     aria-label={`Remove ${item.name} from cart`}
                     className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors press shrink-0"
                   >
@@ -314,6 +329,9 @@ export function CartPageClient() {
           })}
         </AnimatePresence>
       </div>
+
+      {/* Often bought together */}
+      <CartSuggestions />
 
       {/* Coupon Section */}
       <div className="mt-3 rounded-lg bg-white p-3.5 shadow-elevation-2 dark:bg-neutral-900">
@@ -393,7 +411,15 @@ export function CartPageClient() {
             )}
             <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 flex justify-between">
               <span className="font-bold text-neutral-900 dark:text-white">Cart total</span>
-              <span className="font-bold text-neutral-900 dark:text-white">{formatCurrency(totalAmount)}</span>
+              <motion.span
+                key={totalAmount}
+                initial={{ scale: 1.06, opacity: 0.7 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={springs.snappy}
+                className="font-bold text-neutral-900 dark:text-white tabular-nums"
+              >
+                {formatCurrency(totalAmount)}
+              </motion.span>
             </div>
             {gstRate > 0 && (
               <p className="text-micro text-neutral-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>

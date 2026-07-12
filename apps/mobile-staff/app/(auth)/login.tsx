@@ -129,9 +129,8 @@ export default function StaffLoginScreen() {
                 <Text className="text-base text-slate-600 dark:text-slate-300 mr-2">+91</Text>
                 <View className="w-px h-6 bg-slate-200 dark:bg-slate-700 mr-3" />
                 <TextInput
-                  className="flex-1 text-base text-slate-900 dark:text-white"
+                  className="flex-1 text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   placeholder="98765 43210"
-                  placeholderTextColor="#94a3b8"
                   value={phone}
                   onChangeText={setPhone}
                   keyboardType="phone-pad"
@@ -141,15 +140,14 @@ export default function StaffLoginScreen() {
               </View>
             </View>
           ) : (
-            <View className="mb-6 gap-4">
-              <View>
+            <View className="mb-6">
+              <View className="mb-4">
                 <Text className="text-sm font-semibold text-slate-700 dark:text-slate-200 mb-2">
                   Email
                 </Text>
                 <TextInput
-                  className="border border-slate-200 dark:border-slate-700 rounded-xl px-4 h-14 bg-slate-50 dark:bg-slate-900 text-base text-slate-900 dark:text-white"
+                  className="border border-slate-200 dark:border-slate-700 rounded-xl px-4 h-14 bg-slate-50 dark:bg-slate-900 text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   placeholder="admin@msmsupermarket.in"
-                  placeholderTextColor="#94a3b8"
                   value={email}
                   onChangeText={setEmail}
                   keyboardType="email-address"
@@ -162,9 +160,8 @@ export default function StaffLoginScreen() {
                   Password
                 </Text>
                 <TextInput
-                  className="border border-slate-200 dark:border-slate-700 rounded-xl px-4 h-14 bg-slate-50 dark:bg-slate-900 text-base text-slate-900 dark:text-white"
+                  className="border border-slate-200 dark:border-slate-700 rounded-xl px-4 h-14 bg-slate-50 dark:bg-slate-900 text-base text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   placeholder="••••••••"
-                  placeholderTextColor="#94a3b8"
                   value={password}
                   onChangeText={setPassword}
                   secureTextEntry

@@ -48,7 +48,7 @@ class NotifeeService {
         importance: AndroidImportance.HIGH,
         sound: "delivery_alarm",
         vibration: true,
-        vibrationPattern: [0, 300, 100, 300, 100, 300],
+        vibrationPattern: [300, 100, 300, 100, 300, 100],
         bypassDnd: true,
         visibility: AndroidVisibility.PUBLIC,
       });
@@ -61,7 +61,7 @@ class NotifeeService {
         importance: AndroidImportance.HIGH,
         sound: "emergency_bell",
         vibration: true,
-        vibrationPattern: [0, 500, 200, 500],
+        vibrationPattern: [500, 200, 500, 200],
         bypassDnd: true,
         visibility: AndroidVisibility.PUBLIC,
       });
@@ -74,7 +74,7 @@ class NotifeeService {
         importance: AndroidImportance.HIGH,
         sound: "delivery_alarm",
         vibration: true,
-        vibrationPattern: [0, 300, 100, 300, 100, 300],
+        vibrationPattern: [300, 100, 300, 100, 300, 100],
         bypassDnd: true,
         visibility: AndroidVisibility.PUBLIC,
       });

@@ -517,26 +517,60 @@ export function CheckoutForm({
       </AnimatePresence>
 
 
-      {/* Step Progression Indicator */}
-      <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-2 py-2.5 shadow-elevation-2">
-        <div className="flex items-center justify-center">
-          {[
-            { label: "Address", step: 1 },
-            { label: "Delivery", step: 2 },
-            { label: "Payment", step: 3 },
-            { label: "Review", step: 4 },
-          ].map((item, idx) => (
-            <div key={item.label} className="flex items-center">
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-black text-white text-[10px] font-bold">
-                {item.step}
-              </div>
-              {idx < 3 && (
-                <div className="mx-1 h-[2px] w-5 sm:w-7 bg-neutral-200 dark:bg-neutral-700" />
-              )}
+      {/* Step Progression Indicator — reflects real progress */}
+      {(() => {
+        const addressDone = Boolean(form.customerName && form.phone && form.houseName && form.pincode && locationOk);
+        const deliveryDone = deliveryMode === "ASAP" || Boolean(deliverySlotId);
+        const paymentDone = Boolean(form.paymentMethod);
+        const steps = [
+          { label: "Address", done: addressDone },
+          { label: "Delivery", done: deliveryDone },
+          { label: "Payment", done: paymentDone },
+          { label: "Place", done: canSubmit },
+        ];
+        const activeIndex = steps.findIndex((s) => !s.done);
+        return (
+          <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-3 shadow-elevation-2">
+            <div className="flex items-center justify-between gap-1">
+              {steps.map((item, idx) => {
+                const isActive = activeIndex === idx || (activeIndex === -1 && idx === steps.length - 1);
+                const isDone = item.done;
+                return (
+                  <div key={item.label} className="flex flex-1 items-center min-w-0">
+                    <div className="flex flex-col items-center gap-1 min-w-0 w-full">
+                      <div
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
+                          isDone
+                            ? "bg-secondary-500 text-white"
+                            : isActive
+                              ? "bg-black text-white"
+                              : "bg-neutral-100 dark:bg-neutral-800 text-neutral-400"
+                        }`}
+                      >
+                        {isDone ? "✓" : idx + 1}
+                      </div>
+                      <span
+                        className={`text-[10px] font-bold truncate max-w-full ${
+                          isDone || isActive ? "text-foreground" : "text-muted-foreground"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    </div>
+                    {idx < steps.length - 1 && (
+                      <div
+                        className={`mx-0.5 h-[2px] flex-1 min-w-[8px] rounded-full ${
+                          isDone ? "bg-secondary-400" : "bg-neutral-200 dark:bg-neutral-700"
+                        }`}
+                      />
+                    )}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-      </div>
+          </div>
+        );
+      })()}
 
       <div className="grid gap-5 lg:grid-cols-[1fr_min(420px,40vw)] lg:gap-8">
         {/* Left column - Forms */}
@@ -727,6 +761,20 @@ export function CheckoutForm({
           isSubmitting={isSubmitting}
           message={message}
           addressNotCovered={addressNotCovered}
+          minimumOrderValue={minimumOrderValue}
+          blockReason={
+            items.length === 0
+              ? "Your cart is empty"
+              : addressNotCovered
+                ? "Address is outside delivery area"
+                : subtotal < minimumOrderValue
+                  ? `Minimum order is ₹${minimumOrderValue}`
+                  : !locationOk
+                    ? "Verify location with GPS"
+                    : deliveryMode === "SCHEDULED" && !deliverySlotId
+                      ? "Pick a delivery slot"
+                      : null
+          }
         />
       </div>
     </form>

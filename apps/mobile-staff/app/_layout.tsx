@@ -82,7 +82,7 @@ export default function RootLayout() {
     }
   }, [fontsLoaded]);
 
-  if (!fontsLoaded) return null;
+  if (!fontsLoaded || status === "loading") return null;
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

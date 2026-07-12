@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { View, Text } from "react-native";
-import * as Notifications from "expo-notifications";
+import notifee, { AuthorizationStatus } from "@notifee/react-native";
 import * as Location from "expo-location";
 import { AnimatedScreen } from "@/components/AnimatedScreen";
 import { AnimatedPressable } from "@/components/AnimatedPressable";
@@ -15,15 +15,15 @@ export default function AlertSetupScreen() {
   }, []);
 
   const checkPermissions = async () => {
-    const notif = await Notifications.getPermissionsAsync();
-    setNotifGranted(notif.status === "granted");
+    const settings = await notifee.getNotificationSettings();
+    setNotifGranted(settings.authorizationStatus === AuthorizationStatus.AUTHORIZED);
     const loc = await Location.getForegroundPermissionsAsync();
     setLocationGranted(loc.status === "granted");
   };
 
   const requestNotif = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
-    setNotifGranted(status === "granted");
+    const settings = await notifee.requestPermission();
+    setNotifGranted(settings.authorizationStatus === AuthorizationStatus.AUTHORIZED);
   };
 
   const requestLocation = async () => {

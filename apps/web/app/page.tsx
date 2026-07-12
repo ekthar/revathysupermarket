@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
 import { ChevronRight, Star, Zap } from "lucide-react";
-import { ProductCard } from "@/components/product-card";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
 import { HeroSection } from "@/components/home/hero-section";
@@ -16,7 +15,6 @@ import { getPublicStoreSettings } from "@/lib/store-settings";
 import type { Product } from "@/lib/types";
 import { auth } from "@/auth";
 import { getActiveOrderSummary } from "@/lib/live-order";
-import { categoryColorForIndex } from "@/lib/category-icons";
 
 export const revalidate = 60;
 
@@ -57,8 +55,6 @@ const getHomepageCategories = unstable_cache(
   { revalidate: 60, tags: ["homepage", "categories"] }
 );
 
-// Demo-only fallbacks, used solely when a fresh install has zero real categories in
-// the DB yet (see AdminCategories -> real icons/images take over automatically).
 const demoCategoryImages: Record<string, string> = {
   Fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=200&h=200&fit=crop",
   Vegetables: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200&h=200&fit=crop",
@@ -69,23 +65,6 @@ const demoCategoryImages: Record<string, string> = {
   "Personal Care": "https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=200&h=200&fit=crop",
   "Frozen Foods": "https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=200&h=200&fit=crop",
   "Grocery Essentials": "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=200&h=200&fit=crop"
-};
-
-const demoCategoryColors: Record<string, string> = {
-  Fruits: "bg-orange-50",
-  Vegetables: "bg-secondary-50",
-  Dairy: "bg-blue-50",
-  Beverages: "bg-yellow-50",
-  Snacks: "bg-pink-50",
-  Household: "bg-purple-50",
-  "Personal Care": "bg-rose-50",
-  "Frozen Foods": "bg-cyan-50",
-  "Grocery Essentials": "bg-amber-50"
-};
-
-const demoCategoryIcons: Record<string, string> = {
-  Fruits: "\ud83c\udf4e", Vegetables: "\ud83e\udd2c", Dairy: "\ud83e\udd5b", Beverages: "\ud83e\uddc3", Snacks: "\ud83c\udf7f",
-  Household: "\ud83e\uddf9", "Personal Care": "\ud83e\uddf4", "Frozen Foods": "\ud83e\uddc6", "Grocery Essentials": "\ud83c\udf5a"
 };
 
 export default async function HomePage() {
@@ -110,21 +89,16 @@ export default async function HomePage() {
       }))
     : products;
 
-  // Real DB categories drive the "Popular Categories" widget once an admin has added
-  // any; a fresh install with zero categories falls back to the demo set so the
-  // homepage isn't blank before the store owner sets things up.
   const categories: readonly string[] = dbCategories.length > 0
     ? dbCategories.map((c) => c.name)
     : demoCategories;
   const categoryImages: Record<string, string> = dbCategories.length > 0
     ? Object.fromEntries(dbCategories.filter((c) => c.image).map((c) => [c.name, c.image as string]))
     : demoCategoryImages;
+  // AnimatedCategories falls back to built-in Lucide icons; no emoji fallback needed
   const categoryIcons: Record<string, string> = dbCategories.length > 0
     ? Object.fromEntries(dbCategories.filter((c) => c.icon).map((c) => [c.name, c.icon as string]))
-    : demoCategoryIcons;
-  const categoryColors: Record<string, string> = dbCategories.length > 0
-    ? Object.fromEntries(dbCategories.map((c, i) => [c.name, categoryColorForIndex(i)]))
-    : demoCategoryColors;
+    : {};
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);
   const offers = allProducts.filter((p) => p.discountPrice).slice(0, 8);
@@ -136,15 +110,11 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-neutral-950">
-      <HomeSearch products={allProducts.slice(0, 20)} />
-
-      {/* Location Prompt - appears on first visit if no saved location */}
+      {/* Location & order status prompts — shown only when they have data */}
       <LocationPrompt />
-
-      {/* Live Order Tracking Banner - shows when user has an active order */}
       <LiveOrderBanner initialOrder={activeOrder} />
 
-      {/* Hero Section - with parallax + floating card */}
+      {/* Hero Section — GSAP parallax */}
       <HeroSection
         storeName={settings.storeName}
         heroImage={heroImage}
@@ -153,22 +123,26 @@ export default async function HomePage() {
         deliveryRadiusKm={settings.deliveryRadiusKm}
       />
 
-      {/* Promo banners - dynamic from admin */}
+      {/* Search entry — below hero so the value prop lands first */}
+      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4">
+        <HomeSearch products={allProducts.slice(0, 20)} />
+      </div>
+
+      {/* Promo banners — admin-managed, unified glass cards */}
       <PromoBanners banners={promoBanners} />
 
-      {/* Recent Orders - Foodizo horizontal cards (mobile only) */}
+      {/* Recent Orders — hidden when empty */}
       <RecentOrdersSection />
 
-      {/* Popular Categories - with staggered entrance */}
+      {/* Popular Categories — GSAP staggered reveal */}
       <AnimatedCategories
         categories={categories}
         categoryImages={categoryImages}
-        categoryColors={categoryColors}
         categoryIcons={categoryIcons}
         allProducts={allProducts}
       />
 
-      {/* Trending This Week — top picks by popularity */}
+      {/* Trending This Week */}
       <div className="cv-auto">
         <AnimatedProductSection
           title="Trending This Week"
@@ -180,53 +154,48 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* On Sale Today - items with active discounts (only if there are offers) */}
+      {/* On Sale Today — only when discounts exist */}
       {offers.length > 0 && (
         <div className="cv-auto">
           <AnimatedProductSection
             title="On Sale Today"
-            subtitle="Limited-time discounts you don't want to miss"
-            icon={<Zap className="h-5 w-5 text-orange-500" />}
+            subtitle="Limited-time discounts you don&apos;t want to miss"
+            icon={<Zap className="h-5 w-5 text-amber-500" />}
             products={offers}
             layout="grid"
           />
         </div>
       )}
 
-      {/* Featured Products — staff picks */}
+      {/* Staff Picks — only when featured products exist */}
       {featuredProducts.length > 0 && (
         <div className="cv-auto">
           <AnimatedProductSection
             title="Staff Picks"
             subtitle="Our featured favourites of the week"
-            icon={<Star className="h-5 w-5 text-yellow-500" />}
+            icon={<Star className="h-5 w-5 text-amber-500" />}
             products={featuredProducts}
             layout="grid"
           />
         </div>
       )}
 
-      {/* All Products — single responsive grid for both mobile and desktop */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-8 md:pt-12 pb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="section-title text-lg md:text-2xl">All Products</h2>
-          <Link href="/products" className="text-sm font-semibold text-primary flex items-center gap-1">
-            View all {allProducts.length} products <ChevronRight className="h-4 w-4" />
+      {/* Final CTA row — browse all, no duplicate grid */}
+      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-8 md:pt-12 pb-12 md:pb-16">
+        <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 p-8 md:p-12 text-center">
+          <h2 className="section-title text-2xl md:text-3xl">Hungry for more?</h2>
+          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
+            Browse our full catalogue of {allProducts.length} fresh products.
+          </p>
+          <Link
+            href="/products"
+            className="show-all-pill mt-6 inline-flex"
+          >
+            Browse all products
+            <ChevronRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-4">
-          {allProducts.slice(0, 12).map((p) => (
-            <ProductCard key={p.id} product={p} />
-          ))}
-        </div>
-        {allProducts.length > 12 && (
-          <Link href="/products" className="mt-6 flex h-11 items-center justify-center rounded-2xl border border-neutral-200 dark:border-neutral-800 text-body font-semibold text-primary press hover:bg-neutral-50 dark:hover:bg-neutral-900 transition">
-            Browse all {allProducts.length} products
-          </Link>
-        )}
       </section>
-
-
     </main>
   );
 }

@@ -138,8 +138,8 @@ export function ProductDetailClient({ product }: { product: Product }) {
             </div>
 
             {/* Stock */}
-            <p className={`mt-2 text-body font-semibold ${outOfStock ? "text-red-500" : "text-primary"}`}>
-              {outOfStock ? "Out of stock" : `${product.stock} in stock`}
+            <p className={`mt-2 text-body font-semibold ${outOfStock ? "text-red-500" : product.stock <= 5 ? "text-amber-600" : "text-primary"}`}>
+              {outOfStock ? "Out of stock" : product.stock <= 5 ? `Only ${product.stock} left` : `${product.stock} in stock`}
             </p>
 
             {/* Delivery info */}
@@ -243,47 +243,50 @@ export function ProductDetailClient({ product }: { product: Product }) {
       </div>
 
       {/* Mobile: Fixed bottom add-to-cart bar */}
-      <div className="ios-floating-action md:hidden">
-        <AnimatePresence mode="wait">
-          {cartItem ? (
-            <motion.div
-              key="qty-mobile"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={springs.enter}
-              className="flex items-center justify-between"
-            >
-              <div className="flex items-center h-11 rounded-full bg-primary overflow-hidden">
-                <button onClick={() => updateQuantity(product.id, cartItem.quantity - 1)} className="w-10 h-full flex items-center justify-center text-white">
-                  <Minus className="h-3.5 w-3.5" />
-                </button>
-                <motion.span key={cartItem.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} transition={springs.tap} className="w-7 text-center text-body font-bold text-white">
-                  {cartItem.quantity}
-                </motion.span>
-                <button onClick={() => updateQuantity(product.id, cartItem.quantity + 1)} className="w-10 h-full flex items-center justify-center text-white">
-                  <Plus className="h-3.5 w-3.5" />
-                </button>
-              </div>
-              <Link href="/cart" className="h-11 px-6 flex items-center justify-center rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-body font-bold press">
-                View Cart • {formatCurrency(price * cartItem.quantity)}
-              </Link>
-            </motion.div>
-          ) : (
-            <motion.button
-              key="add-mobile"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={springs.enter}
-              whileTap={tapScale.primary}
-              onClick={handleAdd}
-              disabled={outOfStock}
-              className="flex items-center justify-center gap-2 h-12 w-full rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-body disabled:opacity-40 press shadow-lg"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              Add to Cart • {formatCurrency(price)}
-            </motion.button>
-          )}
-        </AnimatePresence>
+      <div className="ios-floating-action md:hidden" data-hide-on-keyboard="true">
+        <div className="rounded-2xl bg-white/95 dark:bg-neutral-900/95 backdrop-blur-md border border-border shadow-elevation-3 p-2">
+          <AnimatePresence mode="wait">
+            {cartItem ? (
+              <motion.div
+                key="qty-mobile"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={springs.enter}
+                className="flex items-center justify-between gap-2"
+              >
+                <div className="flex items-center h-11 rounded-full bg-black overflow-hidden">
+                  <button type="button" onClick={() => updateQuantity(product.id, cartItem.quantity - 1)} className="w-10 h-full flex items-center justify-center text-white press" aria-label="Decrease">
+                    <Minus className="h-3.5 w-3.5" />
+                  </button>
+                  <motion.span key={cartItem.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} transition={springs.tap} className="w-7 text-center text-body font-bold text-white tabular-nums">
+                    {cartItem.quantity}
+                  </motion.span>
+                  <button type="button" onClick={() => updateQuantity(product.id, cartItem.quantity + 1)} className="w-10 h-full flex items-center justify-center text-white press" aria-label="Increase">
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <Link href="/cart" className="h-11 flex-1 px-4 flex items-center justify-center rounded-full bg-secondary-600 text-white text-body font-bold press">
+                  View cart · {formatCurrency(price * cartItem.quantity)}
+                </Link>
+              </motion.div>
+            ) : (
+              <motion.button
+                key="add-mobile"
+                type="button"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={springs.enter}
+                whileTap={tapScale.primary}
+                onClick={handleAdd}
+                disabled={outOfStock}
+                className="flex items-center justify-center gap-2 h-12 w-full rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-body disabled:opacity-40 press shadow-lg"
+              >
+                <ShoppingBag className="h-4 w-4" />
+                {outOfStock ? "Out of stock" : `Add to cart · ${formatCurrency(price)}`}
+              </motion.button>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </>
   );

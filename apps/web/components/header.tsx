@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Bell, Clock, Heart, HelpCircle, MapPin, ShoppingBag, User } from "lucide-react";
+import { ArrowLeft, Bell, Clock, Heart, HelpCircle, MapPin, Search, ShoppingBag, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springs } from "@/lib/motion";
 import { memo, useCallback, useEffect, useState } from "react";
@@ -12,6 +12,7 @@ import { SITE } from "@/lib/constants";
 import { getSavedLocation, type DeliveryLocation } from "@/components/location-prompt";
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { GlobalSearchSheet } from "@/components/search/global-search";
 import { useTranslations } from "next-intl";
 
 const navLinks = [
@@ -37,6 +38,7 @@ export const Header = memo(function Header({
   const pathname = usePathname();
   const router = useRouter();
   const t = useTranslations("common");
+  const [searchOpen, setSearchOpen] = useState(false);
 
   // Prefer native back navigation (preserves scroll position + history) and
   // fall back to the parent path when there is no in-app history to return to
@@ -115,6 +117,16 @@ export const Header = memo(function Header({
 
               {/* Language switcher */}
               <LanguageSwitcher />
+
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="hidden md:flex items-center gap-2 h-10 pl-3 pr-4 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press text-sm font-medium text-neutral-500"
+                aria-label="Search products"
+              >
+                <Search className="h-4 w-4" />
+                <span className="max-w-[7rem] truncate">Search…</span>
+              </button>
 
               <Link
                 href="/support"

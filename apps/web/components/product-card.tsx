@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Clock, Minus, Plus, Star } from "lucide-react";
+import { Minus, Plus, Star } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { memo, useCallback, useRef } from "react";
 import { useCartItem, useCartActions } from "@/components/cart/cart-provider";
@@ -120,23 +120,19 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             >
               <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
             </motion.div>
-            {product.isFeatured && (
-              <span className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-yellow-500 px-2 py-1 text-micro font-black text-white shadow-md z-10">
-                <Star className="h-2.5 w-2.5 fill-white" />
-                Featured
-              </span>
-            )}
-            {product.discountPrice && (
-              <span className={cn(
-                "absolute top-2 flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-black text-white shadow-md",
-                product.isFeatured ? "left-auto right-2" : "left-2"
-              )}>
-                <Clock className="h-2.5 w-2.5" />
-                {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
-              </span>
-            )}
-            {/* Favorite button - shift left when discount badge occupies top-right */}
-            <div className={cn("absolute top-2 z-10", product.discountPrice && product.isFeatured ? "right-2" : product.discountPrice ? "right-2 top-9" : "right-2")}>
+            {/* Unified badge: discount % + featured in one compact pill */}
+            <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+              {(product.discountPrice || product.isFeatured) && (
+                <span className="flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-bold text-white shadow-md">
+                  {product.isFeatured && <Star className="h-2.5 w-2.5 fill-white" />}
+                  {product.discountPrice
+                    ? `${Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF`
+                    : "Featured"}
+                </span>
+              )}
+            </div>
+            {/* Favorite button - always top-right */}
+            <div className="absolute top-2 right-2 z-10">
               <FavoriteButton ref={favoriteBtnRef} productId={product.id} size="sm" />
             </div>
           </div>

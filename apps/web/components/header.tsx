@@ -13,6 +13,7 @@ import { getSavedLocation, type DeliveryLocation } from "@/components/location-p
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { GlobalSearchSheet } from "@/components/search/global-search";
+import { AnimatedStoreName } from "@/components/ui/gsap/animated-store-name";
 import { useTranslations } from "next-intl";
 
 const navLinks = [
@@ -84,9 +85,7 @@ export const Header = memo(function Header({
                 {logoUrl && (
                   <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" unoptimized />
                 )}
-                <span className="font-display text-2xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
-                  {storeName}
-                </span>
+                <AnimatedStoreName name={storeName} className="font-display text-2xl font-black tracking-tight uppercase" />
               </Link>
             </div>
 
@@ -190,9 +189,7 @@ export const Header = memo(function Header({
               </div>
             )}
             <div className="min-w-0">
-              <p className="font-display text-title font-black tracking-tight text-neutral-900 dark:text-white truncate">
-                {storeName}
-              </p>
+              <AnimatedStoreName name={storeName} className="font-display text-title font-black tracking-tight truncate" />
               <p className="text-micro font-medium text-secondary-600 dark:text-secondary-400">Fresh & Fast Delivery</p>
             </div>
           </Link>

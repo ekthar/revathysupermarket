@@ -7,7 +7,6 @@ import { HeroSection } from "@/components/home/hero-section";
 import { AnimatedCategories } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
 import { HomeSearch } from "@/components/home/home-search";
-import { LiveOrderBanner } from "@/components/tracking/live-order-banner";
 import { LocationPrompt } from "@/components/location-prompt";
 import { categories as demoCategories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
@@ -110,9 +109,8 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-white dark:bg-neutral-950">
-      {/* Location & order status prompts — shown only when they have data */}
+      {/* Location prompt — shown on first visit if no saved location */}
       <LocationPrompt />
-      <LiveOrderBanner initialOrder={activeOrder} />
 
       {/* Hero Section — GSAP parallax */}
       <HeroSection

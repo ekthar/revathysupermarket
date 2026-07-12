@@ -1,9 +1,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { CustomerOrdersClient, type CustomerOrder } from "@/components/dashboard/customer-orders-client";
-import { LiveOrderBanner } from "@/components/tracking/live-order-banner";
 import type { Product } from "@/lib/types";
-import { estimateOrderEta } from "@/lib/live-order";
 
 export const dynamic = "force-dynamic";
 
@@ -92,12 +90,6 @@ export default async function DashboardPage() {
         </div>
       </section>
       <div className="mt-6">
-        <LiveOrderBanner initialOrder={activeOrders[0] ? {
-          id: activeOrders[0].id,
-          orderNumber: activeOrders[0].orderNumber,
-          status: activeOrders[0].status,
-          eta: estimateOrderEta(activeOrders[0].status)
-        } : null} />
         <CustomerOrdersClient initialOrders={plainOrders} initialHistoryCursor={completedOrders.length === 10 ? completedOrders.at(-1)?.id ?? null : null} />
       </div>
     </main>

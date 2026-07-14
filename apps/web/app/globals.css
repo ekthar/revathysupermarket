@@ -439,6 +439,10 @@ html[data-keyboard-open] .pb-safe {
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid hsl(var(--border) / 0.6);
 }
+.dark .sticky-category-rail {
+  background: hsl(var(--background) / 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
 @media (min-width: 768px) {
   .sticky-category-rail {
     top: 70px;

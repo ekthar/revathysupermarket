@@ -300,10 +300,11 @@ export function ProductGrid({
           />
         </label>
         <div className="sticky-category-rail md:hidden">
-          <div ref={categoryRailRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 snap-x snap-mandatory">
+          <div ref={categoryRailRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 pr-4 snap-x snap-mandatory">
             <button
               type="button"
               onClick={() => setFilterOpen(true)}
+              aria-label="Open sort and filter options"
               className="flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-black dark:bg-white px-4 text-xs font-black text-white dark:text-black press snap-start"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
@@ -334,7 +335,8 @@ export function ProductGrid({
         <select
           value={category}
           onChange={(event) => handleCategoryChange(event.target.value)}
-          className="mt-3 hidden h-12 rounded-2xl border border-input bg-background px-4 text-sm font-semibold md:mt-0 md:block"
+          className="mt-3 hidden h-12 rounded-2xl border border-input bg-background px-4 text-sm font-semibold text-foreground md:mt-0 md:block"
+          aria-label="Filter by category"
         >
           <option>All</option>
           {categories.map((item) => (
@@ -344,7 +346,8 @@ export function ProductGrid({
         <select
           value={sort}
           onChange={handleSortChange}
-          className="mt-3 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold md:mt-0"
+          className="mt-3 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold text-foreground md:mt-0"
+          aria-label="Sort products"
         >
           <option value="popularity">Popularity</option>
           <option value="low">Price Low To High</option>

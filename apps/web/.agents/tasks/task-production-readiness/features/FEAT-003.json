@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "SMS notification templates and order lifecycle integration using existing sms_enabled flag and lib/sms.ts",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create lib/sms/templates.ts - SMS message template functions: orderConfirmed(orderNumber, total, eta), orderDispatched(orderNumber, riderName), orderDelivered(orderNumber). Each returns a short SMS string.",
     "Create lib/sms/notify-order.ts - Helper that checks sms_enabled feature flag via isFeatureEnabled('sms_enabled'), then sends appropriate SMS using existing lib/sms.ts sendSms function. Exports notifyOrderSms(event, phone, data) where event is 'confirmed'|'dispatched'|'delivered'. Fire-and-forget, catches all errors.",
@@ -21,5 +21,5 @@
     "Run npm run test from apps/web/ and confirm all tests pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 8 SMS template tests pass. Lint produces 0 errors. Pre-existing test failure in tests/security.test.ts (production env verification - unrelated, same as FEAT-001 and FEAT-002). The sms_enabled flag already existed in prisma/feature-flags.ts. notifyOrderSms is integrated into the orders POST handler via Promise.allSettled (fire-and-forget). Templates are concise (<320 chars) for SMS length constraints."
 }

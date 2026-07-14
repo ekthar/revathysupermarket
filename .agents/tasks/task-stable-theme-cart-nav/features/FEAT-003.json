@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "fix",
   "description": "Stabilize navigation active states, product browse UX (category pills, sort controls, skeleton loaders), and ensure proper dark mode treatment across all filter/navigation UI. Fix mobile bottom nav dark mode indicator.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In apps/web/components/product-grid.tsx: (a) Ensure dark mode active state for category pills uses appropriate contrast - active pills should use 'bg-white text-neutral-900 dark:bg-white dark:text-neutral-900' or 'bg-primary text-primary-foreground dark:bg-neutral-100 dark:text-neutral-900'. (b) Inactive pills: 'border border-border bg-card text-muted-foreground' already works for both modes. (c) Ensure the sort select has proper dark styling with visible text. (d) In mobile filter bottom sheet, ensure sort buttons have 'dark:bg-neutral-700' for inactive state and dark text for active. (e) Add aria-label to filter button. (f) Ensure the category rail horizontal scroll does not clip content on the right edge - verify padding-right on the scroll container.",
     "In apps/web/components/mobile-bottom-nav.tsx: Fix the active indicator for dark mode. Currently uses 'bg-black' which is invisible on dark backgrounds. Change to 'bg-neutral-900 dark:bg-white' and update active text: the NavTab active class should be 'text-white dark:text-neutral-900' instead of just 'text-white'. Update the badge (cart count) to remain visible in both modes.",
@@ -27,5 +27,5 @@
     "Run npm run test from apps/web/ and confirm tests pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All fixes applied successfully. Desktop nav active state now visible in dark mode. Category pills and sort controls already had proper dark states from FEAT-001 - only missing pieces were aria-labels, text-foreground on selects, scroll padding for clipping. Product card image placeholders now have dark:bg-neutral-800. Mobile bottom nav was already correct from FEAT-001 (bg-black dark:bg-white indicator). Same pre-existing test failure (security.test.ts test 64 - Upstash rate limiting) as FEAT-001/002. 0 lint errors, 10 warnings (all pre-existing)."
 }

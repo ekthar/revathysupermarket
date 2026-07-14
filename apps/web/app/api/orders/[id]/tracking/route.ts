@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { isStaffRole } from "@/lib/authz";
+import { getActiveDeliveryOtp } from "@/lib/delivery";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
   const session = await auth();
@@ -17,6 +18,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       status: true,
       updatedAt: true,
       deliveryOtp: true,
+      deliveryOtpExpiresAt: true,
       latitude: true,
       longitude: true,
       deliveryPartner: {
@@ -46,7 +48,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
     orderNumber: order.orderNumber,
     status: order.status,
     updatedAt: order.updatedAt.toISOString(),
-    deliveryOtp: ["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY"].includes(order.status) ? order.deliveryOtp : null,
+    deliveryOtp: ["OUT_FOR_DELIVERY", "READY_FOR_DELIVERY"].includes(order.status) ? getActiveDeliveryOtp(order.deliveryOtp, order.deliveryOtpExpiresAt) : null,
     destination: { latitude: Number(order.latitude), longitude: Number(order.longitude) },
     deliveryPartnerLocation: ["OUT_FOR_DELIVERY", "ARRIVING", "CUSTOMER_UNAVAILABLE", "READY_FOR_DELIVERY"].includes(order.status) && order.deliveryPartner?.currentLatitude && order.deliveryPartner.currentLongitude && order.deliveryPartner.locationUpdatedAt && Date.now() - order.deliveryPartner.locationUpdatedAt.getTime() < 10 * 60_000 ? {
       latitude: Number(order.deliveryPartner.currentLatitude),

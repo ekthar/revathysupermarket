@@ -174,7 +174,7 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - Display error "Bill number already in use. Please enter a unique bill number." on duplicates
     - _Requirements: 15.1, 15.2, 15.3_
 
-- [-] 5. Checkpoint - Ensure web admin fixes work correctly
+- [x] 5. Checkpoint - Ensure web admin fixes work correctly
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Implement mobile app fixes
@@ -234,27 +234,27 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - **Validates: Requirements 12, 14, 16**
 
 - [ ] 7. Integration and wiring
-  - [-] 7.1 Wire customer order history page into admin navigation
+  - [x] 7.1 Wire customer order history page into admin navigation
     - Add link from customer list/profile to `/admin/customers/[id]/orders`
     - Ensure breadcrumbs and navigation work correctly
     - _Requirements: 1.1, 1.2_
 
-  - [-] 7.2 Wire staff report page into admin reports navigation
+  - [x] 7.2 Wire staff report page into admin reports navigation
     - Add navigation entry for Staff Report in admin reports section
     - _Requirements: 2.1_
 
-  - [-] 7.3 Wire Payment Collection Modal into order detail payment section
+  - [x] 7.3 Wire Payment Collection Modal into order detail payment section
     - Replace direct "Received Full" action with modal trigger
     - Connect modal confirmation to payment-received API endpoint
     - _Requirements: 17.1_
 
-  - [~] 7.4 Wire delivery OTP auto-generation into order dispatch flow
+  - [x] 7.4 Wire delivery OTP auto-generation into order dispatch flow
     - When order is dispatched, auto-generate delivery OTP (not manual)
     - Store OTP with expiry timestamp
     - Customer sees OTP for delivery verification; admin/staff panels hide expired OTPs
     - _Requirements: 13 (updated — auto-generated delivery OTP)_
 
-- [~] 8. Final checkpoint - Ensure all tests pass
+- [-] 8. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

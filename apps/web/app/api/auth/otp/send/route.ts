@@ -34,6 +34,20 @@ export async function POST(request: Request) {
       if (!user.isActive) {
         return NextResponse.json({ error: "Account is deactivated. Contact admin." }, { status: 403 });
       }
+    } else {
+      // For general OTP login (customer flow), restrict to CUSTOMER role only
+      // Unregistered phones are allowed (new customer signup)
+      const existingUser = await prisma.user.findUnique({
+        where: { phone: normalizedPhone },
+        select: { role: true }
+      });
+
+      if (existingUser && existingUser.role !== "CUSTOMER") {
+        return NextResponse.json(
+          { error: "OTP login is available for customers only. Please use staff login." },
+          { status: 403 }
+        );
+      }
     }
 
     // Rate limiting

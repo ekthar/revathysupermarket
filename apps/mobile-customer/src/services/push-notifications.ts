@@ -77,10 +77,27 @@ export function setupNotificationListeners() {
   const subscription = Notifications.addNotificationResponseReceivedListener(
     (response) => {
       const data = response.notification.request.content.data as Record<string, unknown>;
+      const type = data?.type as string | undefined;
       const url = data?.url as string | undefined;
+
       if (url) {
         router.push(url as any);
       }
+    }
+  );
+
+  return subscription;
+}
+
+/**
+ * Set up a listener for foreground notifications (order approval, etc.)
+ * Returns the subscription for cleanup.
+ */
+export function setupForegroundNotificationListener() {
+  const subscription = Notifications.addNotificationReceivedListener(
+    (notification) => {
+      // Foreground notification received — the banner component handles in-app display
+      // The system notification is shown automatically via setNotificationHandler
     }
   );
 

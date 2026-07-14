@@ -41,6 +41,8 @@ import {
   type OrderUpdateMessage,
   type ConnectionState,
 } from "@/services/realtime";
+import { emitApprovalNotification } from "@/components/ApprovalNotificationBanner";
+import { showApprovalLocalNotification, isApprovalStatus } from "@/services/order-approval-notifications";
 
 // ============================================
 // Types
@@ -242,6 +244,15 @@ export default function OrderTrackingScreen() {
         newTracking.status = message.status;
         // Refresh updatedAt when status changes
         newTracking.updatedAt = message.timestamp || new Date().toISOString();
+
+        // Trigger approval notification when status changes to AWAITING_CUSTOMER_APPROVAL
+        if (isApprovalStatus(message.status)) {
+          emitApprovalNotification({
+            orderId: prev.id,
+            orderNumber: prev.orderNumber,
+          });
+          showApprovalLocalNotification(prev.id, prev.orderNumber);
+        }
       }
 
       // Update ETA

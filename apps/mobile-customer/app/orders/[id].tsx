@@ -15,6 +15,7 @@ function statusVariant(status: string): "success" | "error" | "info" | "warning"
     case "CANCELLED": return "error";
     case "OUT_FOR_DELIVERY":
     case "ARRIVING": return "info";
+    case "AWAITING_CUSTOMER_APPROVAL": return "warning";
     default: return "warning";
   }
 }
@@ -76,6 +77,40 @@ export default function OrderDetailScreen() {
             </Text>
           )}
         </View>
+
+        {/* Approval Required Banner */}
+        {order.status === "AWAITING_CUSTOMER_APPROVAL" && (
+          <View className="bg-amber-50 rounded-xl p-4 mb-4 border border-amber-200">
+            <Text className="text-body font-bold text-amber-900 mb-1">
+              Substitution Requires Approval
+            </Text>
+            <Text className="text-caption text-amber-700 mb-3">
+              Your order has been modified. Please review and approve or reject the changes.
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={() => {
+                  api.post(`/orders/${id}/approve`).then(() => {
+                    setOrder((prev) => prev ? { ...prev, status: "ACCEPTED" } : prev);
+                  }).catch(() => {});
+                }}
+                className="flex-1 bg-green-600 rounded-lg py-2.5 items-center"
+              >
+                <Text className="text-white font-bold text-caption">Approve</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  api.post(`/orders/${id}/reject`).then(() => {
+                    setOrder((prev) => prev ? { ...prev, status: "CANCELLED" } : prev);
+                  }).catch(() => {});
+                }}
+                className="flex-1 bg-red-600 rounded-lg py-2.5 items-center"
+              >
+                <Text className="text-white font-bold text-caption">Reject</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
 
         {/* Track Order Button */}
         {isActive && (

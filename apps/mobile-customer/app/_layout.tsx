@@ -12,6 +12,7 @@ import { registerForPushNotifications, setupNotificationListeners } from "@/serv
 import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
 import { ApprovalNotificationBanner } from "@/components/ApprovalNotificationBanner";
+import { useOrderApprovalListener } from "@/hooks/useOrderApprovalListener";
 import "../global.css";
 
 // Keep splash screen visible while loading
@@ -23,6 +24,9 @@ function RootLayoutInner() {
   const { loadStoreConfig, loadPreferences } = useSettingsStore();
   const appState = useRef(AppState.currentState);
   const { theme } = useTheme();
+
+  // Listen for orders requiring customer approval and show notifications
+  useOrderApprovalListener();
 
   useEffect(() => {
     async function prepare() {

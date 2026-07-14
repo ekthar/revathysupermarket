@@ -19,6 +19,7 @@ const HIDDEN_PREFIXES = [
   "/staff",
   "/track",
   "/dashboard",
+  "/products/",
 ];
 
 /**

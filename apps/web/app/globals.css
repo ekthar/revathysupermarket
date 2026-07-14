@@ -178,7 +178,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   position: fixed;
   left: max(1rem, var(--safe-left));
   right: max(1rem, var(--safe-right));
-  bottom: calc(5.75rem + var(--safe-bottom));
+  bottom: calc(var(--mobile-nav-height) + 0.5rem + var(--safe-bottom));
   z-index: 45;
 }
 .ios-glass {

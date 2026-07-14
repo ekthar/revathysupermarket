@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Homepage banner carousel redesign - transform components/home/promo-banners.tsx from vertical card list to Swiggy-style auto-scrolling Embla Carousel with dot indicators, navigation arrows, mobile peek, and reduced-motion support.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Rewrite components/home/promo-banners.tsx to use the Embla Carousel components from components/ui/carousel.tsx (Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext). Configure with opts={{ loop: true, align: 'start' }}",
     "Implement auto-advance every 4 seconds using useEffect with setInterval on the Embla API (api.scrollNext()). Pause on hover (onMouseEnter/onMouseLeave) and touch (onTouchStart/onTouchEnd). Respect prefers-reduced-motion: if reduced motion preferred, disable auto-advance but keep manual swipe",
@@ -30,5 +30,5 @@
     "Run npm run test to confirm no regressions"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Lint passes cleanly. Test 64 (production env verification requires Upstash rate limiting configuration) is a pre-existing failure unrelated to this feature - confirmed by running tests on base state. All acceptance criteria met."
 }

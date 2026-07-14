@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Production hardening utilities: countdown hook, clipboard utility, offers loading skeleton, and offers error boundary. These are dependencies for the main UI features.",
+  "status": "in_progress",
+  "steps": [
+    "Create lib/hooks/use-countdown.ts: a React hook that takes an end date, returns {hours, minutes, seconds, isExpired}, updates every second (or every minute if >1hr remaining), cleans up interval on unmount, returns expired state gracefully when date is past",
+    "Create lib/clipboard.ts: async copyToClipboard(text: string): Promise<boolean> using navigator.clipboard.writeText with fallback to document.execCommand('copy'), returns success/failure boolean",
+    "Create app/offers/loading.tsx: skeleton matching the new offers page layout - skeleton hero card (full width, rounded-2xl, shimmer), skeleton filter tab pills (3 pills), skeleton coupon-ticket cards (3-4 cards with left accent strip shape, dashed border pattern). Reuse the SkeletonPulse pattern from components/ui/product-skeleton-grid.tsx with the shimmer animation",
+    "Create app/offers/error.tsx: offers-specific error boundary following the pattern in app/error.tsx. Include retry button and 'Browse Products' link as fallback CTA. Use Lucide icons (AlertTriangle, RefreshCw, ShoppingBag). Dark mode support.",
+    "Verify app/api/admin/offers/route.ts already has Zod validation (it does - createSchema with z.object). No changes needed there."
+  ],
+  "acceptance_criteria": [
+    "lib/hooks/use-countdown.ts exports a useCountdown hook with correct TypeScript types",
+    "lib/clipboard.ts exports copyToClipboard async function",
+    "app/offers/loading.tsx renders skeleton UI matching coupon-wallet layout",
+    "app/offers/error.tsx renders error UI with retry and browse-products fallback",
+    "All files pass lint (npx eslint .)"
+  ],
+  "verification": [
+    "Run npx eslint app/offers/loading.tsx app/offers/error.tsx lib/hooks/use-countdown.ts lib/clipboard.ts --no-error-on-unmatched-pattern",
+    "Run npm run test to confirm no regressions"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

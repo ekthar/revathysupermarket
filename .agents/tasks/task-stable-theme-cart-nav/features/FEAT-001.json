@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "fix",
   "description": "Fix dark mode: remove forcedTheme='light' from ThemeProvider, integrate theme toggle into desktop header, ensure all surfaces have proper dark mode styling, and fix ThemeColorSync to react to both route and theme changes.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In apps/web/components/providers.tsx: Remove forcedTheme='light' prop from the ThemeProvider. Keep attribute='class', defaultTheme='light', enableSystem={false}.",
     "In apps/web/components/theme-toggle.tsx: Update ThemeToggleIcon to have a 44x44px touch target (min-h-[44px] min-w-[44px] or h-10 w-10 minimum), improve aria-label to be descriptive ('Switch to dark mode' / 'Switch to light mode' based on state), ensure the icon shows target state (Sun when dark = switch to light, Moon when light = switch to dark). Use bg-neutral-50 dark:bg-neutral-800 to match other header action buttons. Keep Framer Motion rotation animation but ensure it works well pre-mount with a placeholder. Fix unmounted state to not show any icon (avoid hydration mismatch).",
@@ -29,5 +29,5 @@
     "Run npm run test from apps/web/ and confirm tests pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Pre-existing test failure: test 64 (production env verification requires Upstash rate limiting configuration) fails on base state - unrelated to theme changes. All 63 other tests pass. Lint: 0 errors, 10 warnings (all pre-existing)."
 }

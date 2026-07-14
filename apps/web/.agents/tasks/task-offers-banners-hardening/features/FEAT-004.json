@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address semantic review findings: fix countdown interval locking, remove hardcoded savings stat, fix carousel image priority, add carousel ARIA landmarks.",
+  "status": "in_progress",
+  "steps": [
+    "Fix lib/hooks/use-countdown.ts: Remove conditional intervalMs logic, always use 1-second interval",
+    "Fix components/offers/offers-client.tsx: Replace hardcoded 'You saved ₹230 this month' with a generic motivational line",
+    "Fix components/home/promo-banners.tsx: Pass index to BannerCard, set priority={index === 0}",
+    "Fix components/home/promo-banners.tsx: Add aria-label='Promotional banners' to section, add aria-roledescription='carousel' to the carousel grouping div"
+  ],
+  "acceptance_criteria": [
+    "useCountdown always ticks at 1-second intervals regardless of time remaining",
+    "No hardcoded savings amount shown to users",
+    "Only the first carousel banner image has priority={true}",
+    "Carousel section has aria-label and aria-roledescription attributes",
+    "All modified files pass eslint",
+    "Tests pass"
+  ],
+  "verification": [
+    "Run npx eslint lib/hooks/use-countdown.ts components/offers/offers-client.tsx components/home/promo-banners.tsx",
+    "Run npm run test"
+  ],
+  "blocked_reason": null,
+  "findings": null
+}

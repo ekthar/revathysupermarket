@@ -102,9 +102,10 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
   );
 
   return (
-    <section className="px-4 pt-4">
+    <section className="px-4 pt-4" aria-label="Promotional banners">
       <div
         className="group"
+        aria-roledescription="carousel"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onTouchStart={handleTouchStart}
@@ -116,12 +117,12 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
           className="w-full"
         >
           <CarouselContent className="-ml-2 md:-ml-4">
-            {banners.map((banner) => (
+            {banners.map((banner, index) => (
               <CarouselItem
                 key={banner.id}
                 className="basis-[92%] md:basis-full pl-2 md:pl-4"
               >
-                <BannerCard banner={banner} />
+                <BannerCard banner={banner} index={index} />
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -153,7 +154,7 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
   );
 }
 
-function BannerCard({ banner }: { banner: Banner }) {
+function BannerCard({ banner, index }: { banner: Banner; index: number }) {
   const content = (
     <div className="relative overflow-hidden rounded-2xl aspect-[16/7] md:aspect-[3/1]">
       {/* Background image */}
@@ -163,7 +164,7 @@ function BannerCard({ banner }: { banner: Banner }) {
         fill
         sizes="100vw"
         className="object-cover"
-        priority
+        priority={index === 0}
       />
 
       {/* Gradient overlay */}

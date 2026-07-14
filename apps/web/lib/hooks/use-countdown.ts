@@ -28,8 +28,7 @@ function calculateTimeLeft(endDate: Date): CountdownResult {
 /**
  * Countdown hook that ticks toward an end date.
  *
- * - Updates every second when less than 1 hour remains.
- * - Updates every minute when more than 1 hour remains.
+ * - Updates every second (simple, reliable, negligible cost for max ~6 cards).
  * - Cleans up interval on unmount.
  * - Returns expired state gracefully when the date is in the past.
  */
@@ -54,9 +53,6 @@ export function useCountdown(endDate: Date | string): CountdownResult {
 
     if (initial.isExpired) return;
 
-    // Determine tick interval: 1s if under 1 hour, 60s otherwise
-    const intervalMs = initial.hours >= 1 ? 60_000 : 1_000;
-
     const id = setInterval(() => {
       const updated = getTimeLeft();
       setTimeLeft(updated);
@@ -64,7 +60,7 @@ export function useCountdown(endDate: Date | string): CountdownResult {
       if (updated.isExpired) {
         clearInterval(id);
       }
-    }, intervalMs);
+    }, 1_000);
 
     return () => clearInterval(id);
   }, [getTimeLeft]);

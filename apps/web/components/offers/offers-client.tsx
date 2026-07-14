@@ -157,8 +157,8 @@ export function OffersClient({ offers, promoCodes, catMap, isLoggedIn }: OffersC
             {isLoggedIn && (
               <div className="mt-4 inline-flex items-center gap-2 rounded-full bg-secondary-50 dark:bg-secondary-900/30 px-4 py-2">
                 <ShoppingBag className="h-4 w-4 text-secondary-600 dark:text-secondary-400" aria-hidden="true" />
-                <span className="text-sm font-semibold text-secondary-700 dark:text-secondary-300 tabular-nums">
-                  You saved ₹230 this month
+                <span className="text-sm font-semibold text-secondary-700 dark:text-secondary-300">
+                  Save more with every order
                 </span>
               </div>
             )}

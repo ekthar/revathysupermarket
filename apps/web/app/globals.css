@@ -1015,3 +1015,13 @@ html[data-keyboard-open] .pb-safe {
 .animate-fadeIn {
   animation: fadeIn 0.2s ease-out;
 }
+
+/* Animated gradient shift for offers hero */
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.animate-gradient-shift {
+  animation: gradientShift 8s ease infinite;
+}

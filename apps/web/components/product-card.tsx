@@ -98,7 +98,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       whileTap={tapScale.subtle}
       transition={springs.snappy}
       className={cn(
-        "relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated shadow-elevation-1",
+        "relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 product-card-animated shadow-elevation-1",
         outOfStock && "opacity-50"
       )}
     >

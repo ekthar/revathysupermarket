@@ -15,6 +15,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { GlobalSearchSheet } from "@/components/search/global-search";
 import { AnimatedStoreName } from "@/components/ui/gsap/animated-store-name";
 import { useTranslations } from "next-intl";
+import { ThemeToggleIcon } from "@/components/theme-toggle";
 
 const navLinks = [
   { href: "/products", label: "Shop" },
@@ -129,6 +130,9 @@ export const Header = memo(function Header({
 
               {/* Language switcher */}
               <LanguageSwitcher />
+
+              {/* Theme toggle */}
+              <ThemeToggleIcon />
 
               <button
                 type="button"

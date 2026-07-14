@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Redesign the floating cart bar to be a premium, stable mobile component that does not overlap with bottom navigation, uses capsule shape, has proper dark mode, and handles all edge cases (long names, large totals, route transitions).",
+  "status": "pending",
+  "steps": [
+    "In apps/web/components/cart/floating-cart-bar.tsx: Redesign the component with these changes: (a) Leading section: cart/bag icon inside a circular container with green tint (bg-secondary-100 dark:bg-secondary-900/40 with secondary-colored icon). (b) Center section: item count in bold, product summary truncated with min-w-0 and truncate classes. (c) Trailing section: subtotal with tabular-nums font-variant and ChevronRight. (d) Overall shape: rounded-full capsule. (e) Light mode: bg-primary (#050505) text white with restrained shadow (shadow-elevation-3). (f) Dark mode: bg-[#0f172a] with border border-white/10, no glow. (g) Ensure text never wraps - use flex with min-w-0 and truncate on variable-length text. (h) Keep Framer Motion enter/exit with springs.snappy, add whileTap={tapScale.primary}. (i) Keep haptic('light') on click. (j) Add aria-label with item count and subtotal.",
+    "In apps/web/app/globals.css: Update .floating-cart-wrapper positioning: change bottom from 'calc(5.25rem + var(--safe-bottom))' to 'calc(var(--mobile-nav-height) + 0.75rem + var(--safe-bottom))' to ensure clear gap above bottom nav. Ensure width is 'calc(100% - 2rem)' and max-width is 400px. Verify z-index is between bottom nav (70) and toast (80) - use z-index: 60 (var(--z-floating)).",
+    "In apps/web/app/globals.css: Add .floating-cart-bar styles: Use tabular-nums for price display. Ensure the dark mode variant uses border-based elevation rather than bright shadow.",
+    "In apps/web/app/globals.css: Verify that pb-safe class accounts for floating cart bar height in addition to nav height. The current --mobile-nav-height is 82px. The floating cart bar adds approximately 56px + 12px gap = 68px. Update pb-safe calculation or add a separate utility class to ensure page content is not hidden behind both bars.",
+    "Ensure the floating cart bar is hidden during route transitions to prevent duplicate rendering - the current AnimatePresence approach should handle this, but verify mode='wait' is not needed."
+  ],
+  "acceptance_criteria": [
+    "Floating cart bar appears only on mobile when cart has items and not on hidden routes",
+    "Cart bar is positioned clearly above bottom nav with visible gap",
+    "Cart bar uses capsule/rounded-full shape",
+    "Light mode: dark background with white text and restrained shadow",
+    "Dark mode: near-black layered surface with subtle border, no glow",
+    "Long product names truncate without causing layout overflow",
+    "Price uses tabular-nums for stable width during updates",
+    "Cart icon has green-tinted circular container",
+    "Tap feedback via Framer Motion whileTap",
+    "No overlap with bottom navigation on any device",
+    "No overlap with browser chrome on iOS (safe-area respected)",
+    "Page content not hidden behind cart bar (sufficient bottom padding)"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm 0 errors",
+    "Run npm run test from apps/web/ and confirm tests pass"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

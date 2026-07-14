@@ -20,7 +20,7 @@ export function Providers({ children, session }: { children: React.ReactNode; se
   return (
     <SessionProvider session={session}>
       <QueryProvider>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <ThemeColorSync />
           <MotionConfig reducedMotion="user">
             <ToastProvider>

@@ -1,0 +1,32 @@
+{
+  "project_type": "Next.js 15 App Router monorepo - grocery shopping PWA",
+  "language": "TypeScript",
+  "build_system": "turbo monorepo, next build with prisma generate prerequisite. Prisma requires DATABASE_URL env var.",
+  "test_framework": "tsx --test for unit tests, playwright for E2E",
+  "build_command": "npm run build (apps/web/)",
+  "test_command": "npm run test (apps/web/)",
+  "lint_command": "npx eslint . (apps/web/)",
+  "verification_instructions": "1. Run npx eslint . from apps/web/ - expect 0 errors. 2. Run npm run test from apps/web/. 3. Build will fail without DATABASE_URL for prisma generate - that is expected.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "cd apps/web && npm install",
+  "environment_constraints": "Network available for npm install. Build requires DATABASE_URL for prisma generate which is not available - use lint and AST validation instead. No Docker daemon assumed.",
+  "contribution_requirements": "Follow AGENTS.md design system strictly. One accent (green). No emoji. Lucide icons only. rounded-full for controls, rounded-2xl for cards. Manrope 900 headings. Inter Tight body. No window scroll listeners. No h-screen. max-w-7xl. Respect prefers-reduced-motion. CSS grid over flex percentage math.",
+  "key_patterns": "Components use 'use client' directive. Motion tokens from lib/motion.ts. GSAP from lib/gsap.ts. Cart state via cart-provider with isolated re-render pattern. ThemeProvider from next-themes with class strategy. iOS-safe positioning with CSS custom properties. Framer Motion AnimatePresence for enter/exit. haptic() utility for tactile feedback.",
+  "relevant_files": [
+    "apps/web/components/providers.tsx",
+    "apps/web/components/theme-toggle.tsx",
+    "apps/web/components/theme-color-sync.tsx",
+    "apps/web/components/header.tsx",
+    "apps/web/components/mobile-bottom-nav.tsx",
+    "apps/web/components/cart/floating-cart-bar.tsx",
+    "apps/web/components/product-grid.tsx",
+    "apps/web/components/product-card.tsx",
+    "apps/web/app/products/page.tsx",
+    "apps/web/app/layout.tsx",
+    "apps/web/app/globals.css",
+    "apps/web/tailwind.config.ts",
+    "apps/web/lib/motion.ts",
+    "apps/web/lib/gsap.ts"
+  ],
+  "directory_structure": "Monorepo root: turbo.json, apps/web/ is main app. apps/web/app/ = App Router pages. apps/web/components/ = shared components. apps/web/lib/ = utilities, motion tokens, gsap setup. apps/web/tests/ = unit tests."
+}

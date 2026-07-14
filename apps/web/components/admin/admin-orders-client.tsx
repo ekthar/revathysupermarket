@@ -248,15 +248,18 @@ export function AdminOrdersClient({
   }
 
   function updateDraft(itemId: string, patch: Partial<{ quantity: string; productId: string; reason: string }>) {
-    setEditDrafts((current) => ({
-      ...current,
-      [itemId]: {
-        quantity: current[itemId]?.quantity ?? "",
-        productId: current[itemId]?.productId ?? "",
-        reason: current[itemId]?.reason ?? "",
-        ...patch
+    setEditDrafts((current) => {
+      const existing = current[itemId] ?? { quantity: "", productId: "", reason: "" };
+      const updated = { ...existing, ...patch };
+
+      // When a substitute product is selected, default quantity to 1
+      // so staff never accidentally submit a zero-quantity substitute
+      if (patch.productId && patch.productId !== "" && !existing.quantity) {
+        updated.quantity = "1";
       }
-    }));
+
+      return { ...current, [itemId]: updated };
+    });
   }
 
   async function assignDelivery(orderId: string, deliveryPartnerId: string) {

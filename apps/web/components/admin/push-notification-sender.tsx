@@ -15,7 +15,7 @@ const templates = [
     color: "bg-orange-50 text-orange-600 dark:bg-orange-950/30",
     title: "Flash Sale! Up to 30% OFF",
     body: "Limited time offer on fresh groceries. Order now before stock runs out!",
-    url: "/products?sort=offers"
+    url: "/offers"
   },
   {
     id: "new-arrivals",
@@ -42,7 +42,7 @@ const templates = [
     color: "bg-pink-50 text-pink-600 dark:bg-pink-950/30",
     title: "Weekend Special Offer",
     body: "Exclusive weekend discounts on dairy, snacks & beverages. Don't miss out!",
-    url: "/products?sort=offers"
+    url: "/offers"
   },
   {
     id: "reorder-reminder",

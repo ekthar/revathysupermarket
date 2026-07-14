@@ -6,7 +6,7 @@ import { ArrowLeft, Bell, Clock, Heart, HelpCircle, MapPin, Search, ShoppingBag,
 import { motion, AnimatePresence } from "framer-motion";
 import { springs } from "@/lib/motion";
 import { memo, useCallback, useEffect, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCartItemCount } from "@/components/cart/cart-provider";
 import { SITE } from "@/lib/constants";
 import { getSavedLocation, type DeliveryLocation } from "@/components/location-prompt";
@@ -18,9 +18,9 @@ import { useTranslations } from "next-intl";
 
 const navLinks = [
   { href: "/products", label: "Shop" },
-  { href: "/products?view=categories", label: "Categories" },
-  { href: "/products?sort=offers", label: "Deals" },
+  { href: "/offers", label: "Deals" },
   { href: "/products?category=Fruits", label: "Fresh Produce" },
+  { href: "/products?category=Vegetables", label: "Vegetables" },
 ];
 
 export const Header = memo(function Header({
@@ -37,6 +37,7 @@ export const Header = memo(function Header({
   onOpenLocationPrompt?: () => void;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const router = useRouter();
   const t = useTranslations("common");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -58,7 +59,7 @@ export const Header = memo(function Header({
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/delivery")) return null;
 
   // Determine if we're on an inner page that needs a back button
-  const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/support", "/checkout", "/offers"];
+  const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/support", "/checkout"];
   const isInnerPage = innerPages.some((p) => pathname.startsWith(p)) || (pathname.startsWith("/account/") && pathname !== "/account");
 
 
@@ -92,7 +93,19 @@ export const Header = memo(function Header({
             {/* Navigation links */}
             <nav className="hidden lg:flex items-center gap-1">
               {navLinks.map((link) => {
-                const isActive = pathname === link.href || (link.href !== "/products" && pathname.startsWith(link.href.split("?")[0]));
+                const [linkPath, linkQuery] = link.href.split("?");
+                const linkParams = new URLSearchParams(linkQuery || "");
+                // Exact path match for simple routes, path + query match for param-based routes
+                let isActive = false;
+                if (linkQuery) {
+                  // Has query params: match path AND all query params must match
+                  isActive = pathname === linkPath && [...linkParams.entries()].every(
+                    ([key, val]) => searchParams.get(key) === val
+                  );
+                } else {
+                  // No query params: exact path match only (avoid matching /products when on /products?category=X)
+                  isActive = pathname === linkPath && !searchParams.has("category") && !searchParams.has("sort");
+                }
                 return (
                   <Link
                     key={link.href}

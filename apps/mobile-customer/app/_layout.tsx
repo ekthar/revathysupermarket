@@ -11,6 +11,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { registerForPushNotifications, setupNotificationListeners } from "@/services/push-notifications";
 import { ThemeProvider, useTheme } from "@/theme/ThemeProvider";
 import { ToastProvider } from "@/components/ui/Toast";
+import { ApprovalNotificationBanner } from "@/components/ApprovalNotificationBanner";
 import "../global.css";
 
 // Keep splash screen visible while loading
@@ -67,6 +68,7 @@ function RootLayoutInner() {
     <View className="flex-1 bg-white">
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <OfflineBanner />
+      <ApprovalNotificationBanner />
       <Stack
         screenOptions={{
           headerShown: false,
@@ -109,6 +111,7 @@ function RootLayoutInner() {
         <Stack.Screen name="account/favorites" options={{ headerShown: true, title: "Favorites" }} />
         <Stack.Screen name="account/addresses" options={{ headerShown: true, title: "Addresses" }} />
         <Stack.Screen name="account/add-address" options={{ headerShown: true, title: "Add Address" }} />
+        <Stack.Screen name="account/edit-address" options={{ headerShown: true, title: "Edit Address" }} />
         <Stack.Screen name="account/notifications" options={{ headerShown: true, title: "Notifications" }} />
         <Stack.Screen name="account/settings" options={{ headerShown: true, title: "Settings" }} />
         <Stack.Screen name="account/support" options={{ headerShown: true, title: "Support" }} />

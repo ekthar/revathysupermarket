@@ -3,6 +3,8 @@ import Link from "next/link";
 import { ArrowLeft, Clock, CreditCard, FileText, MapPin, Package, Phone, RotateCcw, Truck, User } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
+import { formatQuantityWithUnit } from "@msm/shared";
+import { getActiveDeliveryOtp } from "@/lib/delivery";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +16,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
-      items: { include: { product: { select: { id: true, name: true, image: true, slug: true } } } },
+      items: { include: { product: { select: { id: true, name: true, image: true, slug: true, unit: true } } } },
       user: { select: { id: true, name: true, email: true, phone: true } },
       deliveryPartner: { select: { id: true, name: true, phone: true } },
       acknowledgedBy: { select: { id: true, name: true } },
@@ -109,6 +111,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-muted text-xs font-bold text-muted-foreground">{item.quantity}x</span>
                     <div>
                       <p className="text-sm font-semibold text-foreground">{item.name}</p>
+                      <p className="text-xs text-muted-foreground">{formatQuantityWithUnit(item.quantity, item.product?.unit ?? "pcs")}</p>
                       {item.gstRate && <p className="text-micro text-muted-foreground">GST: {Number(item.gstRate)}%</p>}
                     </div>
                   </div>
@@ -191,7 +194,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <div className="text-sm">
                 <p className="font-semibold text-foreground">{order.deliveryPartner.name}</p>
                 <p className="text-muted-foreground">{order.deliveryPartner.phone}</p>
-                {order.deliveryOtp && <p className="mt-2 text-xs font-mono bg-muted rounded-lg px-3 py-2">OTP: <span className="font-bold text-primary">{order.deliveryOtp}</span></p>}
+                {(() => {
+                  const activeOtp = getActiveDeliveryOtp(order.deliveryOtp, order.deliveryOtpExpiresAt);
+                  return activeOtp ? (
+                    <p className="mt-2 text-xs font-mono bg-muted rounded-lg px-3 py-2">OTP: <span className="font-bold text-primary">{activeOtp}</span></p>
+                  ) : null;
+                })()}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground italic">Not assigned yet</p>

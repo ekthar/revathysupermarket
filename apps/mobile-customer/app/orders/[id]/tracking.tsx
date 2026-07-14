@@ -34,11 +34,15 @@ import {
 } from "lucide-react-native";
 import { api } from "@/services/api";
 import { STATUS_LABELS } from "@msm/shared/constants";
+import { isDeliveryEtaVisible, formatRelativeTime } from "@msm/shared/utils";
+import type { OrderStatus } from "@msm/shared/types";
 import {
   getRealtimeService,
   type OrderUpdateMessage,
   type ConnectionState,
 } from "@/services/realtime";
+import { emitApprovalNotification } from "@/components/ApprovalNotificationBanner";
+import { showApprovalLocalNotification, isApprovalStatus } from "@/services/order-approval-notifications";
 
 // ============================================
 // Types
@@ -48,6 +52,7 @@ interface TrackingData {
   id: string;
   orderNumber: string;
   status: string;
+  updatedAt: string;
   deliveryOtp: string | null;
   destination: { latitude: number; longitude: number };
   deliveryPartner?: { name: string; phone: string };
@@ -237,6 +242,17 @@ export default function OrderTrackingScreen() {
       // Update status if changed
       if (message.status && message.status !== prev.status) {
         newTracking.status = message.status;
+        // Refresh updatedAt when status changes
+        newTracking.updatedAt = message.timestamp || new Date().toISOString();
+
+        // Trigger approval notification when status changes to AWAITING_CUSTOMER_APPROVAL
+        if (isApprovalStatus(message.status)) {
+          emitApprovalNotification({
+            orderId: prev.id,
+            orderNumber: prev.orderNumber,
+          });
+          showApprovalLocalNotification(prev.id, prev.orderNumber);
+        }
       }
 
       // Update ETA
@@ -381,7 +397,7 @@ export default function OrderTrackingScreen() {
               </View>
             </View>
             <View className="items-end">
-              {etaMinutes && !isDelivered && (
+              {etaMinutes && !isDelivered && isDeliveryEtaVisible(tracking.status as OrderStatus) && (
                 <Text className="text-xl font-black text-white">{etaMinutes} min</Text>
               )}
               {isDelivered && (
@@ -402,6 +418,15 @@ export default function OrderTrackingScreen() {
           <View className="mx-4 mt-2 flex-row items-center justify-center gap-2 py-2 rounded-xl bg-error-50 border border-error-100">
             <WifiOff size={12} color="#B91C1C" />
             <Text className="text-micro font-bold text-error-700">Connection lost</Text>
+          </View>
+        )}
+
+        {/* Last Updated Timestamp */}
+        {tracking.updatedAt && (
+          <View className="mx-4 mt-2">
+            <Text className="text-micro text-neutral-400 text-center">
+              Last updated: {formatRelativeTime(tracking.updatedAt)}
+            </Text>
           </View>
         )}
 
@@ -477,8 +502,8 @@ export default function OrderTrackingScreen() {
           )}
         </Animated.View>
 
-        {/* ETA Display */}
-        {etaMinutes && !isDelivered && (
+        {/* ETA Display — only shown for dispatch statuses (OUT_FOR_DELIVERY, ARRIVING) */}
+        {etaMinutes && !isDelivered && isDeliveryEtaVisible(tracking.status as OrderStatus) && (
           <Animated.View entering={FadeInDown.delay(250).duration(400)} className="mx-4 mt-4 rounded-2xl bg-white p-5 items-center border border-neutral-100" style={{ shadowColor: "#050505", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.06, shadowRadius: 12, elevation: 3 }}>
             <Text className="text-caption font-bold uppercase tracking-wider text-neutral-400">
               Arriving in

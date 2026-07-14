@@ -3,6 +3,7 @@ import { View, Text, TextInput, Pressable, ActivityIndicator, ScrollView, Alert 
 import { useLocalSearchParams, router } from "expo-router";
 import { api } from "@/services/api";
 import type { OrderDetail } from "@msm/shared/types";
+import { calculateDamageReduction, formatCurrency } from "@msm/shared/utils";
 
 export default function DamageReportScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -12,6 +13,9 @@ export default function DamageReportScreen() {
   const [selectedProductId, setSelectedProductId] = useState("");
   const [orderItems, setOrderItems] = useState<OrderDetail["items"]>([]);
   const [itemsLoading, setItemsLoading] = useState(true);
+  const [quantity, setQuantity] = useState(1);
+  const [reductionAmount, setReductionAmount] = useState(0);
+  const [isManualOverride, setIsManualOverride] = useState(false);
 
   useEffect(() => {
     api.get(`/delivery/orders/${id}`)
@@ -21,18 +25,55 @@ export default function DamageReportScreen() {
         if (items.length) {
           setSelectedProductId(items[0].productId);
           setItemName(items[0].name);
+          setQuantity(1);
+          setReductionAmount(calculateDamageReduction(items[0].price, 1));
         }
       })
       .catch(() => {})
       .finally(() => setItemsLoading(false));
   }, [id]);
 
+  const handleItemSelect = (item: OrderDetail["items"][number]) => {
+    setSelectedProductId(item.productId);
+    setItemName(item.name);
+    setQuantity(1);
+    setIsManualOverride(false);
+    setReductionAmount(calculateDamageReduction(item.price, 1));
+  };
+
+  const handleQuantityChange = (text: string) => {
+    const qty = parseInt(text, 10);
+    if (isNaN(qty) || qty < 1) {
+      setQuantity(1);
+      if (!isManualOverride) {
+        const selectedItem = orderItems.find((i) => i.productId === selectedProductId);
+        if (selectedItem) {
+          setReductionAmount(calculateDamageReduction(selectedItem.price, 1));
+        }
+      }
+      return;
+    }
+    setQuantity(qty);
+    if (!isManualOverride) {
+      const selectedItem = orderItems.find((i) => i.productId === selectedProductId);
+      if (selectedItem) {
+        setReductionAmount(calculateDamageReduction(selectedItem.price, qty));
+      }
+    }
+  };
+
+  const handleReductionChange = (text: string) => {
+    setIsManualOverride(true);
+    const amount = parseFloat(text);
+    setReductionAmount(isNaN(amount) ? 0 : amount);
+  };
+
   const handleReport = async () => {
     if (!itemName || !reason) return;
     setIsLoading(true);
     try {
       await api.post(`/delivery/orders/${id}/damage`, {
-        items: [{ productId: selectedProductId || "unknown", name: itemName, quantity: 1, reason }],
+        items: [{ productId: selectedProductId || "unknown", name: itemName, quantity, reason, reductionAmount }],
       });
       router.back();
     } catch (error) {
@@ -53,17 +94,35 @@ export default function DamageReportScreen() {
           {orderItems.map((item) => (
             <Pressable
               key={item.id}
-              onPress={() => {
-                setSelectedProductId(item.productId);
-                setItemName(item.name);
-              }}
+              onPress={() => handleItemSelect(item)}
               className={`p-3 rounded-xl mb-2 border ${selectedProductId === item.productId ? "border-red-500 bg-red-50" : "border-slate-200"}`}
             >
               <Text className={`font-sans-medium ${selectedProductId === item.productId ? "text-red-700" : "text-slate-700"}`}>
-                {item.name} × {item.quantity}
+                {item.name} × {item.quantity} — {formatCurrency(item.price)}/unit
               </Text>
             </Pressable>
           ))}
+
+          <Text className="text-sm text-slate-600 mb-2 mt-4">Damaged Quantity</Text>
+          <TextInput
+            value={String(quantity)}
+            onChangeText={handleQuantityChange}
+            keyboardType="numeric"
+            placeholder="1"
+            className="h-12 border border-slate-200 rounded-xl px-4 mb-4"
+          />
+
+          <Text className="text-sm text-slate-600 mb-2">Reduction Amount (₹)</Text>
+          <TextInput
+            value={String(reductionAmount)}
+            onChangeText={handleReductionChange}
+            keyboardType="numeric"
+            placeholder="0"
+            className="h-12 border border-slate-200 rounded-xl px-4 mb-4"
+          />
+          {isManualOverride && (
+            <Text className="text-xs text-amber-600 -mt-3 mb-4">Manually overridden — tap an item to reset</Text>
+          )}
         </>
       ) : (
         <>

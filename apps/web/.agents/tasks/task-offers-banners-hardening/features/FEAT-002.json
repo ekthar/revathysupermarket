@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Swiggy-style offers page redesign - transform app/offers/page.tsx into a coupon-wallet experience with hero section, coupon-ticket cards, tap-to-copy promo codes, filter tabs, countdown timers, and empty state.",
+  "status": "completed",
+  "steps": [
+    "Refactor app/offers/page.tsx into a hybrid server+client architecture: keep data fetching in a server component wrapper, create a new client component components/offers/offers-client.tsx for interactive UI (filter tabs, copy functionality, countdown timers)",
+    "Hero section: Replace the orange gradient with a visually engaging card - bold 'Offers & Deals' heading in Manrope 900 (font-display), subtitle about savings, subtle animated green-tinted gradient pattern (CSS animation, no rainbow), and a 'You saved X this month' personalized stat shown only if user is logged in (pass session status from server component)",
+    "Offer cards as coupon-ticket style: left colored accent strip (green #22C55E for active, neutral-300 for expired), dashed perforation border on one side (CSS border-style: dashed), semi-circular cutout visual on left edge (pure CSS using pseudo-elements with background-color matching the page background), discount value large font green for percentage, 'Auto-applied at checkout' text, countdown timer for offers expiring within 24 hours using the useCountdown hook from lib/hooks/use-countdown.ts, category badge as a pill, offer image as small thumbnail if present",
+    "Promo codes as tap-to-copy chips: bordered card with dashed border, large monospace code text, 'Tap to copy' button (min 44px tap target) that copies via lib/clipboard.ts copyToClipboard(), shows animated checkmark + 'Copied!' state for 2 seconds (use useState with setTimeout), triggers haptic feedback from lib/haptics.ts, minimum order info clearly shown, discount details displayed",
+    "Filter tabs at top: 'All', 'Category Offers', 'Promo Codes' horizontal pills, client-side filtering with state, active state: filled black pill with white text (light mode) / inverted in dark mode (dark:bg-white dark:text-black), rounded-full pills",
+    "Empty state: Lucide icons composed together (Tag + Gift or similar), CTA to browse products as rounded-full button, descriptive text",
+    "Dark mode: All elements must use dark: variants per design system (dark bg #020617, dark surface hsl(222 47% 9%), borders rgba(255,255,255,0.08))",
+    "Accessibility: All interactive elements have aria-labels, tap targets >= 44px (min-h-[44px] min-w-[44px] or h-11), focus-visible rings (focus-visible:ring-2 focus-visible:ring-secondary-500), tabular numbers for prices/timers (tabular-nums class)"
+  ],
+  "acceptance_criteria": [
+    "app/offers/page.tsx is a server component that fetches data and passes to client component",
+    "components/offers/offers-client.tsx is a 'use client' component handling all interactivity",
+    "Filter tabs switch between All/Category Offers/Promo Codes views",
+    "Coupon-ticket cards have visual cutout, dashed border, green accent strip",
+    "Promo code copy works with clipboard API and shows copied state",
+    "Countdown timer shows for offers expiring within 24 hours",
+    "Empty state renders when no offers/codes exist",
+    "All interactive elements have aria-labels and 44px minimum tap targets",
+    "Dark mode works correctly on all elements",
+    "Lint passes: npx eslint app/offers/ components/offers/"
+  ],
+  "verification": [
+    "Run npx eslint app/offers/ components/offers/ --no-error-on-unmatched-pattern",
+    "Run npm run test to confirm no regressions"
+  ],
+  "blocked_reason": null,
+  "findings": "All lint passes cleanly. 63/64 tests pass - the single failure (test 64: production env verification requires Upstash rate limiting configuration) is a pre-existing issue documented in FEAT-001. Created components/offers/offers-client.tsx as the client component with hero section, filter tabs, coupon-ticket offer cards, tap-to-copy promo cards, and empty state. Refactored app/offers/page.tsx into a server component wrapper that serializes Prisma types and passes to client. Added animate-gradient-shift CSS animation to globals.css."
+}

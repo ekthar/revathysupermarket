@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 
 function SkeletonPulse({ className }: { className?: string }) {
   return (
-    <div className={`relative overflow-hidden rounded-lg bg-neutral-100 dark:bg-neutral-800 ${className || ""}`}>
+    <div className={`relative overflow-hidden rounded-2xl bg-neutral-100 dark:bg-neutral-800 ${className || ""}`}>
       <div className="absolute inset-0 -translate-x-full animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/40 dark:via-white/5 to-transparent" />
     </div>
   );

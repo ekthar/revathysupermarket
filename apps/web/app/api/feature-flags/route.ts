@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
+import { revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/api-auth";
 import { z } from "zod";
@@ -61,6 +62,61 @@ export async function PUT(request: Request) {
     data: updateData,
     select: { key: true, enabled: true, config: true },
   });
+
+  // Sync store_open_hours config to the Setting table so that
+  // isStoreCurrentlyOpen() uses the correct times.
+  if (key === "store_open_hours") {
+    const flagConfig = (config ?? existing.config) as Record<string, unknown> | null;
+    const operations: Array<ReturnType<typeof prisma.setting.upsert>> = [];
+
+    if (flagConfig?.open && typeof flagConfig.open === "string") {
+      operations.push(
+        prisma.setting.upsert({
+          where: { key: "storeOpenTime" },
+          update: { value: flagConfig.open },
+          create: { key: "storeOpenTime", value: flagConfig.open },
+        })
+      );
+    }
+    if (flagConfig?.close && typeof flagConfig.close === "string") {
+      operations.push(
+        prisma.setting.upsert({
+          where: { key: "storeCloseTime" },
+          update: { value: flagConfig.close },
+          create: { key: "storeCloseTime", value: flagConfig.close },
+        })
+      );
+    }
+    // If autoToggle is enabled, also update the isStoreOpen setting based on current time
+    if (flagConfig?.autoToggle === true) {
+      const now = new Date();
+      const istTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+      const hours = istTime.getHours();
+      const minutes = istTime.getMinutes();
+      const currentMinutes = hours * 60 + minutes;
+
+      const openStr = (flagConfig.open as string) || "08:00";
+      const closeStr = (flagConfig.close as string) || "21:00";
+      const [openH, openM] = openStr.split(":").map(Number);
+      const [closeH, closeM] = closeStr.split(":").map(Number);
+      const openMinutes = openH * 60 + openM;
+      const closeMinutes = closeH * 60 + closeM;
+
+      const shouldBeOpen = currentMinutes >= openMinutes && currentMinutes < closeMinutes;
+      operations.push(
+        prisma.setting.upsert({
+          where: { key: "isStoreOpen" },
+          update: { value: String(shouldBeOpen) },
+          create: { key: "isStoreOpen", value: String(shouldBeOpen) },
+        })
+      );
+    }
+
+    if (operations.length > 0) {
+      await prisma.$transaction(operations);
+      revalidateTag("store-settings");
+    }
+  }
 
   return NextResponse.json({ flag: updated });
 }

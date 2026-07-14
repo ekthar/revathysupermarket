@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   Apple,
   LeafyGreen,
@@ -63,7 +63,7 @@ export const AnimatedCategories = memo(function AnimatedCategories({
           <h2 className="section-title">Popular Categories</h2>
           <Link href="/products" className="show-all-pill text-sm">
             Show All
-            <ChevronUp className="h-3.5 w-3.5" />
+            <ChevronRight className="h-3.5 w-3.5" />
           </Link>
         </div>
 

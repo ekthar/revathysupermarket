@@ -79,7 +79,7 @@ const LazyProductCard = memo(function LazyProductCard({ product }: { product: Pr
 
   if (!isVisible) {
     // Placeholder with same dimensions to avoid layout shift
-    return <div ref={ref} className="aspect-[3/4] rounded-lg bg-neutral-50 dark:bg-neutral-900 animate-pulse" />;
+    return <div ref={ref} className="aspect-[3/4] rounded-2xl bg-neutral-50 dark:bg-neutral-900 animate-pulse" />;
   }
 
   return (

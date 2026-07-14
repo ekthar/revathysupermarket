@@ -108,7 +108,7 @@ export default async function HomePage() {
   const heroHref = banner?.href || "/products";
 
   return (
-    <main className="min-h-screen bg-white dark:bg-neutral-950">
+    <main className="min-h-screen bg-[#F7F7FA] dark:bg-[#020617]">
       {/* Location prompt — shown on first visit if no saved location */}
       <LocationPrompt />
 
@@ -149,6 +149,7 @@ export default async function HomePage() {
           showCategoryPills
           categoryPills={categories.slice(0, 6)}
           categories={categories}
+          layout="mixed"
         />
       </div>
 

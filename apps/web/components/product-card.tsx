@@ -65,14 +65,14 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
             onTouchStart={outOfStock ? undefined : preload.onTouchStart}
           >
-            <h3 className="text-body font-bold text-neutral-800 leading-snug line-clamp-1">
+            <h3 className="text-body font-bold text-neutral-800 dark:text-neutral-100 leading-snug line-clamp-1">
               {product.name}
             </h3>
             <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pick"}</p>
             {product.avgRating && product.avgRating > 0 && (
               <div className="flex items-center gap-1 mt-0.5">
                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                <span className="text-micro font-bold text-neutral-600">{product.avgRating.toFixed(1)}</span>
+                <span className="text-micro font-bold text-neutral-600 dark:text-neutral-400">{product.avgRating.toFixed(1)}</span>
                 {product.reviewCount && product.reviewCount > 0 && (
                   <span className="text-micro text-neutral-400">({product.reviewCount})</span>
                 )}
@@ -80,7 +80,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             )}
           </Link>
           <div className="flex items-center gap-1 mt-1.5">
-            <span className="text-title font-black text-neutral-900">{formatCurrency(price)}</span>
+            <span className="text-title font-black text-neutral-900 dark:text-white">{formatCurrency(price)}</span>
             <span className="text-micro text-neutral-400 font-medium">/ {product.unit || "per kg"}</span>
           </div>
         </div>
@@ -98,7 +98,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       whileTap={tapScale.subtle}
       transition={springs.snappy}
       className={cn(
-        "relative overflow-hidden rounded-lg bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated shadow-elevation-1",
+        "relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated shadow-elevation-1",
         outOfStock && "opacity-50"
       )}
     >
@@ -153,14 +153,14 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
           onTouchStart={outOfStock ? undefined : preload.onTouchStart}
         >
           <h3 className={cn(
-            "font-semibold text-neutral-800 leading-snug line-clamp-2",
+            "font-semibold text-neutral-800 dark:text-neutral-100 leading-snug line-clamp-2",
             compact ? "text-caption" : "text-body"
           )}>{product.name}</h3>
           <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pack"}</p>
           {product.avgRating && product.avgRating > 0 && (
             <div className="flex items-center gap-1 mt-0.5">
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="text-micro font-bold text-neutral-600">{product.avgRating.toFixed(1)}</span>
+              <span className="text-micro font-bold text-neutral-600 dark:text-neutral-400">{product.avgRating.toFixed(1)}</span>
               {product.reviewCount && product.reviewCount > 0 && (
                 <span className="text-micro text-neutral-400">({product.reviewCount})</span>
               )}
@@ -170,7 +170,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
 
         <div className="flex items-end justify-between mt-2.5 gap-1">
           <div>
-            <span className={cn("font-black text-neutral-900", compact ? "text-body" : "text-title")}>{formatCurrency(price)}</span>
+            <span className={cn("font-black text-neutral-900 dark:text-white", compact ? "text-body" : "text-title")}>{formatCurrency(price)}</span>
             <span className="text-micro text-neutral-400 ml-0.5 font-medium">/ {product.unit || "per kg"}</span>
             {product.discountPrice && (
               <span className="ml-1.5 text-micro text-neutral-400 line-through">{formatCurrency(product.price)}</span>

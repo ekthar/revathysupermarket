@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronUp, Bike } from "lucide-react";
+import { ChevronRight, Bike } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 import { useRef } from "react";
@@ -49,7 +49,7 @@ export function HeroSection({
   return (
     <>
       {/* Desktop Hero */}
-      <section ref={desktopRef} className="hidden md:block relative overflow-hidden bg-white dark:bg-neutral-950">
+      <section ref={desktopRef} className="hidden md:block relative overflow-hidden bg-[#F7F7FA] dark:bg-[#020617]">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
           <div className="grid grid-cols-2 gap-8 items-center">
             {/* Left: text */}
@@ -75,7 +75,7 @@ export function HeroSection({
                   className="show-all-pill inline-flex"
                 >
                   Shop Now
-                  <ChevronUp className="h-4 w-4 rotate-90" />
+                  <ChevronRight className="h-4 w-4" />
                 </Link>
               </div>
 

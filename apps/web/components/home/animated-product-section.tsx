@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ChevronUp } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
@@ -119,7 +119,7 @@ export function AnimatedProductSection({
             </div>
             <Link href="/products" className="show-all-pill text-xs md:text-sm">
               Show All
-              <ChevronUp className="h-3 w-3 md:h-3.5 md:w-3.5" />
+              <ChevronRight className="h-3 w-3 md:h-3.5 md:w-3.5" />
             </Link>
           </div>
           {subtitle && (

@@ -60,7 +60,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     .slice(0, 6);
 
   return (
-    <main className="min-h-screen bg-white dark:bg-neutral-950">
+    <main className="min-h-screen bg-[#F7F7FA] dark:bg-[#020617]">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{

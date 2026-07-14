@@ -16,6 +16,7 @@ import { publishNewOrder, publishOrderStatusChanged } from "@/lib/realtime/event
 import { sendPushToUser } from "@/lib/push";
 import { sendFcmToAdmins } from "@/lib/fcm-admin";
 import { sendOrderConfirmationEmail } from "@/lib/email";
+import { notifyOrderSms } from "@/lib/sms/notify-order";
 
 function orderNumber() {
   const date = new Date();
@@ -164,6 +165,11 @@ export async function POST(request: Request) {
         })),
         total: Number(order!.total),
         deliveryAddress: orderAddress,
+      }),
+      // Send order confirmation SMS (fire-and-forget, checks feature flag internally)
+      notifyOrderSms("confirmed", order!.phone, {
+        orderNumber: order!.orderNumber,
+        total: Number(order!.total),
       }),
     ]);
 

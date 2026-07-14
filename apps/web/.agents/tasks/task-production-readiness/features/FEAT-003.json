@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "SMS notification templates and order lifecycle integration using existing sms_enabled flag and lib/sms.ts",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create lib/sms/templates.ts - SMS message template functions: orderConfirmed(orderNumber, total, eta), orderDispatched(orderNumber, riderName), orderDelivered(orderNumber). Each returns a short SMS string.",
     "Create lib/sms/notify-order.ts - Helper that checks sms_enabled feature flag via isFeatureEnabled('sms_enabled'), then sends appropriate SMS using existing lib/sms.ts sendSms function. Exports notifyOrderSms(event, phone, data) where event is 'confirmed'|'dispatched'|'delivered'. Fire-and-forget, catches all errors.",

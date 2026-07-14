@@ -4,7 +4,7 @@ import { useLocalSearchParams, router, Stack } from "expo-router";
 import { Truck } from "lucide-react-native";
 import { api } from "@/services/api";
 import type { OrderDetail } from "@msm/shared/types";
-import { formatCurrency, formatDateTime } from "@msm/shared/utils";
+import { formatCurrency, formatDateTime, formatRelativeTime } from "@msm/shared/utils";
 import { STATUS_LABELS } from "@msm/shared/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -70,6 +70,11 @@ export default function OrderDetailScreen() {
               {STATUS_LABELS[order.status as keyof typeof STATUS_LABELS]}
             </Badge>
           </View>
+          {order.updatedAt && (
+            <Text className="text-micro text-neutral-400 mt-2">
+              Last updated: {formatRelativeTime(order.updatedAt)}
+            </Text>
+          )}
         </View>
 
         {/* Track Order Button */}

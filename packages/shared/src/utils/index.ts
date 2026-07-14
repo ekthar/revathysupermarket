@@ -1,5 +1,29 @@
 import { LOCATION_CONSTANTS, CART_CONSTANTS, LOYALTY_TIERS } from "../constants";
 
+export {
+  canDeleteAddress,
+  validateAddressForm,
+  isPaymentMethodValid,
+  calculateDamageReduction,
+  COLLECTION_PAYMENT_METHODS,
+} from "./address-payment-validations";
+
+export type {
+  CollectionPaymentMethod,
+  AddressFormData,
+  AddressValidationErrors,
+  AddressValidationResult,
+} from "./address-payment-validations";
+
+// Re-export order helper utilities
+export {
+  isDeliveryEtaVisible,
+  canRevertStatus,
+  shouldShowBilledBadge,
+  shouldShowPackingBadge,
+  formatQuantityWithUnit,
+} from "./order-helpers";
+
 // ============================================
 // Haversine Distance Calculation
 // ============================================
@@ -121,6 +145,26 @@ export function formatDateTime(dateString: string): string {
     hour: "2-digit",
     minute: "2-digit",
   });
+}
+
+export function formatRelativeTime(dateString: string): string {
+  const now = Date.now();
+  const then = new Date(dateString).getTime();
+  const diffMs = now - then;
+
+  if (diffMs < 0) return "just now";
+
+  const diffSeconds = Math.floor(diffMs / 1000);
+  if (diffSeconds < 60) return "just now";
+
+  const diffMinutes = Math.floor(diffSeconds / 60);
+  if (diffMinutes < 60) return `${diffMinutes} ${diffMinutes === 1 ? "minute" : "minutes"} ago`;
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) return `${diffHours} ${diffHours === 1 ? "hour" : "hours"} ago`;
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays} ${diffDays === 1 ? "day" : "days"} ago`;
 }
 
 export function getGreeting(): string {

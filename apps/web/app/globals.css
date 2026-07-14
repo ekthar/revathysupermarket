@@ -401,6 +401,7 @@ html[data-keyboard-open] .pb-safe {
   border-radius: 9999px;
   background: rgb(var(--color-primary));
   color: white;
+  border: 1px solid transparent;
   box-shadow: 0 8px 24px -8px rgba(var(--shadow-color), 0.35);
   width: 100%;
   text-decoration: none;

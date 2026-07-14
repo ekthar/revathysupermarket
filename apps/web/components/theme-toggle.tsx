@@ -46,7 +46,7 @@ export function ThemeToggleIcon() {
   return (
     <button
       onClick={toggle}
-      className="relative flex h-10 w-10 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 press transition-colors"
+      className="relative flex h-11 w-11 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 press transition-colors"
       aria-label={mounted ? (isDark ? "Switch to light mode" : "Switch to dark mode") : "Toggle theme"}
     >
       {mounted ? (

@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Redesign the floating cart bar to be a premium, stable mobile component that does not overlap with bottom navigation, uses capsule shape, has proper dark mode, and handles all edge cases (long names, large totals, route transitions).",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "In apps/web/components/cart/floating-cart-bar.tsx: Redesign the component with these changes: (a) Leading section: cart/bag icon inside a circular container with green tint (bg-secondary-100 dark:bg-secondary-900/40 with secondary-colored icon). (b) Center section: item count in bold, product summary truncated with min-w-0 and truncate classes. (c) Trailing section: subtotal with tabular-nums font-variant and ChevronRight. (d) Overall shape: rounded-full capsule. (e) Light mode: bg-primary (#050505) text white with restrained shadow (shadow-elevation-3). (f) Dark mode: bg-[#0f172a] with border border-white/10, no glow. (g) Ensure text never wraps - use flex with min-w-0 and truncate on variable-length text. (h) Keep Framer Motion enter/exit with springs.snappy, add whileTap={tapScale.primary}. (i) Keep haptic('light') on click. (j) Add aria-label with item count and subtotal.",
     "In apps/web/app/globals.css: Update .floating-cart-wrapper positioning: change bottom from 'calc(5.25rem + var(--safe-bottom))' to 'calc(var(--mobile-nav-height) + 0.75rem + var(--safe-bottom))' to ensure clear gap above bottom nav. Ensure width is 'calc(100% - 2rem)' and max-width is 400px. Verify z-index is between bottom nav (70) and toast (80) - use z-index: 60 (var(--z-floating)).",

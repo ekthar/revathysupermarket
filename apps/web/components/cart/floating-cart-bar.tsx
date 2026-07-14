@@ -6,7 +6,7 @@ import { ShoppingBag, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
-import { springs } from "@/lib/motion";
+import { springs, tapScale } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";
 
 const HIDDEN_PREFIXES = [
@@ -22,8 +22,9 @@ const HIDDEN_PREFIXES = [
 ];
 
 /**
- * Always-visible "View cart" bar on browse surfaces (home, products, offers, account).
- * Hidden on cart/checkout and when the cart is empty.
+ * Premium floating cart summary bar -- mobile only.
+ * Positioned above the bottom navigation with a clear gap.
+ * Hidden on cart/checkout/admin routes and when the cart is empty.
  */
 export function FloatingCartBar() {
   const pathname = usePathname();
@@ -44,32 +45,41 @@ export function FloatingCartBar() {
           exit={{ opacity: 0, y: 16, scale: 0.96 }}
           transition={springs.snappy}
         >
-          <Link
-            href="/cart"
-            data-cart-icon
-            onClick={() => haptic("light")}
-            className="floating-cart-bar press"
-            aria-label={`View cart, ${totalItems} items, ${formatCurrency(subtotal)}`}
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/15">
-                <ShoppingBag className="h-4 w-4" />
-              </span>
-              <div className="min-w-0">
-                <p className="text-xs font-bold leading-tight">
-                  {totalItems} item{totalItems === 1 ? "" : "s"}
-                </p>
-                <p className="text-[11px] font-medium text-white/75 truncate">
-                  {items.slice(0, 2).map((i) => i.name).join(", ")}
-                  {items.length > 2 ? ` +${items.length - 2}` : ""}
-                </p>
+          <motion.div whileTap={tapScale.primary} transition={springs.tap}>
+            <Link
+              href="/cart"
+              data-cart-icon
+              onClick={() => haptic("light")}
+              className="floating-cart-bar"
+              aria-label={`View cart, ${totalItems} item${totalItems === 1 ? "" : "s"}, subtotal ${formatCurrency(subtotal)}`}
+            >
+              {/* Leading: green-tinted circular icon */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-500/20 dark:bg-emerald-500/15">
+                  <ShoppingBag className="h-4 w-4 text-emerald-400" />
+                </span>
+
+                {/* Center: item count + product summary */}
+                <div className="min-w-0">
+                  <p className="text-xs font-bold leading-tight text-white">
+                    {totalItems} item{totalItems === 1 ? "" : "s"}
+                  </p>
+                  <p className="text-[11px] font-medium text-white/70 truncate max-w-[140px]">
+                    {items.slice(0, 2).map((i) => i.name).join(", ")}
+                    {items.length > 2 ? ` +${items.length - 2}` : ""}
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-1.5 shrink-0 pl-2">
-              <span className="text-sm font-black tabular-nums">{formatCurrency(subtotal)}</span>
-              <ChevronRight className="h-4 w-4 opacity-80" />
-            </div>
-          </Link>
+
+              {/* Trailing: subtotal + chevron */}
+              <div className="flex items-center gap-1 shrink-0 pl-2">
+                <span className="text-sm font-black text-white tabular-nums">
+                  {formatCurrency(subtotal)}
+                </span>
+                <ChevronRight className="h-4 w-4 text-white/80" />
+              </div>
+            </Link>
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

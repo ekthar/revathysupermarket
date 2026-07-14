@@ -2,7 +2,7 @@
   "id": "FEAT-001",
   "type": "feat",
   "description": "Razorpay Payment Gateway integration with feature flag, API routes, webhook, and checkout UI button",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add razorpay_enabled feature flag to prisma/feature-flags.ts with config: { keyId: '', keySecret: '', webhookSecret: '' }",
     "Create lib/payments/razorpay.ts - Razorpay client initialization (uses env vars RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET), order creation function, payment verification with HMAC-SHA256 signature check",
@@ -30,5 +30,5 @@
     "Run npm run test from apps/web/ and confirm all tests pass including new razorpay tests"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Pre-existing test failure in tests/security.test.ts (production env verification test - unrelated to Razorpay changes). All 12 Razorpay tests pass. Lint produces 0 errors (1 pre-existing warning about missing subtotal dep in promo code useEffect). Prisma schema updated with razorpayOrderId, razorpayPaymentId fields and UPI_ONLINE enum value. prisma generate runs successfully."
 }

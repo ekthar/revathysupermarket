@@ -1,6 +1,6 @@
 # FEAT-008: Real-time Order Tracking Enhancement
 
-## Status: in_progress
+## Status: completed
 
 ## Description
 Enhance the existing SSE-based order tracking with a more detailed 7-step timeline and enhanced rider info card with distance display.

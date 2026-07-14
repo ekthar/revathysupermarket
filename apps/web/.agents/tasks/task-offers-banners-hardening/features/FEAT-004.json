@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "fix",
   "description": "Address semantic review findings: fix countdown interval locking, remove hardcoded savings stat, fix carousel image priority, add carousel ARIA landmarks.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Fix lib/hooks/use-countdown.ts: Remove conditional intervalMs logic, always use 1-second interval",
     "Fix components/offers/offers-client.tsx: Replace hardcoded 'You saved ₹230 this month' with a generic motivational line",
@@ -22,5 +22,5 @@
     "Run npm run test"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 4 review issues addressed. Lint passes with 0 errors. Tests: 63/64 pass (1 pre-existing Upstash env config failure, documented in FEAT-001/002/003)."
 }

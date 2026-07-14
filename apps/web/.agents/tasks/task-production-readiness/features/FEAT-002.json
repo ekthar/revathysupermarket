@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Transactional Email via Resend with feature flag, email templates, and integration into order lifecycle",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Add email_enabled feature flag to prisma/feature-flags.ts with config: { provider: 'resend', fromEmail: 'orders@store.com', fromName: 'Revathy Supermarket' }",
     "Create lib/email/resend.ts - Resend API client that sends emails via fetch to https://api.resend.com/emails using RESEND_API_KEY env var. No npm package.",
@@ -25,5 +25,5 @@
     "Run npm run test from apps/web/ and confirm email template tests pass"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All 9 email template tests pass. Lint is clean (0 errors). Pre-existing test failure in tests/security.test.ts (production env verification - unrelated, same as FEAT-001). The order items in Prisma schema use 'name' field (not 'productName'). Email integration uses session.user.email which may be empty string if user has no email - the email service handles this gracefully by checking flag first."
 }

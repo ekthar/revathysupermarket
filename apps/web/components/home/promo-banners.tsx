@@ -135,18 +135,22 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
 
       {/* Dot indicators */}
       {slideCount > 1 && (
-        <div className="flex items-center justify-center gap-1.5 mt-3">
+        <div className="flex items-center justify-center mt-1">
           {Array.from({ length: slideCount }).map((_, index) => (
             <button
               key={index}
-              className={`rounded-full transition-all duration-300 ${
-                index === selectedIndex
-                  ? "w-6 h-2 bg-secondary-500"
-                  : "w-2 h-2 bg-neutral-300 dark:bg-neutral-600"
-              }`}
+              className="flex items-center justify-center min-h-[44px] min-w-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500 rounded-full"
               aria-label={`Go to slide ${index + 1}`}
               onClick={() => scrollTo(index)}
-            />
+            >
+              <span
+                className={`rounded-full transition-all duration-300 ${
+                  index === selectedIndex
+                    ? "w-6 h-2 bg-secondary-500"
+                    : "w-2 h-2 bg-neutral-300 dark:bg-neutral-600"
+                }`}
+              />
+            </button>
           ))}
         </div>
       )}

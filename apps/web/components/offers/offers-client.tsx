@@ -236,11 +236,11 @@ function OfferCard({
     >
       {/* Semi-circular cutouts - ticket tear effect */}
       <div
-        className="absolute left-[3px] top-[-6px] w-3 h-3 rounded-full bg-[#F7F7FA] dark:bg-[#020617] z-10"
+        className="absolute left-[3px] top-[-6px] w-3 h-3 rounded-full bg-background z-10"
         aria-hidden="true"
       />
       <div
-        className="absolute left-[3px] bottom-[-6px] w-3 h-3 rounded-full bg-[#F7F7FA] dark:bg-[#020617] z-10"
+        className="absolute left-[3px] bottom-[-6px] w-3 h-3 rounded-full bg-background z-10"
         aria-hidden="true"
       />
 

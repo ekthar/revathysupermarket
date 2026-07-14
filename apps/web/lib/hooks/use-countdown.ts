@@ -44,7 +44,15 @@ export function useCountdown(endDate: Date | string): CountdownResult {
 
   const getTimeLeft = useCallback(() => calculateTimeLeft(target.current), []);
 
-  const [timeLeft, setTimeLeft] = useState<CountdownResult>(getTimeLeft);
+  // Initialize with zero placeholder to avoid hydration mismatch.
+  // Date.now() differs between SSR and client, so we compute the real value
+  // only inside the effect on the client.
+  const [timeLeft, setTimeLeft] = useState<CountdownResult>({
+    hours: 0,
+    minutes: 0,
+    seconds: 0,
+    isExpired: false,
+  });
 
   useEffect(() => {
     // Calculate initial state

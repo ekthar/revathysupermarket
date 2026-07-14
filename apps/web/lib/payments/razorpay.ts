@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 /**
  * Razorpay payment gateway utilities.
@@ -86,7 +86,12 @@ export function verifyPaymentSignature(params: {
   const expectedSignature = createHmac("sha256", keySecret)
     .update(body)
     .digest("hex");
-  return expectedSignature === params.razorpaySignature;
+
+  // Use timing-safe comparison to prevent timing side-channel attacks
+  const expected = Buffer.from(expectedSignature, "hex");
+  const actual = Buffer.from(params.razorpaySignature, "hex");
+  if (expected.length !== actual.length) return false;
+  return timingSafeEqual(expected, actual);
 }
 
 /**
@@ -102,7 +107,12 @@ export function verifyWebhookSignature(params: {
   const expectedSignature = createHmac("sha256", webhookSecret)
     .update(params.body)
     .digest("hex");
-  return expectedSignature === params.signature;
+
+  // Use timing-safe comparison to prevent timing side-channel attacks
+  const expected = Buffer.from(expectedSignature, "hex");
+  const actual = Buffer.from(params.signature, "hex");
+  if (expected.length !== actual.length) return false;
+  return timingSafeEqual(expected, actual);
 }
 
 /**

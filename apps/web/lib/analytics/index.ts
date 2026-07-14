@@ -8,6 +8,13 @@
  * Client-side initialization is gated by:
  *  - NEXT_PUBLIC_POSTHOG_KEY env var being present
  *  - NEXT_PUBLIC_POSTHOG_HOST env var being present
+ *
+ * Design note: Analytics is intentionally gated by env vars rather than the
+ * database-backed `analytics_enabled` feature flag. Client-side code cannot
+ * make async server calls before deciding whether to load the PostHog script.
+ * Env-var gating is the simplest approach for client components and avoids a
+ * server-side flag fetch on every page load. To fully disable analytics, remove
+ * or unset the NEXT_PUBLIC_POSTHOG_* env vars at deploy time.
  */
 
 import * as posthog from "./posthog";

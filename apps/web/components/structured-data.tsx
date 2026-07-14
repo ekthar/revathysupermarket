@@ -13,7 +13,11 @@ export function StructuredData({ data }: StructuredDataProps) {
         <script
           key={index}
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+          dangerouslySetInnerHTML={{
+            // Escape closing script tags to prevent XSS when product data
+            // contains "</script>" sequences from admin input.
+            __html: JSON.stringify(schema).replace(/</g, "\\u003c"),
+          }}
         />
       ))}
     </>

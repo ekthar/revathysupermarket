@@ -12,10 +12,12 @@ import { verifyWebhookSignature } from "@/lib/payments/razorpay";
  */
 export async function POST(request: Request) {
   try {
-    // Feature flag check
+    // Feature flag check: when disabled, acknowledge the webhook with 200 to
+    // prevent Razorpay from retrying. Payments already in flight should not be
+    // blocked by a flag that gates new payment initiation.
     const razorpayEnabled = await isFeatureEnabled("razorpay_enabled");
     if (!razorpayEnabled) {
-      return NextResponse.json({ error: "Webhook not active" }, { status: 400 });
+      return NextResponse.json({ status: "ok", note: "Feature disabled, event acknowledged" });
     }
 
     // Read raw body for signature verification

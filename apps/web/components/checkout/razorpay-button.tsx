@@ -77,6 +77,11 @@ function loadRazorpayScript(): Promise<void> {
       `script[src="${RAZORPAY_SCRIPT_URL}"]`
     );
     if (existing) {
+      // Script element exists; check if it already finished loading
+      if (window.Razorpay) {
+        resolve();
+        return;
+      }
       existing.addEventListener("load", () => resolve());
       existing.addEventListener("error", () =>
         reject(new Error("Failed to load Razorpay script"))

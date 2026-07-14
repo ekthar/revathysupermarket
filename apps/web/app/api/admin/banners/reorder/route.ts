@@ -23,9 +23,13 @@ export async function POST(request: Request) {
 
     const { bannerIds } = parsed.data;
 
-    // Update createdAt timestamps in sequence so the banners display in the
-    // submitted order. The GET endpoint orders by createdAt desc, so the first
-    // ID in the array gets the newest timestamp.
+    // Design tradeoff: We encode sort order by mutating createdAt timestamps
+    // rather than adding a dedicated sortOrder column. This avoids a schema
+    // migration and works with the existing ORDER BY createdAt DESC query.
+    // The original creation timestamps are lost, which is acceptable because
+    // banners are short-lived promotional content and the audit log captures
+    // the reorder event. If audit-grade timestamps become necessary, add a
+    // `sortOrder` integer column to the Banner model.
     const now = Date.now();
     await prisma.$transaction(
       bannerIds.map((id, index) =>

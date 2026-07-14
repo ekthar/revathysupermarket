@@ -2,6 +2,12 @@
  * Email service abstraction.
  * Checks the email_enabled feature flag before sending.
  * All functions are fire-and-forget: they catch errors, log them, and never throw.
+ *
+ * Design note: No retry or dead-letter mechanism is implemented. At current
+ * scale, transient failures are rare and acceptable to lose -- they appear in
+ * server logs for manual follow-up. If delivery guarantees become critical,
+ * introduce a job queue (e.g., database-backed outbox pattern) rather than
+ * adding retry loops inside these request-scoped helpers.
  */
 
 import { getFeatureFlag } from "@/lib/feature-flags";

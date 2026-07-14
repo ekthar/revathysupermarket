@@ -11,6 +11,8 @@ import { router, Stack } from "expo-router";
 import { api } from "@/services/api";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
+import { showToast } from "@/components/ui/Toast";
+import { validateAddressForm } from "@msm/shared/utils/address-payment-validations";
 
 const LABELS = ["Home", "Work", "Other"];
 
@@ -25,13 +27,17 @@ export default function AddAddressScreen() {
 
   const handleSave = async () => {
     setErrors({});
-    const fieldErrors: Record<string, string> = {};
-    if (!houseName.trim()) fieldErrors.houseName = "Required";
-    if (!street.trim()) fieldErrors.street = "Required";
-    if (!pincode.trim() || pincode.length < 6) fieldErrors.pincode = "Enter valid 6-digit pincode";
 
-    if (Object.keys(fieldErrors).length > 0) {
-      setErrors(fieldErrors);
+    // Validate using shared utility
+    const validation = validateAddressForm({
+      houseName: houseName.trim(),
+      street: street.trim(),
+      landmark: landmark.trim(),
+      pincode: pincode.trim(),
+    });
+
+    if (!validation.valid) {
+      setErrors(validation.errors as Record<string, string>);
       return;
     }
 
@@ -46,6 +52,7 @@ export default function AddAddressScreen() {
         latitude: 8.644361,
         longitude: 76.843472,
       });
+      showToast("Address saved successfully.", "success");
       router.back();
     } catch (e: any) {
       setErrors({ form: e.response?.data?.error || "Failed to save address" });
@@ -104,10 +111,11 @@ export default function AddAddressScreen() {
           />
 
           <Input
-            label="Landmark (optional)"
+            label="Landmark"
             value={landmark}
             onChangeText={setLandmark}
             placeholder="e.g. Near City Mall"
+            error={errors.landmark}
             className="mb-4"
           />
 

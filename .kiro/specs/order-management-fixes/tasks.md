@@ -92,7 +92,7 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
 - [x] 3. Checkpoint - Ensure shared utilities and API tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 4. Implement web admin UI fixes
+- [x] 4. Implement web admin UI fixes
   - [x] 4.1 Create customer order history page
     - New page at `apps/web/app/admin/customers/[id]/orders/page.tsx`
     - Server component fetching customer orders with aggregates
@@ -131,20 +131,20 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - Ensure Product `unit` field is included in the order item query
     - _Requirements: 6.1, 6.2_
 
-  - [-] 4.7 Create single consolidated print view
+  - [x] 4.7 Create single consolidated print view
     - New route at `apps/web/app/admin/orders/[id]/print/page.tsx`
     - Consolidate: order number, date, customer info, delivery address, items with qty/unit/price, totals, payment method, bill number, status
     - Open in single new tab, auto-invoke `window.print()` on load
     - Print button in order detail opens this route via `window.open`
     - _Requirements: 8.1, 8.2, 8.3, 8.4_
 
-  - [-] 4.8 Fix Billed and Packing status badges in order list
+  - [x] 4.8 Fix Billed and Packing status badges in order list
     - Modify `apps/web/components/admin/orders/order-list.tsx`
     - Use `shouldShowBilledBadge(order)` and `shouldShowPackingBadge(order)`
     - Render "Billed" badge in green/teal, "Packing" badge in amber/orange with distinct styling
     - _Requirements: 9.1, 9.2, 9.3_
 
-  - [-] 4.9 Display "Updated Last Time" on web customer order status page
+  - [x] 4.9 Display "Updated Last Time" on web customer order status page
     - Modify `apps/web/components/tracking/order-timeline.tsx`
     - Display `order.updatedAt` formatted as relative time (e.g., "Last updated: 5 minutes ago")
     - _Requirements: 10.1, 10.2_
@@ -161,20 +161,20 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - Only the customer-facing view should show active OTP for delivery verification
     - _Requirements: 13 (updated — OTP expiry visibility)_
 
-  - [~] 4.12 Create Payment Collection Modal with method selection
+  - [x] 4.12 Create Payment Collection Modal with method selection
     - New component at `apps/web/components/admin/payment-collection-modal.tsx`
     - Display UPI, Cash, Card options when "Received Full" is clicked
     - Require exactly one method selected before enabling confirm button
     - On confirm, call payment-received API endpoint
     - _Requirements: 17.1, 17.2, 17.3, 17.4_
 
-  - [~] 4.13 Fix bill number input with duplication check
+  - [x] 4.13 Fix bill number input with duplication check
     - Modify bill number entry in order detail
     - On submit, call bill number API that checks uniqueness
     - Display error "Bill number already in use. Please enter a unique bill number." on duplicates
     - _Requirements: 15.1, 15.2, 15.3_
 
-- [~] 5. Checkpoint - Ensure web admin fixes work correctly
+- [-] 5. Checkpoint - Ensure web admin fixes work correctly
   - Ensure all tests pass, ask the user if questions arise.
 
 - [ ] 6. Implement mobile app fixes
@@ -189,24 +189,24 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - Map AWAITING_CUSTOMER_APPROVAL status to "Customer Awaiting Approval" label
     - _Requirements: 7.3_
 
-  - [~] 6.3 Display approval notification in mobile customer app
+  - [x] 6.3 Display approval notification in mobile customer app
     - When order transitions to AWAITING_CUSTOMER_APPROVAL, show notification to customer
     - Prompt customer to review and approve/reject substitution
     - _Requirements: 7.4_
 
-  - [-] 6.4 Display "Updated Last Time" in mobile customer order tracking
+  - [x] 6.4 Display "Updated Last Time" in mobile customer order tracking
     - Modify `apps/mobile-customer/app/(tabs)/orders/[id].tsx`
     - Show `updatedAt` formatted as relative time on order tracking screen
     - _Requirements: 10.1_
 
-  - [~] 6.5 Implement address edit and default deletion prevention
+  - [x] 6.5 Implement address edit and default deletion prevention
     - Modify `apps/mobile-customer/app/(tabs)/account/addresses.tsx`
     - Add "Edit" button on each address card navigating to editable form pre-populated with existing data
     - Disable/hide delete button for addresses where `isDefault` is true
     - Show error: "Default address cannot be deleted. Set another address as default first."
     - _Requirements: 12.1, 12.2, 12.3, 12.4_
 
-  - [~] 6.6 Implement address form validation with toast notification
+  - [x] 6.6 Implement address form validation with toast notification
     - Add validation to address form: houseName, street, landmark, pincode must be non-empty
     - Show field-level error messages for empty required fields
     - Prevent form submission when validation fails
@@ -220,7 +220,7 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - Allow manual override of the auto-populated amount
     - _Requirements: 16.1, 16.2, 16.3_
 
-  - [~] 6.8 Fix delivery boy cash collection UI — button visibility layout fix
+  - [x] 6.8 Fix delivery boy cash collection UI — button visibility layout fix
     - Modify the delivery app payment collection screen layout
     - Fix layout so that "Cash Collected" button at the bottom is NOT hidden/blocked by the cash/UPI input section
     - Ensure the button is always visible and accessible regardless of input section state
@@ -234,16 +234,16 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - **Validates: Requirements 12, 14, 16**
 
 - [ ] 7. Integration and wiring
-  - [~] 7.1 Wire customer order history page into admin navigation
+  - [-] 7.1 Wire customer order history page into admin navigation
     - Add link from customer list/profile to `/admin/customers/[id]/orders`
     - Ensure breadcrumbs and navigation work correctly
     - _Requirements: 1.1, 1.2_
 
-  - [~] 7.2 Wire staff report page into admin reports navigation
+  - [-] 7.2 Wire staff report page into admin reports navigation
     - Add navigation entry for Staff Report in admin reports section
     - _Requirements: 2.1_
 
-  - [~] 7.3 Wire Payment Collection Modal into order detail payment section
+  - [-] 7.3 Wire Payment Collection Modal into order detail payment section
     - Replace direct "Received Full" action with modal trigger
     - Connect modal confirmation to payment-received API endpoint
     - _Requirements: 17.1_

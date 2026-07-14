@@ -15,6 +15,7 @@ import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { ThemeColorSync } from "@/components/theme-color-sync";
 import { QueryProvider } from "@/components/query-provider";
 import { MotionConfig } from "framer-motion";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 
 export function Providers({ children, session }: { children: React.ReactNode; session?: Session | null }) {
   return (
@@ -26,7 +27,9 @@ export function Providers({ children, session }: { children: React.ReactNode; se
             <ToastProvider>
               <CartProvider>
                 <FlyToCartProvider>
-                  {children}
+                  <AnalyticsProvider>
+                    {children}
+                  </AnalyticsProvider>
                 </FlyToCartProvider>
                 <ProfileSync />
                 <ServiceWorkerRegister />

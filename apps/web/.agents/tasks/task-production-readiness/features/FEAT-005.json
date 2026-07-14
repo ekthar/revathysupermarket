@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "feat",
   "description": "PostHog Analytics integration with feature flag, dynamic script loading, type-safe events, and provider component",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Add analytics_enabled feature flag to prisma/feature-flags.ts with config: { provider: 'posthog', projectApiKey: '', host: 'https://app.posthog.com' }",
     "Create lib/analytics/events.ts - Type-safe event name constants and payload types: product_viewed, add_to_cart, remove_from_cart, checkout_started, order_placed, search_performed, offer_viewed, promo_code_applied",

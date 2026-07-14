@@ -226,6 +226,12 @@ export const featureFlags: Array<{
     enabled: false,
     config: { provider: "resend", fromEmail: "orders@store.com", fromName: "Revathy Supermarket" },
   },
+  {
+    id: "ff_analytics_enabled",
+    key: "analytics_enabled",
+    enabled: false,
+    config: { provider: "posthog", projectApiKey: "", host: "https://app.posthog.com" },
+  },
 ];
 
 /**

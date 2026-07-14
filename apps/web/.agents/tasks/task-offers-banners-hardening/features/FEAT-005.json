@@ -2,7 +2,7 @@
   "id": "FEAT-005",
   "type": "fix",
   "description": "Address v2 semantic review findings: fix countdown hydration mismatch, carousel dot tap targets, offer card cutout background tokens, and dark-mode shimmer visibility.",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Fix lib/hooks/use-countdown.ts: Initialize useState with zero placeholder instead of calling getTimeLeft during render to eliminate SSR/client hydration mismatch",
     "Fix components/home/promo-banners.tsx: Restructure dot buttons to have min 44px tap target using padding/min-size on the button while keeping visual dot small as a child span",
@@ -22,5 +22,5 @@
     "Run npm run test"
   ],
   "blocked_reason": null,
-  "findings": null
+  "findings": "All 4 v2 review issues addressed. Lint passes with 0 errors on all modified files. Tests: 63/64 pass (1 pre-existing Upstash env config failure, documented in FEAT-001/002/003/004). Issue 4 (stale closure on endDate change) acknowledged as safe for current usage - no code change needed."
 }

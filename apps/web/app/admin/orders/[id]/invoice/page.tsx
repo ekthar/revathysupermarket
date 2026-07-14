@@ -7,6 +7,7 @@ import { formatCurrency } from "@/lib/utils";
 import { gstBusinessName } from "@/lib/billing";
 import { getStoreSettings } from "@/lib/store-settings";
 import { PrintButton } from "@/components/print-button";
+import { formatQuantityWithUnit } from "@msm/shared";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const order = await prisma.order.findUnique({
     where: { id },
-    include: { items: true }
+    include: { items: { include: { product: { select: { unit: true } } } } }
   });
   if (!order) notFound();
   const settings = await getStoreSettings();
@@ -120,7 +121,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
           {itemsWithGst.map((item) => (
             <tr key={item.id} className="border-b">
               <td className="py-3 px-2">{item.name}</td>
-              <td className="py-3 px-2 text-center">{item.quantity}</td>
+              <td className="py-3 px-2 text-center">{formatQuantityWithUnit(item.quantity, item.product?.unit ?? "pcs")}</td>
               <td className="py-3 px-2 text-right">{formatCurrency(Number(item.price))}</td>
               {hasGst && <td className="py-3 px-2 text-right">{item.gstRate}%</td>}
               {hasGst && <td className="py-3 px-2 text-right">{formatCurrency(item.gstAmount)}</td>}

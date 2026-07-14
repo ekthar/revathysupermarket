@@ -23,7 +23,7 @@ type AdminOrder = {
   printedAt: string | null;
   printCount: number;
   createdAt: string;
-  items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
+  items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null; unit: string }>;
   whatsappLogs: Array<{ id: string; template: string; status: string; createdAt: string }>;
 };
 
@@ -61,6 +61,7 @@ function normalizeOrder(order: RawApiOrder): AdminOrder {
       quantity: item.quantity,
       price: Number(item.price),
       gstRate: item.gstRate ?? null,
+      unit: (item as any).product?.unit ?? (item as any).unit ?? "pcs",
     })),
     whatsappLogs: order.whatsappLogs ?? [],
   };

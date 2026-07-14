@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { AdminOrdersClient } from "@/components/admin/admin-orders-client";
+import { getActiveDeliveryOtp } from "@/lib/delivery";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +34,10 @@ export default async function AdminOrdersPage() {
           name: true,
           quantity: true,
           price: true,
-          gstRate: true
+          gstRate: true,
+          product: {
+            select: { unit: true }
+          }
         }
       }
     },
@@ -96,7 +100,7 @@ export default async function AdminOrdersPage() {
         total: Number(order.total),
         status: order.status,
         deliveryPartnerId: order.deliveryPartnerId,
-        deliveryOtp: order.deliveryOtp,
+        deliveryOtp: getActiveDeliveryOtp(order.deliveryOtp, order.deliveryOtpExpiresAt),
         deliveryOtpAttempts: order.deliveryOtpAttempts,
         deliveryOtpExpiresAt: order.deliveryOtpExpiresAt?.toISOString() ?? null,
         deliveryInstructions: order.deliveryInstructions,
@@ -111,7 +115,8 @@ export default async function AdminOrdersPage() {
           name: item.name,
           quantity: item.quantity,
           price: Number(item.price),
-          gstRate: item.gstRate ? Number(item.gstRate) : null
+          gstRate: item.gstRate ? Number(item.gstRate) : null,
+          unit: item.product?.unit ?? "pcs"
         })),
         whatsappLogs: logsByOrder.get(order.id) ?? []
       }))}

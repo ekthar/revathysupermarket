@@ -8,6 +8,7 @@ import { SITE } from "@/lib/constants";
 import { cn, formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
+import { formatQuantityWithUnit } from "@msm/shared";
 import { useAdminOrders, useAcknowledgeOrder, useAssignDelivery, useRegenerateOtp, ADMIN_ORDERS_QUERY_KEY } from "@/lib/queries/admin-orders";
 import { useQueryClient } from "@tanstack/react-query";
 import { OrderActionModal } from "@/components/admin/orders/order-action-modal";
@@ -33,7 +34,7 @@ type AdminOrder = {
   printedAt: string | null;
   printCount: number;
   createdAt: string;
-  items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
+  items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null; unit: string }>;
   whatsappLogs: Array<{ id: string; template: string; status: string; createdAt: string }>;
 };
 type AdminProduct = { id: string; name: string; price: number };
@@ -501,6 +502,7 @@ export function AdminOrdersClient({
                         <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-slate-800 dark:bg-slate-600 text-sm font-black text-white">{item.quantity}</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold text-foreground truncate">{item.name}</p>
+                          <p className="text-[11px] text-muted-foreground">{formatQuantityWithUnit(item.quantity, item.unit)}</p>
                           {gstRate > 0 && <p className="text-[11px] text-muted-foreground">GST {gstRate}% · {formatCurrency(gstAmt)}</p>}
                         </div>
                         <span className="shrink-0 text-sm font-black text-foreground">{formatCurrency(itemTotal)}</span>

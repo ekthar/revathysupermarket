@@ -4,10 +4,13 @@ import { ProductDetailClient } from "@/components/product-detail-client";
 import { ProductCard } from "@/components/product-card";
 import { ProductReviews } from "@/components/product-reviews";
 import { ProductSuggestions } from "@/components/product-suggestions";
+import { StructuredData } from "@/components/structured-data";
+import { productSchema, breadcrumbSchema } from "@/lib/structured-data";
 import { getProductBySlug, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import type { Product } from "@/lib/types";
 import { safeProductImageUrl } from "@/lib/image";
+import { SITE } from "@/lib/constants";
 
 export function generateStaticParams() {
   return products.map((product) => ({ slug: product.slug }));
@@ -61,23 +64,15 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
 
   return (
     <main className="min-h-screen bg-[#F7F7FA] dark:bg-[#020617]">
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Product",
-            name: product.name,
-            image: safeProductImageUrl(product.image),
-            description: product.description,
-            offers: {
-              "@type": "Offer",
-              priceCurrency: "INR",
-              price: product.discountPrice ?? product.price,
-              availability: product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock"
-            }
-          })
-        }}
+      <StructuredData
+        data={[
+          productSchema(product),
+          breadcrumbSchema([
+            { name: "Home", url: SITE.url },
+            { name: "Products", url: `${SITE.url}/products` },
+            { name: product.name, url: `${SITE.url}/products/${product.slug}` },
+          ]),
+        ]}
       />
 
       <ProductDetailClient product={product} />

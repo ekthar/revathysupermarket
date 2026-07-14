@@ -2,7 +2,7 @@
   "id": "FEAT-004",
   "type": "feat",
   "description": "SEO Structured Data (JSON-LD) components for homepage, product pages, offers page, and breadcrumbs",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Create lib/structured-data.ts - Helper functions: organizationSchema(), websiteSchema(siteUrl), productSchema(product), offerCatalogSchema(offers), breadcrumbSchema(items: {name,url}[]). Each returns a JSON-LD object with @context and @type.",
     "Create components/structured-data.tsx - Server component that renders <script type='application/ld+json'> with JSON.stringify of passed schema object. Accept single schema or array of schemas.",

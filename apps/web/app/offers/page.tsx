@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { OffersClient } from "@/components/offers/offers-client";
+import { StructuredData } from "@/components/structured-data";
+import { offerCatalogSchema } from "@/lib/structured-data";
 
 export const dynamic = "force-dynamic";
 
@@ -71,11 +73,14 @@ export default async function OffersPage() {
   const isLoggedIn = !!(session?.user?.id);
 
   return (
-    <OffersClient
-      offers={serializedOffers}
-      promoCodes={serializedPromoCodes}
-      catMap={catMap}
-      isLoggedIn={isLoggedIn}
-    />
+    <>
+      <StructuredData data={offerCatalogSchema(serializedOffers)} />
+      <OffersClient
+        offers={serializedOffers}
+        promoCodes={serializedPromoCodes}
+        catMap={catMap}
+        isLoggedIn={isLoggedIn}
+      />
+    </>
   );
 }

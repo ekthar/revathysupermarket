@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-002",
+  "type": "feat",
+  "description": "Transactional Email via Resend with feature flag, email templates, and integration into order lifecycle",
+  "status": "pending",
+  "steps": [
+    "Add email_enabled feature flag to prisma/feature-flags.ts with config: { provider: 'resend', fromEmail: 'orders@store.com', fromName: 'Revathy Supermarket' }",
+    "Create lib/email/resend.ts - Resend API client that sends emails via fetch to https://api.resend.com/emails using RESEND_API_KEY env var. No npm package.",
+    "Create lib/email/templates.ts - Inline HTML email templates: orderConfirmation(order), orderDispatched(order, riderName), orderDelivered(order), passwordReset(otp/link). Each returns { subject, html } object.",
+    "Create lib/email/index.ts - Email service abstraction that checks email_enabled feature flag, gets config (fromEmail, fromName), and delegates to resend.ts. Exports sendOrderConfirmationEmail, sendOrderDispatchedEmail, sendOrderDeliveredEmail, sendPasswordResetEmail. All are async fire-and-forget (catch errors, log, never throw).",
+    "Integrate into app/api/orders/route.ts POST handler - After order creation in the Promise.allSettled block, add sendOrderConfirmationEmail call (needs user email from session or order data)",
+    "Add test in tests/email-templates.test.ts verifying template functions produce valid HTML with expected content"
+  ],
+  "acceptance_criteria": [
+    "Feature flag email_enabled exists in prisma/feature-flags.ts with enabled: false",
+    "lib/email/index.ts exports fire-and-forget email functions that check the flag",
+    "lib/email/templates.ts returns { subject, html } for all 4 template types",
+    "lib/email/resend.ts sends via fetch to Resend API, no npm dependency",
+    "Order confirmation email is triggered in POST /api/orders (fire-and-forget)",
+    "All email functions gracefully return without error when flag is disabled",
+    "Template tests pass"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm no errors in new email files",
+    "Run npm run test from apps/web/ and confirm email template tests pass"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

@@ -13,6 +13,7 @@ interface PaymentMethodSelectorProps {
   totalAmount: number;
   codEnabled?: boolean;
   upiOnDeliveryEnabled?: boolean;
+  razorpayEnabled?: boolean;
 }
 
 export function PaymentMethodSelector({
@@ -23,6 +24,7 @@ export function PaymentMethodSelector({
   totalAmount,
   codEnabled = true,
   upiOnDeliveryEnabled = true,
+  razorpayEnabled = false,
 }: PaymentMethodSelectorProps) {
   return (
     <motion.section
@@ -53,14 +55,16 @@ export function PaymentMethodSelector({
             onClick={() => onMethodChange("UPI_ON_DELIVERY")}
           />
         )}
-        <PaymentMethodCard
-          active={paymentMethod === "CARD"}
-          icon={<Wallet className="h-5 w-5" />}
-          iconBg="bg-purple-100 text-purple-700"
-          label="Card Payment"
-          description="Pay via Debit/Credit card on delivery"
-          onClick={() => onMethodChange("CARD")}
-        />
+        {razorpayEnabled && (
+          <PaymentMethodCard
+            active={paymentMethod === "CARD"}
+            icon={<Wallet className="h-5 w-5" />}
+            iconBg="bg-purple-100 text-purple-700"
+            label="Pay Online"
+            description="Pay via UPI, Card, or Netbanking"
+            onClick={() => onMethodChange("CARD")}
+          />
+        )}
         {walletLoading ? (
           <div className="flex items-center gap-3 rounded-2xl p-4 border-2 border-neutral-100 dark:border-neutral-800">
             <div className="h-10 w-10 animate-pulse rounded-full bg-neutral-200 dark:bg-neutral-700" />

@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-007",
+  "type": "feat",
+  "description": "Admin banner drag-to-reorder with auto-animate and reorder API endpoint",
+  "status": "pending",
+  "steps": [
+    "Create app/api/admin/banners/reorder/route.ts - POST endpoint that accepts { bannerIds: string[] } (Zod validated). Requires auth + product staff permission. Updates createdAt timestamps in sequence (newest first) so the banners display in the submitted order. Revalidates homepage and banners tags.",
+    "Create components/admin/banner-reorder-client.tsx - Client component that: fetches banners from /api/admin/banners, displays them as sortable cards with drag handles (using HTML5 drag-and-drop), applies @formkit/auto-animate for smooth animations, shows image thumbnail + title + active status, has Save Order button that POSTs to /api/admin/banners/reorder with the new ID order. Uses toast for success/error feedback.",
+    "Integrate banner reorder into admin settings or banner management page - Add the BannerReorderClient component to the admin banners section (check where banners are managed in admin pages)"
+  ],
+  "acceptance_criteria": [
+    "app/api/admin/banners/reorder/route.ts accepts array of banner IDs and reorders them",
+    "Reorder endpoint requires authentication and staff permission",
+    "Banner reorder client uses @formkit/auto-animate for animations (already installed)",
+    "Drag-and-drop reordering works with HTML5 drag API (no new packages)",
+    "Save button persists new order via API call",
+    "Cache is revalidated after reorder"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm no errors",
+    "Run npm run test from apps/web/ and confirm all tests pass"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

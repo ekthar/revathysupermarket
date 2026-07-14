@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-001",
+  "type": "feat",
+  "description": "Razorpay Payment Gateway integration with feature flag, API routes, webhook, and checkout UI button",
+  "status": "in_progress",
+  "steps": [
+    "Add razorpay_enabled feature flag to prisma/feature-flags.ts with config: { keyId: '', keySecret: '', webhookSecret: '' }",
+    "Create lib/payments/razorpay.ts - Razorpay client initialization (uses env vars RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET), order creation function, payment verification with HMAC-SHA256 signature check",
+    "Create app/api/payments/create-order/route.ts - POST endpoint that checks razorpay_enabled flag, validates input with Zod, creates Razorpay order via lib, returns order_id. Requires auth. Rate limited.",
+    "Create app/api/payments/verify/route.ts - POST endpoint that verifies razorpay_signature against razorpay_payment_id + razorpay_order_id using HMAC-SHA256, updates order paymentStatus to PAID",
+    "Create app/api/webhooks/razorpay/route.ts - POST endpoint that validates webhook signature using RAZORPAY_WEBHOOK_SECRET, handles payment.captured (mark PAID), payment.failed (mark FAILED), refund.processed (mark REFUNDED)",
+    "Create components/checkout/razorpay-button.tsx - Client component that dynamically loads Razorpay checkout.js script, opens checkout modal with order details, handles success/failure callbacks, calls /api/payments/verify on success",
+    "Modify components/checkout/payment-method-selector.tsx - Add 'Pay Online' option that only shows when razorpay_enabled flag is true (pass razorpayEnabled prop). Maps to CARD payment method",
+    "Modify components/checkout-form.tsx - When razorpay_enabled AND paymentMethod is CARD: instead of directly calling /api/orders, first create order normally, then trigger Razorpay payment flow. On payment success, navigate to success. On failure, show retry option.",
+    "Update lib/validations.ts - Add 'UPI_ONLINE' to paymentMethod enum in checkoutSchema (or reuse CARD for online payments)",
+    "Add unit tests in tests/razorpay.test.ts for payment signature verification logic"
+  ],
+  "acceptance_criteria": [
+    "Feature flag razorpay_enabled exists in prisma/feature-flags.ts with enabled: false",
+    "lib/payments/razorpay.ts exports createRazorpayOrder and verifyPaymentSignature functions",
+    "All 3 API routes (create-order, verify, webhooks/razorpay) exist with Zod validation and auth checks",
+    "razorpay-button.tsx loads script dynamically without any npm package",
+    "Payment method selector conditionally shows 'Pay Online' based on razorpayEnabled prop",
+    "When flag is disabled, no online payment options appear in checkout",
+    "Webhook validates signature before processing events",
+    "Tests for signature verification pass"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm no errors in new files",
+    "Run npm run test from apps/web/ and confirm all tests pass including new razorpay tests"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

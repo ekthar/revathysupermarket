@@ -25,6 +25,7 @@ import { OrderSummary } from "@/components/checkout/order-summary";
 import { TipSelector } from "@/components/checkout/tip-selector";
 import { DeliveryInstructions } from "@/components/checkout/delivery-instructions";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { RazorpayButton } from "@/components/checkout/razorpay-button";
 
 
 type CheckoutState = {
@@ -108,6 +109,7 @@ export function CheckoutForm({
   tipEnabled = true,
   codEnabled = true,
   upiOnDeliveryEnabled = true,
+  razorpayEnabled = false,
   savedAddresses = []
 }: {
   deliveryRadiusKm?: number;
@@ -125,6 +127,7 @@ export function CheckoutForm({
   tipEnabled?: boolean;
   codEnabled?: boolean;
   upiOnDeliveryEnabled?: boolean;
+  razorpayEnabled?: boolean;
   savedAddresses?: SavedAddress[];
 }) {
   const rewardsEnabled = process.env.NEXT_PUBLIC_ENABLE_REWARDS !== "false";
@@ -162,6 +165,7 @@ export function CheckoutForm({
   const [deliveryOptionsOpen, setDeliveryOptionsOpen] = useState(true);
   const [offersSectionOpen, setOffersSectionOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [razorpayOrderId, setRazorpayOrderId] = useState("");
 
   const fallbackDeliveryFee = freeDeliveryThreshold > 0 && subtotal >= freeDeliveryThreshold ? 0 : baseDeliveryFee;
   const deliveryFee = quotedDeliveryFee ?? fallbackDeliveryFee;
@@ -232,12 +236,15 @@ export function CheckoutForm({
 
   useEffect(() => {
     if (form.paymentMethod === "COD" && !codEnabled) {
-      update("paymentMethod", upiOnDeliveryEnabled ? "UPI_ON_DELIVERY" : "CARD");
+      update("paymentMethod", upiOnDeliveryEnabled ? "UPI_ON_DELIVERY" : razorpayEnabled ? "CARD" : "WALLET");
     }
     if (form.paymentMethod === "UPI_ON_DELIVERY" && !upiOnDeliveryEnabled) {
-      update("paymentMethod", codEnabled ? "COD" : "CARD");
+      update("paymentMethod", codEnabled ? "COD" : razorpayEnabled ? "CARD" : "WALLET");
     }
-  }, [codEnabled, form.paymentMethod, upiOnDeliveryEnabled]);
+    if (form.paymentMethod === "CARD" && !razorpayEnabled) {
+      update("paymentMethod", codEnabled ? "COD" : upiOnDeliveryEnabled ? "UPI_ON_DELIVERY" : "WALLET");
+    }
+  }, [codEnabled, form.paymentMethod, upiOnDeliveryEnabled, razorpayEnabled]);
 
   useEffect(() => {
     const latitude = Number(form.latitude);
@@ -432,6 +439,12 @@ export function CheckoutForm({
         return;
       }
 
+      // If Razorpay enabled and payment method is CARD, start the online payment flow
+      if (razorpayEnabled && form.paymentMethod === "CARD" && data.orderId) {
+        setRazorpayOrderId(data.orderId);
+        return;
+      }
+
       clearCart();
       if (data.orderId) setPlacedOrderId(data.orderId);
       triggerCelebration();
@@ -440,6 +453,18 @@ export function CheckoutForm({
       setIsSubmitting(false);
       showToast("Order could not be placed", "error");
     }
+  }
+
+  function handleRazorpaySuccess() {
+    clearCart();
+    setPlacedOrderId(razorpayOrderId);
+    setRazorpayOrderId("");
+    triggerCelebration();
+    showToast("Order placed and payment successful!", "success");
+  }
+
+  function handleRazorpayFailure(error: string) {
+    showToast(error || "Payment failed. You can retry or choose another method.", "error");
   }
 
 
@@ -453,7 +478,7 @@ export function CheckoutForm({
         <div className="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
           <div className="flex justify-between"><span>Items</span><span className="font-semibold text-neutral-900 dark:text-white">{items.length}</span></div>
           <div className="flex justify-between"><span>Total</span><span className="font-semibold text-neutral-900 dark:text-white">{formatCurrency(totalAmount)}</span></div>
-          <div className="flex justify-between"><span>Payment</span><span className="font-semibold text-neutral-900 dark:text-white">{form.paymentMethod === "COD" ? "Cash on Delivery" : form.paymentMethod === "UPI_ON_DELIVERY" ? "UPI on Delivery" : form.paymentMethod}</span></div>
+          <div className="flex justify-between"><span>Payment</span><span className="font-semibold text-neutral-900 dark:text-white">{form.paymentMethod === "COD" ? "Cash on Delivery" : form.paymentMethod === "UPI_ON_DELIVERY" ? "UPI on Delivery" : form.paymentMethod === "CARD" ? "Pay Online" : form.paymentMethod}</span></div>
         </div>
         <div className="mt-5 grid grid-cols-2 gap-3">
           <button
@@ -470,6 +495,33 @@ export function CheckoutForm({
             className="h-12 rounded-2xl bg-black text-sm font-bold text-white transition-colors hover:bg-neutral-800 disabled:cursor-not-allowed disabled:bg-neutral-400 disabled:opacity-40"
           >
             {isSubmitting ? "Placing..." : "Confirm & Place"}
+          </button>
+        </div>
+      </BottomSheet>
+
+      {/* Razorpay payment modal */}
+      <BottomSheet
+        open={Boolean(razorpayOrderId)}
+        onClose={() => setRazorpayOrderId("")}
+        title="Complete Payment"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">
+            Your order has been created. Complete the payment to confirm.
+          </p>
+          <RazorpayButton
+            orderId={razorpayOrderId}
+            customerName={form.customerName}
+            customerPhone={form.phone}
+            onSuccess={handleRazorpaySuccess}
+            onFailure={handleRazorpayFailure}
+          />
+          <button
+            type="button"
+            onClick={() => setRazorpayOrderId("")}
+            className="w-full h-11 rounded-2xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+          >
+            Cancel
           </button>
         </div>
       </BottomSheet>
@@ -741,6 +793,7 @@ export function CheckoutForm({
             totalAmount={totalAmount}
             codEnabled={codEnabled}
             upiOnDeliveryEnabled={upiOnDeliveryEnabled}
+            razorpayEnabled={razorpayEnabled}
           />
         </div>
 

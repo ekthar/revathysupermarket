@@ -214,6 +214,12 @@ export const featureFlags: Array<{
     enabled: false,
     config: Prisma.JsonNull,
   },
+  {
+    id: "ff_razorpay_enabled",
+    key: "razorpay_enabled",
+    enabled: false,
+    config: { keyId: "", keySecret: "", webhookSecret: "" },
+  },
 ];
 
 /**

@@ -15,6 +15,7 @@ import { broadcastToAllDeliveryPartners } from "@/lib/delivery-alerts";
 import { publishNewOrder, publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
 import { sendPushToUser } from "@/lib/push";
 import { sendFcmToAdmins } from "@/lib/fcm-admin";
+import { sendOrderConfirmationEmail } from "@/lib/email";
 
 function orderNumber() {
   const date = new Date();
@@ -151,6 +152,19 @@ export async function POST(request: Request) {
         status: "ORDER_RECEIVED",
         userId: session.user.id,
       }).catch((e) => { console.error("Order status event publish failed:", e); return null; }),
+      // Send order confirmation email (fire-and-forget, checks feature flag internally)
+      sendOrderConfirmationEmail({
+        to: session.user.email ?? "",
+        orderNumber: order!.orderNumber,
+        customerName: data.customerName,
+        items: order!.items.map((item: { name: string; quantity: number; price: unknown }) => ({
+          name: item.name,
+          quantity: item.quantity,
+          price: Number(item.price),
+        })),
+        total: Number(order!.total),
+        deliveryAddress: orderAddress,
+      }),
     ]);
 
     return NextResponse.json({ orderId: order!.id, orderNumber: order!.orderNumber, total: Number(order!.total) });

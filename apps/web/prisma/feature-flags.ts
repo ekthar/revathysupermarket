@@ -220,6 +220,12 @@ export const featureFlags: Array<{
     enabled: false,
     config: { keyId: "", keySecret: "", webhookSecret: "" },
   },
+  {
+    id: "ff_email_enabled",
+    key: "email_enabled",
+    enabled: false,
+    config: { provider: "resend", fromEmail: "orders@store.com", fromName: "Revathy Supermarket" },
+  },
 ];
 
 /**

@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "feat",
   "description": "Transactional Email via Resend with feature flag, email templates, and integration into order lifecycle",
-  "status": "pending",
+  "status": "in_progress",
   "steps": [
     "Add email_enabled feature flag to prisma/feature-flags.ts with config: { provider: 'resend', fromEmail: 'orders@store.com', fromName: 'Revathy Supermarket' }",
     "Create lib/email/resend.ts - Resend API client that sends emails via fetch to https://api.resend.com/emails using RESEND_API_KEY env var. No npm package.",

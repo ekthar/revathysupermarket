@@ -12,14 +12,13 @@ import {
   MessageCircle,
   CheckCircle2,
   Truck,
-  Package,
-  ShoppingBag,
-  CircleDot,
+  Navigation,
 } from "lucide-react";
 import { SITE } from "@/lib/constants";
 import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
 import { estimateOrderEta, type EtaDisplayMode } from "@/lib/live-order";
 import { OrderBill } from "./order-bill";
+import { OrderTimeline, getTimelineStatusLabel } from "./order-timeline";
 
 const DeliveryMap = dynamic(
   () => import("./delivery-map").then((m) => ({ default: m.DeliveryMap })),
@@ -67,54 +66,16 @@ type TrackingData = {
   storeLongitude: number;
 };
 
-const TRACKING_STEPS = [
-  {
-    key: "ORDER_RECEIVED",
-    label: "Order received",
-    subtitle: "We got it. The store is preparing.",
-    icon: ShoppingBag,
-  },
-  {
-    key: "PACKING",
-    label: "Packing your bag",
-    subtitle: "Hand-picked items, carefully packed.",
-    icon: Package,
-  },
-  {
-    key: "OUT_FOR_DELIVERY",
-    label: "Out for delivery",
-    subtitle: "Your rider is on the way.",
-    icon: Truck,
-  },
-  {
-    key: "DELIVERED",
-    label: "Delivered",
-    subtitle: "Enjoy your fresh groceries!",
-    icon: CheckCircle2,
-  },
-];
-
-function getStepIndex(status: string): number {
-  if (["ORDER_RECEIVED", "AWAITING_CUSTOMER_APPROVAL", "ACCEPTED"].includes(status)) return 0;
-  if (status === "PACKING") return 1;
-  if (["READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "ARRIVING"].includes(status)) return 2;
-  if (status === "DELIVERED") return 3;
-  return 0;
-}
-
-function getStatusLabel(status: string): string {
-  const map: Record<string, string> = {
-    ORDER_RECEIVED: "Order received",
-    AWAITING_CUSTOMER_APPROVAL: "Awaiting approval",
-    ACCEPTED: "Order confirmed",
-    PACKING: "Packing your bag",
-    READY_FOR_DELIVERY: "Ready for delivery",
-    OUT_FOR_DELIVERY: "Out for delivery",
-    ARRIVING: "Arriving soon",
-    DELIVERED: "Delivered",
-    CANCELLED: "Cancelled",
-  };
-  return map[status] || status;
+/** Compute distance in km from rider to customer destination */
+function computeRiderDistanceKm(
+  riderLoc: { latitude: number; longitude: number } | null,
+  destination: { latitude: number; longitude: number }
+): number | null {
+  if (!riderLoc) return null;
+  return calculateDistanceKm(
+    { lat: riderLoc.latitude, lng: riderLoc.longitude },
+    { lat: destination.latitude, lng: destination.longitude }
+  );
 }
 
 export function LiveOrderTracking({ initialData }: { initialData: TrackingData }) {
@@ -178,8 +139,14 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
     }, []),
   });
 
-  const currentStep = getStepIndex(data.status);
   const phoneNumber = data.riderPhone || SITE.phone;
+
+  // Calculate rider-to-customer distance for display
+  const riderDistanceKm = computeRiderDistanceKm(
+    data.deliveryPartnerLocation,
+    data.destination
+  );
+  const isRiderEnRoute = ["OUT_FOR_DELIVERY", "ARRIVING"].includes(data.status);
 
   // Order bill data
   const hasBillData = data.orderItems && data.orderItems.length > 0 && data.total != null;
@@ -211,7 +178,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
                   Live Order
                 </p>
                 <p className="text-body font-bold text-white">
-                  {getStatusLabel(data.status)}
+                  {getTimelineStatusLabel(data.status)}
                 </p>
               </div>
             </div>
@@ -248,30 +215,48 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
 
       {/* Content */}
       <div className="px-4 pt-5 space-y-4">
-        {/* Rider info card */}
+        {/* Rider info card - enhanced with distance when en route */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.25, ...springs.enter }}
-          className="flex items-center gap-3 rounded-2xl bg-white p-4 card-shadow dark:bg-neutral-900"
+          className="rounded-2xl bg-white p-4 card-shadow dark:bg-neutral-900"
         >
-          {/* Avatar */}
-          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600 shadow-md shadow-secondary-500/20">
-            <Truck className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-caption font-semibold text-neutral-400 dark:text-neutral-500">
-              Your rider
-            </p>
-            <p className="text-title font-bold text-neutral-900 dark:text-white truncate">
-              {data.riderName || "Assigning rider..."}
-            </p>
-          </div>
-          {data.riderName && (
-            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-50 dark:bg-secondary-900/30">
-              <CheckCircle2 className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
+          <div className="flex items-center gap-3">
+            {/* Avatar */}
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600 shadow-md shadow-secondary-500/20">
+              <Truck className="h-5 w-5 text-white" />
             </div>
-          )}
+            <div className="flex-1 min-w-0">
+              <p className="text-caption font-semibold text-neutral-400 dark:text-neutral-500">
+                Your rider
+              </p>
+              <p className="text-title font-bold text-neutral-900 dark:text-white truncate">
+                {data.riderName || "Assigning rider..."}
+              </p>
+              {/* Distance badge when rider is en route */}
+              {isRiderEnRoute && riderDistanceKm != null && (
+                <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-secondary-600 dark:text-secondary-400">
+                  <Navigation className="h-3 w-3" />
+                  {riderDistanceKm.toFixed(1)} km away
+                </span>
+              )}
+            </div>
+            {/* Call button when rider is assigned and en route */}
+            {data.riderName && isRiderEnRoute && data.riderPhone && (
+              <a
+                href={`tel:${data.riderPhone}`}
+                className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-900/40 press"
+              >
+                <Phone className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
+              </a>
+            )}
+            {data.riderName && !isRiderEnRoute && (
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-50 dark:bg-secondary-900/30">
+                <CheckCircle2 className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
+              </div>
+            )}
+          </div>
         </motion.div>
 
         {/* Map/tracking visual */}
@@ -378,91 +363,12 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           </motion.div>
         )}
 
-        {/* Order status timeline */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ ...springs.enter, delay: 0.45 }}
-          className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900"
-        >
-          <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-5">
-            Order Status
-          </p>
-          <div className="space-y-0">
-            {TRACKING_STEPS.map((step, index) => {
-              const isCompleted = index < currentStep;
-              const isCurrent = index === currentStep;
-              const isPending = index > currentStep;
-              const StepIcon = step.icon;
-
-              return (
-                <motion.div
-                  key={step.key}
-                  initial={{ opacity: 0, x: -12 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ ...springs.enter, delay: 0.5 + index * 0.1 }}
-                  className="relative flex gap-4"
-                >
-                  {/* Timeline line and dot */}
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={`relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-all duration-300 ${
-                        isCompleted
-                          ? "bg-secondary-500 shadow-md shadow-secondary-500/30"
-                          : isCurrent
-                          ? "bg-secondary-500 shadow-lg shadow-secondary-500/40"
-                          : "bg-neutral-100 dark:bg-neutral-800"
-                      }`}
-                    >
-                      {isCompleted ? (
-                        <CheckCircle2 className="h-4 w-4 text-white" />
-                      ) : isCurrent ? (
-                        <>
-                          <StepIcon className="h-4 w-4 text-white" />
-                          <span className="absolute inset-0 rounded-full animate-ping bg-secondary-500/30" />
-                        </>
-                      ) : (
-                        <CircleDot className="h-4 w-4 text-neutral-300 dark:text-neutral-600" />
-                      )}
-                    </div>
-                    {/* Connector line */}
-                    {index < TRACKING_STEPS.length - 1 && (
-                      <div
-                        className={`w-0.5 flex-1 min-h-[2rem] transition-colors duration-300 ${
-                          isCompleted
-                            ? "bg-secondary-500"
-                            : "bg-neutral-100 dark:bg-neutral-800"
-                        }`}
-                      />
-                    )}
-                  </div>
-
-                  {/* Step content */}
-                  <div className="pb-6 pt-1.5">
-                    <p
-                      className={`text-body font-bold transition-colors ${
-                        isCompleted || isCurrent
-                          ? "text-neutral-900 dark:text-white"
-                          : "text-neutral-400 dark:text-neutral-500"
-                      }`}
-                    >
-                      {step.label}
-                    </p>
-                    <p
-                      className={`mt-0.5 text-caption transition-colors ${
-                        isCompleted || isCurrent
-                          ? "text-neutral-500 dark:text-neutral-400"
-                          : "text-neutral-300 dark:text-neutral-600"
-                      }`}
-                    >
-                      {step.subtitle}
-                    </p>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
+        {/* Order status timeline - enhanced 7-step version */}
+        <OrderTimeline
+          currentStatus={data.status}
+          distanceKm={riderDistanceKm}
+          etaMinutes={etaMinutes}
+        />
 
         {/* Order Bill section */}
         {hasBillData && (

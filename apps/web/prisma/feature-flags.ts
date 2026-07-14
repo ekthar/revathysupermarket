@@ -214,6 +214,24 @@ export const featureFlags: Array<{
     enabled: false,
     config: Prisma.JsonNull,
   },
+  {
+    id: "ff_razorpay_enabled",
+    key: "razorpay_enabled",
+    enabled: false,
+    config: { keyId: "", keySecret: "", webhookSecret: "" },
+  },
+  {
+    id: "ff_email_enabled",
+    key: "email_enabled",
+    enabled: false,
+    config: { provider: "resend", fromEmail: "orders@store.com", fromName: "Revathy Supermarket" },
+  },
+  {
+    id: "ff_analytics_enabled",
+    key: "analytics_enabled",
+    enabled: false,
+    config: { provider: "posthog", projectApiKey: "", host: "https://app.posthog.com" },
+  },
 ];
 
 /**

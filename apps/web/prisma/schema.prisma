@@ -23,6 +23,7 @@ enum PaymentMethod {
   UPI_ON_DELIVERY
   WALLET
   CARD
+  UPI_ONLINE
 }
 
 enum PaymentStatus {
@@ -384,6 +385,8 @@ model Order {
   deliveryInstructions    String?
   loyaltyPointsRedeemed   Int                     @default(0)
   loyaltyPointsEarned     Int                     @default(0)
+  razorpayOrderId         String?
+  razorpayPaymentId       String?
   user                    User?                   @relation(fields: [userId], references: [id], onDelete: SetNull)
   acknowledgedBy          User?                   @relation("OrderAcknowledgedBy", fields: [acknowledgedById], references: [id], onDelete: SetNull)
   deliveryPartner         User?                   @relation("OrderDeliveryPartner", fields: [deliveryPartnerId], references: [id], onDelete: SetNull)
@@ -415,6 +418,7 @@ model Order {
   @@index([estimatedDeliveryAt])
   @@index([paymentStatus])
   @@index([status, createdAt])
+  @@index([razorpayOrderId])
 }
 
 model OrderItem {

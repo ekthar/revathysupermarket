@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "SEO Structured Data (JSON-LD) components for homepage, product pages, offers page, and breadcrumbs",
+  "status": "completed",
+  "steps": [
+    "Create lib/structured-data.ts - Helper functions: organizationSchema(), websiteSchema(siteUrl), productSchema(product), offerCatalogSchema(offers), breadcrumbSchema(items: {name,url}[]). Each returns a JSON-LD object with @context and @type.",
+    "Create components/structured-data.tsx - Server component that renders <script type='application/ld+json'> with JSON.stringify of passed schema object. Accept single schema or array of schemas.",
+    "Enhance app/page.tsx (homepage) - Add StructuredData component with Organization and WebSite schemas (WebSite includes SearchAction pointing to /products?q={search_term_string}). Use SITE constants for data.",
+    "Enhance app/products/[slug]/page.tsx - Replace existing inline JSON-LD with the StructuredData component using productSchema(). Include BreadcrumbList (Home > Products > [Product Name]).",
+    "Enhance app/offers/page.tsx - Add StructuredData with OfferCatalog schema listing active offers.",
+    "Add test in tests/structured-data.test.ts verifying schema helper functions produce valid JSON-LD objects with required @context and @type fields"
+  ],
+  "acceptance_criteria": [
+    "lib/structured-data.ts exports schema generator functions for Organization, WebSite, Product, OfferCatalog, BreadcrumbList",
+    "components/structured-data.tsx renders valid <script type='application/ld+json'> tags",
+    "Homepage includes Organization + WebSite with SearchAction JSON-LD",
+    "Product detail page uses StructuredData component with Product + BreadcrumbList schemas",
+    "Offers page includes OfferCatalog JSON-LD",
+    "All schemas include @context: 'https://schema.org'",
+    "Tests pass"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm no errors",
+    "Run npm run test from apps/web/ and confirm structured data tests pass"
+  ],
+  "blocked_reason": null,
+  "findings": "All 11 structured data tests pass. Lint produces 0 errors (only pre-existing warnings). Pre-existing test failure in tests/security.test.ts (production env verification - same as FEAT-001/002/003). Created lib/structured-data.ts (schema generators), components/structured-data.tsx (render component), and tests/structured-data.test.ts. Integrated into app/page.tsx (Organization + WebSite), app/products/[slug]/page.tsx (Product + BreadcrumbList - replaced inline JSON-LD), and app/offers/page.tsx (OfferCatalog). All schemas include @context: https://schema.org."
+}

@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-005",
+  "type": "fix",
+  "description": "Address v2 semantic review findings: fix countdown hydration mismatch, carousel dot tap targets, offer card cutout background tokens, and dark-mode shimmer visibility.",
+  "status": "completed",
+  "steps": [
+    "Fix lib/hooks/use-countdown.ts: Initialize useState with zero placeholder instead of calling getTimeLeft during render to eliminate SSR/client hydration mismatch",
+    "Fix components/home/promo-banners.tsx: Restructure dot buttons to have min 44px tap target using padding/min-size on the button while keeping visual dot small as a child span",
+    "Fix components/offers/offers-client.tsx: Replace hardcoded bg-[#F7F7FA] dark:bg-[#020617] on cutout elements with bg-background",
+    "Fix app/offers/loading.tsx: Change dark:via-white/5 to dark:via-white/10 for better shimmer visibility in dark mode"
+  ],
+  "acceptance_criteria": [
+    "useCountdown initializes with zero placeholder - no Date.now() call during useState initialization",
+    "Carousel dot buttons have >= 44px touch area",
+    "Offer card cutouts use bg-background instead of hardcoded hex colors",
+    "Dark-mode shimmer uses via-white/10 for better visibility",
+    "All modified files pass eslint",
+    "Tests pass"
+  ],
+  "verification": [
+    "Run npx eslint lib/hooks/use-countdown.ts components/home/promo-banners.tsx components/offers/offers-client.tsx app/offers/loading.tsx",
+    "Run npm run test"
+  ],
+  "blocked_reason": null,
+  "findings": "All 4 v2 review issues addressed. Lint passes with 0 errors on all modified files. Tests: 63/64 pass (1 pre-existing Upstash env config failure, documented in FEAT-001/002/003/004). Issue 4 (stale closure on endDate change) acknowledged as safe for current usage - no code change needed."
+}

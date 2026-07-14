@@ -30,7 +30,7 @@ export default async function CheckoutPage() {
     );
   }
   const settings = await getStoreSettings();
-  const [addresses, deliveryModeFlag, instantDeliveryEnabled, slotOnlyMode, tipEnabled, codEnabled, upiOnDeliveryEnabled] = await Promise.all([
+  const [addresses, deliveryModeFlag, instantDeliveryEnabled, slotOnlyMode, tipEnabled, codEnabled, upiOnDeliveryEnabled, razorpayEnabled] = await Promise.all([
     prisma.address.findMany({
       where: { userId: session.user.id },
       orderBy: [{ isDefault: "desc" }, { createdAt: "desc" }]
@@ -41,6 +41,7 @@ export default async function CheckoutPage() {
     isFeatureEnabled("tip_enabled"),
     isFeatureEnabled("cod_enabled"),
     isFeatureEnabled("upi_on_delivery_enabled"),
+    isFeatureEnabled("razorpay_enabled"),
   ]);
   const deliveryMode = deliveryModeFlag.enabled ? deliveryModeFlag.config?.mode ?? "both" : "instant";
   const allowScheduledDelivery = deliveryMode === "both" || deliveryMode === "scheduled" || slotOnlyMode;
@@ -75,6 +76,7 @@ export default async function CheckoutPage() {
         tipEnabled={tipEnabled}
         codEnabled={codEnabled}
         upiOnDeliveryEnabled={upiOnDeliveryEnabled}
+        razorpayEnabled={razorpayEnabled}
         savedAddresses={addresses.map((address) => ({
           id: address.id,
           label: address.label,

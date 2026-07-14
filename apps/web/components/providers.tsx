@@ -15,18 +15,21 @@ import { InstallAppPrompt } from "@/components/install-app-prompt";
 import { ThemeColorSync } from "@/components/theme-color-sync";
 import { QueryProvider } from "@/components/query-provider";
 import { MotionConfig } from "framer-motion";
+import { AnalyticsProvider } from "@/components/analytics-provider";
 
 export function Providers({ children, session }: { children: React.ReactNode; session?: Session | null }) {
   return (
     <SessionProvider session={session}>
       <QueryProvider>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} forcedTheme="light">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <ThemeColorSync />
           <MotionConfig reducedMotion="user">
             <ToastProvider>
               <CartProvider>
                 <FlyToCartProvider>
-                  {children}
+                  <AnalyticsProvider>
+                    {children}
+                  </AnalyticsProvider>
                 </FlyToCartProvider>
                 <ProfileSync />
                 <ServiceWorkerRegister />

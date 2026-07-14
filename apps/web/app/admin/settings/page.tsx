@@ -4,6 +4,7 @@ import { canManageSettings } from "@/lib/authz";
 import { deliverySummary } from "@/lib/delivery";
 import { getStoreSettings } from "@/lib/store-settings";
 import { SettingsManagementClient } from "@/components/admin/settings-management-client";
+import { BannerReorderClient } from "@/components/admin/banner-reorder-client";
 import { MapPin } from "lucide-react";
 import { getLoyaltyConfig } from "@/lib/loyalty-config";
 import { LoyaltySettingsClient } from "@/components/admin/loyalty-settings-client";
@@ -65,6 +66,7 @@ export default async function AdminSettingsPage() {
         }}
         templateStatuses={templateStatuses}
       />
+      <BannerReorderClient banners={banners} />
       <LoyaltySettingsClient initialConfig={loyaltyConfig} />
       <div className="mt-5 rounded-xl border border-white/70 bg-primary p-5 text-white shadow-soft dark:border-white/10">
         <MapPin className="h-6 w-6 text-lime-fresh" />

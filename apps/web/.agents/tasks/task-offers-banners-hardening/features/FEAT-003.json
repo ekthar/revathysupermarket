@@ -1,0 +1,34 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Homepage banner carousel redesign - transform components/home/promo-banners.tsx from vertical card list to Swiggy-style auto-scrolling Embla Carousel with dot indicators, navigation arrows, mobile peek, and reduced-motion support.",
+  "status": "completed",
+  "steps": [
+    "Rewrite components/home/promo-banners.tsx to use the Embla Carousel components from components/ui/carousel.tsx (Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext). Configure with opts={{ loop: true, align: 'start' }}",
+    "Implement auto-advance every 4 seconds using useEffect with setInterval on the Embla API (api.scrollNext()). Pause on hover (onMouseEnter/onMouseLeave) and touch (onTouchStart/onTouchEnd). Respect prefers-reduced-motion: if reduced motion preferred, disable auto-advance but keep manual swipe",
+    "Banner card design: Full-width cards with aspect-ratio 16/7 on mobile (aspect-[16/7]), 3/1 on desktop (md:aspect-[3/1]). Background image fills card (object-cover). Cinematic gradient overlay from bottom (bg-gradient-to-t from-black/60 via-black/20 to-transparent). Title in Manrope 900 white large overlaid on gradient. Subtitle smaller white/80 opacity. Green 'Offer' badge pill at top-left. Subtle 'Shop Now' link at bottom-right if banner has href. Cards rounded-2xl.",
+    "Dot indicators below carousel: Track selected index via api.on('select'). Small dots (h-2 w-2 rounded-full), active dot is green (#22C55E) and wider (w-6 pill shape with transition-all). Each dot has aria-label 'Go to slide N'. Dots container centered below carousel.",
+    "Navigation arrows (desktop only): Use CarouselPrevious and CarouselNext. Show on hover only (parent group, opacity-0 group-hover:opacity-100 transition). Hidden on mobile (hidden md:flex).",
+    "Mobile: Edge-to-edge with peek - show a sliver of the next card. Use basis-[92%] or similar on CarouselItem for mobile to show peek, basis-full on desktop. Cards have 8px gap (gap-2 or pl-2 adjustments). Rounded-2xl cards.",
+    "Fallback: If no banners or empty array, return null (already handled, keep it)",
+    "Import and use prefersReducedMotion from lib/gsap.ts OR use a media query check for the auto-advance disable logic"
+  ],
+  "acceptance_criteria": [
+    "Carousel auto-advances every 4 seconds",
+    "Carousel pauses on hover and touch",
+    "Carousel loops infinitely",
+    "Dot indicators show active state (green, wider pill)",
+    "Navigation arrows appear on desktop hover only",
+    "Mobile shows peek of next card",
+    "Reduced motion disables auto-advance",
+    "Empty banners returns null",
+    "Dark mode works correctly",
+    "Lint passes: npx eslint components/home/promo-banners.tsx"
+  ],
+  "verification": [
+    "Run npx eslint components/home/promo-banners.tsx",
+    "Run npm run test to confirm no regressions"
+  ],
+  "blocked_reason": null,
+  "findings": "Lint passes cleanly. Test 64 (production env verification requires Upstash rate limiting configuration) is a pre-existing failure unrelated to this feature - confirmed by running tests on base state. All acceptance criteria met."
+}

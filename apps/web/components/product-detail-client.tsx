@@ -207,7 +207,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
       </div>
 
       {/* Mobile: Product info below image */}
-      <div className="md:hidden px-4 pt-5 pb-4">
+      <div className="md:hidden px-4 pt-5 pb-40">
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ ...springs.enter, delay: 0.1 }}>
           <span className="text-caption font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">{product.category}</span>
           <h1 className="mt-3 text-2xl font-black text-slate-900 dark:text-white">{product.name}</h1>

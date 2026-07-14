@@ -46,22 +46,26 @@ export function ThemeToggleIcon() {
   return (
     <button
       onClick={toggle}
-      className="relative flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 press transition-colors"
-      aria-label="Toggle dark mode"
+      className="relative flex h-11 w-11 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 press transition-colors"
+      aria-label={mounted ? (isDark ? "Switch to light mode" : "Switch to dark mode") : "Toggle theme"}
     >
-      <motion.div
-        initial={false}
-        animate={{ rotate: mounted && isDark ? 180 : 0, scale: mounted && isDark ? 0.8 : 1 }}
-        transition={springs.enter}
-      >
-        {/* Show the target state you'd switch TO, matching ThemeToggle:
-            in dark mode show the Sun (switch to light), in light mode the Moon. */}
-        {mounted && isDark ? (
-          <Sun className="h-4 w-4 text-yellow-400" />
-        ) : (
-          <Moon className="h-4 w-4 text-slate-600 dark:text-slate-300" />
-        )}
-      </motion.div>
+      {mounted ? (
+        <motion.div
+          key={isDark ? "sun" : "moon"}
+          initial={{ rotate: -90, opacity: 0 }}
+          animate={{ rotate: 0, opacity: 1 }}
+          transition={springs.enter}
+        >
+          {isDark ? (
+            <Sun className="h-[18px] w-[18px] text-yellow-400" />
+          ) : (
+            <Moon className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
+          )}
+        </motion.div>
+      ) : (
+        /* Pre-mount placeholder to avoid layout shift and hydration mismatch */
+        <span className="h-[18px] w-[18px]" />
+      )}
     </button>
   );
 }

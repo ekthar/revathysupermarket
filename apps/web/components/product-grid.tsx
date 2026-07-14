@@ -300,11 +300,12 @@ export function ProductGrid({
           />
         </label>
         <div className="sticky-category-rail md:hidden">
-          <div ref={categoryRailRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 snap-x snap-mandatory">
+          <div ref={categoryRailRef} className="flex items-center gap-2 overflow-x-auto no-scrollbar pb-0.5 pr-4 snap-x snap-mandatory">
             <button
               type="button"
               onClick={() => setFilterOpen(true)}
-              className="flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-black px-4 text-xs font-black text-white press snap-start"
+              aria-label="Open sort and filter options"
+              className="flex h-10 shrink-0 items-center gap-2 rounded-2xl bg-black dark:bg-white px-4 text-xs font-black text-white dark:text-black press snap-start"
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               Filters
@@ -322,7 +323,7 @@ export function ProductGrid({
                 className={cn(
                   "h-9 shrink-0 rounded-full px-4 text-xs font-black whitespace-nowrap snap-start transition-colors",
                   category === item
-                    ? "bg-black text-white"
+                    ? "bg-black text-white dark:bg-white dark:text-black"
                     : "border border-border bg-card text-muted-foreground shadow-sm"
                 )}
               >
@@ -334,7 +335,8 @@ export function ProductGrid({
         <select
           value={category}
           onChange={(event) => handleCategoryChange(event.target.value)}
-          className="mt-3 hidden h-12 rounded-2xl border border-input bg-background px-4 text-sm font-semibold md:mt-0 md:block"
+          className="mt-3 hidden h-12 rounded-2xl border border-input bg-background px-4 text-sm font-semibold text-foreground md:mt-0 md:block"
+          aria-label="Filter by category"
         >
           <option>All</option>
           {categories.map((item) => (
@@ -344,7 +346,8 @@ export function ProductGrid({
         <select
           value={sort}
           onChange={handleSortChange}
-          className="mt-3 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold md:mt-0"
+          className="mt-3 h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold text-foreground md:mt-0"
+          aria-label="Sort products"
         >
           <option value="popularity">Popularity</option>
           <option value="low">Price Low To High</option>
@@ -354,7 +357,7 @@ export function ProductGrid({
         <div className="mt-3 hidden md:col-span-3 md:block">
           <div className="flex items-center justify-between text-xs font-black sm:text-sm">
             <span>Price up to Rs {maxPrice}</span>
-            <span className="rounded-full bg-black px-3 py-1 text-white">{total} items</span>
+            <span className="rounded-full bg-black dark:bg-white px-3 py-1 text-white dark:text-black">{total} items</span>
           </div>
           <input
             type="range"
@@ -418,7 +421,7 @@ export function ProductGrid({
                   onClick={() => { startTransition(() => setSort(option.value)); setFilterOpen(false); }}
                   className={`h-10 rounded-xl text-caption font-semibold transition-colors ${
                     sort === option.value
-                      ? "bg-black text-white"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
                       : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                   }`}
                 >
@@ -456,7 +459,7 @@ export function ProductGrid({
                   onClick={() => { handleCategoryChange(item); setFilterOpen(false); }}
                   className={`h-9 px-3 rounded-full text-caption font-semibold transition-colors ${
                     category === item
-                      ? "bg-black text-white"
+                      ? "bg-black text-white dark:bg-white dark:text-black"
                       : "bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
                   }`}
                 >
@@ -467,7 +470,7 @@ export function ProductGrid({
           </div>
 
           {/* Results count */}
-          <p className="text-center text-caption font-semibold text-black">{total} products found</p>
+          <p className="text-center text-caption font-semibold text-black dark:text-white">{total} products found</p>
         </div>
       </BottomSheet>
     </section>

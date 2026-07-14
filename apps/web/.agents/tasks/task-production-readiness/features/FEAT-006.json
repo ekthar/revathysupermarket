@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-006",
+  "type": "feat",
+  "description": "Enhanced fuzzy search with Levenshtein distance, trigram similarity, relevance scoring, and autocomplete fallback",
+  "status": "completed",
+  "steps": [
+    "Create lib/search/fuzzy.ts - Pure utility functions: levenshteinDistance(a, b), trigramSimilarity(a, b) (Dice coefficient on character trigrams). No external deps.",
+    "Create lib/search/relevance.ts - Search result scoring: scoreResult(query, productName) returns numeric score. Scoring: exact match (100) > starts-with (80) > word-starts-with (60) > contains (40) > fuzzy match with similarity > 0.3 (20 * similarity). Export rankResults(query, products) that sorts by score descending.",
+    "Modify app/api/products/route.ts - When search query 'q' is provided and Prisma returns < 3 results: fetch additional products (up to 50) without the name filter, run fuzzy matching via lib/search/relevance.ts, merge results. Include a 'relevanceScore' field in response items when q is present. Add 'suggestions' array to response with top fuzzy-matched product names when exact results are sparse.",
+    "Add comprehensive tests in tests/fuzzy-search.test.ts - Test levenshteinDistance, trigramSimilarity, scoreResult with various inputs including misspellings and partial matches"
+  ],
+  "acceptance_criteria": [
+    "lib/search/fuzzy.ts exports levenshteinDistance and trigramSimilarity functions",
+    "lib/search/relevance.ts exports scoreResult and rankResults functions",
+    "Product search API falls back to fuzzy matching when < 3 exact results found",
+    "Response includes relevanceScore when search query is present",
+    "Response includes suggestions array for fuzzy matches",
+    "Fuzzy search tests pass with correct distance/similarity calculations"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm no errors",
+    "Run npm run test from apps/web/ and confirm fuzzy search tests pass"
+  ],
+  "blocked_reason": null,
+  "findings": "All 29 fuzzy search tests pass. Pre-existing test failure in tests/security.test.ts (production env verification requires Upstash rate limiting configuration) is unrelated - same issue documented in FEAT-005. Eslint passes cleanly on all new/modified files."
+}

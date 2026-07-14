@@ -15,6 +15,7 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { GlobalSearchSheet } from "@/components/search/global-search";
 import { AnimatedStoreName } from "@/components/ui/gsap/animated-store-name";
 import { useTranslations } from "next-intl";
+import { ThemeToggleIcon } from "@/components/theme-toggle";
 
 const navLinks = [
   { href: "/products", label: "Shop" },
@@ -112,7 +113,7 @@ export const Header = memo(function Header({
                     href={link.href}
                     className={`relative px-4 py-2 text-sm font-bold rounded-full transition-all ${
                       isActive
-                        ? "bg-primary/10 text-primary"
+                        ? "bg-primary/10 text-primary dark:bg-white/10 dark:text-white"
                         : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-neutral-800"
                     }`}
                   >
@@ -129,6 +130,9 @@ export const Header = memo(function Header({
 
               {/* Language switcher */}
               <LanguageSwitcher />
+
+              {/* Theme toggle */}
+              <ThemeToggleIcon />
 
               <button
                 type="button"

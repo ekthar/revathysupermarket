@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-008",
+  "type": "feat",
+  "description": "Enhanced real-time order tracking with visual timeline component, rider ETA countdown, and rider info card",
+  "status": "pending",
+  "steps": [
+    "Create components/tracking/order-timeline.tsx - Visual step-by-step timeline component with icons for each order status (ORDER_RECEIVED, ACCEPTED, PACKING, READY_FOR_DELIVERY, OUT_FOR_DELIVERY, ARRIVING, DELIVERED). Current step highlighted with pulse animation. Completed steps show checkmark. Uses framer-motion for enter animations. Shows timestamp for each completed step from statusEvents array.",
+    "Enhance components/tracking/live-order-tracking.tsx - Replace the existing inline TRACKING_STEPS timeline with the new OrderTimeline component. Add rider info card enhancement: when OUT_FOR_DELIVERY status, show rider name, phone with tap-to-call button, and distance-based ETA countdown that updates as rider location changes. Add a pulsing 'arriving' indicator when distance < 500m."
+  ],
+  "acceptance_criteria": [
+    "components/tracking/order-timeline.tsx renders a full 7-step timeline with icons",
+    "Current step has pulse animation, completed steps show checkmarks",
+    "Each completed step shows its timestamp from statusEvents",
+    "Rider info card shows name and phone with call button when OUT_FOR_DELIVERY",
+    "ETA countdown updates based on rider location changes",
+    "Component uses framer-motion springs from lib/motion.ts",
+    "No new npm packages added"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm no errors",
+    "Run npm run test from apps/web/ and confirm all existing tests still pass"
+  ],
+  "blocked_reason": null,
+  "findings": ""
+}

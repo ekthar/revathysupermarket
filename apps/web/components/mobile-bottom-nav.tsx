@@ -98,7 +98,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
       aria-current={active ? "page" : undefined}
       className={cn(
         "relative flex min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-micro transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary/30",
-        active ? "text-white" : "text-neutral-500 hover:bg-white/65 dark:hover:bg-neutral-800/65"
+        active ? "text-white dark:text-black" : "text-neutral-500 hover:bg-white/65 dark:hover:bg-neutral-800/65"
       )}
     >
       {/* Shared-layout active indicator — a single pill that slides between
@@ -107,7 +107,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
       {active && (
         <motion.div
           layoutId="nav-active-indicator"
-          className="absolute inset-0 rounded-2xl bg-black shadow-elevation-3"
+          className="absolute inset-0 rounded-2xl bg-black dark:bg-white shadow-elevation-3"
           style={{ willChange: "transform" }}
           transition={springs.indicator}
           initial={false}

@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "SMS notification templates and order lifecycle integration using existing sms_enabled flag and lib/sms.ts",
+  "status": "completed",
+  "steps": [
+    "Create lib/sms/templates.ts - SMS message template functions: orderConfirmed(orderNumber, total, eta), orderDispatched(orderNumber, riderName), orderDelivered(orderNumber). Each returns a short SMS string.",
+    "Create lib/sms/notify-order.ts - Helper that checks sms_enabled feature flag via isFeatureEnabled('sms_enabled'), then sends appropriate SMS using existing lib/sms.ts sendSms function. Exports notifyOrderSms(event, phone, data) where event is 'confirmed'|'dispatched'|'delivered'. Fire-and-forget, catches all errors.",
+    "Integrate into app/api/orders/route.ts POST handler - Add notifyOrderSms('confirmed', ...) call in the Promise.allSettled block",
+    "Add test in tests/sms-templates.test.ts verifying template functions produce correct SMS strings"
+  ],
+  "acceptance_criteria": [
+    "lib/sms/templates.ts exports template functions for order events",
+    "lib/sms/notify-order.ts checks sms_enabled flag before sending",
+    "SMS notification is triggered in POST /api/orders (fire-and-forget)",
+    "When sms_enabled flag is false, no SMS is sent (graceful no-op)",
+    "Template tests pass"
+  ],
+  "verification": [
+    "Run npx eslint . from apps/web/ and confirm no errors",
+    "Run npm run test from apps/web/ and confirm all tests pass"
+  ],
+  "blocked_reason": null,
+  "findings": "All 8 SMS template tests pass. Lint produces 0 errors. Pre-existing test failure in tests/security.test.ts (production env verification - unrelated, same as FEAT-001 and FEAT-002). The sms_enabled flag already existed in prisma/feature-flags.ts. notifyOrderSms is integrated into the orders POST handler via Promise.allSettled (fire-and-forget). Templates are concise (<320 chars) for SMS length constraints."
+}

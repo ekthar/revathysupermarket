@@ -8,6 +8,8 @@ import { AnimatedCategories } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
 import { HomeSearch } from "@/components/home/home-search";
 import { LocationPrompt } from "@/components/location-prompt";
+import { StructuredData } from "@/components/structured-data";
+import { organizationSchema, websiteSchema } from "@/lib/structured-data";
 import { categories as demoCategories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
@@ -109,6 +111,9 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-screen bg-[#F7F7FA] dark:bg-[#020617]">
+      {/* SEO structured data — Organization + WebSite with SearchAction */}
+      <StructuredData data={[organizationSchema(), websiteSchema()]} />
+
       {/* Location prompt — shown on first visit if no saved location */}
       <LocationPrompt />
 

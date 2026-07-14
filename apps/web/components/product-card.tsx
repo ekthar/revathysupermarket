@@ -52,7 +52,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         >
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50"
+            className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-800"
           >
             <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
           </motion.div>
@@ -98,7 +98,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       whileTap={tapScale.subtle}
       transition={springs.snappy}
       className={cn(
-        "relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 product-card-animated shadow-elevation-1",
+        "relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 product-card-animated shadow-elevation-1",
         outOfStock && "opacity-50"
       )}
     >
@@ -110,7 +110,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       >
         <DoubleTapHeart onDoubleTap={() => favoriteBtnRef.current?.toggle()}>
           <div className={cn(
-            "relative bg-neutral-50 overflow-hidden",
+            "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
             compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
           )}>
             <motion.div

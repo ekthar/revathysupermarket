@@ -8,7 +8,7 @@ import {
   BarChart3, Bell, Calculator, ChevronDown, Clock, FileText, Gift,
   Headphones, IndianRupee, Layers, LayoutDashboard, Menu, MessageCircle,
   MessageSquare, Package, Receipt, RotateCcw, Settings, ShieldCheck,
-  ShoppingBag, Star, Tag, Ticket, Truck, Users, X,
+  ShoppingBag, Star, Tag, Ticket, ToggleLeft, Truck, Users, X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { roleLabel } from "@/lib/roles";
@@ -17,7 +17,7 @@ const iconMap: Record<string, React.ElementType> = {
   BarChart3, Bell, Calculator, Clock, FileText, Gift, Headphones,
   IndianRupee, Layers, LayoutDashboard, MessageCircle, MessageSquare,
   Package, Receipt, RotateCcw, Settings, ShieldCheck, ShoppingBag,
-  Star, Tag, Ticket, Truck, Users,
+  Star, Tag, Ticket, ToggleLeft, Truck, Users,
 };
 
 type NavItem = { href: string; label: string; icon: string; badge: number };
@@ -176,7 +176,7 @@ export function AdminNav({ nav, storeName, logoUrl, userName, role }: AdminNavPr
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 lg:block print:hidden">
+      <aside className="hidden w-60 shrink-0 sticky top-0 h-screen border-r border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900 lg:block print:hidden">
         {sidebarContent}
       </aside>
 

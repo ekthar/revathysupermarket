@@ -265,7 +265,7 @@ export function SettingsManagementClient({
         <FieldGroup label="Delivery Estimate Max (mins)">
           <Input value={form.deliveryEstimateMax} onChange={(event) => update("deliveryEstimateMax", Number(event.target.value))} type="number" min="10" max="180" step="5" placeholder="e.g. 45" className="h-12 rounded-2xl" />
         </FieldGroup>
-        <Button className="md:col-span-2" disabled={isPending}>
+        <Button type="submit" className="md:col-span-2" disabled={isPending}>
           <Save className="h-4 w-4" />
           Save settings
         </Button>
@@ -339,7 +339,7 @@ export function SettingsManagementClient({
             <input type="checkbox" checked={bannerForm.isActive} onChange={(event) => setBannerForm((current) => ({ ...current, isActive: event.target.checked }))} />
             <span className="text-sm font-bold">Enable promotion</span>
           </label>
-          <Button className="md:col-span-2">
+          <Button type="submit" className="md:col-span-2">
             <Save className="h-4 w-4" />
             Save banner
           </Button>

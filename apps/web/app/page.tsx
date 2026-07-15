@@ -247,7 +247,7 @@ export default async function HomePage() {
       )}
 
       {/* Final CTA row — browse all, no duplicate grid */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-8 md:pt-12 pb-12 md:pb-16">
+      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-8 md:pt-12 pb-6 md:pb-8">
         <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 p-8 md:p-12 text-center">
           <h2 className="section-title text-2xl md:text-3xl">Hungry for more?</h2>
           <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">

@@ -469,7 +469,7 @@ export function AddressSelector({
               </motion.button>
               {!locationOk && (
                 <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-semibold text-center">
-                  📍 GPS location is required — tap "Detect" or "Pin on map" above
+                  📍 GPS location is required — tap Detect or Pin on map above
                 </p>
               )}
             </div>

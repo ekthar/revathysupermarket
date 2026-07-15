@@ -1,8 +1,6 @@
 "use client";
 
-import { useState } from "react";
 import { CreditCard } from "lucide-react";
-import { PaymentCollectionModal } from "@/components/admin/payment-collection-modal";
 
 interface OrderPaymentSectionProps {
   orderId: string;
@@ -11,12 +9,7 @@ interface OrderPaymentSectionProps {
 }
 
 export function OrderPaymentSection({ orderId, paymentMethod, paymentStatus }: OrderPaymentSectionProps) {
-  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
-  const [currentPaymentStatus, setCurrentPaymentStatus] = useState(paymentStatus);
-
-  function handlePaymentSuccess() {
-    setCurrentPaymentStatus("PAID");
-  }
+  void orderId;
 
   return (
     <section className="rounded-2xl bg-card border border-border p-5">
@@ -30,29 +23,11 @@ export function OrderPaymentSection({ orderId, paymentMethod, paymentStatus }: O
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Status</span>
-          <span className={`font-semibold ${currentPaymentStatus === "PAID" ? "text-green-600" : "text-yellow-600"}`}>
-            {currentPaymentStatus}
+          <span className={`font-semibold ${paymentStatus === "PAID" ? "text-green-600" : "text-yellow-600"}`}>
+            {paymentStatus}
           </span>
         </div>
       </div>
-
-      {currentPaymentStatus !== "PAID" && (
-        <button
-          type="button"
-          onClick={() => setPaymentModalOpen(true)}
-          className="mt-4 w-full h-10 rounded-xl bg-green-600 text-sm font-bold text-white hover:bg-green-700 transition-colors"
-        >
-          Received Full
-        </button>
-      )}
-
-      {paymentModalOpen && (
-        <PaymentCollectionModal
-          orderId={orderId}
-          onClose={() => setPaymentModalOpen(false)}
-          onSuccess={handlePaymentSuccess}
-        />
-      )}
     </section>
   );
 }

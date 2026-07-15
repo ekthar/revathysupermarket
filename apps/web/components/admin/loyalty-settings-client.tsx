@@ -8,6 +8,31 @@ export function LoyaltySettingsClient({ initialConfig }: { initialConfig: Loyalt
   const [config, setConfig] = useState(initialConfig);
   const [saving, setSaving] = useState(false);
   const [adjustment, setAdjustment] = useState({ identifier: "", points: "", reason: "" });
+  const [tiers, setTiers] = useState([
+    { name: "Bronze", min: 0, max: 199 },
+    { name: "Silver", min: 200, max: 499 },
+    { name: "Gold", min: 500, max: 99999 },
+  ]);
+  const [tierSaving, setTierSaving] = useState(false);
+
+  // Load tier config on mount
+  useState(() => {
+    fetch("/api/admin/loyalty/tiers")
+      .then((res) => res.ok ? res.json() : null)
+      .then((data) => { if (data?.tiers) setTiers(data.tiers); })
+      .catch(() => {});
+  });
+
+  async function saveTiers() {
+    setTierSaving(true);
+    const response = await fetch("/api/admin/loyalty/tiers", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tiers }),
+    });
+    setTierSaving(false);
+    showToast(response.ok ? "Tier settings saved" : "Failed to save tiers", response.ok ? "success" : "error");
+  }
 
   async function save(event: React.FormEvent) {
     event.preventDefault();
@@ -160,6 +185,75 @@ export function LoyaltySettingsClient({ initialConfig }: { initialConfig: Loyalt
           Apply adjustment
         </button>
       </form>
+
+      {/* Tier Configuration */}
+      <div className="rounded-3xl border border-border bg-card p-4 shadow-elevation-1">
+        <h3 className="font-display text-2xl font-black">Tier Configuration</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Set point thresholds for each loyalty tier. Customers progress through tiers as they earn points.
+        </p>
+        <div className="mt-4 space-y-3">
+          {tiers.map((tier, idx) => (
+            <div key={idx} className="grid grid-cols-3 gap-3 items-end">
+              <label className="text-sm font-bold">
+                Tier Name
+                <input
+                  type="text"
+                  value={tier.name}
+                  onChange={(e) => setTiers((prev) => prev.map((t, i) => i === idx ? { ...t, name: e.target.value } : t))}
+                  className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-3"
+                />
+              </label>
+              <label className="text-sm font-bold">
+                Min Points
+                <input
+                  type="number"
+                  min="0"
+                  value={tier.min}
+                  onChange={(e) => setTiers((prev) => prev.map((t, i) => i === idx ? { ...t, min: Number(e.target.value) } : t))}
+                  className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-3"
+                />
+              </label>
+              <label className="text-sm font-bold">
+                Max Points
+                <input
+                  type="number"
+                  min="0"
+                  value={tier.max}
+                  onChange={(e) => setTiers((prev) => prev.map((t, i) => i === idx ? { ...t, max: Number(e.target.value) } : t))}
+                  className="mt-1 h-11 w-full rounded-2xl border border-border bg-background px-3"
+                />
+              </label>
+            </div>
+          ))}
+          <div className="flex gap-3 pt-2">
+            <button
+              type="button"
+              onClick={() => setTiers((prev) => [...prev, { name: "", min: prev.length > 0 ? prev[prev.length - 1].max + 1 : 0, max: 99999 }])}
+              className="h-11 rounded-2xl border border-border px-5 text-sm font-bold text-muted-foreground"
+            >
+              + Add Tier
+            </button>
+            {tiers.length > 1 && (
+              <button
+                type="button"
+                onClick={() => setTiers((prev) => prev.slice(0, -1))}
+                className="h-11 rounded-2xl border border-red-200 px-5 text-sm font-bold text-red-600"
+              >
+                Remove Last
+              </button>
+            )}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={saveTiers}
+          disabled={tierSaving}
+          className="mt-4 h-11 rounded-2xl bg-primary px-5 text-sm font-black text-white disabled:opacity-50"
+        >
+          {tierSaving ? "Saving…" : "Save tier settings"}
+        </button>
+      </div>
     </div>
   );
 }

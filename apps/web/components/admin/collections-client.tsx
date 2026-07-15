@@ -31,6 +31,11 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
   const { showToast } = useToast();
   const [tab, setTab] = useState<"pending" | "upi" | "settled" | "discrepancy">("pending");
   const [hidden, setHidden] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [showBulkModal, setShowBulkModal] = useState(false);
+  const [bulkCash, setBulkCash] = useState("");
+  const [bulkUpi, setBulkUpi] = useState("");
+  const [bulkSubmitting, setBulkSubmitting] = useState(false);
 
   async function reconcile(collection: Collection) {
     const discrepancy = collection.status === "SHORT" || collection.status === "EXCESS";
@@ -40,6 +45,42 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
     const data = await response.json().catch(() => ({}));
     if (!response.ok) return showToast(data.error ?? "Reconciliation failed", "error");
     setHidden((current) => new Set(current).add(collection.id)); showToast("Collection settled", "success");
+  }
+
+  function toggleSelect(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  function selectAll() {
+    const currentList = tab === "pending" ? grouped.pending : grouped.upiPending;
+    const allIds = currentList.filter((c) => !hidden.has(c.id)).map((c) => c.id);
+    setSelectedIds(new Set(allIds));
+  }
+
+  async function handleBulkCollect() {
+    const cashAmount = Number(bulkCash) || 0;
+    const upiAmount = Number(bulkUpi) || 0;
+    if (cashAmount <= 0 && upiAmount <= 0) { showToast("Enter cash or UPI amount", "error"); return; }
+    setBulkSubmitting(true);
+    try {
+      const response = await fetch("/api/admin/collections/bulk-settle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ collectionIds: Array.from(selectedIds), cashAmount, upiAmount }),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) { showToast(data.error ?? "Bulk collection failed", "error"); return; }
+      setHidden((current) => { const next = new Set(current); selectedIds.forEach((id) => next.add(id)); return next; });
+      setSelectedIds(new Set());
+      setShowBulkModal(false);
+      setBulkCash(""); setBulkUpi("");
+      showToast(`${selectedIds.size} bills collected successfully`, "success");
+    } catch { showToast("Network error", "error"); }
+    finally { setBulkSubmitting(false); }
   }
 
   const tabs = [
@@ -92,6 +133,17 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
         ))}
       </div>
 
+      {/* Bulk action bar */}
+      {selectedIds.size > 0 && (tab === "pending" || tab === "upi") && (
+        <div className="flex items-center justify-between rounded-xl bg-primary/10 border border-primary/20 px-4 py-3">
+          <span className="text-sm font-bold text-foreground">{selectedIds.size} bill{selectedIds.size !== 1 ? "s" : ""} selected</span>
+          <div className="flex gap-2">
+            <button onClick={() => setSelectedIds(new Set())} className="h-8 rounded-lg border border-border px-3 text-xs font-bold text-muted-foreground">Clear</button>
+            <button onClick={() => setShowBulkModal(true)} className="h-8 rounded-lg bg-primary px-4 text-xs font-black text-white">Collect All</button>
+          </div>
+        </div>
+      )}
+
       {/* List */}
       {currentList.length === 0 ? (
         <div className="rounded-2xl bg-card border border-border p-10 text-center">
@@ -99,10 +151,21 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
         </div>
       ) : (
         <div className="space-y-2">
+          {(tab === "pending" || tab === "upi") && currentList.filter((c) => !hidden.has(c.id)).length > 1 && (
+            <button onClick={selectAll} className="text-xs font-bold text-primary hover:underline">Select all</button>
+          )}
           {currentList.filter((c) => !hidden.has(c.id)).map((c) => (
             <div key={c.id} className="rounded-xl bg-card border border-border p-4">
               <div className="flex items-center justify-between mb-2">
-                <div>
+                <div className="flex items-center gap-2">
+                  {(tab === "pending" || tab === "upi") && (
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.has(c.id)}
+                      onChange={() => toggleSelect(c.id)}
+                      className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                    />
+                  )}
                   <span className="text-sm font-bold text-foreground">#{c.order.orderNumber}</span>
                   <span className="text-xs text-muted-foreground ml-2">{c.order.customerName}</span>
                 </div>
@@ -118,6 +181,33 @@ export function CollectionsClient({ collections, grouped, totals }: { collection
               {c.status !== "SETTLED" && <button onClick={() => reconcile(c)} className="mt-3 h-10 rounded-xl bg-primary px-4 text-xs font-black text-white">{c.status === "SHORT" || c.status === "EXCESS" ? "Resolve discrepancy" : c.upiCollected > 0 ? "Verify UPI & settle" : "Confirm cash handover"}</button>}
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Bulk Collection Modal */}
+      {showBulkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-card border border-border p-6 shadow-lg">
+            <h3 className="text-lg font-black text-foreground">Collect {selectedIds.size} Bills</h3>
+            <p className="mt-1 text-xs text-muted-foreground">Enter total cash and UPI amounts received for selected bills</p>
+            <div className="mt-4 space-y-3">
+              <div>
+                <label className="text-xs font-bold text-muted-foreground">Cash Amount (₹)</label>
+                <input type="number" min="0" value={bulkCash} onChange={(e) => setBulkCash(e.target.value)} placeholder="0" className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-muted-foreground">UPI Amount (₹)</label>
+                <input type="number" min="0" value={bulkUpi} onChange={(e) => setBulkUpi(e.target.value)} placeholder="0" className="mt-1 h-11 w-full rounded-xl border border-border bg-background px-3 text-sm font-bold" />
+              </div>
+              {(Number(bulkCash) > 0 || Number(bulkUpi) > 0) && (
+                <p className="text-sm font-semibold text-foreground">Total: ₹{(Number(bulkCash) + Number(bulkUpi)).toLocaleString()}</p>
+              )}
+            </div>
+            <div className="mt-5 flex gap-3">
+              <button onClick={() => { setShowBulkModal(false); setBulkCash(""); setBulkUpi(""); }} className="flex-1 h-11 rounded-xl border border-border text-sm font-bold text-muted-foreground">Cancel</button>
+              <button onClick={handleBulkCollect} disabled={bulkSubmitting} className="flex-1 h-11 rounded-xl bg-primary text-sm font-black text-white disabled:opacity-50">{bulkSubmitting ? "Processing..." : "Confirm Collection"}</button>
+            </div>
+          </div>
         </div>
       )}
     </div>

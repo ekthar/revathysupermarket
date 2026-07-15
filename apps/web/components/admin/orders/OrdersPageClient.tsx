@@ -136,11 +136,31 @@ export function OrdersPageClient({ data, filters }: OrdersPageClientProps) {
   const handleRefresh = useCallback(() => router.refresh(), [router]);
 
   const handleBulkAction = useCallback(async () => {
-    // In a real app this calls an API, for now just refresh
+    // Filter out orders that are already acknowledged, delivered, or cancelled
+    const validOrders = data.orders.filter((order) => {
+      if (!selectedKeys.has(order.id)) return false;
+      if (confirmAction === "acknowledge") {
+        // Cannot acknowledge if already acknowledged, delivered, or cancelled
+        return !order.acknowledgedAt && order.status !== "DELIVERED" && order.status !== "CANCELLED";
+      }
+      if (confirmAction === "ready") {
+        // Cannot mark ready if already delivered or cancelled
+        return order.status !== "DELIVERED" && order.status !== "CANCELLED" && order.status !== "READY_FOR_DELIVERY" && order.status !== "OUT_FOR_DELIVERY";
+      }
+      return true;
+    });
+
+    if (validOrders.length === 0) {
+      setConfirmAction(null);
+      setSelectedKeys(new Set());
+      return;
+    }
+
+    // In a real app this calls an API with validOrders IDs only
     setConfirmAction(null);
     setSelectedKeys(new Set());
     router.refresh();
-  }, [router]);
+  }, [router, data.orders, selectedKeys, confirmAction]);
 
   // --- Columns ---
   const columns = useMemo<Column<OrderRow>[]>(
@@ -317,7 +337,17 @@ export function OrdersPageClient({ data, filters }: OrdersPageClientProps) {
         onClose={() => setConfirmAction(null)}
         onConfirm={handleBulkAction}
         title={confirmAction === "ready" ? "Mark as Ready?" : "Acknowledge Orders?"}
-        description={`This will update ${selectedKeys.size} order${selectedKeys.size !== 1 ? "s" : ""}. This action cannot be undone.`}
+        description={(() => {
+          const skipped = data.orders.filter((o) => {
+            if (!selectedKeys.has(o.id)) return false;
+            if (confirmAction === "acknowledge") return !!o.acknowledgedAt || o.status === "DELIVERED" || o.status === "CANCELLED";
+            if (confirmAction === "ready") return o.status === "DELIVERED" || o.status === "CANCELLED" || o.status === "READY_FOR_DELIVERY" || o.status === "OUT_FOR_DELIVERY";
+            return false;
+          });
+          const valid = selectedKeys.size - skipped.length;
+          if (skipped.length > 0) return `${valid} order${valid !== 1 ? "s" : ""} will be updated. ${skipped.length} skipped (already processed).`;
+          return `This will update ${selectedKeys.size} order${selectedKeys.size !== 1 ? "s" : ""}.`;
+        })()}
         confirmLabel={confirmAction === "ready" ? "Mark Ready" : "Acknowledge"}
         variant="default"
       />

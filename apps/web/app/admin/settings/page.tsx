@@ -14,10 +14,30 @@ export default async function AdminSettingsPage() {
     return <AdminAccessDenied permission="settings.manage" />;
   }
 
-  const [settings, banners] = await Promise.all([
-    getStoreSettings(),
-    prisma.banner.findMany({ orderBy: { createdAt: "asc" } }),
-  ]);
+  const settings = await getStoreSettings();
+
+  let serializedBanners: {
+    id: string;
+    title: string;
+    subtitle: string | null;
+    image: string;
+    href: string | null;
+    isActive: boolean;
+  }[] = [];
+
+  try {
+    const banners = await prisma.banner.findMany({ orderBy: { createdAt: "asc" } });
+    serializedBanners = banners.map((b) => ({
+      id: b.id,
+      title: b.title,
+      subtitle: b.subtitle,
+      image: b.image,
+      href: b.href,
+      isActive: b.isActive,
+    }));
+  } catch (error) {
+    console.error("[admin/settings] Banner query failed:", error);
+  }
 
   // WhatsApp config status (env vars)
   const whatsappConfig = {
@@ -38,15 +58,6 @@ export default async function AdminSettingsPage() {
   } catch {
     // Table doesn't exist
   }
-
-  const serializedBanners = banners.map((b) => ({
-    id: b.id,
-    title: b.title,
-    subtitle: b.subtitle,
-    image: b.image,
-    href: b.href,
-    isActive: b.isActive,
-  }));
 
   return (
     <SettingsManagementClient

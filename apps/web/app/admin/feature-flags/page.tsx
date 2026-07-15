@@ -13,25 +13,32 @@ export default async function AdminFeatureFlagsPage() {
     return <AdminAccessDenied permission="settings.manage" />;
   }
 
-  const [flags, deliveryPartners] = await Promise.all([
-    prisma.featureFlag.findMany({ orderBy: { key: "asc" } }),
-    prisma.user.findMany({
-      where: { role: "DELIVERY_PARTNER", isActive: true },
-      select: { id: true, name: true },
-      orderBy: { name: "asc" },
-    }),
-  ]);
+  let serializedFlags: { key: string; enabled: boolean; config: Record<string, unknown> | null }[] = [];
+  let serializedPartners: { id: string; name: string }[] = [];
 
-  const serializedFlags = flags.map((f) => ({
-    key: f.key,
-    enabled: f.enabled,
-    config: f.config as Record<string, unknown> | null,
-  }));
+  try {
+    const [flags, deliveryPartners] = await Promise.all([
+      prisma.featureFlag.findMany({ orderBy: { key: "asc" } }),
+      prisma.user.findMany({
+        where: { role: "DELIVERY_PARTNER", isActive: true },
+        select: { id: true, name: true },
+        orderBy: { name: "asc" },
+      }),
+    ]);
 
-  const serializedPartners = deliveryPartners.map((p) => ({
-    id: p.id,
-    name: p.name || "Unnamed",
-  }));
+    serializedFlags = flags.map((f) => ({
+      key: f.key,
+      enabled: f.enabled,
+      config: f.config as Record<string, unknown> | null,
+    }));
+
+    serializedPartners = deliveryPartners.map((p) => ({
+      id: p.id,
+      name: p.name || "Unnamed",
+    }));
+  } catch (error) {
+    console.error("[admin/feature-flags] Query failed:", error);
+  }
 
   return (
     <FeatureFlagSettings flags={serializedFlags} deliveryPartners={serializedPartners} />

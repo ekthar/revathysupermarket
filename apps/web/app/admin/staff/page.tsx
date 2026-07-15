@@ -23,33 +23,80 @@ export default async function AdminStaffPage() {
     return <AdminAccessDenied permission="staff.manage" />;
   }
 
-  const staffMembers = await prisma.user.findMany({
-    where: { role: { in: STAFF_ROLES } },
-    orderBy: [{ role: "asc" }, { name: "asc" }],
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      role: true,
-      isActive: true,
-      lastLoginAt: true,
-      vehicleInfo: true,
-      staffPermissions: { select: { permission: true } },
-    },
-  }).catch(() => []);
+  let serialized: {
+    id: string;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    role: string;
+    isActive: boolean;
+    lastLoginAt: string | null;
+    vehicleInfo: string | null;
+    permissions: string[];
+  }[] = [];
 
-  const serialized = staffMembers.map((m) => ({
-    id: m.id,
-    name: m.name,
-    email: m.email,
-    phone: m.phone,
-    role: m.role,
-    isActive: m.isActive,
-    lastLoginAt: m.lastLoginAt?.toISOString() || null,
-    vehicleInfo: m.vehicleInfo || null,
-    permissions: m.staffPermissions.map((p) => p.permission),
-  }));
+  try {
+    const staffMembers = await prisma.user.findMany({
+      where: { role: { in: STAFF_ROLES } },
+      orderBy: [{ role: "asc" }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        isActive: true,
+        lastLoginAt: true,
+        vehicleInfo: true,
+        staffPermissions: { select: { permission: true } },
+      },
+    });
+
+    serialized = staffMembers.map((m) => ({
+      id: m.id,
+      name: m.name,
+      email: m.email,
+      phone: m.phone,
+      role: m.role,
+      isActive: m.isActive,
+      lastLoginAt: m.lastLoginAt?.toISOString() || null,
+      vehicleInfo: m.vehicleInfo || null,
+      permissions: m.staffPermissions.map((p) => p.permission),
+    }));
+  } catch (error) {
+    // Fallback: query without staffPermissions relation if it fails
+    console.error("[admin/staff] Primary query failed, trying fallback:", error);
+    try {
+      const staffMembers = await prisma.user.findMany({
+        where: { role: { in: STAFF_ROLES } },
+        orderBy: [{ role: "asc" }, { name: "asc" }],
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          phone: true,
+          role: true,
+          isActive: true,
+          lastLoginAt: true,
+        },
+      });
+
+      serialized = staffMembers.map((m) => ({
+        id: m.id,
+        name: m.name,
+        email: m.email,
+        phone: m.phone,
+        role: m.role,
+        isActive: m.isActive,
+        lastLoginAt: m.lastLoginAt?.toISOString() || null,
+        vehicleInfo: null,
+        permissions: [],
+      }));
+    } catch {
+      // Complete failure — return empty
+      serialized = [];
+    }
+  }
 
   return <AdminStaffClient staff={serialized} />;
 }

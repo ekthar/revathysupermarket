@@ -66,6 +66,7 @@ export default async function AdminCategoriesPage() {
                       height={48}
                       alt={category.name}
                       className="h-full w-full rounded-xl object-cover"
+                      unoptimized
                     />
                   ) : category.icon ? (
                     <span className="text-xl">{category.icon}</span>

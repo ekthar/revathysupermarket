@@ -4,6 +4,7 @@ import { ProductService } from "@/lib/services";
 import { prisma } from "@/lib/prisma";
 import { AdminAccessDenied } from "@/components/admin/shared";
 import { ProductsPageClient } from "@/components/admin/products";
+import { safeProductImageUrl } from "@/lib/image";
 
 export const dynamic = "force-dynamic";
 
@@ -58,7 +59,7 @@ export default async function AdminProductsPage({ searchParams }: PageProps) {
       id: p.id,
       name: p.name,
       slug: p.slug,
-      image: p.image,
+      image: safeProductImageUrl(p.image),
       price: Number(p.price),
       discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
       stock: p.stock,

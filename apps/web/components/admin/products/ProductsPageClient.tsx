@@ -203,6 +203,7 @@ export function ProductsPageClient({
                 height={40}
                 alt={item.name}
                 className="rounded-lg object-cover"
+                unoptimized
               />
             ) : (
               <Package className="h-5 w-5 text-neutral-400" />

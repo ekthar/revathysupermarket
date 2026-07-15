@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Minus, Plus, Trash2, Tag, Info } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, Tag, Info, Truck, Sparkles } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast as sonnerToast } from "sonner";
@@ -25,7 +25,7 @@ type StoreConfig = {
   gstin: string;
 };
 
-export function CartPageClient() {
+export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig }) {
   const { items, subtotal, removeItem, updateQuantity, addItem } = useCart();
   const t = useTranslations("cart");
   const [promoCode, setPromoCode] = useState("");
@@ -34,7 +34,7 @@ export function CartPageClient() {
   const [promoDescription, setPromoDescription] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
-  const [config, setConfig] = useState<StoreConfig>({
+  const [config, setConfig] = useState<StoreConfig>(initialConfig ?? {
     gstRatePercent: 0,
     deliveryFee: 40,
     freeDeliveryThreshold: 500,
@@ -42,16 +42,17 @@ export function CartPageClient() {
     storeName: "",
     gstin: ""
   });
-  const [configLoading, setConfigLoading] = useState(true);
+  const [configLoading, setConfigLoading] = useState(!initialConfig);
 
-  // Fetch store settings on mount
+  // Fetch store settings on mount (fallback if initialConfig not provided)
   useEffect(() => {
+    if (initialConfig) return;
     fetch("/api/store-settings")
       .then((res) => res.ok ? res.json() : null)
       .then((data) => { if (data) setConfig(data); })
       .catch(() => {})
       .finally(() => setConfigLoading(false));
-  }, []);
+  }, [initialConfig]);
 
   // Calculate dynamic values
   const qualifiesFreeDelivery = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold;
@@ -229,8 +230,23 @@ export function CartPageClient() {
         </Link>
       </div>
 
+      {/* Estimated delivery time */}
+      {items.length > 0 && (
+        <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-2.5 dark:bg-green-950/30 mt-2">
+          <Truck className="h-4 w-4 text-green-600" />
+          <span className="text-sm font-medium text-green-700 dark:text-green-300">Estimated delivery in ~30 minutes</span>
+        </div>
+      )}
+
       {/* Free delivery progress */}
       <FreeDeliveryProgress subtotal={subtotal} threshold={config.freeDeliveryThreshold} />
+
+      {/* "Add more for free delivery" nudge */}
+      {!qualifiesFreeDelivery && config.freeDeliveryThreshold > 0 && (config.freeDeliveryThreshold - subtotal) <= 50 && (config.freeDeliveryThreshold - subtotal) > 0 && (
+        <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
+          Add just {formatCurrency(config.freeDeliveryThreshold - subtotal)} more for free delivery!
+        </p>
+      )}
 
       {/* Minimum order warning */}
       {belowMinimum && (
@@ -263,6 +279,18 @@ export function CartPageClient() {
         </motion.div>
       )}
 
+      {/* Savings celebration when over ₹100 */}
+      {totalSavings > 100 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mt-2 flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2.5 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-800"
+        >
+          <Sparkles className="h-4 w-4 text-amber-500" />
+          <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">You&apos;re saving {formatCurrency(totalSavings)} on this order!</span>
+        </motion.div>
+      )}
+
       {/* Cart Items */}
       <div className="mt-3 overflow-hidden rounded-lg bg-white shadow-elevation-3 divide-y divide-neutral-50 dark:divide-neutral-800">
         <AnimatePresence initial={false}>
@@ -288,11 +316,11 @@ export function CartPageClient() {
                     <p className="text-caption text-neutral-400 mt-0.5">{item.unit || "per item"}</p>
                   </div>
 
-                  <div className="flex h-[30px] shrink-0 items-center overflow-hidden rounded-full bg-black">
+                  <div className="flex h-[44px] shrink-0 items-center overflow-hidden rounded-full bg-black">
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                      className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                       aria-label={`Decrease ${item.name} quantity`}
                     >
                       <Minus className="h-3 w-3" />
@@ -301,7 +329,7 @@ export function CartPageClient() {
                     <button
                       type="button"
                       onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-7 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                      className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                       aria-label={`Increase ${item.name} quantity`}
                     >
                       <Plus className="h-3 w-3" />
@@ -319,7 +347,7 @@ export function CartPageClient() {
                     type="button"
                     onClick={() => handleRemove(item)}
                     aria-label={`Remove ${item.name} from cart`}
-                    className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors press shrink-0"
+                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors press shrink-0"
                   >
                     <Trash2 className="h-3 w-3 text-neutral-300 hover:text-red-400" />
                   </button>

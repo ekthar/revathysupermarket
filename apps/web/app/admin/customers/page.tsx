@@ -1,68 +1,76 @@
-import Link from "next/link";
-import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
-import { canViewReports } from "@/lib/authz";
-import { Phone, Send, ShoppingBag, UserRound } from "lucide-react";
+import { getAuthContext } from "@/lib/auth-guard";
+import { hasPermission } from "@/lib/permissions";
+import { CustomerService } from "@/lib/services";
+import { AdminAccessDenied } from "@/components/admin/shared";
+import { CustomersPageClient } from "@/components/admin/customers";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminCustomersPage() {
-  const session = await auth();
-  if (!canViewReports(session?.user?.role)) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
-        <h2 className="font-display text-3xl font-black">Customers</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Manager or owner access is required.</p>
-      </div>
-    );
+interface PageProps {
+  searchParams: Promise<{
+    page?: string;
+    pageSize?: string;
+    search?: string;
+  }>;
+}
+
+export default async function AdminCustomersPage({ searchParams }: PageProps) {
+  const ctx = await getAuthContext();
+
+  if (!ctx || !hasPermission(ctx, "customers.view")) {
+    return <AdminAccessDenied permission="customers.view" />;
   }
 
-  const customers = await prisma.user.findMany({
-    where: { role: "CUSTOMER" },
-    include: { orders: true },
-    orderBy: { createdAt: "desc" }
-  }).catch(() => []);
+  const params = await searchParams;
+
+  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(params.pageSize || "20", 10) || 20));
+
+  const result = await CustomerService.list({
+    page,
+    pageSize,
+    search: params.search || undefined,
+  });
+
+  // Fetch loyalty data for each customer
+  const customersWithLoyalty = await Promise.all(
+    result.customers.map(async (c) => {
+      let loyaltyPoints = 0;
+      let lastOrderDate: string | null = null;
+
+      try {
+        const detail = await CustomerService.getById(c.id);
+        loyaltyPoints = detail.loyaltyAccount?.balance ?? 0;
+        if (detail.recentOrders.length > 0) {
+          lastOrderDate = detail.recentOrders[0].createdAt.toISOString();
+        }
+      } catch {
+        // Graceful fallback
+      }
+
+      return {
+        id: c.id,
+        name: c.name,
+        phone: c.phone,
+        email: c.email,
+        orderCount: c.orderCount,
+        totalSpent: c.totalSpent,
+        loyaltyPoints,
+        lastOrderDate,
+        isActive: c.isActive,
+      };
+    })
+  );
 
   return (
-    <div>
-      <div className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-primary">Customer care</p>
-        <h2 className="mt-2 font-display text-4xl font-black leading-tight">Customers</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Quick contact and order history for repeat shoppers.</p>
-      </div>
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-        {customers.map((customer) => (
-          <article key={customer.id} className="rounded-xl border border-white/70 bg-card/95 p-4 shadow-soft dark:border-white/10">
-            <div className="flex items-start gap-3">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-primary/10">
-                <UserRound className="h-5 w-5 text-primary" />
-              </span>
-              <div className="min-w-0">
-                <h3 className="truncate font-black">{customer.name ?? "Customer"}</h3>
-                <p className="truncate text-sm text-muted-foreground">{customer.email}</p>
-                <p className="mt-2 text-sm font-bold">{customer.orders.length} orders</p>
-              </div>
-            </div>
-            <div className="mt-4 grid grid-cols-2 gap-2">
-              <a href={`tel:${customer.phone ?? ""}`} className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-border bg-background/70 text-sm font-black">
-                <Phone className="h-4 w-4 text-primary" />
-                Call
-              </a>
-              <a href={`https://wa.me/${(customer.phone ?? "").replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-lime-fresh text-sm font-black text-slate-950">
-                <Send className="h-4 w-4" />
-                WhatsApp
-              </a>
-            </div>
-            <Link
-              href={`/admin/customers/${customer.id}/orders`}
-              className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 text-sm font-black text-primary transition-colors hover:bg-primary/10"
-            >
-              <ShoppingBag className="h-4 w-4" />
-              Order History
-            </Link>
-          </article>
-        ))}
-      </div>
-    </div>
+    <CustomersPageClient
+      data={{
+        customers: customersWithLoyalty,
+        total: result.total,
+        page: result.page,
+        pageSize: result.pageSize,
+      }}
+      filters={{ search: params.search || "" }}
+    />
   );
 }

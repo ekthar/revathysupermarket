@@ -234,7 +234,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
                 className="flex shrink-0 items-center gap-2 rounded-xl border border-neutral-100 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3 py-2 text-left hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
               >
                 {product.image && (
-                  <img src={product.image} alt="" className="h-8 w-8 rounded-lg object-cover" />
+                  <img src={product.image} alt={product.name} className="h-8 w-8 rounded-lg object-cover" />
                 )}
                 <div className="min-w-0">
                   <p className="text-micro font-bold text-neutral-800 dark:text-neutral-200 truncate max-w-[100px]">{product.name}</p>

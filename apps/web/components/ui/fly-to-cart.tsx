@@ -35,7 +35,7 @@ function ClientPortal({ items }: { items: FlyingItem[] }) {
           <motion.img
             key={item.id}
             src={item.imgSrc}
-            alt=""
+            alt="Product added to cart"
             style={{
               position: "absolute",
               willChange: "transform, opacity",

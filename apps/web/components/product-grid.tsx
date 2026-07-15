@@ -332,6 +332,9 @@ export function ProductGrid({
             ))}
           </div>
         </div>
+        <div className="mt-2 flex items-center justify-between md:hidden">
+          <span className="text-xs font-semibold text-neutral-500 dark:text-neutral-400">{total} products</span>
+        </div>
         <select
           value={category}
           onChange={(event) => handleCategoryChange(event.target.value)}

@@ -269,7 +269,7 @@ function OfferCard({
             {offer.image && (
               <Image
                 src={offer.image}
-                alt=""
+                alt={offer.title}
                 width={64}
                 height={64}
                 className="w-16 h-16 rounded-xl object-cover shrink-0"

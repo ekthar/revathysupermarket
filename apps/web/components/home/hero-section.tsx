@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, Bike } from "lucide-react";
+import { ChevronRight, Bike, Search, Clock } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 import { useRef } from "react";
@@ -79,10 +79,27 @@ export function HeroSection({
                 </Link>
               </div>
 
-              <div className="mt-6 flex items-center gap-4 text-sm font-semibold text-neutral-400 dark:text-neutral-500">
+              <p className="mt-3 flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
+                <Clock className="h-3.5 w-3.5" />
+                Delivery in ~30 minutes
+              </p>
+
+              <div className="mt-4 flex items-center gap-4 text-sm font-semibold text-neutral-400 dark:text-neutral-500">
                 <span>COD & UPI</span>
                 <span className="h-3 w-px bg-neutral-200 dark:bg-neutral-700" />
                 <span>Free delivery over ₹499</span>
+              </div>
+
+              {/* Integrated search entry */}
+              <div className="mt-5 relative max-w-md">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+                <input
+                  type="text"
+                  placeholder="Search for groceries..."
+                  className="w-full rounded-full border border-neutral-200 bg-white py-3 pl-11 pr-4 text-sm shadow-sm transition-all placeholder:text-neutral-400 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:ring-green-900"
+                  readOnly
+                  onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
+                />
               </div>
             </div>
 

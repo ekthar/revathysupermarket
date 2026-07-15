@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Copy, Gift, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { useToast } from "@/components/toast-provider";
+import { ReferralCard } from "@/components/account/referral-card";
 
 type Transaction = { id: string; points: number; reason: string; createdAt: string };
 
@@ -57,54 +58,40 @@ export function LoyaltyClient({
         </p>
       </section>
 
-      {/* Referral section */}
+      {/* Referral section — premium shareable card */}
+      <ReferralCard referralCode={referralCode} referralRewardPoints={referralRewardPoints} />
+
+      {/* Apply a referral code + stats */}
       <section className="rounded-3xl border border-border bg-card p-4">
         <div className="flex items-center gap-3">
-          <Gift className="h-5 w-5 text-primary" />
+          <Users className="h-5 w-5 text-primary" />
           <div>
-            <h2 className="font-black">Invite friends</h2>
+            <h2 className="font-black">Apply a referral code</h2>
             <p className="text-sm text-muted-foreground">
-              Both receive {referralRewardPoints} points after their first delivered order.
+              {invited} friend{invited !== 1 ? "s" : ""} invited so far
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            navigator.clipboard.writeText(referralCode);
-            showToast("Referral code copied", "success");
-          }}
-          className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary/10 font-black text-primary"
-        >
-          <Copy className="h-4 w-4" />
-          {referralCode}
-        </button>
-        <p className="mt-2 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
-          <Users className="h-4 w-4" />
-          {invited} friend{invited !== 1 ? "s" : ""} invited
-        </p>
-        <div className="mt-4">
-          <div className="flex gap-2">
-            <input
-              value={code}
-              onChange={(event) => setCode(event.target.value.toUpperCase())}
-              placeholder="Have a referral code?"
-              maxLength={20}
-              className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-background px-3 text-sm font-bold"
-            />
-            <button
-              type="button"
-              disabled={applying || code.length < 6}
-              onClick={applyReferral}
-              className="h-11 rounded-2xl bg-primary px-4 text-sm font-black text-white disabled:opacity-50"
-            >
-              Apply
-            </button>
-          </div>
-          {code.length > 0 && code.length < 6 && (
-            <p className="mt-1 text-xs text-muted-foreground">Referral codes are at least 6 characters.</p>
-          )}
+        <div className="mt-3 flex gap-2">
+          <input
+            value={code}
+            onChange={(event) => setCode(event.target.value.toUpperCase())}
+            placeholder="Have a referral code?"
+            maxLength={20}
+            className="h-11 min-w-0 flex-1 rounded-2xl border border-border bg-background px-3 text-sm font-bold"
+          />
+          <button
+            type="button"
+            disabled={applying || code.length < 6}
+            onClick={applyReferral}
+            className="h-11 rounded-2xl bg-primary px-4 text-sm font-black text-white disabled:opacity-50"
+          >
+            Apply
+          </button>
         </div>
+        {code.length > 0 && code.length < 6 && (
+          <p className="mt-1 text-xs text-muted-foreground">Referral codes are at least 6 characters.</p>
+        )}
       </section>
 
       {/* Points history */}

@@ -93,12 +93,14 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   }
 
   // Grid / Compact card layout
+  const isNew = product.createdAt && new Date(product.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
   return (
     <motion.article
       whileTap={tapScale.subtle}
       transition={springs.snappy}
       className={cn(
-        "relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 product-card-animated shadow-elevation-1",
+        "group relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 product-card-animated shadow-elevation-1",
         outOfStock && "opacity-50"
       )}
     >
@@ -122,6 +124,11 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             </motion.div>
             {/* Unified badge: discount % + featured in one compact pill */}
             <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
+              {isNew && !product.discountPrice && !product.isFeatured && (
+                <span className="rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow-md">
+                  New
+                </span>
+              )}
               {(product.discountPrice || product.isFeatured) && (
                 <span className="flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-bold text-white shadow-md">
                   {product.isFeatured && <Star className="h-2.5 w-2.5 fill-white" />}
@@ -130,11 +137,21 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
                     : "Featured"}
                 </span>
               )}
+              {/* Bestseller badge — only if no other badge is showing */}
+              {!isNew && !product.discountPrice && !product.isFeatured && product.popularity > 50 && (
+                <span className="flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow-md">
+                  <Star className="h-2.5 w-2.5 fill-current" /> Best
+                </span>
+              )}
             </div>
             {/* Favorite button - always top-right */}
             <div className="absolute top-2 right-2 z-10">
               <FavoriteButton ref={favoriteBtnRef} productId={product.id} size="sm" />
             </div>
+            {/* Quick add button - appears on hover (desktop only) */}
+            {!outOfStock && (
+              <QuickAddOverlay product={product} />
+            )}
           </div>
         </DoubleTapHeart>
       </Link>
@@ -244,6 +261,35 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
         </motion.button>
       )}
     </AnimatePresence>
+  );
+}
+
+// Quick add overlay button for desktop hover — only shown when item is not already in cart
+function QuickAddOverlay({ product }: { product: Product }) {
+  const cartItem = useCartItem(product.id);
+  const { addItem } = useCartActions();
+  const { flyToCart } = useFlyToCart();
+
+  const handleQuickAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    addItem(product);
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
+      navigator.vibrate(10);
+    }
+    flyToCart(product.image, e.currentTarget);
+  }, [addItem, product, flyToCart]);
+
+  if (cartItem) return null;
+
+  return (
+    <button
+      onClick={handleQuickAdd}
+      className="absolute bottom-2 right-2 z-10 hidden h-9 w-9 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition-all hover:bg-green-600 hover:scale-110 group-hover:flex"
+      aria-label={`Add ${product.name} to cart`}
+    >
+      <Plus className="h-4 w-4" />
+    </button>
   );
 }
 

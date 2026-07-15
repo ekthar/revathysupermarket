@@ -18,10 +18,18 @@ export interface AuthSession {
  * Require the current user to have one of the specified roles.
  * Returns the session if authorized, or a NextResponse error if not.
  *
- * Usage:
- *   const result = await requireRole(["ADMIN", "OWNER"]);
- *   if (result instanceof NextResponse) return result;
- *   // result is now a valid AuthSession
+ * @deprecated Migrate to `requirePermission()` from `@/lib/require-permission`.
+ * The role-based approach does not support granular permissions. Use the new
+ * permission system instead:
+ * ```ts
+ * import { requirePermission } from "@/lib/require-permission";
+ * const result = await requirePermission('orders.manage');
+ * if (!result.authorized) return result.response;
+ * ```
+ *
+ * This function is preserved for backward compatibility during migration.
+ *
+ * @see {@link file://@/lib/require-permission.ts}
  */
 export async function requireRole(
   roles: string[]

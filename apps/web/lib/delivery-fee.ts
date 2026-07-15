@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { unstable_cache } from "next/cache";
 
 export interface DeliveryFeeResult {
   fee: number;
@@ -19,6 +20,26 @@ export function findDeliveryFeeSlab<T extends { minKm: number | { toString(): st
 }
 
 /**
+ * Cached fetch for delivery fee configuration (slabs + settings).
+ * Revalidates every 5 minutes to avoid hitting DB on every checkout.
+ */
+const getCachedDeliveryFeeData = unstable_cache(
+  async () => {
+    const [slabs, freeThresholdSetting, baseFeeSetting] = await Promise.all([
+      prisma.deliveryFeeSlab.findMany({
+        where: { isActive: true },
+        orderBy: { minKm: "asc" },
+      }),
+      prisma.setting.findUnique({ where: { key: "freeDeliveryThreshold" } }),
+      prisma.setting.findUnique({ where: { key: "deliveryFee" } }),
+    ]);
+    return { slabs, freeThresholdSetting, baseFeeSetting };
+  },
+  ['delivery-fee-slabs'],
+  { revalidate: 300 }
+);
+
+/**
  * Calculate delivery fee based on distance slabs.
  * Server-side only — client uses this via API.
  * 
@@ -33,15 +54,8 @@ export async function calculateDeliveryFee(
   distanceKm: number,
   subtotal: number
 ): Promise<DeliveryFeeResult> {
-  // Fetch active slabs, free delivery threshold, and base fee setting
-  const [slabs, freeThresholdSetting, baseFeeSetting] = await Promise.all([
-    prisma.deliveryFeeSlab.findMany({
-      where: { isActive: true },
-      orderBy: { minKm: "asc" },
-    }),
-    prisma.setting.findUnique({ where: { key: "freeDeliveryThreshold" } }),
-    prisma.setting.findUnique({ where: { key: "deliveryFee" } }),
-  ]);
+  // Fetch active slabs, free delivery threshold, and base fee setting (cached)
+  const { slabs, freeThresholdSetting, baseFeeSetting } = await getCachedDeliveryFeeData();
 
   const freeDeliveryThreshold = Number(freeThresholdSetting?.value || "500");
   const baseFee = Number(baseFeeSetting?.value || "40");

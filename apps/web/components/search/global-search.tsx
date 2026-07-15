@@ -325,7 +325,7 @@ function SearchResultRow({
       >
         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-muted">
           {product.image ? (
-            <Image src={product.image} alt="" fill className="object-cover" sizes="56px" />
+            <Image src={product.image} alt={product.name} fill className="object-cover" sizes="56px" />
           ) : null}
         </div>
         <div className="min-w-0">

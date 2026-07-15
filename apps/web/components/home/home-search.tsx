@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
@@ -15,6 +15,16 @@ import type { Product } from "@/lib/types";
 export function HomeSearch({ products: _products }: { products: Product[] }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations("home");
+
+  // Listen for custom event dispatched from hero search input
+  useEffect(() => {
+    function handleOpenSearch() {
+      setOpen(true);
+      haptic("light");
+    }
+    document.addEventListener('open-global-search', handleOpenSearch);
+    return () => document.removeEventListener('open-global-search', handleOpenSearch);
+  }, []);
 
   return (
     <div className="sticky top-[56px] md:top-[70px] z-30 bg-card/98 backdrop-blur-md px-4 py-3">

@@ -89,6 +89,9 @@ export default async function AdminReportsPage() {
         <Link href="/admin/reports/collections" className="inline-flex h-11 items-center rounded-2xl border border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-950/20 px-5 text-sm font-black text-blue-700 dark:text-blue-300">
           Staff Collection Verification
         </Link>
+        <Link href="/admin/reports/staff" className="inline-flex h-11 items-center rounded-2xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/20 px-5 text-sm font-black text-indigo-700 dark:text-indigo-300">
+          Staff-Wise Order Report
+        </Link>
       </div>
     </main>
   );

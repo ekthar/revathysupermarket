@@ -1,0 +1,595 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create order status helper utilities in `packages/shared`": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314333
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053320348
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053516081
+      }
+    ],
+    "1.2 Create address and payment validation utilities in `packages/shared`": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314341
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053321149
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053516880
+      }
+    ],
+    "2.1 Create customer order history API endpoint": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314349
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053520953
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053911981
+      }
+    ],
+    "2.2 Create staff-wise order report API endpoint": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314356
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053521777
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053912664
+      }
+    ],
+    "2.3 Fix OTP send handler to restrict to customer role": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314371
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053522547
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053913393
+      }
+    ],
+    "2.4 Implement delivery OTP auto-generation and expiry handling": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314376
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053523290
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053914197
+      }
+    ],
+    "2.5 Create bill number uniqueness check endpoint": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314380
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053524103
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053914932
+      }
+    ],
+    "2.6 Implement substitution approval status update": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314384
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054064656
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054214099
+      }
+    ],
+    "2.7 Create payment received endpoint with method selection": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314387
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053922132
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054042873
+      }
+    ],
+    "3. Checkpoint - Ensure shared utilities and API tests pass": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314391
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054220129
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054384526
+      }
+    ],
+    "4.1 Create customer order history page": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314394
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054397152
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054648455
+      }
+    ],
+    "4.2 Create staff-wise order report page": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314398
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054397839
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054649156
+      }
+    ],
+    "4.3 Fix delivery ETA visibility on web customer-facing order page": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314401
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054398631
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054649919
+      }
+    ],
+    "4.4 Remove \"View Order\" button from order alarm component": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314405
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054399547
+      }
+    ],
+    "4.5 Fix substitute window default quantity": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314409
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054400218
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054651506
+      }
+    ],
+    "4.6 Add unit display to order sheet": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314414
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054656076
+      }
+    ],
+    "4.7 Create single consolidated print view": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314418
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055030041
+      }
+    ],
+    "4.8 Fix Billed and Packing status badges in order list": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314422
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055030194
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055304990
+      }
+    ],
+    "4.9 Display \"Updated Last Time\" on web customer order status page": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314426
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055031155
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055305789
+      }
+    ],
+    "4.10 Disable \"Old Update\" revert control for non-revertible statuses": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314430
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054657574
+      }
+    ],
+    "4.11 Hide expired delivery OTP from admin and staff panels": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314434
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054658796
+      }
+    ],
+    "4.12 Create Payment Collection Modal with method selection": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314438
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055482324
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055962766
+      }
+    ],
+    "4.13 Fix bill number input with duplication check": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314442
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055484667
+      }
+    ],
+    "5. Checkpoint - Ensure web admin fixes work correctly": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314446
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055973262
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784056276028
+      }
+    ],
+    "6.1 Fix delivery ETA visibility in mobile customer app": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314451
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054659856
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055024053
+      }
+    ],
+    "6.2 Display \"Customer Awaiting Approval\" status in mobile staff app": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314456
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054661461
+      }
+    ],
+    "6.3 Display approval notification in mobile customer app": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314459
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055485724
+      }
+    ],
+    "6.4 Display \"Updated Last Time\" in mobile customer order tracking": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314463
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055032262
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055306657
+      }
+    ],
+    "6.5 Implement address edit and default deletion prevention": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314467
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055486778
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055965784
+      }
+    ],
+    "6.6 Implement address form validation with toast notification": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314470
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055972195
+      }
+    ],
+    "6.7 Implement damage amount auto-calculation in delivery app": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314474
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055033485
+      }
+    ],
+    "6.8 Fix delivery boy cash collection UI — button visibility layout fix": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314478
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055483632
+      }
+    ],
+    "7.1 Wire customer order history page into admin navigation": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314482
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055974494
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784056277604
+      }
+    ],
+    "7.2 Wire staff report page into admin reports navigation": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314486
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055975395
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784056278332
+      }
+    ],
+    "7.3 Wire Payment Collection Modal into order detail payment section": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314491
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055976415
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784056279070
+      }
+    ],
+    "7.4 Wire delivery OTP auto-generation into order dispatch flow": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314495
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784056286946
+      }
+    ],
+    "8. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053314499
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784056287766
+      },
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784056530928
+      }
+    ],
+    "1. Implement shared utility functions": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784053516884
+      }
+    ],
+    "2. Implement API/backend changes": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784054214103
+      }
+    ],
+    "4. Implement web admin UI fixes": [
+      {
+        "executionId": "35ac8602-b301-4fd9-84a7-f9fb25849fcf",
+        "chatSessionId": "8abd5a7a-cae7-4271-bb24-67f6db3d0d39",
+        "timestamp": 1784055962770
+      }
+    ]
+  }
+}

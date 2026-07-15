@@ -50,6 +50,7 @@ interface OrderDetail {
 /** Human-readable status labels */
 const STATUS_LABELS: Record<string, string> = {
   ORDER_RECEIVED: "New",
+  AWAITING_CUSTOMER_APPROVAL: "Customer Awaiting Approval",
   ACCEPTED: "Accepted",
   PACKING: "Packing",
   READY_FOR_DELIVERY: "Ready",
@@ -63,6 +64,7 @@ const STATUS_LABELS: Record<string, string> = {
 /** Color-coded pill styles per status */
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   ORDER_RECEIVED: { bg: "bg-orange-100 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-300" },
+  AWAITING_CUSTOMER_APPROVAL: { bg: "bg-yellow-100 dark:bg-yellow-900/30", text: "text-yellow-700 dark:text-yellow-300" },
   ACCEPTED: { bg: "bg-blue-100 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-300" },
   PACKING: { bg: "bg-purple-100 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-300" },
   READY_FOR_DELIVERY: { bg: "bg-amber-100 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-300" },

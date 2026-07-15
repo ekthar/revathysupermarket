@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { springs } from "@/lib/motion";
+import { timeAgo } from "@msm/shared";
 import {
   ShoppingBag,
   ThumbsUp,
@@ -11,6 +12,7 @@ import {
   MapPin,
   CheckCircle2,
   CircleDot,
+  Clock,
 } from "lucide-react";
 
 // ─── 7-Step Timeline Definition ───────────────────────────────────────────────
@@ -115,9 +117,11 @@ type OrderTimelineProps = {
   distanceKm?: number | null;
   /** Optional: ETA in minutes */
   etaMinutes?: number | null;
+  /** Optional: order updatedAt timestamp (ISO string) for "Last updated" display */
+  updatedAt?: string | null;
 };
 
-export function OrderTimeline({ currentStatus, distanceKm, etaMinutes }: OrderTimelineProps) {
+export function OrderTimeline({ currentStatus, distanceKm, etaMinutes, updatedAt }: OrderTimelineProps) {
   const currentStep = getTimelineStepIndex(currentStatus);
 
   return (
@@ -127,9 +131,17 @@ export function OrderTimeline({ currentStatus, distanceKm, etaMinutes }: OrderTi
       transition={{ ...springs.enter, delay: 0.45 }}
       className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900"
     >
-      <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500 mb-5">
-        Order Status
-      </p>
+      <div className="flex items-center justify-between mb-5">
+        <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
+          Order Status
+        </p>
+        {updatedAt && (
+          <span className="inline-flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500">
+            <Clock className="h-3 w-3" />
+            Last updated: {timeAgo(updatedAt)}
+          </span>
+        )}
+      </div>
       <div className="space-y-0">
         {TIMELINE_STEPS.map((step, index) => {
           const isCompleted = index < currentStep;

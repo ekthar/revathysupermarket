@@ -32,6 +32,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ id:
         total: true,
         paymentMethod: true,
         createdAt: true,
+        updatedAt: true,
         deliveryPartner: {
           select: {
             name: true,
@@ -86,6 +87,7 @@ export default async function TrackOrderPage({ params }: { params: Promise<{ id:
       longitude: Number(order.longitude),
     },
     createdAt: order.createdAt.toISOString(),
+    updatedAt: order.updatedAt.toISOString(),
     riderName: order.deliveryPartner?.name ?? null,
     riderPhone: order.deliveryPartner?.phone ?? null,
     deliveryPartnerLocation:

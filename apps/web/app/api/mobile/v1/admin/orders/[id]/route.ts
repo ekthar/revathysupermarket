@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateMobileRequest } from "@/lib/mobile-auth";
+import { getActiveDeliveryOtp } from "@/lib/delivery";
 
 /**
  * GET /api/mobile/v1/admin/orders/[id]
@@ -81,7 +82,7 @@ export async function GET(
       acknowledgedById: order.acknowledgedById,
       deliveryPartnerId: order.deliveryPartnerId,
       deliveryAssignedAt: order.deliveryAssignedAt?.toISOString() ?? null,
-      deliveryOtp: order.deliveryOtp,
+      deliveryOtp: getActiveDeliveryOtp(order.deliveryOtp, order.deliveryOtpExpiresAt),
       deliveryOtpExpiresAt: order.deliveryOtpExpiresAt?.toISOString() ?? null,
       deliveryConfirmedAt: order.deliveryConfirmedAt?.toISOString() ?? null,
       billNumber: order.billNumber,

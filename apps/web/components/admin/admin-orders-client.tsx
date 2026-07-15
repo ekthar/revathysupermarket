@@ -8,7 +8,7 @@ import { SITE } from "@/lib/constants";
 import { cn, formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
-import { formatQuantityWithUnit } from "@msm/shared";
+import { formatQuantityWithUnit, shouldShowBilledBadge, shouldShowPackingBadge } from "@msm/shared";
 import { useAdminOrders, useAcknowledgeOrder, useAssignDelivery, useRegenerateOtp, ADMIN_ORDERS_QUERY_KEY } from "@/lib/queries/admin-orders";
 import { useQueryClient } from "@tanstack/react-query";
 import { OrderActionModal } from "@/components/admin/orders/order-action-modal";
@@ -80,6 +80,7 @@ export function AdminOrdersClient({
   const [staffNotes, setStaffNotes] = useState<Record<string, string>>(() => Object.fromEntries(orders.map((order) => [order.id, order.staffNote ?? ""])));
   const [billNumberDrafts, setBillNumberDrafts] = useState<Record<string, string>>(() => Object.fromEntries(orders.map((order) => [order.id, order.billNumber ?? ""])));
   const [billNumberSaving, setBillNumberSaving] = useState<string | null>(null);
+  const [billNumberErrors, setBillNumberErrors] = useState<Record<string, string>>({});
   const [dismissedAlertIds, setDismissedAlertIds] = useState<Set<string>>(new Set());
   const [soundUnlocked, setSoundUnlocked] = useState(false);
   const audioCtxRef = useRef<AudioContext | null>(null);
@@ -312,9 +313,11 @@ export function AdminOrdersClient({
   async function saveBillNumber(orderId: string) {
     const billNumber = (billNumberDrafts[orderId] ?? "").trim();
     if (!billNumber) {
-      showToast("Enter a bill number", "error");
+      setBillNumberErrors((prev) => ({ ...prev, [orderId]: "Enter a bill number" }));
       return;
     }
+    // Clear any previous error when submitting
+    setBillNumberErrors((prev) => { const next = { ...prev }; delete next[orderId]; return next; });
     setBillNumberSaving(orderId);
     const response = await fetch(`/api/admin/orders/${orderId}/bill-number`, {
       method: "POST",
@@ -324,7 +327,9 @@ export function AdminOrdersClient({
     const data = await readApiResponse<{ error?: string; order?: { id: string; billNumber: string } }>(response);
     setBillNumberSaving(null);
     if (!response.ok) {
-      showToast(data.error ?? "Failed to save bill number", "error");
+      // Display error inline (especially for 409 duplicate bill number)
+      const errorMessage = data.error ?? "Failed to save bill number";
+      setBillNumberErrors((prev) => ({ ...prev, [orderId]: errorMessage }));
       return;
     }
     queryClient.setQueryData<AdminOrder[]>(ADMIN_ORDERS_QUERY_KEY, (current) =>
@@ -439,6 +444,12 @@ export function AdminOrdersClient({
                   <span className={cn("text-micro font-bold px-2 py-0.5 rounded-full", order.status === "CANCELLED" ? "bg-red-100 text-red-700" : "bg-primary/10 text-primary")}>{statusLabels[order.status]}</span>
                   {order.printedAt && (
                     <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-green-100 text-green-700">{order.printCount > 1 ? `✓ Printed ×${order.printCount}` : "✓ Printed"}</span>
+                  )}
+                  {shouldShowBilledBadge(order) && (
+                    <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300">Billed</span>
+                  )}
+                  {shouldShowPackingBadge(order) && (
+                    <span className="text-micro font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300">Packing</span>
                   )}
                 </div>
                 <p suppressHydrationWarning className="text-caption text-muted-foreground mt-0.5">{order.customerName} • {order.items.length} items • {timeSince(order.createdAt, now)}</p>
@@ -581,9 +592,14 @@ export function AdminOrdersClient({
                 {order.billNumber ? (
                   <p className="mt-2 text-lg font-black text-foreground">{order.billNumber}</p>
                 ) : (
-                  <div className="mt-2 flex gap-2">
-                    <input type="text" value={billNumberDrafts[order.id] ?? ""} onChange={(e) => setBillNumberDrafts((p) => ({ ...p, [order.id]: e.target.value }))} placeholder="Enter bill number" className="h-10 flex-1 rounded-xl border border-border bg-background px-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary" />
-                    <button type="button" onClick={() => saveBillNumber(order.id)} disabled={billNumberSaving === order.id} className="h-10 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 px-4 text-sm font-black text-white disabled:opacity-50">Save</button>
+                  <div className="mt-2">
+                    <div className="flex gap-2">
+                      <input type="text" value={billNumberDrafts[order.id] ?? ""} onChange={(e) => { setBillNumberDrafts((p) => ({ ...p, [order.id]: e.target.value })); setBillNumberErrors((prev) => { const next = { ...prev }; delete next[order.id]; return next; }); }} placeholder="Enter bill number" className={cn("h-10 flex-1 rounded-xl border bg-background px-3 text-sm font-bold outline-none focus:ring-2 focus:ring-primary", billNumberErrors[order.id] ? "border-red-400 focus:ring-red-400" : "border-border")} />
+                      <button type="button" onClick={() => saveBillNumber(order.id)} disabled={billNumberSaving === order.id} className="h-10 rounded-xl bg-slate-900 dark:bg-white dark:text-slate-900 px-4 text-sm font-black text-white disabled:opacity-50">Save</button>
+                    </div>
+                    {billNumberErrors[order.id] && (
+                      <p className="mt-1.5 text-xs font-semibold text-red-600 dark:text-red-400">{billNumberErrors[order.id]}</p>
+                    )}
                   </div>
                 )}
               </div>

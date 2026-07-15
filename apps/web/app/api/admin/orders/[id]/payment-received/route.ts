@@ -53,13 +53,14 @@ export async function POST(
   }
 
   const totalAmount = Number(order.total);
+  // Card payments are recorded via upiCollected (digital payment field)
   const collectionData = {
     cashCollected: method === "Cash" ? totalAmount : 0,
-    upiCollected: method === "UPI" ? totalAmount : 0,
+    upiCollected: method === "UPI" || method === "Card" ? totalAmount : 0,
   };
 
   // Update order payment status and record collection method
-  await prisma.$transaction(async (tx: typeof prisma) => {
+  await prisma.$transaction(async (tx) => {
     await tx.order.update({
       where: { id },
       data: { paymentStatus: "PAID" },

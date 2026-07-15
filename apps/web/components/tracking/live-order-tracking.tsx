@@ -17,6 +17,9 @@ import {
 import { SITE } from "@/lib/constants";
 import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
 import { estimateOrderEta, type EtaDisplayMode } from "@/lib/live-order";
+import { isDeliveryEtaVisible } from "@msm/shared";
+import type { OrderStatus } from "@msm/shared";
+import { DeliveryEtaTracking, getVisibleEtaMinutes } from "./delivery-eta";
 import { OrderBill } from "./order-bill";
 import { OrderTimeline, getTimelineStatusLabel } from "./order-timeline";
 
@@ -64,6 +67,8 @@ type TrackingData = {
   paymentMethod?: string;
   storeLatitude: number;
   storeLongitude: number;
+  // Last updated timestamp
+  updatedAt?: string;
 };
 
 /** Compute distance in km from rider to customer destination */
@@ -87,10 +92,12 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
 
   const calculateEta = useCallback(
     (riderLoc: { latitude: number; longitude: number } | null) => {
-      const riderEnRoute = ["OUT_FOR_DELIVERY", "ARRIVING"].includes(data.status);
+      // Use the shared utility to determine if ETA should be visible for the current status.
+      // This enforces Requirements 3.1-3.4: ETA only visible for OUT_FOR_DELIVERY/ARRIVING.
+      const etaVisible = isDeliveryEtaVisible(data.status as OrderStatus);
 
-      // When mode is "after_assignment", only show ETA when rider is en route
-      if (etaDisplayMode === "after_assignment" && !riderEnRoute) {
+      // When mode is "after_assignment", only show ETA when status allows it
+      if (etaDisplayMode === "after_assignment" && !etaVisible) {
         return null;
       }
 
@@ -99,8 +106,8 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         return null;
       }
 
-      // If rider is en route and we have their location, calculate from rider position
-      if (riderEnRoute && riderLoc) {
+      // If ETA is visible (dispatch statuses) and we have rider location, calculate from rider position
+      if (etaVisible && riderLoc) {
         const dist = calculateDistanceKm(
           { lat: riderLoc.latitude, lng: riderLoc.longitude },
           { lat: data.destination.latitude, lng: data.destination.longitude }
@@ -108,8 +115,8 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         return Math.max(2, Math.ceil((dist / 18) * 60));
       }
 
-      // If rider is en route but no location yet
-      if (riderEnRoute && !riderLoc) {
+      // If ETA is visible but no rider location yet
+      if (etaVisible && !riderLoc) {
         return estimateOrderEta(data.status, { distanceKm: data.distanceKm });
       }
 
@@ -146,7 +153,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
     data.deliveryPartnerLocation,
     data.destination
   );
-  const isRiderEnRoute = ["OUT_FOR_DELIVERY", "ARRIVING"].includes(data.status);
+  const isRiderEnRoute = isDeliveryEtaVisible(data.status as OrderStatus);
 
   // Order bill data
   const hasBillData = data.orderItems && data.orderItems.length > 0 && data.total != null;
@@ -183,7 +190,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
               </div>
             </div>
             <div className="text-right">
-              {etaMinutes !== null && !isDelivered && (
+              {getVisibleEtaMinutes(data.status, etaMinutes) !== null && !isDelivered && (
                 <p className="text-xl font-black text-white">{etaMinutes} min</p>
               )}
               {isDelivered && (
@@ -294,43 +301,28 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           )}
         </motion.div>
 
-        {/* ETA countdown section */}
-        <AnimatePresence mode="wait">
-          {etaMinutes !== null && !isDelivered && (
-            <motion.div
-              key="eta"
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={springs.layout}
-              className="rounded-2xl bg-white p-5 text-center card-shadow dark:bg-neutral-900"
-            >
-              <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-                Arriving in
-              </p>
-              <p className="mt-1 font-display text-4xl font-black text-neutral-900 dark:text-white">
-                {etaMinutes}{" "}
-                <span className="text-lg font-bold text-neutral-400">min</span>
-              </p>
-            </motion.div>
-          )}
-          {isDelivered && (
-            <motion.div
-              key="delivered"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="rounded-2xl bg-secondary-50 p-5 text-center dark:bg-secondary-900/20"
-            >
-              <CheckCircle2 className="mx-auto h-10 w-10 text-secondary-500" />
-              <p className="mt-2 font-display text-xl font-black text-secondary-700 dark:text-secondary-400">
-                Order Delivered!
-              </p>
-              <p className="mt-1 text-sm text-secondary-600/70 dark:text-secondary-400/70">
-                Enjoy your fresh groceries
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* ETA countdown section - conditionally rendered using isDeliveryEtaVisible */}
+        <DeliveryEtaTracking
+          status={data.status}
+          etaMinutes={etaMinutes}
+          isDelivered={isDelivered}
+        />
+        {isDelivered && (
+          <motion.div
+            key="delivered"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="rounded-2xl bg-secondary-50 p-5 text-center dark:bg-secondary-900/20"
+          >
+            <CheckCircle2 className="mx-auto h-10 w-10 text-secondary-500" />
+            <p className="mt-2 font-display text-xl font-black text-secondary-700 dark:text-secondary-400">
+              Order Delivered!
+            </p>
+            <p className="mt-1 text-sm text-secondary-600/70 dark:text-secondary-400/70">
+              Enjoy your fresh groceries
+            </p>
+          </motion.div>
+        )}
 
         {/* Call and message buttons */}
         {!isDelivered && (
@@ -368,6 +360,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           currentStatus={data.status}
           distanceKm={riderDistanceKm}
           etaMinutes={etaMinutes}
+          updatedAt={data.updatedAt}
         />
 
         {/* Order Bill section */}

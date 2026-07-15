@@ -2,6 +2,7 @@
 
 import { statusLabels } from "@/lib/constants";
 import { formatCurrency } from "@/lib/utils";
+import { shouldShowBilledBadge, shouldShowPackingBadge } from "@msm/shared";
 
 type AdminOrder = {
   id: string;
@@ -10,6 +11,7 @@ type AdminOrder = {
   total: number;
   status: keyof typeof statusLabels;
   deliveryPartnerId?: string | null;
+  billNumber?: string | null;
   createdAt: string;
   items: Array<{ id: string; name: string; quantity: number; price: number; gstRate: number | null }>;
 };
@@ -120,6 +122,20 @@ export function OrderListBoard({ orders, now, onSelectOrder }: OrderListBoardPro
                     <p className="mt-1 text-[11px] text-muted-foreground">
                       {order.items.length} items &middot; {timeSince(order.createdAt, now)}
                     </p>
+                    {(shouldShowBilledBadge(order) || shouldShowPackingBadge(order)) && (
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {shouldShowBilledBadge(order) && (
+                          <span className="rounded-full bg-teal-100 dark:bg-teal-900/40 px-2 py-0.5 text-[11px] font-black text-teal-700 dark:text-teal-300">
+                            Billed
+                          </span>
+                        )}
+                        {shouldShowPackingBadge(order) && (
+                          <span className="rounded-full bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 text-[11px] font-black text-amber-700 dark:text-amber-300">
+                            Packing
+                          </span>
+                        )}
+                      </div>
+                    )}
                     {status === "READY_FOR_DELIVERY" && !order.deliveryPartnerId ? (
                       <p className="mt-2 rounded-lg bg-amber-100 dark:bg-amber-900/40 px-2 py-1 text-[11px] font-black text-amber-700 dark:text-amber-400">
                         Driver needed

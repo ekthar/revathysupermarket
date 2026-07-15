@@ -5,7 +5,7 @@ import { api } from "@/services/api";
 import { useDeliveryStore } from "@/stores/delivery";
 import type { OrderDetail } from "@msm/shared/types";
 import { formatCurrency, formatDateTime } from "@msm/shared/utils";
-import { STATUS_LABELS } from "@msm/shared/constants";
+import { STAFF_STATUS_LABELS } from "@msm/shared/constants";
 import { AnimatedScreen } from "@/components/AnimatedScreen";
 import { AnimatedPressable } from "@/components/AnimatedPressable";
 
@@ -41,7 +41,7 @@ export default function DeliveryOrderDetailScreen() {
         <View className="bg-primary-50 dark:bg-primary-950/30 rounded-xl p-4 mb-4">
           <Text className="text-xs text-primary-600 dark:text-primary-400">Status</Text>
           <Text className="text-lg font-heading text-primary-900 dark:text-primary-200">
-            {STATUS_LABELS[order.status as keyof typeof STATUS_LABELS]}
+            {STAFF_STATUS_LABELS[order.status as keyof typeof STAFF_STATUS_LABELS]}
           </Text>
         </View>
 

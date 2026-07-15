@@ -10,6 +10,7 @@ import { notifyOrderStatus } from "@/lib/notifications";
 import { awardDeliveredOrderBenefits, releaseCancelledOrderReservations } from "@/lib/loyalty";
 import { publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
 import { sendFcmToUser } from "@/lib/fcm-admin";
+import { createDeliveryOtp, deliveryOtpExpiryDate } from "@/lib/delivery";
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
   ORDER_RECEIVED: ["ACCEPTED", "CANCELLED"],
@@ -54,11 +55,27 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
 
   // Optimistic locking: only update if status hasn't changed since we read it
+  // Auto-generate delivery OTP when transitioning to OUT_FOR_DELIVERY
+  const otpData: Record<string, unknown> = {};
+  if (parsed.data.status === "OUT_FOR_DELIVERY") {
+    const currentOrder = await prisma.order.findUnique({
+      where: { id },
+      select: { deliveryOtp: true, deliveryOtpExpiresAt: true }
+    });
+    const needsNewOtp = !currentOrder?.deliveryOtp || (currentOrder.deliveryOtpExpiresAt && currentOrder.deliveryOtpExpiresAt < new Date());
+    if (needsNewOtp) {
+      otpData.deliveryOtp = createDeliveryOtp();
+      otpData.deliveryOtpAttempts = 0;
+      otpData.deliveryOtpExpiresAt = deliveryOtpExpiryDate();
+    }
+  }
+
   const updateResult = await prisma.order.updateMany({
     where: { id, status: before?.status },
     data: {
       status: parsed.data.status,
       staffNote: parsed.data.staffNote,
+      ...otpData,
     }
   });
   if (updateResult.count === 0) {

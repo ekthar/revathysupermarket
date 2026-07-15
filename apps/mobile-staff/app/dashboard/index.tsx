@@ -4,7 +4,7 @@ import { Redirect, router } from "expo-router";
 import { useAuthStore } from "@/stores/auth";
 import { useDeliveryStore } from "@/stores/delivery";
 import { formatCurrency, getGreeting } from "@msm/shared/utils";
-import { STATUS_LABELS } from "@msm/shared/constants";
+import { STAFF_STATUS_LABELS } from "@msm/shared/constants";
 import { AssignmentAlert } from "@/components/AssignmentAlert";
 import { StatCardSkeleton } from "@/components/ui";
 import { AnimatedScreen } from "@/components/AnimatedScreen";
@@ -105,7 +105,7 @@ export default function DashboardScreen() {
                   <View className="items-end">
                     <View className="bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded">
                       <Text className="text-xs font-sans-medium text-blue-700 dark:text-blue-300">
-                        {STATUS_LABELS[order.status as keyof typeof STATUS_LABELS] || order.status.replace(/_/g, " ")}
+                        {STAFF_STATUS_LABELS[order.status as keyof typeof STAFF_STATUS_LABELS] || order.status.replace(/_/g, " ")}
                       </Text>
                     </View>
                     {order.distance && <Text className="text-xs text-primary-600 dark:text-primary-400 mt-1">{order.distance}</Text>}

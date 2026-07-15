@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { authenticateMobileRequest } from "@/lib/mobile-auth";
+import { createDeliveryOtp, deliveryOtpExpiryDate } from "@/lib/delivery";
 
 /**
  * POST /api/mobile/v1/admin/orders/[id]/assign
@@ -35,9 +36,9 @@ export async function POST(
     return NextResponse.json({ error: "Order not found" }, { status: 404 });
   }
 
-  // Generate 6-digit OTP
-  const deliveryOtp = String(Math.floor(100000 + Math.random() * 900000));
-  const deliveryOtpExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+  // Generate 6-digit OTP using shared utility
+  const deliveryOtp = createDeliveryOtp();
+  const deliveryOtpExpiresAt = deliveryOtpExpiryDate();
 
   const order = await prisma.order.update({
     where: { id },

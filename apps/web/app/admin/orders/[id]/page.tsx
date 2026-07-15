@@ -5,6 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 import { formatQuantityWithUnit } from "@msm/shared";
 import { getActiveDeliveryOtp } from "@/lib/delivery";
+import { OrderPrintButton } from "@/components/order-print-button";
+import { OrderPaymentSection } from "@/components/admin/order-payment-section";
 
 export const dynamic = "force-dynamic";
 
@@ -65,6 +67,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               ✓ Printed {new Date(order.printedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
+          <OrderPrintButton orderId={order.id} />
           <Link
             href={`/admin/orders/${order.id}/invoice`}
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-bold text-muted-foreground hover:bg-muted transition-colors"
@@ -170,13 +173,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
         {/* Right column - Sidebar cards */}
         <div className="space-y-5">
           {/* Payment */}
-          <section className="rounded-2xl bg-card border border-border p-5">
-            <h2 className="text-sm font-black text-foreground mb-3 flex items-center gap-2"><CreditCard className="h-4 w-4 text-primary" /> Payment</h2>
-            <div className="space-y-2 text-sm">
-              <div className="flex justify-between"><span className="text-muted-foreground">Method</span><span className="font-semibold">{order.paymentMethod.replace(/_/g, " ")}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Status</span><span className={`font-semibold ${order.paymentStatus === "PAID" ? "text-green-600" : "text-yellow-600"}`}>{order.paymentStatus}</span></div>
-            </div>
-          </section>
+          <OrderPaymentSection
+            orderId={order.id}
+            paymentMethod={order.paymentMethod}
+            paymentStatus={order.paymentStatus}
+          />
 
           {/* Delivery Slot */}
           {order.deliverySlot && (

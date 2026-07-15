@@ -8,6 +8,8 @@ import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { readApiResponse } from "@/lib/client-api";
 import { estimateOrderEta, type ActiveOrderSummary } from "@/lib/live-order";
+import { isDeliveryEtaVisible } from "@msm/shared";
+import type { OrderStatus } from "@msm/shared";
 
 const statusLabels: Record<string, string> = {
   ORDER_RECEIVED: "Received",
@@ -71,7 +73,11 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
 
   const shouldShow = !hide && activeOrder;
   const statusText = activeOrder ? statusLabels[activeOrder.status] || activeOrder.status : "";
-  const etaText = activeOrder?.eta ? ` · ~${activeOrder.eta} min` : "";
+  // Only show ETA in the mini-bar when order is in dispatch status (OUT_FOR_DELIVERY/ARRIVING)
+  // Validates: Requirements 3.1, 3.2, 3.3, 3.4
+  const etaText = activeOrder?.eta && isDeliveryEtaVisible(activeOrder.status as OrderStatus)
+    ? ` · ~${activeOrder.eta} min`
+    : "";
 
   /* ─── bar entry / exit ─── */
   useGSAP(

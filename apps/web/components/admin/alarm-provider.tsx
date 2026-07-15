@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
 import { BellRing, Phone, ShoppingBag, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -366,8 +365,8 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 border-t border-border flex flex-col gap-2">
-                {orders.length > 1 && (
+              {orders.length > 1 && (
+                <div className="px-6 py-4 border-t border-border">
                   <Button
                     type="button"
                     variant="destructive"
@@ -377,14 +376,8 @@ export function AlarmProvider({ children }: { children: React.ReactNode }) {
                   >
                     {acceptingAll ? "Accepting all..." : `Accept All (${orders.length})`}
                   </Button>
-                )}
-                <Link
-                  href="/admin/orders"
-                  className="w-full h-11 rounded-2xl border border-border flex items-center justify-center text-sm font-semibold text-muted-foreground hover:bg-muted hover:-translate-y-0.5 transition"
-                >
-                  View on Orders Page
-                </Link>
-              </div>
+                </div>
+              )}
             </motion.div>
           </motion.div>
         )}

@@ -2,11 +2,12 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { CheckCircle2, Clock, PackageCheck, PackageOpen, Truck, XCircle } from "lucide-react";
-import { statusLabels } from "@/lib/constants";
+import { CheckCircle2, Clock, PackageCheck, PackageOpen, Truck, XCircle, Undo2 } from "lucide-react";
+import { statusLabels, orderStatuses } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
+import { canRevertStatus } from "@msm/shared";
 
 const quickStatuses = [
   { value: "ACCEPTED", label: "Stock OK", icon: CheckCircle2 },
@@ -83,6 +84,33 @@ export function OrderStatusForm({
             </button>
           );
         })}
+      </div>
+      {/* Revert to previous status control */}
+      <div className="mt-3">
+        <button
+          type="button"
+          disabled={loading || !canRevertStatus(status as Parameters<typeof canRevertStatus>[0])}
+          onClick={() => {
+            const currentIndex = orderStatuses.indexOf(status as (typeof orderStatuses)[number]);
+            if (currentIndex > 0) {
+              update(orderStatuses[currentIndex - 1]);
+            }
+          }}
+          className={cn(
+            "flex h-10 items-center gap-2 rounded-xl border px-4 text-xs font-black transition active:scale-[0.98]",
+            canRevertStatus(status as Parameters<typeof canRevertStatus>[0])
+              ? "border-border bg-background/70 hover:bg-muted text-muted-foreground hover:text-foreground"
+              : "border-border/50 bg-muted/30 text-muted-foreground/50 cursor-not-allowed opacity-60"
+          )}
+          title={
+            canRevertStatus(status as Parameters<typeof canRevertStatus>[0])
+              ? "Revert to previous status"
+              : "Cannot revert this status"
+          }
+        >
+          <Undo2 className="h-3.5 w-3.5" />
+          Revert to previous status
+        </button>
       </div>
     </div>
   );

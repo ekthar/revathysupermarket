@@ -1,7 +1,8 @@
+import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { canViewReports } from "@/lib/authz";
-import { Phone, Send, UserRound } from "lucide-react";
+import { Phone, Send, ShoppingBag, UserRound } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +53,13 @@ export default async function AdminCustomersPage() {
                 WhatsApp
               </a>
             </div>
+            <Link
+              href={`/admin/customers/${customer.id}/orders`}
+              className="mt-2 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl border border-primary/20 bg-primary/5 text-sm font-black text-primary transition-colors hover:bg-primary/10"
+            >
+              <ShoppingBag className="h-4 w-4" />
+              Order History
+            </Link>
           </article>
         ))}
       </div>

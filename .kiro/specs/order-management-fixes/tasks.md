@@ -254,7 +254,7 @@ This plan covers 19 discrete fixes and improvements across the Revathy Supermark
     - Customer sees OTP for delivery verification; admin/staff panels hide expired OTPs
     - _Requirements: 13 (updated — auto-generated delivery OTP)_
 
-- [-] 8. Final checkpoint - Ensure all tests pass
+- [x] 8. Final checkpoint - Ensure all tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
 ## Notes

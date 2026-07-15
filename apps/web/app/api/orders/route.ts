@@ -17,6 +17,7 @@ import { sendPushToUser } from "@/lib/push";
 import { sendFcmToAdmins } from "@/lib/fcm-admin";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { notifyOrderSms } from "@/lib/sms/notify-order";
+import { getActiveDeliveryOtp } from "@/lib/delivery";
 
 function orderNumber() {
   const date = new Date();
@@ -217,6 +218,7 @@ export async function GET(request: Request) {
           status: true,
           editApprovalStatus: true,
           deliveryOtp: true,
+          deliveryOtpExpiresAt: true,
           acknowledgedAt: true,
           deliveryPartnerId: true,
           subtotal: true,
@@ -275,9 +277,16 @@ export async function GET(request: Request) {
     const sliced = hasMore ? orders.slice(0, limit) : orders;
     const nextCursor = hasMore ? sliced[sliced.length - 1].id : null;
 
+    const isStaff = isStaffRole(session.user.role);
+
     return NextResponse.json({
       orders: sliced.map((order) => ({
         ...order,
+        // For staff: hide expired delivery OTP. For customers: show active OTP only.
+        deliveryOtp: isStaff
+          ? getActiveDeliveryOtp(order.deliveryOtp, order.deliveryOtpExpiresAt)
+          : getActiveDeliveryOtp(order.deliveryOtp, order.deliveryOtpExpiresAt),
+        deliveryOtpExpiresAt: order.deliveryOtpExpiresAt?.toISOString() ?? null,
         latitude: Number(order.latitude),
         longitude: Number(order.longitude),
         distanceKm: Number(order.distanceKm),

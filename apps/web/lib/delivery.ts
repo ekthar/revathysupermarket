@@ -55,3 +55,23 @@ export function createDeliveryOtp() {
 export function deliveryOtpExpiryDate(minutes = 30) {
   return new Date(Date.now() + minutes * 60 * 1000);
 }
+
+/**
+ * Check if a delivery OTP is still active (not expired).
+ * Returns true if the OTP exists and has not expired.
+ */
+export function isDeliveryOtpActive(otp: string | null | undefined, expiresAt: Date | string | null | undefined): boolean {
+  if (!otp) return false;
+  if (!expiresAt) return true; // No expiry set — treat as active
+  const expiryDate = typeof expiresAt === "string" ? new Date(expiresAt) : expiresAt;
+  return expiryDate > new Date();
+}
+
+/**
+ * Returns the delivery OTP only if it's active (not expired).
+ * For admin/staff panels: use this to suppress display of expired OTPs.
+ * Returns null if the OTP is expired or doesn't exist.
+ */
+export function getActiveDeliveryOtp(otp: string | null | undefined, expiresAt: Date | string | null | undefined): string | null {
+  return isDeliveryOtpActive(otp, expiresAt) ? (otp ?? null) : null;
+}

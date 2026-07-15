@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, ChevronDown, Clock, MapPin, Navigation, Package, RefreshCcw, RotateCcw, Star, XCircle } from "lucide-react";
 import { useToast } from "@/components/toast-provider";
 import { AnimatePresence, motion } from "framer-motion";
@@ -12,6 +13,7 @@ import { cn, formatCurrency } from "@/lib/utils";
 import { DeliveryOtpCard } from "@/components/dashboard/delivery-otp-card";
 import { OrderTrackingMap } from "@/components/dashboard/order-tracking-map";
 import { useCart } from "@/components/cart/cart-provider";
+import { PullToRefresh } from "@/components/ui/pull-to-refresh";
 import Link from "next/link";
 import type { Product } from "@/lib/types";
 import { ReorderButton } from "@/components/dashboard/reorder-button";
@@ -76,6 +78,7 @@ function formatTime(dateStr: string) {
 const customerTimelineStatuses = ["PENDING", "PROCESSING", "READY_FOR_DELIVERY", "OUT_FOR_DELIVERY", "DELIVERED"];
 
 export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = null }: { initialOrders: CustomerOrder[]; initialHistoryCursor?: string | null }) {
+  const router = useRouter();
   const { addItems } = useCart();
   const { showToast } = useToast();
   const [orders, setOrders] = useState(initialOrders);
@@ -209,6 +212,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
   })();
 
   return (
+    <PullToRefresh onRefresh={async () => { router.refresh(); await new Promise((r) => setTimeout(r, 500)); }}>
     <div className="space-y-3">
       {returnOrder && <ReturnRequestSheet order={returnOrder} onClose={() => setReturnOrder(null)} />}
       {ratingOrderId && <div className="fixed inset-0 z-[90] flex items-end justify-center bg-neutral-950/60 p-3 sm:items-center" role="dialog" aria-modal="true" aria-labelledby="feedback-title" onKeyDown={(e) => { if (e.key === "Escape") setRatingOrderId(null); }}><div className="w-full max-w-md rounded-3xl bg-background p-5 shadow-2xl" ref={(el) => el?.focus() } tabIndex={-1}><h2 id="feedback-title" className="font-display text-2xl font-black">Rate your order</h2><p className="mt-1 text-sm text-muted-foreground">Your feedback goes directly to the store team.</p>{[["Order", orderRating, setOrderRating], ["Delivery", deliveryRating, setDeliveryRating]].map(([label, value, setter]) => <div key={String(label)} className="mt-4"><p className="text-sm font-bold">{String(label)}</p><div className="mt-2 flex gap-2">{[1,2,3,4,5].map((rating) => <button key={rating} type="button" aria-label={`${label} ${rating} stars`} onClick={() => (setter as (value: number) => void)(rating)} className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted"><Star className={`h-5 w-5 ${rating <= Number(value) ? "fill-amber-400 text-amber-400" : "text-neutral-300"}`} /></button>)}</div></div>)}<label className="mt-4 block text-sm font-bold">Comment<textarea value={feedbackComment} onChange={(event) => setFeedbackComment(event.target.value)} maxLength={500} className="mt-2 min-h-24 w-full rounded-2xl border border-border bg-background p-3" /></label><div className="mt-4 grid grid-cols-2 gap-2"><button type="button" onClick={() => setRatingOrderId(null)} className="h-11 rounded-2xl border border-border font-black">Cancel</button><button type="button" onClick={submitFeedback} className="h-11 rounded-2xl bg-primary font-black text-white">Submit</button></div></div></div>}
@@ -454,6 +458,7 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
       })()}
       {historyCursor && <button disabled={historyLoading} onClick={loadOlderOrders} className="h-11 w-full rounded-2xl border border-border bg-background text-sm font-black disabled:opacity-50">{historyLoading ? "Loading…" : "Load older orders"}</button>}
     </div>
+    </PullToRefresh>
   );
 }
 

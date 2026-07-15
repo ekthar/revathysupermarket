@@ -111,6 +111,16 @@ export default async function SalesReportPage() {
       title="Sales Report"
       variant="green"
       breadcrumbs={breadcrumbs}
+      actions={
+        <a
+          href={`/api/admin/export/orders?from=${monthStart.toISOString()}&to=${now.toISOString()}`}
+          download
+          className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-900 shadow-sm transition-colors hover:bg-neutral-50 dark:bg-neutral-800 dark:text-white dark:hover:bg-neutral-700"
+        >
+          <BarChart3 className="h-4 w-4" />
+          Export CSV
+        </a>
+      }
     >
       {/* Summary Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

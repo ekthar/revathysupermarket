@@ -302,10 +302,23 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                 layout
                 initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -8 }}
+                exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
                 transition={springs.layout}
-                className="px-4 py-3"
+                drag="x"
+                dragConstraints={{ left: -100, right: 0 }}
+                dragElastic={0.1}
+                onDragEnd={(_, info) => {
+                  if (info.offset.x < -80) {
+                    haptic("medium");
+                    handleRemove(item);
+                  }
+                }}
+                className="px-4 py-3 relative cursor-grab active:cursor-grabbing"
               >
+                {/* Swipe delete indicator (background) */}
+                <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center bg-red-500 rounded-r-lg pointer-events-none">
+                  <Trash2 className="h-4 w-4 text-white" />
+                </div>
                 <div className="flex items-center gap-3">
                   <div className="h-4 w-4 rounded-sm border-2 border-secondary-500 flex items-center justify-center shrink-0 hidden xs:flex">
                     <div className="h-2 w-2 rounded-full bg-secondary-500" />

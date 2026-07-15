@@ -25,9 +25,9 @@ export default async function AdminPage() {
         orderBy: { createdAt: "desc" }, take: 8,
       }).catch(() => [] as never[]),
       prisma.product.findMany({
-        where: { isActive: true, stock: { lte: 5 } },
+        where: { isActive: true, stock: { lte: 10 } },
         select: { id: true, name: true, stock: true, image: true },
-        orderBy: { stock: "asc" }, take: 5,
+        orderBy: { stock: "asc" }, take: 10,
       }).catch(() => [] as never[]),
       Promise.all([
         prisma.order.count({ where: { status: { in: ["ORDER_RECEIVED", "ACCEPTED"] } } }).catch(() => 0),

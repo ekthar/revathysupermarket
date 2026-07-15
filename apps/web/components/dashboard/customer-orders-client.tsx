@@ -282,6 +282,9 @@ export function CustomerOrdersClient({ initialOrders, initialHistoryCursor = nul
 
 // ─── Active Order Card (immersive tracking preview) ───
 function ActiveOrderCard({ order, live }: { order: CustomerOrder; live?: LiveOrderState }) {
+  const { showToast } = useToast();
+  const router = useRouter();
+  const [processingApproval, setProcessingApproval] = useState(false);
   const activeIndex = customerTimelineStatuses.indexOf(order.status);
   const rider = live?.deliveryPartnerLocation ?? order.deliveryPartnerLocation;
   const distance = rider ? calculateDistanceKm(
@@ -290,6 +293,82 @@ function ActiveOrderCard({ order, live }: { order: CustomerOrder; live?: LiveOrd
   ) : null;
   const etaMinutes = distance !== null ? Math.max(2, Math.ceil((distance / 18) * 60)) : null;
   const itemNames = order.items.slice(0, 2).map((i) => i.name).join(", ");
+  const needsApproval = order.status === "AWAITING_CUSTOMER_APPROVAL" && order.editLogs.length > 0;
+
+  async function handleApproval(decision: "approved" | "rejected") {
+    setProcessingApproval(true);
+    const response = await fetch(`/api/orders/${order.id}/approval`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ decision }) });
+    setProcessingApproval(false);
+    if (response.ok) {
+      showToast(decision === "approved" ? "Changes approved!" : "Changes rejected", "success");
+      router.refresh();
+    } else {
+      showToast("Could not process. Try again.", "error");
+    }
+  }
+
+  // Show approval UI when order needs customer approval
+  if (needsApproval) {
+    const totalDelta = order.editLogs.reduce((sum, log) => sum + log.priceDelta, 0);
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-2xl border-2 border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 p-4"
+      >
+        <div className="flex items-center gap-2 mb-2">
+          <AlertTriangle className="h-5 w-5 text-amber-600" />
+          <p className="text-sm font-black text-amber-800 dark:text-amber-300">Order #{order.orderNumber} — Approval Needed</p>
+        </div>
+        <p className="text-xs text-amber-700 dark:text-amber-400 mb-3">
+          The store made changes to your order. Please review and approve or reject.
+        </p>
+        {/* Edit details */}
+        <div className="space-y-2 mb-3">
+          {order.editLogs.map((log) => {
+            const action = log.action === "remove" ? "Removed" : log.action === "substitute" ? "Substituted" : log.action === "quantity-change" ? "Qty changed" : "Updated";
+            const original = log.originalItem as { name?: string } | null;
+            const updated = log.newItem as { name?: string } | null;
+            return (
+              <div key={log.id} className="flex justify-between items-center rounded-lg bg-white dark:bg-neutral-800 px-3 py-2">
+                <div className="text-xs">
+                  <span className="font-bold text-neutral-700 dark:text-neutral-300">{action}: </span>
+                  <span className="text-neutral-600 dark:text-neutral-400">{original?.name || updated?.name || "Item"}</span>
+                </div>
+                <span className={cn("text-xs font-bold", log.priceDelta >= 0 ? "text-amber-700" : "text-green-600")}>
+                  {log.priceDelta >= 0 ? "+" : ""}{formatCurrency(log.priceDelta)}
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        {totalDelta !== 0 && (
+          <p className="text-xs font-bold text-neutral-700 dark:text-neutral-300 mb-3">
+            New total: {totalDelta > 0 ? `+${formatCurrency(totalDelta)}` : formatCurrency(totalDelta)} change
+          </p>
+        )}
+        {/* Approval buttons */}
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => handleApproval("approved")}
+            disabled={processingApproval}
+            className="h-10 rounded-xl bg-secondary-500 text-sm font-bold text-white flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-95 transition-transform"
+          >
+            <CheckCircle2 className="h-4 w-4" /> Approve
+          </button>
+          <button
+            type="button"
+            onClick={() => handleApproval("rejected")}
+            disabled={processingApproval}
+            className="h-10 rounded-xl bg-red-500 text-sm font-bold text-white flex items-center justify-center gap-1.5 disabled:opacity-50 active:scale-95 transition-transform"
+          >
+            <XCircle className="h-4 w-4" /> Reject
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   return (
     <Link href={`/track/${order.id}`}>

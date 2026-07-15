@@ -412,39 +412,66 @@ export function AddressSelector({
             <div className="mt-4">
               <motion.button
                 type="button"
-                onClick={() => {
-                  if (!form.customerName.trim() || !form.phone.trim() || !form.pincode.trim() || !form.houseName.trim()) {
-                    showToast("Please fill in your name, phone number, house name and pincode", "error");
+                onClick={async () => {
+                  if (!form.customerName.trim()) {
+                    showToast("Please enter your name", "error");
                     return;
                   }
-                  if (!/^\d{6}$/.test(form.pincode)) {
-                    showToast("Pincode must be 6 digits", "error");
+                  if (!form.phone.trim() || form.phone.trim().length < 10) {
+                    showToast("Please enter a valid 10-digit phone number", "error");
                     return;
                   }
-                  // Save the address to DB for new customers
-                  fetch("/api/account/addresses", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      label: "Home",
-                      customerName: form.customerName,
-                      phone: form.phone,
-                      houseName: form.houseName,
-                      street: form.street,
-                      landmark: form.landmark,
-                      pincode: form.pincode,
-                      latitude: Number(form.latitude) || 0,
-                      longitude: Number(form.longitude) || 0,
-                      isDefault: savedAddresses.length === 0,
-                    }),
-                  }).catch(() => {});
-                  setFormExpanded(false);
+                  if (!form.houseName.trim()) {
+                    showToast("Please enter your house name or flat number", "error");
+                    return;
+                  }
+                  if (!form.pincode.trim() || !/^\d{6}$/.test(form.pincode)) {
+                    showToast("Please enter a valid 6-digit pincode", "error");
+                    return;
+                  }
+                  if (!locationOk) {
+                    showToast("Please pin your home location using GPS or map before saving", "error");
+                    return;
+                  }
+                  // Save the address to DB
+                  try {
+                    const res = await fetch("/api/account/addresses", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        label: "Home",
+                        customerName: form.customerName,
+                        phone: form.phone,
+                        houseName: form.houseName,
+                        street: form.street,
+                        landmark: form.landmark,
+                        pincode: form.pincode,
+                        latitude: Number(form.latitude) || 0,
+                        longitude: Number(form.longitude) || 0,
+                        isDefault: savedAddresses.length === 0,
+                      }),
+                    });
+                    if (res.ok) {
+                      showToast("Address saved!", "success");
+                      setFormExpanded(false);
+                    } else {
+                      const data = await res.json().catch(() => ({}));
+                      showToast(data.error || "Could not save address. Please try again.", "error");
+                    }
+                  } catch {
+                    showToast("Network error. Please try again.", "error");
+                  }
                 }}
                 whileTap={{ scale: 0.97 }}
                 className="flex h-11 w-full items-center justify-center rounded-xl bg-black text-sm font-bold text-white press"
               >
                 Save address & continue
               </motion.button>
+              {!locationOk && (
+                <p className="mt-2 text-xs text-amber-600 dark:text-amber-400 font-semibold text-center">
+                  📍 GPS location is required — tap "Detect" or "Pin on map" above
+                </p>
+              )}
             </div>
           </motion.div>
         )}

@@ -21,7 +21,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
-      items: { include: { product: { select: { id: true, name: true, image: true, slug: true, unit: true, category: { select: { name: true } } } } } },
+      items: { include: { product: { include: { category: { select: { name: true } } } } } },
       user: { select: { id: true, name: true, email: true, phone: true } },
       deliveryPartner: { select: { id: true, name: true, phone: true } },
       acknowledgedBy: { select: { id: true, name: true } },

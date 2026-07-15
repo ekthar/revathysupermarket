@@ -56,8 +56,8 @@ export const Header = memo(function Header({
     }
   }, [router, pathname]);
 
-  // Hide on login/welcome/staff/admin/delivery
-  if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/delivery")) return null;
+  // Hide on login/welcome/staff/admin/delivery/track
+  if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/delivery") || pathname.startsWith("/track")) return null;
 
   // Determine if we're on an inner page that needs a back button
   const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/account/addresses", "/support", "/checkout"];

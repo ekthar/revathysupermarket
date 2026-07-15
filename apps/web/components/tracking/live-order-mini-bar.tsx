@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronRight, Package } from "lucide-react";
-import { useGSAP } from "@gsap/react";
-import { gsap, prefersReducedMotion } from "@/lib/gsap";
+import { ChevronRight, Package, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
 import { estimateOrderEta, type ActiveOrderSummary } from "@/lib/live-order";
 import { isDeliveryEtaVisible } from "@msm/shared";
 import type { OrderStatus } from "@msm/shared";
+import { haptic } from "@/lib/haptics";
 
 const statusLabels: Record<string, string> = {
   ORDER_RECEIVED: "Received",
@@ -21,23 +21,26 @@ const statusLabels: Record<string, string> = {
   ARRIVING: "Arriving",
 };
 
-const HIDDEN = ["/login", "/welcome", "/admin", "/delivery", "/staff", "/checkout"];
+const HIDDEN = ["/login", "/welcome", "/admin", "/delivery", "/staff", "/checkout", "/track"];
 
-/** Compact sticky mini-bar under the header — GSAP driven. */
+/**
+ * Live order tracker — collapsible bubble design.
+ * 
+ * Collapsed: small floating circle (bottom-right, above tab bar)
+ * Expanded: full-width pill with order info + Track button
+ * 
+ * Tap bubble to expand, tap X or Track to collapse/navigate.
+ */
 export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: ActiveOrderSummary | null }) {
   const pathname = usePathname();
   const [activeOrder, setActiveOrder] = useState<ActiveOrderSummary | null>(initialOrder);
+  const [expanded, setExpanded] = useState(false);
 
   const hide =
     !activeOrder ||
-    HIDDEN.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
-    pathname.startsWith("/track/");
+    HIDDEN.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-  const barRef = useRef<HTMLDivElement>(null);
-  const dotRef = useRef<HTMLSpanElement>(null);
-  const statusRef = useRef<HTMLSpanElement>(null);
-
-  /* ─── polling ─── */
+  // Polling for active order
   useEffect(() => {
     let active = true;
     async function fetchActiveOrder() {
@@ -59,136 +62,103 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
         } else {
           setActiveOrder(null);
         }
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
     }
     fetchActiveOrder();
     const interval = setInterval(fetchActiveOrder, 30_000);
-    return () => {
-      active = false;
-      clearInterval(interval);
-    };
+    return () => { active = false; clearInterval(interval); };
   }, []);
 
+  // Auto-collapse when navigating
+  useEffect(() => {
+    setExpanded(false);
+  }, [pathname]);
+
+  if (hide) return null;
+
   const shouldShow = !hide && activeOrder;
-  const statusText = activeOrder ? statusLabels[activeOrder.status] || activeOrder.status : "";
-  // Only show ETA in the mini-bar when order is in dispatch status (OUT_FOR_DELIVERY/ARRIVING)
-  // Validates: Requirements 3.1, 3.2, 3.3, 3.4
-  const etaText = activeOrder?.eta && isDeliveryEtaVisible(activeOrder.status as OrderStatus)
-    ? ` · ~${activeOrder.eta} min`
+  if (!shouldShow) return null;
+
+  const statusText = statusLabels[activeOrder.status] || activeOrder.status;
+  const etaText = activeOrder.eta && isDeliveryEtaVisible(activeOrder.status as OrderStatus)
+    ? `~${activeOrder.eta} min`
     : "";
 
-  /* ─── bar entry / exit ─── */
-  useGSAP(
-    () => {
-      const el = barRef.current;
-      if (!el) return;
-
-      if (shouldShow) {
-        el.style.height = "auto";
-        const autoHeight = el.scrollHeight;
-        el.style.height = "0px";
-        gsap.to(el, {
-          height: autoHeight,
-          opacity: 1,
-          duration: 0.35,
-          ease: "power2.out",
-          onComplete: () => {
-            el.style.height = "auto";
-          },
-        });
-      } else {
-        gsap.to(el, {
-          height: 0,
-          opacity: 0,
-          duration: 0.3,
-          ease: "power2.in",
-        });
-      }
-    },
-    { dependencies: [shouldShow], scope: barRef },
-  );
-
-  /* ─── continuous pulse on the indicator dot ─── */
-  useGSAP(
-    () => {
-      if (prefersReducedMotion() || !dotRef.current) return;
-      gsap.to(dotRef.current, {
-        scale: 0.6,
-        opacity: 0.3,
-        duration: 1.2,
-        ease: "sine.inOut",
-        repeat: -1,
-        yoyo: true,
-      });
-    },
-    { scope: dotRef },
-  );
-
-  /* ─── crossfade on status change ─── */
-  useGSAP(
-    () => {
-      if (!statusRef.current) return;
-      gsap.fromTo(statusRef.current, { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.3, ease: "power2.out" });
-    },
-    { dependencies: [statusText], scope: statusRef },
-  );
-
   return (
-    <>
-      {/* Desktop: sticky top bar */}
-      <div
-        ref={barRef}
-        className="sticky top-[var(--mobile-header-height)] md:top-[70px] z-[35] overflow-hidden hidden md:block"
-        style={{ height: 0, opacity: 0 }}
-      >
-        <Link
-          href={`/track/${activeOrder?.id ?? "#"}`}
-          className="group flex items-center gap-3 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 dark:from-emerald-800 dark:via-emerald-700 dark:to-teal-700 px-4 py-2.5 shadow-sm press"
-        >
-          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-            <Package className="h-4 w-4 text-white" />
-            <span ref={dotRef} className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow-sm shadow-emerald-900/30" />
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Order #{activeOrder?.orderNumber ?? "—"}</p>
-            <p className="text-sm font-bold text-white truncate"><span ref={statusRef} key={statusText}>{statusText}{etaText}</span></p>
-          </div>
-          <span className="flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-sm px-3 py-1.5 text-[11px] font-bold text-white transition-all group-hover:bg-white/30">
-            Track <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-          </span>
-        </Link>
-      </div>
-
-      {/* Mobile: floating bottom pill (Swiggy-style) */}
-      {shouldShow && (
-        <div className="fixed bottom-20 inset-x-3 z-[75] md:hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <Link
-            href={`/track/${activeOrder?.id ?? "#"}`}
-            className="group flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-3.5 shadow-xl shadow-emerald-500/25 active:scale-[0.97] transition-transform"
+    <div className="fixed z-[70] md:hidden" style={{ bottom: "calc(var(--mobile-nav-height, 64px) + 0.75rem + env(safe-area-inset-bottom, 0px))", right: "0.75rem" }}>
+      <AnimatePresence mode="wait">
+        {!expanded ? (
+          /* ─── COLLAPSED BUBBLE ─── */
+          <motion.button
+            key="bubble"
+            type="button"
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.5, opacity: 0 }}
+            transition={{ type: "spring", damping: 20, stiffness: 300 }}
+            onClick={() => { setExpanded(true); haptic("light"); }}
+            className="relative flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/30 active:scale-90 transition-transform"
+            aria-label={`Order ${activeOrder.orderNumber}: ${statusText}. Tap to expand.`}
           >
-            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
-              <Package className="h-5 w-5 text-white" />
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-white animate-pulse" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Order #{activeOrder?.orderNumber ?? "—"}</p>
-              <p className="text-sm font-bold text-white truncate">{statusText}{etaText}</p>
-            </div>
-            {etaText ? (
-              <div className="text-right shrink-0">
-                <p className="text-xl font-black text-white">{activeOrder?.eta}</p>
-                <p className="text-[9px] font-bold uppercase text-white/60">MIN</p>
-              </div>
-            ) : (
-              <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-bold text-white">
-                Track <ChevronRight className="h-3.5 w-3.5" />
+            <Package className="h-6 w-6 text-white" />
+            {/* Pulse ring */}
+            <span className="absolute inset-0 rounded-full border-2 border-emerald-400/50 animate-ping" style={{ animationDuration: "2s" }} />
+            {/* ETA badge */}
+            {etaText && (
+              <span className="absolute -top-1 -left-1 rounded-full bg-white px-1.5 py-0.5 text-[9px] font-black text-emerald-700 shadow-md border border-emerald-100">
+                {etaText}
               </span>
             )}
-          </Link>
-        </div>
-      )}
-    </>
+            {/* Status dot */}
+            <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+            </span>
+          </motion.button>
+        ) : (
+          /* ─── EXPANDED PILL ─── */
+          <motion.div
+            key="pill"
+            initial={{ width: 56, height: 56, borderRadius: 28, opacity: 0.8 }}
+            animate={{ width: "calc(100vw - 1.5rem)", height: "auto", borderRadius: 20, opacity: 1 }}
+            exit={{ width: 56, height: 56, borderRadius: 28, opacity: 0 }}
+            transition={{ type: "spring", damping: 25, stiffness: 280 }}
+            className="overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/25"
+            style={{ position: "fixed", bottom: "calc(var(--mobile-nav-height, 64px) + 0.75rem + env(safe-area-inset-bottom, 0px))", right: "0.75rem" }}
+          >
+            <div className="flex items-center gap-3 p-3.5">
+              {/* Close button */}
+              <button
+                type="button"
+                onClick={() => setExpanded(false)}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/20"
+                aria-label="Collapse tracker"
+              >
+                <X className="h-4 w-4 text-white" />
+              </button>
+
+              {/* Order info */}
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
+                  Order #{activeOrder.orderNumber}
+                </p>
+                <p className="text-sm font-bold text-white truncate">
+                  {statusText}{etaText ? ` · ${etaText}` : ""}
+                </p>
+              </div>
+
+              {/* Track button */}
+              <Link
+                href={`/track/${activeOrder.id}`}
+                onClick={() => { setExpanded(false); haptic("medium"); }}
+                className="flex items-center gap-1 rounded-full bg-white px-4 py-2 text-xs font-black text-emerald-700 shadow-sm active:scale-95 transition-transform"
+              >
+                Track
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

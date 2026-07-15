@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Package, Search, ShoppingBag } from "lucide-react";
+import { Heart, Package, Search, ShoppingBag } from "lucide-react";
 import Link from "next/link";
 import { springs } from "@/lib/motion";
 
@@ -75,6 +75,37 @@ export function EmptyOrdersState() {
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
         <Link href="/products" className="mt-5 inline-flex h-10 px-6 items-center justify-center rounded-full bg-primary text-white text-body font-bold press">
           Start Shopping
+        </Link>
+      </motion.div>
+    </div>
+  );
+}
+
+// Empty favorites
+export function EmptyFavoritesState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
+      <motion.div
+        initial={{ scale: 0 }}
+        animate={{ scale: 1 }}
+        transition={springs.enter}
+        className="relative"
+      >
+        <div className="h-20 w-20 rounded-full bg-red-50 dark:bg-red-950/30 flex items-center justify-center">
+          <Heart className="h-9 w-9 text-red-300 dark:text-red-800" aria-hidden="true" />
+        </div>
+        <motion.span aria-hidden="true" animate={{ scale: [1, 1.3, 1], opacity: [0.5, 1, 0.5] }} transition={{ duration: 1.5, repeat: Infinity }} className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-400" />
+      </motion.div>
+
+      <motion.h2 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-5 text-lg font-bold text-slate-900 dark:text-white">
+        No favorites yet
+      </motion.h2>
+      <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="mt-1.5 text-body text-slate-500 dark:text-slate-400 max-w-xs">
+        Double-tap or tap the heart on products you love. They&apos;ll show up here for quick access.
+      </motion.p>
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+        <Link href="/products" className="mt-5 inline-flex h-10 px-6 items-center justify-center rounded-full bg-red-500 text-white text-body font-bold press">
+          Discover Products
         </Link>
       </motion.div>
     </div>

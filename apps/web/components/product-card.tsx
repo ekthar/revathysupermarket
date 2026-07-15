@@ -162,7 +162,16 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
           <span className="text-micro font-semibold text-neutral-500">Out of stock</span>
         </div>
       )}
+      {!outOfStock && product.stock > 0 && product.stock <= 5 && (
+        <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 px-3 py-1">
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">Only {product.stock} left</span>
+        </div>
+      )}
       <div className={cn("p-3", compact && "p-2.5")}>
+        {!outOfStock && product.popularity > 30 && (
+          <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">🔥 {product.popularity}+ ordered recently</p>
+        )}
         <Link
           href={productHref}
           className={cn(outOfStock && "pointer-events-none")}

@@ -5,12 +5,12 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 import { formatQuantityWithUnit } from "@msm/shared";
 import { getActiveDeliveryOtp } from "@/lib/delivery";
-import { OrderPrintButton } from "@/components/order-print-button";
 import { OrderPaymentSection } from "@/components/admin/order-payment-section";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { DeliveryAssignment } from "@/components/admin/delivery-assignment";
 import { AcknowledgeButton } from "@/components/admin/acknowledge-button";
 import { BillNumberEntry } from "@/components/admin/bill-number-entry";
+import { OrderItemEditor } from "@/components/admin/order-item-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -66,18 +66,12 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          {order.printedAt && (
-            <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-              ✓ Printed {new Date(order.printedAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit" })}
-            </span>
-          )}
-          <OrderPrintButton orderId={order.id} />
           <Link
             href={`/admin/orders/${order.id}/invoice`}
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-sm font-bold text-muted-foreground hover:bg-muted transition-colors"
           >
             <FileText className="h-4 w-4" />
-            Print Invoice
+            Invoice
           </Link>
           <span className={`inline-flex h-7 items-center rounded-full px-3 text-xs font-bold ${statusColors[order.status] || "bg-muted text-muted-foreground"}`}>
             {order.status.replace(/_/g, " ")}
@@ -134,6 +128,21 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <div className="flex justify-between text-base pt-1 border-t border-border"><span className="font-black">Total</span><span className="font-black text-primary">₹{Number(order.total).toFixed(0)}</span></div>
             </div>
           </section>
+
+          {/* Order Item Editor — edit/remove/substitute items */}
+          {!["OUT_FOR_DELIVERY", "ARRIVING", "DELIVERED", "CANCELLED"].includes(order.status) && (
+            <OrderItemEditor
+              orderId={order.id}
+              items={order.items.map((item) => ({
+                id: item.id,
+                productId: item.productId,
+                name: item.name,
+                quantity: item.quantity,
+                price: Number(item.price),
+                unit: item.product?.unit || "pcs",
+              }))}
+            />
+          )}
 
           {/* Timeline */}
           <section className="rounded-2xl bg-card border border-border p-5">

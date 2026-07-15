@@ -7,6 +7,9 @@ import { formatQuantityWithUnit } from "@msm/shared";
 import { getActiveDeliveryOtp } from "@/lib/delivery";
 import { OrderPrintButton } from "@/components/order-print-button";
 import { OrderPaymentSection } from "@/components/admin/order-payment-section";
+import { OrderStatusForm } from "@/components/admin/order-status-form";
+import { DeliveryAssignment } from "@/components/admin/delivery-assignment";
+import { AcknowledgeButton } from "@/components/admin/acknowledge-button";
 
 export const dynamic = "force-dynamic";
 
@@ -172,6 +175,26 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
 
         {/* Right column - Sidebar cards */}
         <div className="space-y-5">
+          {/* Status Update */}
+          <section className="rounded-2xl bg-card border border-border p-5">
+            <h2 className="text-sm font-black text-foreground mb-1 flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Order Status</h2>
+            {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt && (
+              <AcknowledgeButton orderId={order.id} />
+            )}
+            {order.acknowledgedBy && (
+              <p className="text-xs text-muted-foreground mb-2">Reviewed by: {order.acknowledgedBy.name}</p>
+            )}
+            <OrderStatusForm orderId={order.id} currentStatus={order.status} />
+          </section>
+
+          {/* Delivery Assignment */}
+          <DeliveryAssignment
+            orderId={order.id}
+            currentPartnerId={order.deliveryPartner?.id || null}
+            currentPartnerName={order.deliveryPartner?.name || null}
+            orderStatus={order.status}
+          />
+
           {/* Payment */}
           <OrderPaymentSection
             orderId={order.id}

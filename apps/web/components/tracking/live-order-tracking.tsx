@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import dynamic from "next/dynamic";
 import { calculateDistanceKm } from "@/lib/distance";
 import { springs } from "@/lib/motion";
@@ -13,22 +13,27 @@ import {
   CheckCircle2,
   Truck,
   Navigation,
+  ChevronUp,
+  MapPin,
+  Package,
+  ShoppingBag,
 } from "lucide-react";
 import { SITE } from "@/lib/constants";
 import { useOrderTracking, type TrackingUpdate } from "@/lib/hooks/use-order-tracking";
 import { estimateOrderEta, type EtaDisplayMode } from "@/lib/live-order";
 import { isDeliveryEtaVisible } from "@msm/shared";
 import type { OrderStatus } from "@msm/shared";
-import { DeliveryEtaTracking, getVisibleEtaMinutes } from "./delivery-eta";
+import { getVisibleEtaMinutes } from "./delivery-eta";
 import { OrderBill } from "./order-bill";
-import { OrderTimeline, getTimelineStatusLabel } from "./order-timeline";
+import { getTimelineStepIndex, getTimelineStatusLabel, TIMELINE_STEPS } from "./order-timeline";
+import { haptic } from "@/lib/haptics";
 
 const DeliveryMap = dynamic(
   () => import("./delivery-map").then((m) => ({ default: m.DeliveryMap })),
   {
     ssr: false,
     loading: () => (
-      <div className="flex h-[280px] w-full items-center justify-center rounded-2xl bg-neutral-100 dark:bg-neutral-800">
+      <div className="flex h-full w-full items-center justify-center bg-neutral-100 dark:bg-neutral-800">
         <span className="text-sm text-neutral-400">Loading map...</span>
       </div>
     ),
@@ -55,10 +60,8 @@ type TrackingData = {
     note: string | null;
     createdAt: string;
   }>;
-  // Distance-aware ETA fields
   distanceKm?: number;
   etaDisplayMode?: EtaDisplayMode;
-  // Order bill fields
   orderItems?: Array<{ name: string; quantity: number; price: number }>;
   subtotal?: number;
   deliveryFee?: number;
@@ -67,11 +70,35 @@ type TrackingData = {
   paymentMethod?: string;
   storeLatitude: number;
   storeLongitude: number;
-  // Last updated timestamp
   updatedAt?: string;
 };
 
-/** Compute distance in km from rider to customer destination */
+// Fun status messages that rotate
+const FUN_MESSAGES: Record<string, string[]> = {
+  ORDER_RECEIVED: ["We got your order! 🎉", "Our team is on it!", "Fresh picks incoming!"],
+  AWAITING_CUSTOMER_APPROVAL: ["Just need your okay 👍", "Quick confirmation needed"],
+  ACCEPTED: ["Your order is confirmed! ✅", "Getting things ready for you"],
+  PACKING: ["Hand-picking the freshest items 🥬", "Carefully packing your bag 📦", "Almost packed!"],
+  READY_FOR_DELIVERY: ["Packed and ready to go! 🚀", "Waiting for your rider..."],
+  OUT_FOR_DELIVERY: ["Your rider is on the way! 🏍️", "Zooming to your doorstep!", "Almost there!"],
+  ARRIVING: ["Rider's at your door! 🚪", "Time to grab your groceries!", "They're here!"],
+  DELIVERED: ["Enjoy your fresh groceries! 🎊", "Order complete. See you soon!"],
+};
+
+function useFunMessage(status: string) {
+  const [index, setIndex] = useState(0);
+  const messages = FUN_MESSAGES[status] || ["Processing..."];
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((i) => (i + 1) % messages.length);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [messages.length]);
+
+  return messages[index];
+}
+
 function computeRiderDistanceKm(
   riderLoc: { latitude: number; longitude: number } | null,
   destination: { latitude: number; longitude: number }
@@ -87,26 +114,16 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
   const router = useRouter();
   const [data, setData] = useState<TrackingData>(initialData);
   const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+  const funMessage = useFunMessage(data.status);
 
   const etaDisplayMode: EtaDisplayMode = data.etaDisplayMode ?? "after_assignment";
 
   const calculateEta = useCallback(
     (riderLoc: { latitude: number; longitude: number } | null) => {
-      // Use the shared utility to determine if ETA should be visible for the current status.
-      // This enforces Requirements 3.1-3.4: ETA only visible for OUT_FOR_DELIVERY/ARRIVING.
       const etaVisible = isDeliveryEtaVisible(data.status as OrderStatus);
-
-      // When mode is "after_assignment", only show ETA when status allows it
-      if (etaDisplayMode === "after_assignment" && !etaVisible) {
-        return null;
-      }
-
-      // When mode is "always", show ETA for all non-delivered/non-cancelled statuses
-      if (data.status === "DELIVERED" || data.status === "CANCELLED") {
-        return null;
-      }
-
-      // If ETA is visible (dispatch statuses) and we have rider location, calculate from rider position
+      if (etaDisplayMode === "after_assignment" && !etaVisible) return null;
+      if (data.status === "DELIVERED" || data.status === "CANCELLED") return null;
       if (etaVisible && riderLoc) {
         const dist = calculateDistanceKm(
           { lat: riderLoc.latitude, lng: riderLoc.longitude },
@@ -114,13 +131,9 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         );
         return Math.max(2, Math.ceil((dist / 18) * 60));
       }
-
-      // If ETA is visible but no rider location yet
       if (etaVisible && !riderLoc) {
         return estimateOrderEta(data.status, { distanceKm: data.distanceKm });
       }
-
-      // For other statuses (when mode is "always"), use distance-aware estimation
       return estimateOrderEta(data.status, { distanceKm: data.distanceKm });
     },
     [data.destination, data.status, data.distanceKm, etaDisplayMode]
@@ -130,7 +143,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
     setEtaMinutes(calculateEta(data.deliveryPartnerLocation));
   }, [data.deliveryPartnerLocation, calculateEta]);
 
-  // Real-time updates via Event-Driven SSE Gateway
+  // Real-time updates
   const isDelivered = data.status === "DELIVERED";
   const { connectionState } = useOrderTracking({
     orderId: data.id,
@@ -143,264 +156,315 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           deliveryPartnerLocation: update.deliveryPartnerLocation,
         }),
       }));
+      if (update.status) haptic("medium");
     }, []),
   });
 
-  const phoneNumber = data.riderPhone || SITE.phone;
-
-  // Calculate rider-to-customer distance for display
-  const riderDistanceKm = computeRiderDistanceKm(
-    data.deliveryPartnerLocation,
-    data.destination
-  );
+  const riderDistanceKm = computeRiderDistanceKm(data.deliveryPartnerLocation, data.destination);
   const isRiderEnRoute = isDeliveryEtaVisible(data.status as OrderStatus);
-
-  // Order bill data
   const hasBillData = data.orderItems && data.orderItems.length > 0 && data.total != null;
+  const currentStep = getTimelineStepIndex(data.status);
+  const visibleEta = getVisibleEtaMinutes(data.status, etaMinutes);
 
   return (
-    <motion.main
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={springs.enter}
-      className="relative min-h-screen bg-background dark:bg-neutral-950 pb-safe"
-    >
-      {/* Fixed top LIVE ORDER banner */}
-      <div className="ios-sticky-tracking-header bg-background/90 dark:bg-neutral-950/90 backdrop-blur-xl">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.1, ...springs.snappy }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-secondary-600 via-secondary-500 to-secondary-400 p-3.5 shadow-lg shadow-secondary-500/20 dark:shadow-secondary-900/30"
-        >
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Pulse dot */}
-              <div className="relative flex h-3 w-3">
-                <span className="stay-light absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-75" />
-                <span className="stay-light relative inline-flex h-3 w-3 rounded-full bg-white" />
-              </div>
-              <div>
-                <p className="text-micro font-bold uppercase tracking-wider text-white/80">
-                  Live Order
-                </p>
-                <p className="text-body font-bold text-white">
-                  {getTimelineStatusLabel(data.status)}
-                </p>
-              </div>
-            </div>
-            <div className="text-right">
-              {getVisibleEtaMinutes(data.status, etaMinutes) !== null && !isDelivered && (
-                <p className="text-xl font-black text-white">{etaMinutes} min</p>
-              )}
-              {isDelivered && (
-                <p className="text-sm font-bold text-white">Complete</p>
-              )}
-              <p className="text-micro font-semibold uppercase tracking-wider text-white/70">
-                {isDelivered ? "Order delivered" : "Tap to track"}
-              </p>
-            </div>
-          </div>
-          {/* Decorative gradient circles */}
-          <div className="absolute -right-4 -top-4 h-20 w-20 rounded-full bg-white/10" />
-          <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-white/5" />
-        </motion.div>
-      </div>
-
-      {/* Back button */}
-      <div className="px-4 pt-4">
-        <motion.button
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.2 }}
-          onClick={() => router.back()}
-          className="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md dark:bg-neutral-800 dark:shadow-neutral-900/50 press"
-        >
-          <ArrowLeft className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />
-        </motion.button>
-      </div>
-
-      {/* Content */}
-      <div className="px-4 pt-5 space-y-4">
-        {/* Rider info card - enhanced with distance when en route */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.25, ...springs.enter }}
-          className="rounded-2xl bg-white p-4 card-shadow dark:bg-neutral-900"
-        >
-          <div className="flex items-center gap-3">
-            {/* Avatar */}
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600 shadow-md shadow-secondary-500/20">
-              <Truck className="h-5 w-5 text-white" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-caption font-semibold text-neutral-400 dark:text-neutral-500">
-                Your rider
-              </p>
-              <p className="text-title font-bold text-neutral-900 dark:text-white truncate">
-                {data.riderName || "Assigning rider..."}
-              </p>
-              {/* Distance badge when rider is en route */}
-              {isRiderEnRoute && riderDistanceKm != null && (
-                <span className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-secondary-600 dark:text-secondary-400">
-                  <Navigation className="h-3 w-3" />
-                  {riderDistanceKm.toFixed(1)} km away
-                </span>
-              )}
-            </div>
-            {/* Call button when rider is assigned and en route */}
-            {data.riderName && isRiderEnRoute && data.riderPhone && (
-              <a
-                href={`tel:${data.riderPhone}`}
-                className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-900/40 press"
-              >
-                <Phone className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
-              </a>
-            )}
-            {data.riderName && !isRiderEnRoute && (
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-50 dark:bg-secondary-900/30">
-                <CheckCircle2 className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
-              </div>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Map/tracking visual */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.3, ...springs.enter }}
-        >
-          {(data.deliveryPartnerLocation ||
-            ["OUT_FOR_DELIVERY", "ARRIVING", "READY_FOR_DELIVERY"].includes(data.status)) ? (
+    <div className="fixed inset-0 z-50 flex flex-col bg-black">
+      {/* FULL-SCREEN MAP — occupies entire viewport */}
+      <div className="absolute inset-0">
+        {(data.deliveryPartnerLocation || ["OUT_FOR_DELIVERY", "ARRIVING", "READY_FOR_DELIVERY"].includes(data.status)) ? (
+          <div className="h-full w-full [&_.h-\\[320px\\]]:!h-full [&_>div]:!rounded-none [&_>div]:!border-0">
             <DeliveryMap
               deliveryPartnerLocation={data.deliveryPartnerLocation}
               customerLocation={data.destination}
               storeLocation={{ latitude: data.storeLatitude, longitude: data.storeLongitude }}
-              className="shadow-md"
+              className="!rounded-none !border-0 !shadow-none h-full [&>div]:!h-full"
               etaMinutes={etaMinutes}
             />
-          ) : (
-            <div className="relative ios-map-placeholder flex items-center justify-center">
-              {/* Delivery icon overlay */}
-              <motion.div
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                className="flex flex-col items-center gap-2"
-              >
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-secondary-500 shadow-lg shadow-secondary-500/40">
-                  <Truck className="h-8 w-8 text-white" />
+          </div>
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-gradient-to-b from-secondary-50 to-white dark:from-neutral-900 dark:to-neutral-950">
+            <motion.div
+              animate={{ y: [0, -12, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              className="flex flex-col items-center gap-4"
+            >
+              <div className="relative">
+                <div className="flex h-24 w-24 items-center justify-center rounded-full bg-secondary-500 shadow-2xl shadow-secondary-500/40">
+                  {data.status === "PACKING" ? <Package className="h-12 w-12 text-white" /> :
+                   data.status === "ORDER_RECEIVED" || data.status === "ACCEPTED" ? <ShoppingBag className="h-12 w-12 text-white" /> :
+                   <Truck className="h-12 w-12 text-white" />}
                 </div>
-              </motion.div>
-              {/* Pulse rings around the delivery icon */}
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="h-24 w-24 rounded-full border-2 border-secondary-400/30 animate-ping" style={{ animationDuration: "2s" }} />
+                <div className="absolute inset-0 rounded-full border-2 border-secondary-400/30 animate-ping" style={{ animationDuration: "2s" }} />
+              </div>
+              <div className="text-center">
+                <p className="text-lg font-bold text-neutral-900 dark:text-white">{getTimelineStatusLabel(data.status)}</p>
+                <AnimatePresence mode="wait">
+                  <motion.p
+                    key={funMessage}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -8 }}
+                    className="mt-1 text-sm text-neutral-500"
+                  >
+                    {funMessage}
+                  </motion.p>
+                </AnimatePresence>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </div>
+
+      {/* TOP BAR — floating over map */}
+      <div className="relative z-10 safe-top">
+        <div className="flex items-center justify-between px-4 pt-4">
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            onClick={() => router.back()}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm dark:bg-neutral-900/90"
+          >
+            <ArrowLeft className="h-5 w-5 text-neutral-700 dark:text-neutral-200" />
+          </motion.button>
+
+          {/* Live indicator pill */}
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 shadow-lg backdrop-blur-sm dark:bg-neutral-900/90"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary-400 opacity-75" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary-500" />
+            </span>
+            <span className="text-xs font-bold text-neutral-700 dark:text-neutral-200">LIVE</span>
+          </motion.div>
+
+          {/* Call rider button */}
+          {data.riderPhone && isRiderEnRoute && (
+            <a
+              href={`tel:${data.riderPhone}`}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/90 shadow-lg backdrop-blur-sm dark:bg-neutral-900/90"
+            >
+              <Phone className="h-5 w-5 text-secondary-600" />
+            </a>
+          )}
+          {!data.riderPhone && <div className="w-10" />}
+        </div>
+      </div>
+
+      {/* BOTTOM SHEET — draggable overlay */}
+      <motion.div
+        initial={{ y: "70%" }}
+        animate={{ y: sheetExpanded ? "10%" : "55%" }}
+        transition={{ type: "spring", damping: 30, stiffness: 300 }}
+        drag="y"
+        dragConstraints={{ top: 0, bottom: 0 }}
+        dragElastic={0.1}
+        onDragEnd={(_, info) => {
+          if (info.offset.y < -50) setSheetExpanded(true);
+          else if (info.offset.y > 50) setSheetExpanded(false);
+        }}
+        className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-3xl bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.15)] dark:bg-neutral-900 dark:shadow-[0_-8px_40px_rgba(0,0,0,0.5)]"
+        style={{ top: 0, touchAction: "none" }}
+      >
+        {/* Drag handle */}
+        <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing" onClick={() => setSheetExpanded(!sheetExpanded)}>
+          <div className="h-1 w-10 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+        </div>
+
+        {/* Sheet content - scrollable */}
+        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-safe">
+          {/* Status + ETA Hero */}
+          <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
+            <div className="flex-1">
+              <p className="text-xs font-bold uppercase tracking-wider text-secondary-600 dark:text-secondary-400">
+                Order #{data.orderNumber}
+              </p>
+              <h2 className="mt-1 text-xl font-black text-neutral-900 dark:text-white">
+                {getTimelineStatusLabel(data.status)}
+              </h2>
+              <AnimatePresence mode="wait">
+                <motion.p
+                  key={funMessage}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="mt-0.5 text-sm text-neutral-500 dark:text-neutral-400"
+                >
+                  {funMessage}
+                </motion.p>
+              </AnimatePresence>
+            </div>
+            {/* ETA Circle */}
+            {visibleEta !== null && !isDelivered && (
+              <div className="relative flex h-16 w-16 shrink-0 items-center justify-center">
+                <svg className="absolute inset-0 -rotate-90" viewBox="0 0 64 64">
+                  <circle cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4" className="text-neutral-100 dark:text-neutral-800" />
+                  <motion.circle
+                    cx="32" cy="32" r="28" fill="none" stroke="currentColor" strokeWidth="4"
+                    className="text-secondary-500"
+                    strokeDasharray={175.9}
+                    strokeDashoffset={175.9 * (1 - Math.min(etaMinutes ?? 30, 60) / 60)}
+                    strokeLinecap="round"
+                    animate={{ strokeDashoffset: 175.9 * (1 - Math.min(etaMinutes ?? 30, 60) / 60) }}
+                    transition={{ duration: 1 }}
+                  />
+                </svg>
+                <div className="text-center">
+                  <p className="text-lg font-black text-neutral-900 dark:text-white">{etaMinutes}</p>
+                  <p className="text-[9px] font-bold text-neutral-400">MIN</p>
+                </div>
+              </div>
+            )}
+            {isDelivered && (
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-900/30">
+                <CheckCircle2 className="h-7 w-7 text-secondary-500" />
+              </div>
+            )}
+          </div>
+
+          {/* Compact Timeline Steps */}
+          <div className="py-4">
+            <div className="flex items-center justify-between gap-1">
+              {TIMELINE_STEPS.map((step, index) => {
+                const isCompleted = index < currentStep;
+                const isCurrent = index === currentStep;
+                const Icon = step.icon;
+                return (
+                  <div key={step.key} className="flex items-center flex-1">
+                    <div className="flex flex-col items-center gap-1 flex-1">
+                      <motion.div
+                        animate={isCurrent ? { scale: [1, 1.15, 1] } : {}}
+                        transition={{ duration: 1.5, repeat: isCurrent ? Infinity : 0 }}
+                        className={`flex h-8 w-8 items-center justify-center rounded-full transition-all ${
+                          isCompleted ? "bg-secondary-500" :
+                          isCurrent ? "bg-secondary-500 ring-4 ring-secondary-500/20" :
+                          "bg-neutral-100 dark:bg-neutral-800"
+                        }`}
+                      >
+                        {isCompleted ? (
+                          <CheckCircle2 className="h-4 w-4 text-white" />
+                        ) : (
+                          <Icon className={`h-3.5 w-3.5 ${isCurrent ? "text-white" : "text-neutral-400"}`} />
+                        )}
+                      </motion.div>
+                      <span className={`text-[9px] font-bold text-center leading-tight ${
+                        isCompleted || isCurrent ? "text-neutral-700 dark:text-neutral-200" : "text-neutral-400"
+                      }`}>
+                        {step.label.split(" ")[0]}
+                      </span>
+                    </div>
+                    {index < TIMELINE_STEPS.length - 1 && (
+                      <div className={`h-0.5 w-full min-w-[8px] rounded-full mx-0.5 ${
+                        isCompleted ? "bg-secondary-500" : "bg-neutral-200 dark:bg-neutral-700"
+                      }`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Rider Card */}
+          {(data.riderName || isRiderEnRoute) && (
+            <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-800 p-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-secondary-400 to-secondary-600 shadow-md">
+                  <Truck className="h-5 w-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-neutral-900 dark:text-white">
+                    {data.riderName || "Finding a rider..."}
+                  </p>
+                  {isRiderEnRoute && riderDistanceKm != null && (
+                    <p className="text-xs text-secondary-600 dark:text-secondary-400 font-semibold flex items-center gap-1">
+                      <Navigation className="h-3 w-3" />
+                      {riderDistanceKm.toFixed(1)} km away
+                      {etaMinutes && ` • ~${etaMinutes} min`}
+                    </p>
+                  )}
+                  {!isRiderEnRoute && data.riderName && (
+                    <p className="text-xs text-neutral-500">Will pick up your order</p>
+                  )}
+                </div>
+                {data.riderPhone && (
+                  <div className="flex gap-2">
+                    <a href={`tel:${data.riderPhone}`} className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-900/40">
+                      <Phone className="h-4 w-4 text-secondary-600" />
+                    </a>
+                    <a href={`https://wa.me/91${data.riderPhone}`} target="_blank" rel="noopener noreferrer" className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
+                      <MessageCircle className="h-4 w-4 text-blue-600" />
+                    </a>
+                  </div>
+                )}
               </div>
             </div>
           )}
-        </motion.div>
 
-        {/* ETA countdown section - conditionally rendered using isDeliveryEtaVisible */}
-        <DeliveryEtaTracking
-          status={data.status}
-          etaMinutes={etaMinutes}
-          isDelivered={isDelivered}
-        />
-        {isDelivered && (
-          <motion.div
-            key="delivered"
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="rounded-2xl bg-secondary-50 p-5 text-center dark:bg-secondary-900/20"
-          >
-            <CheckCircle2 className="mx-auto h-10 w-10 text-secondary-500" />
-            <p className="mt-2 font-display text-xl font-black text-secondary-700 dark:text-secondary-400">
-              Order Delivered!
-            </p>
-            <p className="mt-1 text-sm text-secondary-600/70 dark:text-secondary-400/70">
-              Enjoy your fresh groceries
-            </p>
-          </motion.div>
-        )}
-
-        {/* Call and message buttons */}
-        {!isDelivered && (
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="flex gap-3"
-          >
-            <a
-              href={`tel:${phoneNumber}`}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-4 font-bold text-neutral-900 card-shadow press dark:bg-neutral-900 dark:text-white"
+          {/* Delivery OTP */}
+          {data.deliveryOtp && !isDelivered && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-2xl border-2 border-dashed border-secondary-300 bg-secondary-50/50 p-4 mb-4 text-center dark:border-secondary-700 dark:bg-secondary-900/20"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-900/40">
-                <Phone className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
-              </div>
-              <span className="text-body font-bold">Call</span>
-            </a>
-            <a
-              href={`https://wa.me/${SITE.whatsapp}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-white py-4 font-bold text-neutral-900 card-shadow press dark:bg-neutral-900 dark:text-white"
+              <p className="text-[10px] font-bold uppercase tracking-widest text-secondary-600 dark:text-secondary-400">
+                Delivery PIN
+              </p>
+              <p className="mt-1 font-mono text-3xl font-black tracking-[0.3em] text-neutral-900 dark:text-white">
+                {data.deliveryOtp}
+              </p>
+              <p className="mt-1 text-[11px] text-neutral-500">Share only with delivery partner</p>
+            </motion.div>
+          )}
+
+          {/* Delivered celebration */}
+          {isDelivered && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="rounded-2xl bg-gradient-to-br from-secondary-50 to-secondary-100 p-6 mb-4 text-center dark:from-secondary-900/20 dark:to-secondary-900/10"
             >
-              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/40">
-                <MessageCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              </div>
-              <span className="text-body font-bold">Message</span>
-            </a>
-          </motion.div>
-        )}
+              <CheckCircle2 className="mx-auto h-12 w-12 text-secondary-500" />
+              <p className="mt-2 text-xl font-black text-secondary-700 dark:text-secondary-400">
+                Order Delivered! 🎉
+              </p>
+              <p className="mt-1 text-sm text-secondary-600/70 dark:text-secondary-400/60">
+                Enjoy your fresh groceries
+              </p>
+            </motion.div>
+          )}
 
-        {/* Order status timeline - enhanced 7-step version */}
-        <OrderTimeline
-          currentStatus={data.status}
-          distanceKm={riderDistanceKm}
-          etaMinutes={etaMinutes}
-          updatedAt={data.updatedAt}
-        />
+          {/* Order Bill */}
+          {hasBillData && (
+            <OrderBill
+              storeName={SITE.name}
+              orderNumber={data.orderNumber}
+              orderDate={data.createdAt}
+              items={data.orderItems!}
+              subtotal={data.subtotal ?? 0}
+              deliveryFee={data.deliveryFee ?? 0}
+              tipAmount={data.tipAmount ?? 0}
+              total={data.total ?? 0}
+              paymentMethod={data.paymentMethod ?? "COD"}
+            />
+          )}
 
-        {/* Order Bill section */}
-        {hasBillData && (
-          <OrderBill
-            storeName={SITE.name}
-            orderNumber={data.orderNumber}
-            orderDate={data.createdAt}
-            items={data.orderItems!}
-            subtotal={data.subtotal ?? 0}
-            deliveryFee={data.deliveryFee ?? 0}
-            tipAmount={data.tipAmount ?? 0}
-            total={data.total ?? 0}
-            paymentMethod={data.paymentMethod ?? "COD"}
-          />
-        )}
+          {/* Contact store */}
+          {!isDelivered && (
+            <div className="mt-4 flex gap-3">
+              <a href={`tel:${SITE.phone}`} className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-neutral-100 py-3.5 text-sm font-bold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                <Phone className="h-4 w-4" /> Call Store
+              </a>
+              <a href={`https://wa.me/${SITE.whatsapp}`} target="_blank" rel="noopener noreferrer" className="flex flex-1 items-center justify-center gap-2 rounded-2xl bg-neutral-100 py-3.5 text-sm font-bold text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                <MessageCircle className="h-4 w-4" /> WhatsApp
+              </a>
+            </div>
+          )}
 
-        {/* OTP section */}
-        {data.deliveryOtp && !isDelivered && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-            className="rounded-2xl border border-secondary-200 bg-secondary-50 p-4 dark:border-secondary-800 dark:bg-secondary-900/20"
-          >
-            <p className="text-micro font-bold uppercase tracking-wider text-secondary-700 dark:text-secondary-400">
-              Delivery OTP
-            </p>
-            <p className="mt-2 font-mono text-3xl font-black tracking-[0.25em] text-neutral-900 dark:text-white">
-              {data.deliveryOtp}
-            </p>
-            <p className="mt-1 text-caption text-secondary-600/70 dark:text-secondary-400/60">
-              Share this code only with the delivery person.
-            </p>
-          </motion.div>
-        )}
-
-        {/* Bottom spacer */}
-        <div className="h-8" />
-      </div>
-    </motion.main>
+          <div className="h-8" />
+        </div>
+      </motion.div>
+    </div>
   );
 }

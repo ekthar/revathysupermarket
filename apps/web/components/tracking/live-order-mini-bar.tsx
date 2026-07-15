@@ -136,42 +136,59 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
   );
 
   return (
-    <div
-      ref={barRef}
-      className="sticky top-[var(--mobile-header-height)] md:top-[70px] z-[35] overflow-hidden"
-      style={{ height: 0, opacity: 0 }}
-    >
-      <Link
-        href={`/track/${activeOrder?.id ?? "#"}`}
-        className="group flex items-center gap-3 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 dark:from-emerald-800 dark:via-emerald-700 dark:to-teal-700 px-4 py-2.5 shadow-sm press"
+    <>
+      {/* Desktop: sticky top bar */}
+      <div
+        ref={barRef}
+        className="sticky top-[var(--mobile-header-height)] md:top-[70px] z-[35] overflow-hidden hidden md:block"
+        style={{ height: 0, opacity: 0 }}
       >
-        {/* Animated order icon */}
-        <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
-          <Package className="h-4 w-4 text-white" />
-          <span
-            ref={dotRef}
-            className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow-sm shadow-emerald-900/30"
-          />
-        </span>
+        <Link
+          href={`/track/${activeOrder?.id ?? "#"}`}
+          className="group flex items-center gap-3 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 dark:from-emerald-800 dark:via-emerald-700 dark:to-teal-700 px-4 py-2.5 shadow-sm press"
+        >
+          <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+            <Package className="h-4 w-4 text-white" />
+            <span ref={dotRef} className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow-sm shadow-emerald-900/30" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">Order #{activeOrder?.orderNumber ?? "—"}</p>
+            <p className="text-sm font-bold text-white truncate"><span ref={statusRef} key={statusText}>{statusText}{etaText}</span></p>
+          </div>
+          <span className="flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-sm px-3 py-1.5 text-[11px] font-bold text-white transition-all group-hover:bg-white/30">
+            Track <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          </span>
+        </Link>
+      </div>
 
-        {/* Order info */}
-        <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
-            Order #{activeOrder?.orderNumber ?? "—"}
-          </p>
-          <p className="text-sm font-bold text-white truncate">
-            <span ref={statusRef} key={statusText}>
-              {statusText}{etaText}
+      {/* Mobile: floating bottom pill (Swiggy-style) */}
+      {shouldShow && (
+        <div className="fixed bottom-20 inset-x-3 z-[75] md:hidden animate-in slide-in-from-bottom-4 fade-in duration-300">
+          <Link
+            href={`/track/${activeOrder?.id ?? "#"}`}
+            className="group flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-3.5 shadow-xl shadow-emerald-500/25 active:scale-[0.97] transition-transform"
+          >
+            <span className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/20">
+              <Package className="h-5 w-5 text-white" />
+              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-white animate-pulse" />
             </span>
-          </p>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] font-semibold uppercase tracking-wider text-white/60">Order #{activeOrder?.orderNumber ?? "—"}</p>
+              <p className="text-sm font-bold text-white truncate">{statusText}{etaText}</p>
+            </div>
+            {etaText ? (
+              <div className="text-right shrink-0">
+                <p className="text-xl font-black text-white">{activeOrder?.eta}</p>
+                <p className="text-[9px] font-bold uppercase text-white/60">MIN</p>
+              </div>
+            ) : (
+              <span className="flex items-center gap-1 rounded-full bg-white/20 px-3 py-1.5 text-[11px] font-bold text-white">
+                Track <ChevronRight className="h-3.5 w-3.5" />
+              </span>
+            )}
+          </Link>
         </div>
-
-        {/* Track button */}
-        <span className="flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-sm px-3 py-1.5 text-[11px] font-bold text-white transition-all group-hover:bg-white/30">
-          Track
-          <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-        </span>
-      </Link>
-    </div>
+      )}
+    </>
   );
 }

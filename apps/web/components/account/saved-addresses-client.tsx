@@ -43,9 +43,9 @@ export function SavedAddressesClient({ addresses: initialAddresses }: { addresse
       onSuccess: () => {
         showToast("Address deleted", "success");
       },
-      onError: () => {
+      onError: (error) => {
         setAddresses(previous);
-        showToast("Failed to delete address", "error");
+        showToast(error.message || "Failed to delete address", "error");
       },
     });
   }
@@ -107,14 +107,16 @@ export function SavedAddressesClient({ addresses: initialAddresses }: { addresse
                       Set as default
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => deleteAddress(address.id)}
-                    className="text-caption font-bold text-red-500 hover:underline flex items-center gap-1"
-                  >
-                    <Trash2 className="h-3 w-3" />
-                    Delete
-                  </button>
+                  {!address.isDefault && (
+                    <button
+                      type="button"
+                      onClick={() => deleteAddress(address.id)}
+                      className="text-caption font-bold text-red-500 hover:underline flex items-center gap-1"
+                    >
+                      <Trash2 className="h-3 w-3" />
+                      Delete
+                    </button>
+                  )}
                 </div>
               </motion.article>
             ))}

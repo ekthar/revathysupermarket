@@ -19,7 +19,10 @@ export function useDeleteAddress() {
   return useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/account/addresses/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Failed to delete address");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: "Failed to delete address" }));
+        throw new Error(data.error || "Failed to delete address");
+      }
       return id;
     },
     onMutate: async (id) => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence, useDragControls } from "framer-motion";
 import dynamic from "next/dynamic";
@@ -165,6 +165,8 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
   const hasBillData = data.orderItems && data.orderItems.length > 0 && data.total != null;
   const currentStep = getTimelineStepIndex(data.status);
   const visibleEta = getVisibleEtaMinutes(data.status, etaMinutes);
+  const dragControls = useDragControls();
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black">
@@ -258,6 +260,8 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         animate={{ y: sheetExpanded ? "10%" : "55%" }}
         transition={{ type: "spring", damping: 30, stiffness: 300 }}
         drag="y"
+        dragControls={dragControls}
+        dragListener={false}
         dragConstraints={{ top: 0, bottom: 0 }}
         dragElastic={0.1}
         onDragEnd={(_, info) => {
@@ -265,15 +269,44 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           else if (info.offset.y > 50) setSheetExpanded(false);
         }}
         className="absolute inset-x-0 bottom-0 z-20 flex flex-col rounded-t-3xl bg-white shadow-[0_-8px_40px_rgba(0,0,0,0.15)] dark:bg-neutral-900 dark:shadow-[0_-8px_40px_rgba(0,0,0,0.5)]"
-        style={{ top: 0, touchAction: "none" }}
+        style={{ top: 0 }}
       >
-        {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing" onClick={() => setSheetExpanded(!sheetExpanded)}>
-          <div className="h-1 w-10 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+        {/* Drag handle — ONLY this area triggers sheet drag */}
+        <div
+          className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none"
+          onPointerDown={(e) => dragControls.start(e)}
+          onClick={() => setSheetExpanded(!sheetExpanded)}
+        >
+          <div className="h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-neutral-600" />
         </div>
 
-        {/* Sheet content - scrollable */}
-        <div className="flex-1 overflow-y-auto overscroll-contain px-5 pb-safe">
+        {/* Sheet content - scrollable (touch-action allows native scroll) */}
+        <div
+          ref={scrollRef}
+          className="flex-1 overflow-y-auto overscroll-contain px-5 pb-8"
+          style={{ touchAction: "pan-y" }}
+          onTouchStart={(e) => {
+            // If scrolled to top and swiping down, allow sheet collapse
+            if (scrollRef.current && scrollRef.current.scrollTop <= 0) {
+              const touch = e.touches[0];
+              const startY = touch.clientY;
+              const handleTouchMove = (ev: TouchEvent) => {
+                const deltaY = ev.touches[0].clientY - startY;
+                if (deltaY > 40 && scrollRef.current && scrollRef.current.scrollTop <= 0) {
+                  setSheetExpanded(false);
+                  document.removeEventListener("touchmove", handleTouchMove);
+                  document.removeEventListener("touchend", handleTouchEnd);
+                }
+              };
+              const handleTouchEnd = () => {
+                document.removeEventListener("touchmove", handleTouchMove);
+                document.removeEventListener("touchend", handleTouchEnd);
+              };
+              document.addEventListener("touchmove", handleTouchMove, { passive: true });
+              document.addEventListener("touchend", handleTouchEnd);
+            }
+          }}
+        >
           {/* Status + ETA Hero */}
           <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
             <div className="flex-1">

@@ -292,80 +292,72 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
       )}
 
       {/* Cart Items */}
-      <div className="mt-3 overflow-hidden rounded-lg bg-white shadow-elevation-3 divide-y divide-neutral-50 dark:divide-neutral-800">
+      <div className="mt-3 rounded-lg bg-white shadow-elevation-3 divide-y divide-neutral-50 dark:divide-neutral-800">
         <AnimatePresence initial={false}>
           {items.map((item) => {
             const price = item.discountPrice ?? item.price;
             return (
-              <motion.div
-                key={item.id}
-                layout
-                initial={{ opacity: 0, x: -8 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
-                transition={springs.layout}
-                drag="x"
-                dragConstraints={{ left: -100, right: 0 }}
-                dragElastic={0.1}
-                onDragEnd={(_, info) => {
-                  if (info.offset.x < -80) {
-                    haptic("medium");
-                    handleRemove(item);
-                  }
-                }}
-                className="px-4 py-3 relative cursor-grab active:cursor-grabbing"
-              >
-                {/* Swipe delete indicator (background) */}
-                <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center bg-red-500 rounded-r-lg pointer-events-none">
-                  <Trash2 className="h-4 w-4 text-white" />
+              <div key={item.id} className="relative overflow-hidden">
+                {/* Swipe delete indicator (background — hidden until swiped) */}
+                <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center bg-red-500">
+                  <Trash2 className="h-5 w-5 text-white" />
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="h-4 w-4 rounded-sm border-2 border-secondary-500 flex items-center justify-center shrink-0 hidden xs:flex">
-                    <div className="h-2 w-2 rounded-full bg-secondary-500" />
-                  </div>
+                <motion.div
+                  layout
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
+                  transition={springs.layout}
+                  drag="x"
+                  dragConstraints={{ left: -80, right: 0 }}
+                  dragElastic={0.05}
+                  onDragEnd={(_, info) => {
+                    if (info.offset.x < -60) {
+                      haptic("medium");
+                      handleRemove(item);
+                    }
+                  }}
+                  className="relative bg-white dark:bg-neutral-900 px-4 py-3"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="h-4 w-4 rounded-sm border-2 border-secondary-500 flex items-center justify-center shrink-0 hidden xs:flex">
+                      <div className="h-2 w-2 rounded-full bg-secondary-500" />
+                    </div>
 
-                  <div className="flex-1 min-w-0">
-                    <p className="text-body font-semibold text-neutral-800 dark:text-white truncate">{item.name}</p>
-                    <p className="text-caption text-neutral-400 mt-0.5">{item.unit || "per item"}</p>
-                  </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-body font-semibold text-neutral-800 dark:text-white truncate">{item.name}</p>
+                      <p className="text-caption text-neutral-400 mt-0.5">{item.unit || "per item"}</p>
+                    </div>
 
-                  <div className="flex h-[44px] shrink-0 items-center overflow-hidden rounded-full bg-black">
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
-                      aria-label={`Decrease ${item.name} quantity`}
-                    >
-                      <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-5 text-center text-caption font-bold text-white">{item.quantity}</span>
-                    <button
-                      type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                      className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
-                      aria-label={`Increase ${item.name} quantity`}
-                    >
-                      <Plus className="h-3 w-3" />
-                    </button>
-                  </div>
+                    <div className="flex h-[44px] shrink-0 items-center overflow-hidden rounded-full bg-black">
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                        aria-label={`Decrease ${item.name} quantity`}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </button>
+                      <span className="w-5 text-center text-caption font-bold text-white">{item.quantity}</span>
+                      <button
+                        type="button"
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                        aria-label={`Increase ${item.name} quantity`}
+                      >
+                        <Plus className="h-3 w-3" />
+                      </button>
+                    </div>
 
-                  <div className="text-right shrink-0 min-w-[52px]">
-                    <p className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(price * item.quantity)}</p>
-                    {item.discountPrice && (
-                      <p className="text-micro text-neutral-400 line-through">{formatCurrency(item.price * item.quantity)}</p>
-                    )}
+                    <div className="text-right shrink-0 min-w-[52px]">
+                      <p className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(price * item.quantity)}</p>
+                      {item.discountPrice && (
+                        <p className="text-micro text-neutral-400 line-through">{formatCurrency(item.price * item.quantity)}</p>
+                      )}
+                    </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => handleRemove(item)}
-                    aria-label={`Remove ${item.name} from cart`}
-                    className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors press shrink-0"
-                  >
-                    <Trash2 className="h-3 w-3 text-neutral-300 hover:text-red-400" />
-                  </button>
-                </div>
-              </motion.div>
+                </motion.div>
+              </div>
             );
           })}
         </AnimatePresence>

@@ -60,7 +60,7 @@ export const Header = memo(function Header({
   if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/delivery")) return null;
 
   // Determine if we're on an inner page that needs a back button
-  const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/support", "/checkout"];
+  const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/account/addresses", "/support", "/checkout"];
   const isInnerPage = innerPages.some((p) => pathname.startsWith(p)) || (pathname.startsWith("/account/") && pathname !== "/account");
 
 
@@ -213,7 +213,15 @@ export const Header = memo(function Header({
           )}
 
           {/* Right icons */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setSearchOpen(true)}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press"
+              aria-label="Search"
+            >
+              <Search className="h-[17px] w-[17px] text-neutral-600 dark:text-neutral-300" />
+            </button>
             <LocationIndicator onOpenLocationPrompt={onOpenLocationPrompt} compact />
             <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Notifications">
               <Bell className="h-[17px] w-[17px] text-neutral-600 dark:text-neutral-300" />

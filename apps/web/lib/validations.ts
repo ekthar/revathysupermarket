@@ -41,15 +41,15 @@ export const productSchema = z.object({
   name: z.string().min(2),
   category: z.string().min(2),
   price: z.coerce.number().positive(),
-  discountPrice: z.coerce.number().positive().optional(),
-  gstRate: z.coerce.number().min(0).max(28).optional(),
+  discountPrice: z.coerce.number().min(0).optional().nullable(),
+  gstRate: z.coerce.number().min(0).max(28).optional().nullable(),
   stock: z.coerce.number().int().min(0),
-  description: z.string().min(10),
+  description: z.string().min(3),
   image: z.string().trim().optional(),
   unit: z.string().trim().min(1).optional(),
   isActive: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
-  costPrice: z.coerce.number().positive().optional(),
+  costPrice: z.coerce.number().min(0).optional().nullable(),
   brand: z.string().trim().max(100).optional()
 });
 

@@ -1,18 +1,17 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BarChart3, Bell, ClipboardList, CreditCard, Home, LayoutDashboard, LogOut, MessageSquare, Package, RotateCcw, Settings, ShieldCheck, ShoppingBag, Tag, Ticket, Truck, Users } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { auth, signOut } from "@/auth";
 import { isStaffRole } from "@/lib/authz";
-import { roleLabel } from "@/lib/roles";
 import { NewOrderAlert } from "@/components/admin/new-order-alert";
-import { AdminSidebar } from "@/components/admin/admin-sidebar";
 import { StoreToggleButton } from "@/components/admin/store-toggle-button";
 import { getPublicShellSettings } from "@/lib/store-settings";
-import { InstallAppButton } from "@/components/install-app-button";
 import { getAuthContext } from "@/lib/auth-guard";
-import { hasPermission, hasFullAccess, type AuthContext } from "@/lib/permissions";
+import { hasFullAccess } from "@/lib/permissions";
 import { AlarmProvider } from "@/components/admin/alarm-provider";
+import { AdminCommandPalette } from "@/components/admin/shared";
 import { prisma } from "@/lib/prisma";
+import { AdminNav } from "@/components/admin/admin-nav";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -22,7 +21,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const shell = await getPublicShellSettings();
   const { settings, logoUrl } = shell;
 
-  // Get permission context
   const ctx = await getAuthContext();
   const can = (perm: string) => {
     if (!ctx) return false;
@@ -30,101 +28,112 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     return ctx.permissions.includes(perm);
   };
 
-  // Fetch badge counts
+  // Badge counts
   const [newOrderCount, pendingReturnCount, openRequestCount] = await Promise.all([
     prisma.order.count({ where: { status: "ORDER_RECEIVED", acknowledgedAt: null } }).catch(() => 0),
     prisma.returnRequest.count({ where: { status: "REQUESTED" } }).catch(() => 0),
     prisma.supportTicket.count({ where: { status: { in: ["OPEN", "IN_PROGRESS"] } } }).catch(() => 0),
   ]);
 
-  const nav = [
-    // Operations
-    { href: "/admin", label: "Command Centre", icon: "LayoutDashboard", group: "Operations", show: true, badge: 0 },
-    { href: "/admin/orders", label: "Orders", icon: "ShoppingBag", group: "Operations", show: can("orders.view"), badge: newOrderCount },
-    { href: "/admin/requests", label: "Customer Requests", icon: "MessageSquare", group: "Operations", show: can("requests.view"), badge: openRequestCount },
-    { href: "/admin/dispatch", label: "Dispatch", icon: "Truck", group: "Operations", show: can("dispatch.view"), badge: 0 },
-    { href: "/admin/returns", label: "Returns", icon: "RotateCcw", group: "Operations", show: can("returns.view"), badge: pendingReturnCount },
+  const nav = {
+    "DASHBOARD": [
+      { href: "/admin", label: "Command Centre", icon: "LayoutDashboard", badge: 0, show: true },
+    ],
+    "ORDERS & OPS": [
+      { href: "/admin/orders", label: "Orders", icon: "ShoppingBag", badge: newOrderCount, show: can("orders.view") },
+      { href: "/admin/dispatch", label: "Dispatch", icon: "Truck", badge: 0, show: can("dispatch.view") },
+      { href: "/admin/returns", label: "Returns", icon: "RotateCcw", badge: pendingReturnCount, show: can("returns.view") },
+      { href: "/admin/requests", label: "Requests", icon: "MessageSquare", badge: openRequestCount, show: can("requests.view") },
+      { href: "/admin/support", label: "Support", icon: "Headphones", badge: 0, show: can("requests.view") },
+    ],
+    "CATALOGUE": [
+      { href: "/admin/products", label: "Products", icon: "Package", badge: 0, show: can("catalogue.view") },
+      { href: "/admin/categories", label: "Categories", icon: "Layers", badge: 0, show: can("catalogue.view") },
+    ],
+    "CUSTOMERS": [
+      { href: "/admin/customers", label: "Customers", icon: "Users", badge: 0, show: can("customers.view") },
+      { href: "/admin/feedback", label: "Feedback", icon: "Star", badge: 0, show: can("customers.view") },
+      { href: "/admin/rewards", label: "Rewards", icon: "Gift", badge: 0, show: can("customers.view") },
+    ],
+    "MARKETING": [
+      { href: "/admin/offers", label: "Offers", icon: "Tag", badge: 0, show: can("marketing.view") },
+      { href: "/admin/promo-codes", label: "Promos", icon: "Ticket", badge: 0, show: can("marketing.view") },
+      { href: "/admin/push-notifications", label: "Push", icon: "Bell", badge: 0, show: can("marketing.manage") },
+      { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "MessageCircle", badge: 0, show: can("marketing.view") },
+    ],
+    "FINANCE": [
+      { href: "/admin/collections", label: "Collections", icon: "IndianRupee", badge: 0, show: can("collections.view") },
+      { href: "/admin/billing", label: "Billing", icon: "Receipt", badge: 0, show: can("reports.view") },
+      { href: "/admin/reports", label: "Reports", icon: "BarChart3", badge: 0, show: can("reports.view") },
+    ],
+    "SYSTEM": [
+      { href: "/admin/staff", label: "Staff", icon: "ShieldCheck", badge: 0, show: can("staff.manage") },
+      { href: "/admin/settings", label: "Settings", icon: "Settings", badge: 0, show: can("settings.manage") },
+      { href: "/admin/delivery-slots", label: "Delivery Slots", icon: "Clock", badge: 0, show: can("settings.manage") },
+      { href: "/admin/pricing", label: "Delivery Pricing", icon: "Calculator", badge: 0, show: can("pricing.manage") },
+      { href: "/admin/audit-log", label: "Audit Log", icon: "FileText", badge: 0, show: can("audit.view") },
+    ],
+  };
 
-    // Catalogue
-    { href: "/admin/products", label: "Products", icon: "Package", group: "Catalogue", show: can("catalogue.view"), badge: 0 },
-    { href: "/admin/categories", label: "Categories", icon: "Package", group: "Catalogue", show: can("catalogue.view"), badge: 0 },
-
-    // Customers
-    { href: "/admin/customers", label: "Customers", icon: "Users", group: "Customers", show: can("customers.view"), badge: 0 },
-    { href: "/admin/feedback", label: "Feedback", icon: "Users", group: "Customers", show: can("customers.view"), badge: 0 },
-    { href: "/admin/rewards", label: "Rewards Points", icon: "Gift", group: "Customers", show: can("customers.view"), badge: 0 },
-
-    // Marketing
-    { href: "/admin/offers", label: "Offers", icon: "Tag", group: "Marketing", show: can("marketing.view"), badge: 0 },
-    { href: "/admin/promo-codes", label: "Promos", icon: "Ticket", group: "Marketing", show: can("marketing.view"), badge: 0 },
-    { href: "/admin/push-notifications", label: "Push", icon: "Bell", group: "Marketing", show: can("marketing.manage"), badge: 0 },
-    { href: "/admin/whatsapp-log", label: "WhatsApp", icon: "MessageSquare", group: "Marketing", show: can("marketing.view"), badge: 0 },
-
-    // Finance
-    { href: "/admin/collections", label: "Collections", icon: "CreditCard", group: "Finance", show: can("collections.view"), badge: 0 },
-    { href: "/admin/billing", label: "Billing", icon: "BarChart3", group: "Finance", show: can("reports.view"), badge: 0 },
-    { href: "/admin/reports", label: "Reports", icon: "BarChart3", group: "Finance", show: can("reports.view"), badge: 0 },
-
-    // Administration
-    { href: "/admin/staff", label: "Staff", icon: "ShieldCheck", group: "Administration", show: can("staff.manage"), badge: 0 },
-    { href: "/admin/delivery-slots", label: "Delivery Slots", icon: "ClipboardList", group: "Administration", show: can("settings.manage"), badge: 0 },
-    { href: "/admin/pricing", label: "Delivery Pricing", icon: "Tag", group: "Administration", show: can("pricing.manage"), badge: 0 },
-    { href: "/admin/settings", label: "Settings", icon: "Settings", group: "Administration", show: can("settings.manage"), badge: 0 },
-    { href: "/admin/audit-log", label: "Audit Log", icon: "ClipboardList", group: "Administration", show: can("audit.view"), badge: 0 },
-  ];
+  // Filter by permissions
+  const filteredNav = Object.fromEntries(
+    Object.entries(nav).map(([group, items]) => [
+      group,
+      items.filter((item) => item.show),
+    ]).filter(([, items]) => (items as unknown[]).length > 0)
+  ) as Record<string, { href: string; label: string; icon: string; badge: number }[]>;
 
   return (
-    <div className="admin-shell min-h-screen bg-background">
+    <div className="admin-shell flex min-h-[100dvh] bg-neutral-50 dark:bg-neutral-950">
       <NewOrderAlert />
+      <AdminCommandPalette />
 
-      {/* Top bar */}
-      <header className="sticky top-0 z-40 bg-card/90 backdrop-blur-xl border-b border-border print:hidden">
-        <div className="max-w-7xl mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
+      {/* Sidebar */}
+      <AdminNav
+        nav={filteredNav}
+        storeName={settings.storeName}
+        logoUrl={logoUrl}
+        userName={userName}
+        role={role}
+      />
+
+      {/* Main area */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        {/* Top bar */}
+        <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-neutral-200 bg-white/80 px-4 backdrop-blur-xl dark:border-neutral-800 dark:bg-neutral-900/80 lg:px-6 print:hidden">
           <div className="flex items-center gap-3">
-            <Link href="/admin" className="flex items-center gap-2.5">
-              <div className="relative h-8 w-8 rounded-lg bg-primary flex items-center justify-center overflow-hidden">
-                {logoUrl ? (
-                  <Image src={logoUrl} alt={settings.storeName} fill className="object-contain" unoptimized />
-                ) : (
-                  <ShoppingBag className="h-4 w-4 text-white" />
-                )}
-              </div>
-              <span className="text-body font-bold text-foreground hidden sm:block">{settings.storeName} Admin</span>
-            </Link>
+            {/* Mobile menu trigger rendered in AdminNav */}
+            <div className="lg:hidden" id="admin-mobile-trigger" />
             <StoreToggleButton initialIsOpen={settings.isStoreOpen} />
-            <div className="hidden md:block"><InstallAppButton compact /></div>
+            <button
+              className="hidden items-center gap-2 rounded-full border border-neutral-200 bg-neutral-50 px-3 py-1.5 text-xs text-neutral-500 transition-colors hover:border-neutral-300 hover:bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-400 sm:inline-flex"
+              data-cmd-k-trigger
+            >
+              <kbd className="font-mono text-[10px]">⌘K</kbd>
+              <span>Search...</span>
+            </button>
           </div>
-          <div className="flex items-center gap-4">
-            <Link href="/" className="text-caption font-semibold text-primary flex items-center gap-1.5 hover:underline px-3 py-1.5 rounded-full bg-primary/5 dark:bg-primary/10">
-              <Home className="h-3.5 w-3.5" /> View Store
+          <div className="flex items-center gap-3">
+            <Link
+              href="/"
+              className="rounded-full bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-400 dark:hover:bg-emerald-900/40"
+            >
+              View Store
             </Link>
-            <div className="h-4 w-px bg-border" />
-            <div className="flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-caption font-bold text-muted-foreground">{userName.charAt(0).toUpperCase()}</span>
-              </div>
-              <div className="text-right hidden sm:block">
-                <p className="text-caption font-semibold text-foreground">{userName}</p>
-                <p className="text-micro text-muted-foreground">{roleLabel(role)}</p>
-              </div>
-              <form action={async () => { "use server"; await signOut({ redirectTo: "/admin/login" }); }}>
-                <button type="submit" className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50 dark:bg-red-950/30 hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors press" title="Logout">
-                  <LogOut className="h-3.5 w-3.5 text-red-500" />
-                </button>
-              </form>
-            </div>
+            <form action={async () => { "use server"; await signOut({ redirectTo: "/admin/login" }); }}>
+              <button
+                type="submit"
+                className="rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 dark:bg-red-950/30 dark:text-red-400 dark:hover:bg-red-900/30"
+                title="Logout"
+              >
+                Logout
+              </button>
+            </form>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="max-w-7xl mx-auto px-4 lg:px-6 py-5">
-        {/* Responsive admin navigation */}
-        <div className="print:hidden">
-          <AdminSidebar nav={nav.filter((n) => n.show)} />
-        </div>
-
-        {/* Main content */}
-        <main className="mt-5 min-w-0">
+        {/* Page content */}
+        <main className="flex-1 overflow-y-auto p-4 lg:p-6">
           <AlarmProvider>{children}</AlarmProvider>
         </main>
       </div>

@@ -1,8 +1,9 @@
 import { getAuthContext } from "@/lib/auth-guard";
 import { hasPermission } from "@/lib/permissions";
-import { SettingsService } from "@/lib/services";
+import { prisma } from "@/lib/prisma";
 import { AdminAccessDenied } from "@/components/admin/shared";
-import { SettingsPageClient } from "@/components/admin/settings";
+import { SettingsManagementClient } from "@/components/admin/settings-management-client";
+import { getStoreSettings } from "@/lib/store-settings";
 
 export const dynamic = "force-dynamic";
 
@@ -13,17 +14,46 @@ export default async function AdminSettingsPage() {
     return <AdminAccessDenied permission="settings.manage" />;
   }
 
-  const [settings, featureFlags] = await Promise.all([
-    SettingsService.getAll(),
-    SettingsService.getFeatureFlags(),
+  const [settings, banners] = await Promise.all([
+    getStoreSettings(),
+    prisma.banner.findMany({ orderBy: { createdAt: "asc" } }),
   ]);
 
-  const serializedFlags = featureFlags.map((f) => ({
-    ...f,
-    updatedAt: f.updatedAt.toISOString(),
+  // WhatsApp config status (env vars)
+  const whatsappConfig = {
+    phoneNumberIdConfigured: !!process.env.WHATSAPP_PHONE_NUMBER_ID,
+    apiTokenConfigured: !!process.env.WHATSAPP_API_TOKEN,
+    verifyTokenConfigured: !!process.env.WHATSAPP_VERIFY_TOKEN,
+    businessPhone: process.env.WHATSAPP_BUSINESS_PHONE || "",
+  };
+
+  // Template statuses (model may not exist)
+  let templateStatuses: Record<string, string> = {};
+  try {
+    const model = (prisma as unknown as Record<string, unknown>).whatsappTemplate;
+    if (model && typeof model === "object" && "findMany" in model) {
+      const templates = await (model as { findMany: () => Promise<{ name: string; status: string }[]> }).findMany();
+      templateStatuses = Object.fromEntries(templates.map((t) => [t.name, t.status]));
+    }
+  } catch {
+    // Table doesn't exist
+  }
+
+  const serializedBanners = banners.map((b) => ({
+    id: b.id,
+    title: b.title,
+    subtitle: b.subtitle,
+    image: b.image,
+    href: b.href,
+    isActive: b.isActive,
   }));
 
   return (
-    <SettingsPageClient settings={settings} featureFlags={serializedFlags} />
+    <SettingsManagementClient
+      settings={settings}
+      banners={serializedBanners}
+      whatsappConfig={whatsappConfig}
+      templateStatuses={templateStatuses}
+    />
   );
 }

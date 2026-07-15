@@ -22,16 +22,37 @@ import {
 
 // ─── Static admin routes ────────────────────────────────────────────────────
 const PAGES = [
-  { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { label: "Orders", href: "/admin/orders", icon: ShoppingBag },
-  { label: "Products", href: "/admin/products", icon: Package },
-  { label: "Categories", href: "/admin/categories", icon: Layers },
-  { label: "Customers", href: "/admin/customers", icon: Users },
-  { label: "Staff", href: "/admin/staff", icon: Shield },
-  { label: "Settings", href: "/admin/settings", icon: Settings },
-  { label: "Reports", href: "/admin/reports", icon: BarChart3 },
-  { label: "Offers", href: "/admin/offers", icon: Tag },
-  { label: "Promo Codes", href: "/admin/promo-codes", icon: Ticket },
+  // Dashboard
+  { label: "Command Centre", href: "/admin", icon: LayoutDashboard, group: "Dashboard" },
+  // Orders & Ops
+  { label: "Orders", href: "/admin/orders", icon: ShoppingBag, group: "Orders & Ops" },
+  { label: "Dispatch", href: "/admin/dispatch", icon: Package, group: "Orders & Ops" },
+  { label: "Returns", href: "/admin/returns", icon: Package, group: "Orders & Ops" },
+  { label: "Customer Requests", href: "/admin/requests", icon: Package, group: "Orders & Ops" },
+  { label: "Support", href: "/admin/support", icon: Package, group: "Orders & Ops" },
+  // Catalogue
+  { label: "Products", href: "/admin/products", icon: Package, group: "Catalogue" },
+  { label: "Categories", href: "/admin/categories", icon: Layers, group: "Catalogue" },
+  // Customers
+  { label: "Customers", href: "/admin/customers", icon: Users, group: "Customers" },
+  { label: "Feedback", href: "/admin/feedback", icon: Users, group: "Customers" },
+  { label: "Rewards", href: "/admin/rewards", icon: Users, group: "Customers" },
+  // Marketing
+  { label: "Offers", href: "/admin/offers", icon: Tag, group: "Marketing" },
+  { label: "Promo Codes", href: "/admin/promo-codes", icon: Ticket, group: "Marketing" },
+  { label: "Push Notifications", href: "/admin/push-notifications", icon: Package, group: "Marketing" },
+  { label: "WhatsApp Log", href: "/admin/whatsapp-log", icon: Package, group: "Marketing" },
+  // Finance
+  { label: "Collections", href: "/admin/collections", icon: BarChart3, group: "Finance" },
+  { label: "Billing", href: "/admin/billing", icon: BarChart3, group: "Finance" },
+  { label: "Reports", href: "/admin/reports", icon: BarChart3, group: "Finance" },
+  { label: "Sales Report", href: "/admin/reports/sales", icon: BarChart3, group: "Finance" },
+  // System
+  { label: "Staff", href: "/admin/staff", icon: Shield, group: "System" },
+  { label: "Settings", href: "/admin/settings", icon: Settings, group: "System" },
+  { label: "Delivery Slots", href: "/admin/delivery-slots", icon: Settings, group: "System" },
+  { label: "Delivery Pricing", href: "/admin/pricing", icon: Settings, group: "System" },
+  { label: "Audit Log", href: "/admin/audit-log", icon: Settings, group: "System" },
 ] as const;
 
 const QUICK_ACTIONS = [

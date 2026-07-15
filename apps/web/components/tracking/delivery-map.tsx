@@ -418,8 +418,8 @@ export function DeliveryMap({
   const handleZoomOut = () => mapRef.current?.zoomOut();
 
   return (
-    <div className={`relative overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-soft ${className ?? ""}`}>
-      <div ref={containerRef} className="h-[320px] w-full bg-neutral-100 dark:bg-neutral-900 relative z-0" />
+    <div className={`relative overflow-hidden rounded-2xl border border-neutral-200 dark:border-neutral-800 shadow-soft h-full ${className ?? ""}`}>
+      <div ref={containerRef} className="h-full w-full min-h-[280px] bg-neutral-100 dark:bg-neutral-900 relative z-0" />
       {/* Distance remaining overlay — clean minimal chip */}
       {distanceRemaining !== null && (
         <div className="absolute top-3 left-3 z-[400] rounded-xl border border-neutral-200 bg-white/95 px-3 py-1.5 shadow-sm backdrop-blur-sm dark:bg-neutral-900/95 dark:border-neutral-800">

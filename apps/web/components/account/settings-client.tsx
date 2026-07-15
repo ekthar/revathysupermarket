@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Bell, MessageCircle, Megaphone, Package, TrendingDown, Gift, Truck } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, MessageCircle, Megaphone, Moon, Package, Sun, TrendingDown, Gift, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
 
@@ -21,6 +21,24 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
   const [settings, setSettings] = useState(initial);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // Sync dark mode state on mount
+  useEffect(() => {
+    setDarkMode(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  function toggleDarkMode() {
+    const next = !darkMode;
+    setDarkMode(next);
+    if (next) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }
 
   async function toggleSetting(key: keyof typeof settings) {
     const newValue = !settings[key];
@@ -48,6 +66,25 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
 
   return (
     <div className="space-y-4">
+      {/* Theme */}
+      <div className="rounded-2xl bg-white dark:bg-neutral-800 border border-neutral-100 dark:border-neutral-700 p-4">
+        <p className="text-xs font-bold uppercase tracking-wide text-neutral-400 mb-3">Appearance</p>
+        <button
+          type="button"
+          onClick={toggleDarkMode}
+          className="flex w-full items-center justify-between rounded-xl bg-neutral-50 dark:bg-neutral-700 px-4 py-3"
+        >
+          <div className="flex items-center gap-3">
+            {darkMode ? <Moon className="h-4 w-4 text-indigo-400" /> : <Sun className="h-4 w-4 text-amber-500" />}
+            <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200">
+              {darkMode ? "Dark Mode" : "Light Mode"}
+            </span>
+          </div>
+          <div className={`relative h-6 w-11 rounded-full transition-colors ${darkMode ? "bg-indigo-500" : "bg-neutral-300"}`}>
+            <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${darkMode ? "translate-x-[22px]" : "translate-x-0.5"}`} />
+          </div>
+        </button>
+      </div>
       {/* Notifications Section */}
       <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
         <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">Notifications</p>

@@ -85,7 +85,7 @@ export default async function AccountPage() {
       <div className="overflow-hidden rounded-lg bg-card shadow-elevation-3">
         <p className="px-4 pt-3.5 pb-1 text-caption font-semibold text-neutral-400 uppercase tracking-wide">My Activity</p>
         <AccountRow href="/dashboard" icon={Package} label="My Orders" detail={`${orderCount} orders`} />
-        <AccountRow href="/account/edit" icon={MapPin} label="Saved Addresses" detail={`${addressCount} saved`} />
+        <AccountRow href="/account/addresses" icon={MapPin} label="Saved Addresses" detail={`${addressCount} saved`} />
         <AccountRow href="/account/favorites" icon={Heart} label="Favorites" detail={`${favoriteCount} items`} iconColor="text-red-400" />
         <AccountRow href="/account/wallet" icon={Wallet} label="Wallet" detail={walletBalance > 0 ? `${new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(walletBalance)}` : "No balance"} iconColor="text-secondary-500" />
         <AccountRow href="/account/loyalty" icon={Gift} label="Rewards & referrals" detail="Points and invites" iconColor="text-amber-500" />

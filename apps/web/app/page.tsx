@@ -14,6 +14,7 @@ import { categories as demoCategories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 import { getLoyaltyConfig } from "@/lib/loyalty-config";
+import { getFeatureFlag } from "@/lib/feature-flags";
 import type { Product } from "@/lib/types";
 import { auth } from "@/auth";
 import { getActiveOrderSummary } from "@/lib/live-order";
@@ -72,6 +73,25 @@ const demoCategoryImages: Record<string, string> = {
 };
 
 export default async function HomePage() {
+  // Maintenance mode check
+  const maintenanceFlag = await getFeatureFlag<{ message?: string; eta?: string }>("maintenance_mode").catch(() => ({ enabled: false, config: null }));
+  if (maintenanceFlag.enabled) {
+    const msg = maintenanceFlag.config?.message || "We're performing scheduled maintenance. Please check back soon.";
+    const eta = maintenanceFlag.config?.eta || "";
+    return (
+      <main className="flex min-h-[80dvh] flex-col items-center justify-center px-4 text-center bg-[#F7F7FA] dark:bg-[#020617]">
+        <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-8 max-w-md shadow-lg">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
+            <span className="text-3xl">🔧</span>
+          </div>
+          <h1 className="text-xl font-bold text-neutral-900 dark:text-white">Under Maintenance</h1>
+          <p className="mt-2 text-sm text-neutral-600 dark:text-neutral-400">{msg}</p>
+          {eta && <p className="mt-3 text-xs font-semibold text-amber-600 dark:text-amber-400">Expected back: {eta}</p>}
+        </div>
+      </main>
+    );
+  }
+
   const session = await auth();
   const [settings, banner, dbProducts, dbCategories, promoBanners, activeOrder] = await Promise.all([
     getPublicStoreSettings(),
@@ -172,6 +192,8 @@ export default async function HomePage() {
         heroTitle={heroTitle}
         heroHref={heroHref}
         deliveryRadiusKm={settings.deliveryRadiusKm}
+        deliveryEstimateMin={settings.deliveryEstimateMin}
+        deliveryEstimateMax={settings.deliveryEstimateMax}
       />
 
       {/* Search entry — below hero so the value prop lands first */}

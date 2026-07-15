@@ -86,7 +86,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   }
   // Create status event separately (updateMany doesn't support nested creates)
   await prisma.orderEvent.create({
-    data: { orderId: id, status: parsed.data.status, note: "Updated by staff." }
+    data: { orderId: id, status: parsed.data.status, note: `Updated by ${session?.user?.name || session?.user?.email || "staff"}` }
   });
   const order = await prisma.order.findUnique({ where: { id } });
 

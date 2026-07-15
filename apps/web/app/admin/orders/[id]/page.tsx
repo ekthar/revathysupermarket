@@ -10,6 +10,7 @@ import { OrderPaymentSection } from "@/components/admin/order-payment-section";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { DeliveryAssignment } from "@/components/admin/delivery-assignment";
 import { AcknowledgeButton } from "@/components/admin/acknowledge-button";
+import { BillNumberEntry } from "@/components/admin/bill-number-entry";
 
 export const dynamic = "force-dynamic";
 
@@ -194,6 +195,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
             currentPartnerName={order.deliveryPartner?.name || null}
             orderStatus={order.status}
           />
+
+          {/* Bill Number */}
+          <BillNumberEntry orderId={order.id} currentBillNumber={order.billNumber || null} />
 
           {/* Payment */}
           <OrderPaymentSection

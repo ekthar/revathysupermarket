@@ -13,13 +13,17 @@ export function HeroSection({
   heroImage,
   heroTitle,
   heroHref,
-  deliveryRadiusKm
+  deliveryRadiusKm,
+  deliveryEstimateMin = 25,
+  deliveryEstimateMax = 45,
 }: {
   storeName: string;
   heroImage: string;
   heroTitle: string;
   heroHref: string;
   deliveryRadiusKm: number;
+  deliveryEstimateMin?: number;
+  deliveryEstimateMax?: number;
 }) {
   const desktopRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLDivElement>(null);
@@ -81,7 +85,7 @@ export function HeroSection({
 
               <p className="mt-3 flex items-center gap-1.5 text-sm text-neutral-500 dark:text-neutral-400">
                 <Clock className="h-3.5 w-3.5" />
-                Delivery in ~30 minutes
+                Delivery in ~{deliveryEstimateMin}–{deliveryEstimateMax} mins
               </p>
 
               <div className="mt-4 flex items-center gap-4 text-sm font-semibold text-neutral-400 dark:text-neutral-500">

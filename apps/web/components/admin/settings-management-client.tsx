@@ -161,6 +161,21 @@ export function SettingsManagementClient({
       {/* Settings Search */}
       <SettingsSearch />
 
+      {/* Quick link to Feature Flags */}
+      <Link
+        href="/admin/feature-flags"
+        className="mt-4 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-4 transition-colors hover:bg-primary/10 dark:border-primary/30 dark:bg-primary/10"
+      >
+        <div className="flex items-center gap-3">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">⚡</span>
+          <div>
+            <p className="text-sm font-bold text-foreground">Feature Flags</p>
+            <p className="text-xs text-muted-foreground">Toggle features, maintenance mode, delivery settings</p>
+          </div>
+        </div>
+        <span className="text-xs font-bold text-primary">Open →</span>
+      </Link>
+
       {/* Logo Upload Section */}
       <LogoUploadSection />
 

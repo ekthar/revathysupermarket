@@ -143,28 +143,33 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
     >
       <Link
         href={`/track/${activeOrder?.id ?? "#"}`}
-        className="flex items-center gap-3 border-b border-secondary-500/20 bg-secondary-50/95 dark:bg-secondary-950/80 px-4 py-2 backdrop-blur-md press"
+        className="group flex items-center gap-3 bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 dark:from-emerald-800 dark:via-emerald-700 dark:to-teal-700 px-4 py-2.5 shadow-sm press"
       >
-        <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-secondary-500 text-white">
-          <Package className="h-3.5 w-3.5" />
+        {/* Animated order icon */}
+        <span className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm">
+          <Package className="h-4 w-4 text-white" />
           <span
             ref={dotRef}
-            className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-white ring-2 ring-secondary-500"
+            className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-white shadow-sm shadow-emerald-900/30"
           />
         </span>
+
+        {/* Order info */}
         <div className="min-w-0 flex-1">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-secondary-700 dark:text-secondary-300">
-            Live order · #{activeOrder?.orderNumber ?? "—"}
+          <p className="text-[10px] font-semibold uppercase tracking-wider text-white/70">
+            Order #{activeOrder?.orderNumber ?? "—"}
           </p>
-          <p className="text-xs font-bold text-foreground truncate">
+          <p className="text-sm font-bold text-white truncate">
             <span ref={statusRef} key={statusText}>
               {statusText}{etaText}
             </span>
           </p>
         </div>
-        <span className="flex items-center gap-0.5 text-[11px] font-bold text-secondary-700 dark:text-secondary-300 shrink-0">
+
+        {/* Track button */}
+        <span className="flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-sm px-3 py-1.5 text-[11px] font-bold text-white transition-all group-hover:bg-white/30">
           Track
-          <ChevronRight className="h-3.5 w-3.5" />
+          <ChevronRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
         </span>
       </Link>
     </div>

@@ -7,7 +7,7 @@ import { useToast } from "@/components/toast-provider";
 
 type OrderItem = {
   id: string;
-  productId: string;
+  productId: string | null;
   name: string;
   quantity: number;
   price: number;

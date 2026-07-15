@@ -72,7 +72,7 @@ export async function POST(
         where: { id: order.deliveryCollection.id },
         data: {
           ...collectionData,
-          status: "RECONCILED",
+          status: "SETTLED",
           completedAt: new Date(),
         },
       });
@@ -83,7 +83,7 @@ export async function POST(
           partnerId: order.deliveryPartnerId,
           expectedAmount: totalAmount,
           ...collectionData,
-          status: "RECONCILED",
+          status: "SETTLED",
           completedAt: new Date(),
         },
       });

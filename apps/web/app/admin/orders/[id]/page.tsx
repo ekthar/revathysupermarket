@@ -21,7 +21,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   const order = await prisma.order.findUnique({
     where: { id },
     include: {
-      items: { include: { product: { select: { id: true, name: true, image: true, slug: true, unit: true, category: { select: { name: true } } } } } },
+      items: { include: { product: { select: { id: true, name: true, image: true, slug: true, unit: true, categoryId: true } } } },
       user: { select: { id: true, name: true, email: true, phone: true } },
       deliveryPartner: { select: { id: true, name: true, phone: true } },
       acknowledgedBy: { select: { id: true, name: true } },
@@ -38,6 +38,13 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
   });
 
   if (!order) return notFound();
+
+  // Fetch category names for items (to pass to OrderItemEditor for same-category substitute search)
+  const categoryIds = [...new Set(order.items.map((item) => item.product?.categoryId).filter(Boolean))] as string[];
+  const categories = categoryIds.length > 0
+    ? await prisma.category.findMany({ where: { id: { in: categoryIds } }, select: { id: true, name: true } })
+    : [];
+  const categoryMap = new Map(categories.map((c) => [c.id, c.name]));
 
   const statusColors: Record<string, string> = {
     ORDER_RECEIVED: "bg-yellow-100 text-yellow-800",
@@ -139,7 +146,7 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 quantity: item.quantity,
                 price: Number(item.price),
                 unit: item.product?.unit || "pcs",
-                category: item.product?.category?.name || undefined,
+                category: item.product?.categoryId ? categoryMap.get(item.product.categoryId) : undefined,
               }))}
             />
           )}

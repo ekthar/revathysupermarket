@@ -44,7 +44,7 @@ export function ProductManagementForm({ categories, units }: Props) {
       case "name":
         return value.trim().length < 2 ? "Name must be at least 2 characters" : undefined;
       case "description":
-        return value.trim().length > 0 && value.trim().length < 10 ? "Description must be at least 10 characters" : undefined;
+        return value.trim().length > 0 && value.trim().length < 3 ? "Description must be at least 3 characters" : undefined;
       case "category":
         return value.trim().length < 2 ? "Category is required" : undefined;
       case "price": {

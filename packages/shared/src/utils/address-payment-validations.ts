@@ -104,7 +104,9 @@ export function isPaymentMethodValid(
  */
 export function calculateDamageReduction(
   unitPrice: number,
-  quantity: number
+  quantity: number,
+  _gstRatePercent: number = 0
 ): number {
-  return unitPrice * quantity;
+  // Prices are stored inclusive of GST already. The reduction is the full bill amount.
+  return Math.round(unitPrice * quantity * 100) / 100;
 }

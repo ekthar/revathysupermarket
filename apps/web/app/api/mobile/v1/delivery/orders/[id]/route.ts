@@ -53,6 +53,7 @@ export async function GET(
           name: true,
           quantity: true,
           price: true,
+          gstRate: true,
         },
       },
       deliveryCollection: {
@@ -98,6 +99,7 @@ export async function GET(
         name: item.name,
         quantity: item.quantity,
         price: Number(item.price),
+        gstRate: item.gstRate ? Number(item.gstRate) : 0,
       })),
       collection: order.deliveryCollection
         ? {

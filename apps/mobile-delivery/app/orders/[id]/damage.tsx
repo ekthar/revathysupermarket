@@ -26,7 +26,7 @@ export default function DamageReportScreen() {
           setSelectedProductId(items[0].productId);
           setItemName(items[0].name);
           setQuantity(1);
-          setReductionAmount(calculateDamageReduction(items[0].price, 1));
+          setReductionAmount(calculateDamageReduction(items[0].price, 1, items[0].gstRate || 0));
         }
       })
       .catch(() => {})
@@ -38,7 +38,7 @@ export default function DamageReportScreen() {
     setItemName(item.name);
     setQuantity(1);
     setIsManualOverride(false);
-    setReductionAmount(calculateDamageReduction(item.price, 1));
+    setReductionAmount(calculateDamageReduction(item.price, 1, (item as any).gstRate || 0));
   };
 
   const handleQuantityChange = (text: string) => {
@@ -48,7 +48,7 @@ export default function DamageReportScreen() {
       if (!isManualOverride) {
         const selectedItem = orderItems.find((i) => i.productId === selectedProductId);
         if (selectedItem) {
-          setReductionAmount(calculateDamageReduction(selectedItem.price, 1));
+          setReductionAmount(calculateDamageReduction(selectedItem.price, 1, (selectedItem as any).gstRate || 0));
         }
       }
       return;
@@ -57,7 +57,7 @@ export default function DamageReportScreen() {
     if (!isManualOverride) {
       const selectedItem = orderItems.find((i) => i.productId === selectedProductId);
       if (selectedItem) {
-        setReductionAmount(calculateDamageReduction(selectedItem.price, qty));
+        setReductionAmount(calculateDamageReduction(selectedItem.price, qty, (selectedItem as any).gstRate || 0));
       }
     }
   };

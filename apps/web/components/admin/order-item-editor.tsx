@@ -12,6 +12,7 @@ type OrderItem = {
   quantity: number;
   price: number;
   unit: string;
+  category?: string;
 };
 
 type SubstituteProduct = {
@@ -52,14 +53,16 @@ export function OrderItemEditor({ orderId, items }: { orderId: string; items: Or
     }
   }
 
-  async function searchProducts(query: string) {
+  async function searchProducts(query: string, category?: string) {
     if (query.length < 2) { setSearchResults([]); return; }
     setSearching(true);
     try {
-      const res = await fetch(`/api/products?search=${encodeURIComponent(query)}&limit=8`);
+      const params = new URLSearchParams({ q: query, limit: "8" });
+      if (category && category !== "All") params.set("category", category);
+      const res = await fetch(`/api/products?${params.toString()}`);
       const data = await res.json();
       setSearchResults(
-        (data.products || []).map((p: { id: string; name: string; price: number | string; unit?: string }) => ({
+        (data.products || data.items || []).map((p: { id: string; name: string; price: number | string; unit?: string }) => ({
           id: p.id,
           name: p.name,
           price: Number(p.price),
@@ -151,8 +154,12 @@ export function OrderItemEditor({ orderId, items }: { orderId: string; items: Or
                   <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => { setSearchQuery(e.target.value); searchProducts(e.target.value); }}
-                    placeholder="Search replacement product..."
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      const currentItem = items.find((i) => i.id === substituteFor);
+                      searchProducts(e.target.value, currentItem?.category);
+                    }}
+                    placeholder={`Search in ${items.find((i) => i.id === substituteFor)?.category || "same category"}...`}
                     className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                     autoFocus
                   />

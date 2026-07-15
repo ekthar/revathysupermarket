@@ -413,10 +413,31 @@ export function AddressSelector({
               <motion.button
                 type="button"
                 onClick={() => {
-                  if (!form.customerName.trim() || !form.phone.trim() || !form.pincode.trim()) {
-                    showToast("Please fill in your name, phone number and pincode", "error");
+                  if (!form.customerName.trim() || !form.phone.trim() || !form.pincode.trim() || !form.houseName.trim()) {
+                    showToast("Please fill in your name, phone number, house name and pincode", "error");
                     return;
                   }
+                  if (!/^\d{6}$/.test(form.pincode)) {
+                    showToast("Pincode must be 6 digits", "error");
+                    return;
+                  }
+                  // Save the address to DB for new customers
+                  fetch("/api/account/addresses", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      label: "Home",
+                      customerName: form.customerName,
+                      phone: form.phone,
+                      houseName: form.houseName,
+                      street: form.street,
+                      landmark: form.landmark,
+                      pincode: form.pincode,
+                      latitude: Number(form.latitude) || 0,
+                      longitude: Number(form.longitude) || 0,
+                      isDefault: savedAddresses.length === 0,
+                    }),
+                  }).catch(() => {});
                   setFormExpanded(false);
                 }}
                 whileTap={{ scale: 0.97 }}

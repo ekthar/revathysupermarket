@@ -161,21 +161,6 @@ export function SettingsManagementClient({
       {/* Settings Search */}
       <SettingsSearch />
 
-      {/* Quick link to Feature Flags */}
-      <Link
-        href="/admin/feature-flags"
-        className="mt-4 flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 p-4 transition-colors hover:bg-primary/10 dark:border-primary/30 dark:bg-primary/10"
-      >
-        <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15">⚡</span>
-          <div>
-            <p className="text-sm font-bold text-foreground">Feature Flags</p>
-            <p className="text-xs text-muted-foreground">Toggle features, maintenance mode, delivery settings</p>
-          </div>
-        </div>
-        <span className="text-xs font-bold text-primary">Open →</span>
-      </Link>
-
       {/* Logo Upload Section */}
       <LogoUploadSection />
 
@@ -254,9 +239,6 @@ export function SettingsManagementClient({
         </FieldGroup>
         <FieldGroup label="GSTIN">
           <Input value={form.gstin} onChange={(event) => update("gstin", event.target.value.toUpperCase())} placeholder="e.g. 32AAACR1234F1Z5" className="h-12 rounded-2xl" />
-        </FieldGroup>
-        <FieldGroup label="GST Rate (%)">
-          <Input value={form.gstRatePercent} onChange={(event) => update("gstRatePercent", Number(event.target.value))} type="number" min="0" max="28" step="0.01" placeholder="e.g. 5" className="h-12 rounded-2xl" />
         </FieldGroup>
         <div className="mt-2 flex items-center gap-3 border-t border-border pt-4 md:col-span-2">
           <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-lime-fresh/20 text-primary">

@@ -68,7 +68,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     ],
     "SYSTEM": [
       { href: "/admin/staff", label: "Staff", icon: "ShieldCheck", badge: 0, show: can("staff.manage") },
-      { href: "/admin/feature-flags", label: "Feature Flags", icon: "ToggleLeft", badge: 0, show: can("settings.manage") },
       { href: "/admin/settings", label: "Settings", icon: "Settings", badge: 0, show: can("settings.manage") },
       { href: "/admin/delivery-slots", label: "Delivery Slots", icon: "Clock", badge: 0, show: can("settings.manage") },
       { href: "/admin/pricing", label: "Delivery Pricing", icon: "Calculator", badge: 0, show: can("pricing.manage") },

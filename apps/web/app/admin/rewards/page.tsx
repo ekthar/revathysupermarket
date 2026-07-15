@@ -2,6 +2,8 @@ import { auth } from "@/auth";
 import { canManageSettings } from "@/lib/authz";
 import { prisma } from "@/lib/prisma";
 import { RewardsTableClient } from "@/components/admin/rewards-table-client";
+import { LoyaltySettingsClient } from "@/components/admin/loyalty-settings-client";
+import { getLoyaltyConfig } from "@/lib/loyalty-config";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +18,7 @@ export default async function AdminRewardsPage() {
     );
   }
 
-  const [accounts, totalCustomers, totalPointsIssued] = await Promise.all([
+  const [accounts, totalCustomers, totalPointsIssued, loyaltyConfig] = await Promise.all([
     prisma.loyaltyAccount.findMany({
       include: {
         user: {
@@ -37,6 +39,7 @@ export default async function AdminRewardsPage() {
       _sum: { points: true },
       where: { type: "EARN" },
     }),
+    getLoyaltyConfig(),
   ]);
 
   const rewards = accounts.map((account) => ({
@@ -77,6 +80,9 @@ export default async function AdminRewardsPage() {
           <p className="mt-1 font-display text-2xl font-black">{totalPointsIssued._sum.points ?? 0}</p>
         </div>
       </div>
+
+      {/* Loyalty Settings - Points Configuration */}
+      <LoyaltySettingsClient initialConfig={loyaltyConfig} />
 
       <RewardsTableClient rewards={rewards} />
     </div>

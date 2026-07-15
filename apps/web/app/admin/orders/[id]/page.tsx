@@ -4,7 +4,6 @@ import { ArrowLeft, Clock, CreditCard, FileText, MapPin, Package, Phone, RotateC
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 import { formatQuantityWithUnit } from "@msm/shared";
-import { getActiveDeliveryOtp } from "@/lib/delivery";
 import { OrderPaymentSection } from "@/components/admin/order-payment-section";
 import { OrderStatusForm } from "@/components/admin/order-status-form";
 import { DeliveryAssignment } from "@/components/admin/delivery-assignment";
@@ -156,6 +155,9 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                   <div>
                     <p className="text-sm font-semibold text-foreground">{ev.status.replace(/_/g, " ")}</p>
                     {ev.note && <p className="text-xs text-muted-foreground">{ev.note}</p>}
+                    {(ev.status === "OUT_FOR_DELIVERY" || ev.status === "DELIVERED" || ev.status === "ARRIVING") && order.deliveryPartner && (
+                      <p className="text-xs text-primary font-semibold">Delivery: {order.deliveryPartner.name} ({order.deliveryPartner.phone})</p>
+                    )}
                     <p className="text-micro text-muted-foreground">{new Date(ev.createdAt).toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p>
                   </div>
                 </div>
@@ -188,13 +190,19 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
           {/* Status Update */}
           <section className="rounded-2xl bg-card border border-border p-5">
             <h2 className="text-sm font-black text-foreground mb-1 flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> Order Status</h2>
-            {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt && (
-              <AcknowledgeButton orderId={order.id} />
+            {order.status === "CANCELLED" ? (
+              <p className="mt-2 text-sm font-semibold text-red-600">This order has been cancelled. No further updates allowed.</p>
+            ) : (
+              <>
+                {order.status === "ORDER_RECEIVED" && !order.acknowledgedAt && (
+                  <AcknowledgeButton orderId={order.id} />
+                )}
+                {order.acknowledgedBy && (
+                  <p className="text-xs text-muted-foreground mb-2">Reviewed by: {order.acknowledgedBy.name}</p>
+                )}
+                <OrderStatusForm orderId={order.id} currentStatus={order.status} />
+              </>
             )}
-            {order.acknowledgedBy && (
-              <p className="text-xs text-muted-foreground mb-2">Reviewed by: {order.acknowledgedBy.name}</p>
-            )}
-            <OrderStatusForm orderId={order.id} currentStatus={order.status} />
           </section>
 
           {/* Delivery Assignment */}
@@ -231,12 +239,6 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
               <div className="text-sm">
                 <p className="font-semibold text-foreground">{order.deliveryPartner.name}</p>
                 <p className="text-muted-foreground">{order.deliveryPartner.phone}</p>
-                {(() => {
-                  const activeOtp = getActiveDeliveryOtp(order.deliveryOtp, order.deliveryOtpExpiresAt);
-                  return activeOtp ? (
-                    <p className="mt-2 text-xs font-mono bg-muted rounded-lg px-3 py-2">OTP: <span className="font-bold text-primary">{activeOtp}</span></p>
-                  ) : null;
-                })()}
               </div>
             ) : (
               <p className="text-sm text-muted-foreground italic">Not assigned yet</p>

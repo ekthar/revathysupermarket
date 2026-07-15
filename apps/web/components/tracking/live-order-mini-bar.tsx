@@ -40,9 +40,12 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
     !activeOrder ||
     HIDDEN.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
-  // Polling for active order
+  // Polling for active order — stops when no order found for 2 consecutive checks
   useEffect(() => {
     let active = true;
+    let emptyCount = 0;
+    let interval: ReturnType<typeof setInterval> | null = null;
+
     async function fetchActiveOrder() {
       try {
         if (document.visibilityState === "hidden") return;
@@ -54,19 +57,26 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
         if (!active || !data.orders) return;
         const found = data.orders[0];
         if (found) {
+          emptyCount = 0;
           setActiveOrder((current) =>
             current?.id === found.id && current.status === found.status
               ? current
               : { ...found, eta: estimateOrderEta(found.status) },
           );
         } else {
+          emptyCount++;
           setActiveOrder(null);
+          // Stop polling after 2 empty responses (no active orders)
+          if (emptyCount >= 2 && interval) {
+            clearInterval(interval);
+            interval = null;
+          }
         }
       } catch { /* ignore */ }
     }
     fetchActiveOrder();
-    const interval = setInterval(fetchActiveOrder, 30_000);
-    return () => { active = false; clearInterval(interval); };
+    interval = setInterval(fetchActiveOrder, 30_000);
+    return () => { active = false; if (interval) clearInterval(interval); };
   }, []);
 
   // Auto-collapse when navigating
@@ -101,15 +111,7 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
             aria-label={`Order ${activeOrder.orderNumber}: ${statusText}. Tap to expand.`}
           >
             <Package className="h-6 w-6 text-white" />
-            {/* Pulse ring */}
-            <span className="absolute inset-0 rounded-full border-2 border-emerald-400/50 animate-ping" style={{ animationDuration: "2s" }} />
-            {/* ETA badge */}
-            {etaText && (
-              <span className="absolute -top-1 -left-1 rounded-full bg-white px-1.5 py-0.5 text-[9px] font-black text-emerald-700 shadow-md border border-emerald-100">
-                {etaText}
-              </span>
-            )}
-            {/* Status dot */}
+            {/* Status dot — lightweight */}
             <span className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white shadow-sm">
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
             </span>
@@ -118,12 +120,11 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
           /* ─── EXPANDED PILL ─── */
           <motion.div
             key="pill"
-            initial={{ width: 56, height: 56, borderRadius: 28, opacity: 0.8 }}
-            animate={{ width: "calc(100vw - 1.5rem)", height: "auto", borderRadius: 20, opacity: 1 }}
-            exit={{ width: 56, height: 56, borderRadius: 28, opacity: 0 }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
             transition={{ type: "spring", damping: 25, stiffness: 280 }}
-            className="overflow-hidden bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/25"
-            style={{ position: "fixed", bottom: "calc(var(--mobile-nav-height, 64px) + 0.75rem + env(safe-area-inset-bottom, 0px))", right: "0.75rem" }}
+            className="w-[calc(100vw-1.5rem)] overflow-hidden rounded-[20px] bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 shadow-xl shadow-emerald-500/25"
           >
             <div className="flex items-center gap-3 p-3.5">
               {/* Close button */}

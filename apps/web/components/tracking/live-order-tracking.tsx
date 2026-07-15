@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import dynamic from "next/dynamic";
 import { calculateDistanceKm } from "@/lib/distance";
-import { springs } from "@/lib/motion";
 import {
   ArrowLeft,
   Phone,
@@ -130,6 +129,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
   const [data, setData] = useState<TrackingData>(initialData);
   const [etaMinutes, setEtaMinutes] = useState<number | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [exiting, setExiting] = useState(false);
   const funMessage = useFunMessage(data.status);
 
   const etaDisplayMode: EtaDisplayMode = data.etaDisplayMode ?? "after_assignment";
@@ -184,8 +184,20 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
   const showMap = data.deliveryPartnerLocation || ["OUT_FOR_DELIVERY", "ARRIVING", "READY_FOR_DELIVERY"].includes(data.status);
 
   // ─── Render ──────────────────────────────────────────────────────────────────
+  // Back navigation with fade to prevent white flash
+  function handleBack() {
+    setExiting(true);
+    setTimeout(() => {
+      if (window.history.length > 1) {
+        router.back();
+      } else {
+        router.push("/dashboard");
+      }
+    }, 150);
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-neutral-100 dark:bg-neutral-950">
+    <div className={`fixed inset-0 z-50 flex flex-col bg-neutral-100 dark:bg-neutral-950 transition-opacity duration-150 ${exiting ? "opacity-0" : "opacity-100"}`}>
 
       {/* ═══════════════ TOP BAR (safe-area aware) ═══════════════ */}
       <div
@@ -195,7 +207,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
         {/* Back button — 44×44 minimum tap target */}
         <button
           type="button"
-          onClick={() => router.back()}
+          onClick={handleBack}
           className="flex h-11 w-11 items-center justify-center rounded-full bg-white shadow-md active:scale-90 transition-transform dark:bg-neutral-800"
           aria-label="Go back"
         >
@@ -260,21 +272,25 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
       </div>
 
       {/* ═══════════════ BOTTOM SHEET ═══════════════ */}
-      <motion.div
-        layout
-        animate={{ height: sheetExpanded ? "75vh" : "auto" }}
-        transition={{ type: "spring", damping: 28, stiffness: 280 }}
-        className="relative z-20 flex flex-col rounded-t-3xl bg-white shadow-[0_-4px_30px_rgba(0,0,0,0.12)] dark:bg-neutral-900"
-        style={{ maxHeight: "85vh" }}
+      <div
+        className="relative z-20 flex flex-col rounded-t-3xl bg-white shadow-[0_-4px_30px_rgba(0,0,0,0.12)] dark:bg-neutral-900 transition-[max-height] duration-300 ease-out"
+        style={{ maxHeight: sheetExpanded ? "80vh" : "45vh", overflow: "hidden" }}
       >
-        {/* ─── Handle bar (44px tap target) ─── */}
+        {/* ─── Handle bar (44px tap target) with direction chevron ─── */}
         <button
           type="button"
           onClick={() => { setSheetExpanded(!sheetExpanded); haptic("light"); }}
-          className="flex w-full min-h-[44px] items-center justify-center shrink-0"
-          aria-label={sheetExpanded ? "Collapse details" : "Expand details"}
+          className="flex w-full min-h-[44px] items-center justify-center gap-2 shrink-0"
+          aria-label={sheetExpanded ? "Collapse to see map" : "Expand for more details"}
         >
-          <div className="h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+          <div className="flex items-center gap-2">
+            <div className="h-1.5 w-10 rounded-full bg-neutral-300 dark:bg-neutral-600" />
+          </div>
+          {sheetExpanded ? (
+            <ChevronDown className="h-4 w-4 text-neutral-400" />
+          ) : (
+            <ChevronUp className="h-4 w-4 text-neutral-400" />
+          )}
         </button>
 
         {/* ─── Scrollable Content ─── */}
@@ -489,7 +505,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           {/* Extra bottom space */}
           <div className="h-4" />
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

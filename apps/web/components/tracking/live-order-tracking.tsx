@@ -163,7 +163,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={springs.enter}
-      className="relative min-h-screen bg-background dark:bg-neutral-950 pb-safe"
+      className="relative min-h-screen bg-background dark:bg-neutral-950 pb-6"
     >
       {/* Fixed top LIVE ORDER banner */}
       <div className="ios-sticky-tracking-header bg-background/90 dark:bg-neutral-950/90 backdrop-blur-xl">

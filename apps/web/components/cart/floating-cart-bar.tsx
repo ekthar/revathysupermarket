@@ -25,6 +25,7 @@ const HIDDEN_PREFIXES = [
  * Premium floating cart summary bar -- mobile only.
  * Positioned above the bottom navigation with a clear gap.
  * Hidden on cart/checkout/admin routes and when the cart is empty.
+ * Positioned on left side to avoid conflict with live order bubble (right side).
  */
 export function FloatingCartBar() {
   const pathname = usePathname();
@@ -39,14 +40,21 @@ export function FloatingCartBar() {
     <AnimatePresence>
       {!hidden && (
         <motion.div
-          className="floating-cart-wrapper md:hidden"
+          className="fixed md:hidden"
           data-hide-on-keyboard="true"
+          style={{
+            bottom: "calc(var(--mobile-nav-height, 64px) + 0.75rem + env(safe-area-inset-bottom, 0px))",
+            left: "0.75rem",
+            right: "4.5rem",
+            zIndex: 65,
+            pointerEvents: "none",
+          }}
           initial={{ opacity: 0, y: 24, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 16, scale: 0.96 }}
           transition={springs.snappy}
         >
-          <motion.div whileTap={tapScale.primary} transition={springs.tap}>
+          <motion.div whileTap={tapScale.primary} transition={springs.tap} style={{ pointerEvents: "auto" }}>
             <Link
               href="/cart"
               data-cart-icon
@@ -65,7 +73,7 @@ export function FloatingCartBar() {
                   <p className="text-xs font-bold leading-tight text-white">
                     {totalItems} item{totalItems === 1 ? "" : "s"}
                   </p>
-                  <p className="text-[11px] font-medium text-white/70 truncate max-w-[140px]">
+                  <p className="text-[11px] font-medium text-white/70 truncate max-w-[120px]">
                     {items.slice(0, 2).map((i) => i.name).join(", ")}
                     {items.length > 2 ? ` +${items.length - 2}` : ""}
                   </p>

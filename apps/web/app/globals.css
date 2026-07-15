@@ -381,16 +381,6 @@ html[data-keyboard-open] .pb-safe {
 }
 
 /* Floating cart bar */
-.floating-cart-wrapper {
-  position: fixed;
-  pointer-events: none;
-  bottom: calc(var(--mobile-nav-height) + 0.75rem + var(--safe-bottom));
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-floating);
-  width: calc(100% - 2rem);
-  max-width: 400px;
-}
 .floating-cart-bar {
   pointer-events: auto;
   display: flex;

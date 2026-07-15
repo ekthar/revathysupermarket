@@ -273,33 +273,10 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
   );
 }
 
-// Quick add overlay button for desktop hover — only shown when item is not already in cart
+// Quick add overlay removed — the black + button in the card footer handles add-to-cart
 function QuickAddOverlay({ product }: { product: Product }) {
-  const cartItem = useCartItem(product.id);
-  const { addItem } = useCartActions();
-  const { flyToCart } = useFlyToCart();
-
-  const handleQuickAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addItem(product);
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(10);
-    }
-    flyToCart(product.image, e.currentTarget);
-  }, [addItem, product, flyToCart]);
-
-  if (cartItem) return null;
-
-  return (
-    <button
-      onClick={handleQuickAdd}
-      className="absolute bottom-2 right-2 z-10 hidden h-9 w-9 items-center justify-center rounded-full bg-green-500 text-white shadow-lg transition-all hover:bg-green-600 hover:scale-110 group-hover:flex"
-      aria-label={`Add ${product.name} to cart`}
-    >
-      <Plus className="h-4 w-4" />
-    </button>
-  );
+  void product;
+  return null;
 }
 
 // Animated quantity stepper with number bounce

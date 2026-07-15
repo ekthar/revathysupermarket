@@ -38,7 +38,7 @@ export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: S
     resetTimer.current = setTimeout(() => setPendingHref(null), 1500);
   }, [router]);
 
-  if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/checkout") || pathname.startsWith("/delivery")) return null;
+  if (["/login", "/welcome"].includes(pathname) || pathname.startsWith("/staff") || pathname.startsWith("/admin") || pathname.startsWith("/checkout") || pathname.startsWith("/delivery") || pathname.startsWith("/track")) return null;
 
   const accountHref = user?.id ? "/account" : "/login";
   const activePath = pendingHref ?? pathname;

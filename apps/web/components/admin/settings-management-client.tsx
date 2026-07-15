@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Camera, Eye, EyeOff, ImagePlus, MapPin, Megaphone, MessageCircle, Save, Search, Settings, Trash2, Upload } from "lucide-react";
+import { Camera, Eye, EyeOff, ImagePlus, MapPin, Megaphone, MessageCircle, Save, Settings, Trash2, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/toast-provider";
@@ -712,30 +712,20 @@ function PincodeTagInput({ value, onChange }: { value: string; onChange: (value:
   );
 }
 
-const SETTINGS_SECTIONS = [
-  { id: "logo", label: "Store Logo", keywords: ["logo", "image", "brand", "icon", "upload"] },
-  { id: "store", label: "Store Details", keywords: ["store", "name", "phone", "whatsapp", "address", "maps", "social", "instagram", "facebook", "location", "map", "pin", "latitude", "longitude"] },
-  { id: "gst", label: "GST Billing", keywords: ["gst", "gstin", "tax", "billing", "business"] },
-  { id: "delivery", label: "Delivery & Orders", keywords: ["delivery", "radius", "fee", "minimum", "order", "estimate", "pincode"] },
-  { id: "whatsapp", label: "WhatsApp API", keywords: ["whatsapp", "api", "template", "message", "webhook"] },
-  { id: "banner", label: "Banner Management", keywords: ["banner", "offer", "promotion", "homepage", "image"] },
-];
-
 function SettingsSearch() {
-  const [query, setQuery] = useState("");
-  const [showResults, setShowResults] = useState(false);
+  const [activeTab, setActiveTab] = useState("store");
 
-  const results = query.trim().length > 0
-    ? SETTINGS_SECTIONS.filter((section) =>
-        section.label.toLowerCase().includes(query.toLowerCase()) ||
-        section.keywords.some((kw) => kw.includes(query.toLowerCase()))
-      )
-    : [];
+  const tabs = [
+    { id: "logo", label: "Logo", icon: "🖼️" },
+    { id: "store", label: "Store Info", icon: "🏪" },
+    { id: "gst", label: "GST", icon: "📋" },
+    { id: "delivery", label: "Delivery", icon: "🚚" },
+    { id: "whatsapp", label: "WhatsApp", icon: "💬" },
+    { id: "banner", label: "Banners", icon: "📢" },
+  ];
 
   function scrollToSection(sectionId: string) {
-    setQuery("");
-    setShowResults(false);
-
+    setActiveTab(sectionId);
     const headingMap: Record<string, string> = {
       logo: "Store Logo",
       store: "Store details",
@@ -763,45 +753,28 @@ function SettingsSearch() {
   }
 
   return (
-    <div className="mt-5 relative">
-      <div className="relative">
-        <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => { setQuery(e.target.value); setShowResults(true); }}
-          onFocus={() => setShowResults(true)}
-          onBlur={() => setTimeout(() => setShowResults(false), 200)}
-          placeholder="Search settings... (logo, delivery, GST, banners...)"
-          className="h-12 w-full rounded-2xl border border-border bg-card pl-11 pr-4 text-sm font-medium outline-none shadow-soft focus:ring-2 focus:ring-primary/30 transition-all"
-        />
+    <div className="sticky top-0 z-20 -mx-4 -mt-4 mb-4 border-b border-neutral-200 bg-white/95 px-4 pb-0 pt-4 backdrop-blur-sm dark:border-neutral-800 dark:bg-neutral-900/95 lg:-mx-6 lg:-mt-6 lg:px-6 lg:pt-6">
+      <div className="mb-3">
+        <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">Settings</h1>
+        <p className="text-sm text-neutral-500">Manage your store configuration, delivery, billing, and integrations.</p>
       </div>
-      {showResults && results.length > 0 && (
-        <div className="absolute z-30 mt-1 w-full rounded-xl border border-border bg-card shadow-lg overflow-hidden">
-          {results.map((section) => (
-            <button
-              key={section.id}
-              type="button"
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => scrollToSection(section.id)}
-              className="flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-primary/5 transition-colors border-b border-border last:border-0"
-            >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <Search className="h-3.5 w-3.5 text-primary" />
-              </span>
-              <div>
-                <p className="text-sm font-bold text-neutral-900 dark:text-white">{section.label}</p>
-                <p className="text-xs text-muted-foreground">{section.keywords.slice(0, 4).join(", ")}</p>
-              </div>
-            </button>
-          ))}
-        </div>
-      )}
-      {showResults && query.trim().length > 0 && results.length === 0 && (
-        <div className="absolute z-30 mt-1 w-full rounded-xl border border-border bg-card p-4 shadow-lg text-center">
-          <p className="text-sm text-muted-foreground">No matching settings found</p>
-        </div>
-      )}
+      <div className="flex gap-1 overflow-x-auto pb-0 scrollbar-none">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => scrollToSection(tab.id)}
+            className={`flex shrink-0 items-center gap-1.5 rounded-t-lg border-b-2 px-3 py-2 text-xs font-semibold transition-colors ${
+              activeTab === tab.id
+                ? "border-emerald-600 text-emerald-700 dark:border-emerald-400 dark:text-emerald-400"
+                : "border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200"
+            }`}
+          >
+            <span>{tab.icon}</span>
+            <span>{tab.label}</span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 }

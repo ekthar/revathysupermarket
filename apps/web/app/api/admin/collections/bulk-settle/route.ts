@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/auth-guard";
 
 export async function POST(request: Request) {
-  const result = await requirePermission("collections.manage");
+  const result = await requirePermission("collections.reconcile");
   if ("error" in result) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }

@@ -1,177 +1,162 @@
-import Link from "next/link";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
-import { formatCurrency } from "@/lib/utils";
-import { ReturnsReportClient } from "@/components/admin/returns-report-client";
+import { getAuthContext } from "@/lib/auth-guard";
+import { hasPermission } from "@/lib/permissions";
+import {
+  AdminPageShell,
+  AdminAccessDenied,
+  AdminStatusBadge,
+  AdminEmptyState,
+} from "@/components/admin/shared";
+import { RotateCcw } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function DailyReturnsReportPage() {
-  const session = await auth();
-  const role = session?.user?.role;
-  if (!role || !["OWNER", "MANAGER", "ADMIN"].includes(role)) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
-        <h2 className="font-display text-3xl font-black">Daily Returns Report</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Owner/Manager access required.</p>
-      </div>
-    );
+function formatDate(val: Date | string | null) {
+  if (!val) return "—";
+  return new Date(val).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function returnStatusVariant(status: string) {
+  switch (status) {
+    case "REFUNDED":
+      return "success" as const;
+    case "APPROVED":
+    case "ITEM_RECEIVED":
+      return "info" as const;
+    case "REJECTED":
+      return "error" as const;
+    case "REQUESTED":
+    case "UNDER_REVIEW":
+      return "pending" as const;
+    default:
+      return "neutral" as const;
+  }
+}
+
+export default async function ReturnsReportPage() {
+  const ctx = await getAuthContext();
+  if (!ctx || !hasPermission(ctx, "returns.view")) {
+    return <AdminAccessDenied permission="returns.view" />;
   }
 
-  // Get returns grouped by day for last 30 days
-  const thirtyDaysAgo = new Date();
-  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-  thirtyDaysAgo.setHours(0, 0, 0, 0);
+  const returns = await prisma.returnRequest
+    .findMany({
+      select: {
+        id: true,
+        returnNumber: true,
+        status: true,
+        refundAmount: true,
+        items: true,
+        createdAt: true,
+        order: {
+          select: { orderNumber: true, customerName: true },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    })
+    .catch(() => []);
 
-  const returns = await prisma.returnRequest.findMany({
-    where: { createdAt: { gte: thirtyDaysAgo } },
-    select: {
-      id: true,
-      returnNumber: true,
-      status: true,
-      refundAmount: true,
-      refundMethod: true,
-      createdAt: true,
-      reason: true,
-      items: true,
-      order: { select: { orderNumber: true, customerName: true, total: true } }
-    },
-    orderBy: { createdAt: "desc" }
-  }).catch(() => []);
+  const totalReturns = returns.length;
+  const approved = returns.filter((r) => r.status === "APPROVED" || r.status === "ITEM_RECEIVED" || r.status === "REFUNDED").length;
+  const rejected = returns.filter((r) => r.status === "REJECTED").length;
+  const pending = returns.filter((r) => r.status === "REQUESTED" || r.status === "UNDER_REVIEW").length;
+  const totalRefunded = returns
+    .filter((r) => r.status === "REFUNDED")
+    .reduce((sum, r) => sum + Number(r.refundAmount || 0), 0);
 
-  // Group by date
-  type ReturnEntry = (typeof returns)[number];
-  const byDate = new Map<string, { date: string; returns: ReturnEntry[]; total: number; count: number }>();
-  for (const ret of returns) {
-    const dateKey = ret.createdAt.toISOString().split("T")[0];
-    if (!byDate.has(dateKey)) {
-      byDate.set(dateKey, { date: dateKey, returns: [], total: 0, count: 0 });
-    }
-    const group = byDate.get(dateKey)!;
-    group.returns.push(ret);
-    group.total += Number(ret.refundAmount ?? 0);
-    group.count++;
-  }
+  const summaryCards = [
+    { label: "Total Returns", value: totalReturns },
+    { label: "Approved", value: approved },
+    { label: "Rejected", value: rejected },
+    { label: "Pending", value: pending },
+    { label: "Total Refunded", value: `₹${totalRefunded.toLocaleString("en-IN")}` },
+  ];
 
-  const dailyData = Array.from(byDate.values());
-  const grandTotal = dailyData.reduce((sum, day) => sum + day.total, 0);
-
-  // Today's orders total for net calculation
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const todayOrders = await prisma.order.aggregate({
-    where: { createdAt: { gte: today }, status: { not: "CANCELLED" } },
-    _sum: { total: true }
-  }).catch(() => ({ _sum: { total: null } }));
-
-  const todaySales = Number(todayOrders._sum?.total ?? 0);
-  const todayReturns = byDate.get(today.toISOString().split("T")[0])?.total ?? 0;
-  const netSales = todaySales - todayReturns;
+  const breadcrumbs = [
+    { label: "Reports", href: "/admin/reports" },
+    { label: "Returns" },
+  ];
 
   return (
-    <main className="grid gap-5">
-      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(239,68,68,0.1),rgba(251,146,60,0.12))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-red-600 dark:text-red-400">Returns deduction</p>
-        <h1 className="mt-2 font-display text-4xl font-black leading-tight">Daily Returns Report</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Per-day return totals deducted from main software sales.</p>
-      </section>
-
-      {/* Today's Net Summary */}
-      <div className="grid gap-3 md:grid-cols-4">
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50/80 p-4 shadow-soft dark:border-emerald-800 dark:bg-emerald-950/20">
-          <p className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400">Today Sales</p>
-          <p className="mt-2 text-2xl font-black text-emerald-800 dark:text-emerald-300">{formatCurrency(todaySales)}</p>
-        </div>
-        <div className="rounded-xl border border-red-200 bg-red-50/80 p-4 shadow-soft dark:border-red-800 dark:bg-red-950/20">
-          <p className="text-xs font-black uppercase text-red-700 dark:text-red-400">Today Returns</p>
-          <p className="mt-2 text-2xl font-black text-red-800 dark:text-red-300">- {formatCurrency(todayReturns)}</p>
-        </div>
-        <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-4 shadow-soft dark:border-blue-800 dark:bg-blue-950/20">
-          <p className="text-xs font-black uppercase text-blue-700 dark:text-blue-400">Net Sales Today</p>
-          <p className="mt-2 text-2xl font-black text-blue-800 dark:text-blue-300">{formatCurrency(netSales)}</p>
-        </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-4 shadow-soft dark:border-amber-800 dark:bg-amber-950/20">
-          <p className="text-xs font-black uppercase text-amber-700 dark:text-amber-400">30-Day Returns</p>
-          <p className="mt-2 text-2xl font-black text-amber-800 dark:text-amber-300">{formatCurrency(grandTotal)}</p>
-        </div>
+    <AdminPageShell
+      eyebrow="Finance"
+      title="Returns Report"
+      breadcrumbs={breadcrumbs}
+      variant="green"
+    >
+      {/* Summary Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {summaryCards.map((card) => (
+          <div
+            key={card.label}
+            className="rounded-2xl border border-neutral-100 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900"
+          >
+            <p className="text-xs text-neutral-500 dark:text-neutral-400">{card.label}</p>
+            <p className="mt-1 text-xl font-bold text-neutral-900 dark:text-white">{card.value}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Daily breakdown */}
-      <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
-        <h2 className="font-display text-2xl font-black">Day-by-day breakdown</h2>
-        <div className="mt-4 overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border text-left">
-                <th className="pb-3 font-black">Date</th>
-                <th className="pb-3 font-black">Returns</th>
-                <th className="pb-3 text-right font-black">Total Refund</th>
-              </tr>
-            </thead>
-            <tbody>
-              {dailyData.map((day) => (
-                <tr key={day.date} className="border-b border-border/50">
-                  <td className="py-3 font-bold">{new Date(day.date + "T00:00:00").toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}</td>
-                  <td className="py-3">{day.count} return{day.count !== 1 ? "s" : ""}</td>
-                  <td className="py-3 text-right font-black text-red-600 dark:text-red-400">- {formatCurrency(day.total)}</td>
-                </tr>
-              ))}
-              {dailyData.length === 0 && (
-                <tr>
-                  <td colSpan={3} className="py-6 text-center text-muted-foreground">No returns in the last 30 days.</td>
-                </tr>
-              )}
-            </tbody>
-            {dailyData.length > 0 && (
-              <tfoot>
-                <tr className="border-t-2 border-border">
-                  <td className="pt-3 font-black">Total</td>
-                  <td className="pt-3 font-bold">{returns.length} returns</td>
-                  <td className="pt-3 text-right text-lg font-black text-red-600 dark:text-red-400">- {formatCurrency(grandTotal)}</td>
-                </tr>
-              </tfoot>
-            )}
-          </table>
+      {/* Table */}
+      {returns.length === 0 ? (
+        <div className="mt-6">
+          <AdminEmptyState
+            icon={RotateCcw}
+            title="No return requests"
+            description="No returns have been filed yet."
+          />
         </div>
-      </section>
-
-      {/* Per-day expandable item breakdown */}
-      <ReturnsReportClient
-        dailyData={dailyData.map((day) => ({
-          ...day,
-          returns: day.returns.map((ret) => ({
-            ...ret,
-            refundAmount: Number(ret.refundAmount ?? 0),
-            createdAt: ret.createdAt.toISOString(),
-            order: {
-              ...ret.order,
-              total: Number(ret.order.total),
-            },
-          })),
-        }))}
-      />
-
-      {/* Recent returns detail */}
-      <section className="rounded-xl border border-white/70 bg-card/95 p-5 shadow-soft dark:border-white/10">
-        <h2 className="font-display text-2xl font-black">Recent returns detail</h2>
-        <div className="mt-4 grid gap-2">
-          {returns.slice(0, 20).map((ret) => (
-            <div key={ret.id} className="flex items-center justify-between rounded-2xl bg-muted p-3">
-              <div>
-                <p className="text-sm font-bold">#{ret.order.orderNumber} — {ret.order.customerName}</p>
-                <p className="text-xs text-muted-foreground">{ret.returnNumber} • {ret.status}</p>
-              </div>
-              <span className="font-black text-red-600 dark:text-red-400">- {formatCurrency(Number(ret.refundAmount ?? 0))}</span>
-            </div>
-          ))}
+      ) : (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-neutral-100 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-100 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-900/80">
+                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">Return #</th>
+                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">Order #</th>
+                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">Customer</th>
+                  <th className="px-4 py-3 text-right font-medium text-neutral-600 dark:text-neutral-400">Amount</th>
+                  <th className="px-4 py-3 text-center font-medium text-neutral-600 dark:text-neutral-400">Status</th>
+                  <th className="px-4 py-3 text-right font-medium text-neutral-600 dark:text-neutral-400">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                {returns.map((ret) => (
+                  <tr key={ret.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
+                    <td className="px-4 py-3 font-mono text-xs font-medium text-neutral-900 dark:text-white">
+                      {ret.returnNumber.slice(0, 8)}
+                    </td>
+                    <td className="px-4 py-3 font-mono text-xs text-neutral-600 dark:text-neutral-400">
+                      {ret.order.orderNumber}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">
+                      {ret.order.customerName}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-neutral-900 dark:text-white">
+                      {ret.refundAmount ? `₹${Number(ret.refundAmount).toLocaleString("en-IN")}` : "—"}
+                    </td>
+                    <td className="px-4 py-3 text-center">
+                      <AdminStatusBadge
+                        label={ret.status.replace(/_/g, " ")}
+                        variant={returnStatusVariant(ret.status)}
+                        size="sm"
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-right text-neutral-500 dark:text-neutral-400">
+                      {formatDate(ret.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </section>
-
-      <div className="flex gap-3">
-        <Link href="/admin/reports" className="inline-flex h-11 items-center rounded-2xl border border-border px-5 text-sm font-black">
-          ← Back to Reports
-        </Link>
-      </div>
-    </main>
+      )}
+    </AdminPageShell>
   );
 }

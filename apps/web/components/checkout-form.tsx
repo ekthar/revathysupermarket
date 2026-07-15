@@ -353,6 +353,14 @@ export function CheckoutForm({
 
   const router = useRouter();
   const userNavigatedRef = useRef(false);
+
+  // Redirect to cart page if cart is empty (guard against direct navigation)
+  useEffect(() => {
+    if (items.length === 0 && !placedOrderId) {
+      router.push("/cart");
+    }
+  }, [items.length, placedOrderId, router]);
+
   useEffect(() => {
     if (!placedOrderId) return;
     const timeout = window.setTimeout(() => {

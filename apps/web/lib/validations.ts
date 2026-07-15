@@ -31,7 +31,7 @@ export const checkoutSchema = z.object({
         productId: z.string(),
         name: z.string(),
         price: z.coerce.number().positive(),
-        quantity: z.coerce.number().int().positive()
+        quantity: z.coerce.number().int().positive().max(100)
       })
     )
     .min(1)

@@ -19,7 +19,6 @@ const HIDDEN_PREFIXES = [
   "/staff",
   "/track",
   "/dashboard",
-  "/products/",
 ];
 
 /**
@@ -33,7 +32,8 @@ export function FloatingCartBar() {
 
   const hidden =
     totalItems === 0 ||
-    HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+    HIDDEN_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`)) ||
+    /^\/products\/[^/]+$/.test(pathname);
 
   return (
     <AnimatePresence>

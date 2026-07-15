@@ -147,7 +147,7 @@ export default async function ProductsPage({
   const categoryNames = dbCategoryNames.length > 0 ? dbCategoryNames : demoCategories;
   const initialCategory = category || "All";
   return (
-    <main className="min-h-screen bg-background pb-24">
+    <main className="min-h-[100dvh] bg-background pb-24">
       <section className="overflow-hidden px-4 pb-1 pt-8 sm:py-14">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <h1 className="font-display text-display font-black leading-none tracking-tighter sm:text-5xl">Browse</h1>

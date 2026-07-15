@@ -1,100 +1,86 @@
+import { getAuthContext } from "@/lib/auth-guard";
+import { hasPermission } from "@/lib/permissions";
+import { ProductService } from "@/lib/services";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
-import { canManageProducts } from "@/lib/authz";
-import { type AdminProduct } from "@/components/admin/admin-products-client";
-import { AdminProductsPageClient } from "@/components/admin/admin-products-page-client";
+import { AdminAccessDenied } from "@/components/admin/shared";
+import { ProductsPageClient } from "@/components/admin/products";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminProductsPage() {
-  const session = await auth();
-  if (!canManageProducts(session?.user?.role)) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
-        <h2 className="font-display text-3xl font-black">Products</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Product access is required.</p>
-      </div>
-    );
+interface PageProps {
+  searchParams: Promise<{
+    page?: string;
+    pageSize?: string;
+    search?: string;
+    categoryId?: string;
+    isActive?: string;
+    sortBy?: string;
+    sortDir?: string;
+  }>;
+}
+
+export default async function AdminProductsPage({ searchParams }: PageProps) {
+  const ctx = await getAuthContext();
+
+  if (!ctx || !hasPermission(ctx, "catalogue.view")) {
+    return <AdminAccessDenied permission="catalogue.view" />;
   }
 
-  const [dbProducts, dbCategories] = await Promise.all([
-    prisma.product.findMany({
-      select: {
-        id: true,
-        slug: true,
-        name: true,
-        description: true,
-        image: true,
-        price: true,
-        discountPrice: true,
-        costPrice: true,
-        gstRate: true,
-        brand: true,
-        stock: true,
-        unit: true,
-        isActive: true,
-        isFeatured: true,
-        category: { select: { name: true } },
-        _count: { select: { orderItems: true } }
-      },
-      orderBy: { createdAt: "desc" }
-    }).catch(() => []),
+  const params = await searchParams;
+
+  const page = Math.max(1, parseInt(params.page || "1", 10) || 1);
+  const pageSize = Math.min(100, Math.max(1, parseInt(params.pageSize || "20", 10) || 20));
+
+  // Parse isActive filter
+  let isActive: boolean | undefined;
+  if (params.isActive === "true") isActive = true;
+  else if (params.isActive === "false") isActive = false;
+
+  const [result, categories] = await Promise.all([
+    ProductService.list({
+      page,
+      pageSize,
+      search: params.search || undefined,
+      categoryId: params.categoryId || undefined,
+      isActive,
+      sortBy: (params.sortBy as "name" | "price" | "stock" | "createdAt") || undefined,
+      sortDir: (params.sortDir as "asc" | "desc") || undefined,
+    }),
     prisma.category.findMany({
-      orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-      select: { id: true, name: true }
-    }).catch(() => [])
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    }),
   ]);
 
-  let dbUnits = await prisma.unit.findMany({ orderBy: { name: "asc" } }).catch(() => []);
-  if (dbUnits.length === 0) {
-    const defaultUnits = ["1 pc", "10 nos", "1 kg", "500 g", "250 g", "100 g", "1 L", "500 ml", "250 ml", "1 packet", "1 box", "1 bundle"];
-    await prisma.unit.createMany({
-      data: defaultUnits.map((name) => ({ name })),
-      skipDuplicates: true
-    }).catch(() => null);
-    dbUnits = await prisma.unit.findMany({ orderBy: { name: "asc" } }).catch(() => []);
-  }
-
-  const products: AdminProduct[] = dbProducts.map((product) => ({
-    id: product.id,
-    slug: product.slug,
-    name: product.name,
-    category: product.category.name,
-    price: Number(product.price),
-    discountPrice: product.discountPrice != null ? Number(product.discountPrice) : undefined,
-    costPrice: product.costPrice != null ? Number(product.costPrice) : undefined,
-    gstRate: product.gstRate != null ? Number(product.gstRate) : undefined,
-    brand: product.brand ?? undefined,
-    stock: product.stock,
-    image: product.image,
-    description: product.description,
-    unit: product.unit,
-    isActive: product.isActive,
-    isFeatured: product.isFeatured,
-    isSold: (product as any)._count?.orderItems > 0
-  }));
-
-  const categories = dbCategories.map((c) => ({ id: c.id, name: c.name }));
-
-  const productCounts = await prisma.product.groupBy({
-    by: ["unit"],
-    _count: { _all: true },
-    where: { unit: { in: dbUnits.map((u) => u.name) } }
-  });
-  const productCountByUnit = new Map(
-    productCounts.map((count) => [count.unit, count._count._all])
-  );
-  const units = dbUnits.map((u) => ({
-    id: u.id,
-    name: u.name,
-    productCount: productCountByUnit.get(u.name) ?? 0
-  }));
+  // Serialize Decimal values for the client
+  const serialized = {
+    products: result.products.map((p) => ({
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      image: p.image,
+      price: Number(p.price),
+      discountPrice: p.discountPrice ? Number(p.discountPrice) : null,
+      stock: p.stock,
+      unit: p.unit,
+      isActive: p.isActive,
+      isFeatured: p.isFeatured,
+      category: p.category,
+    })),
+    total: result.total,
+    page: result.page,
+    pageSize: result.pageSize,
+  };
 
   return (
-    <AdminProductsPageClient
-      products={products}
+    <ProductsPageClient
+      data={serialized}
       categories={categories}
-      units={units}
+      filters={{
+        search: params.search || "",
+        categoryId: params.categoryId || "",
+        isActive: params.isActive || "",
+      }}
     />
   );
 }

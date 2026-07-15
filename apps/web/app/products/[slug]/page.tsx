@@ -63,7 +63,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
     .slice(0, 6);
 
   return (
-    <main className="min-h-screen bg-[#F7F7FA] dark:bg-[#020617]">
+    <main className="min-h-[100dvh] bg-[#F7F7FA] dark:bg-[#020617]">
       <StructuredData
         data={[
           productSchema(product),

@@ -32,7 +32,7 @@ export default async function AccountPage() {
   const storeSettings = await getPublicStoreSettings();
 
   return (
-    <main className="mx-auto min-h-screen max-w-lg space-y-4 bg-background px-4 pb-28 pt-8">
+    <main className="mx-auto min-h-[100dvh] max-w-lg space-y-4 bg-background px-4 pb-28 pt-8">
       <div className="text-center">
         <p className="text-caption font-black uppercase tracking-[0.28em] text-neutral-400">Profile</p>
         <h1 className="font-display text-lg font-black tracking-tighter text-neutral-950 dark:text-white">Your account</h1>

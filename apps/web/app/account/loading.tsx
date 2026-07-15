@@ -4,7 +4,7 @@
  */
 export default function AccountLoading() {
   return (
-    <main className="mx-auto min-h-screen max-w-lg space-y-4 bg-background px-4 pb-28 pt-8">
+    <main className="mx-auto min-h-[100dvh] max-w-lg space-y-4 bg-background px-4 pb-28 pt-8">
       {/* Header */}
       <div className="text-center space-y-1">
         <div className="h-3 w-16 mx-auto rounded bg-neutral-100 dark:bg-neutral-800 animate-pulse" />

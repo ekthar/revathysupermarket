@@ -1,8 +1,0 @@
-CREATE TABLE IF NOT EXISTS "Unit" (
-    "id" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
-    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Unit_pkey" PRIMARY KEY ("id")
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS "Unit_name_key" ON "Unit"("name");

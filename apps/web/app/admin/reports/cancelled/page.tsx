@@ -1,98 +1,131 @@
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
-import { canViewReports } from "@/lib/authz";
-import { CancelledOrdersClient } from "@/components/admin/cancelled-orders-client";
+import { getAuthContext } from "@/lib/auth-guard";
+import { hasPermission } from "@/lib/permissions";
+import { AdminPageShell, AdminAccessDenied, AdminEmptyState } from "@/components/admin/shared";
+import { XCircle } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
-export default async function CancelledOrdersReportPage() {
-  const session = await auth();
-  if (!canViewReports(session?.user?.role)) {
-    return (
-      <div className="rounded-2xl border border-border bg-card p-8">
-        <h2 className="font-display text-2xl font-bold">Cancelled Orders Report</h2>
-        <p className="mt-2 text-sm text-muted-foreground">You need report access to view this.</p>
-      </div>
-    );
+function formatDate(val: Date | string | null) {
+  if (!val) return "—";
+  return new Date(val).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+export default async function CancelledOrdersPage() {
+  const ctx = await getAuthContext();
+  if (!ctx || !hasPermission(ctx, "reports.view")) {
+    return <AdminAccessDenied permission="reports.view" />;
   }
 
-  const today = new Date();
-  const thirtyDaysAgo = new Date(today);
+  const thirtyDaysAgo = new Date();
   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-  const [cancelledOrders, totalCancelledValue, cancelledCount, totalOrderCount] = await Promise.all([
-    prisma.order.findMany({
-      where: { status: "CANCELLED" },
-      select: {
-        id: true,
-        orderNumber: true,
-        customerName: true,
-        phone: true,
-        total: true,
-        createdAt: true,
-        updatedAt: true,
-        items: { select: { name: true, quantity: true, price: true } },
-        statusEvents: {
-          where: { status: "CANCELLED" },
-          select: { note: true, createdAt: true },
-          take: 1
-        }
-      },
-      orderBy: { updatedAt: "desc" },
-      take: 100
-    }).catch(() => []),
-    prisma.order.aggregate({
-      _sum: { total: true },
-      where: { status: "CANCELLED" }
-    }).then((r) => Number(r._sum.total ?? 0)).catch(() => 0),
-    prisma.order.count({ where: { status: "CANCELLED" } }).catch(() => 0),
-    prisma.order.count().catch(() => 0)
+  const [cancelledOrders, totalOrderCount] = await Promise.all([
+    prisma.order
+      .findMany({
+        where: { status: "CANCELLED", createdAt: { gte: thirtyDaysAgo } },
+        select: {
+          id: true,
+          orderNumber: true,
+          customerName: true,
+          staffNote: true,
+          total: true,
+          createdAt: true,
+        },
+        orderBy: { createdAt: "desc" },
+        take: 100,
+      })
+      .catch(() => []),
+    prisma.order
+      .count({ where: { createdAt: { gte: thirtyDaysAgo } } })
+      .catch(() => 0),
   ]);
 
-  const cancelledRate = totalOrderCount > 0 ? ((cancelledCount / totalOrderCount) * 100).toFixed(1) : "0";
+  const cancelledCount = cancelledOrders.length;
+  const cancelPercentage =
+    totalOrderCount > 0
+      ? ((cancelledCount / totalOrderCount) * 100).toFixed(1)
+      : "0";
+
+  const breadcrumbs = [
+    { label: "Reports", href: "/admin/reports" },
+    { label: "Cancelled Orders" },
+  ];
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/20 dark:to-slate-900 p-5">
-        <p className="text-caption font-bold uppercase text-red-600 dark:text-red-400">Report</p>
-        <h1 className="mt-1 text-xl font-bold text-foreground">Cancelled Orders</h1>
-        <p className="text-caption text-muted-foreground mt-1">Track cancellations, reasons, and revenue impact</p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <p className="text-caption text-muted-foreground font-medium">Total Cancelled</p>
-          <p className="text-heading font-bold text-red-600 mt-1">{cancelledCount}</p>
-          <p className="text-micro text-muted-foreground mt-0.5">orders</p>
+    <AdminPageShell
+      eyebrow="Finance"
+      title="Cancelled Orders"
+      breadcrumbs={breadcrumbs}
+      variant="green"
+    >
+      {/* Summary */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-2xl border border-neutral-100 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">Total Cancelled (30d)</p>
+          <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">{cancelledCount}</p>
         </div>
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <p className="text-caption text-muted-foreground font-medium">Revenue Lost</p>
-          <p className="text-heading font-bold text-foreground mt-1">{new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(totalCancelledValue)}</p>
-          <p className="text-micro text-muted-foreground mt-0.5">total value</p>
+        <div className="rounded-2xl border border-neutral-100 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">% of All Orders</p>
+          <p className="mt-1 text-2xl font-bold text-red-600 dark:text-red-400">{cancelPercentage}%</p>
         </div>
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <p className="text-caption text-muted-foreground font-medium">Cancel Rate</p>
-          <p className="text-heading font-bold text-orange-600 mt-1">{cancelledRate}%</p>
-          <p className="text-micro text-muted-foreground mt-0.5">of all orders</p>
+        <div className="rounded-2xl border border-neutral-100 bg-white p-5 dark:border-neutral-800 dark:bg-neutral-900">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">Total Orders (30d)</p>
+          <p className="mt-1 text-2xl font-bold text-neutral-900 dark:text-white">{totalOrderCount}</p>
         </div>
       </div>
 
-      {/* Orders List */}
-      <CancelledOrdersClient
-        orders={cancelledOrders.map((o) => ({
-          id: o.id,
-          orderNumber: o.orderNumber,
-          customerName: o.customerName,
-          phone: o.phone,
-          total: Number(o.total),
-          createdAt: o.createdAt.toISOString(),
-          cancelledAt: o.statusEvents[0]?.createdAt?.toISOString() || o.updatedAt.toISOString(),
-          reason: o.statusEvents[0]?.note || "No reason provided",
-          items: o.items.map((i) => ({ name: i.name, quantity: i.quantity, price: Number(i.price) }))
-        }))}
-      />
-    </div>
+      {/* Table */}
+      {cancelledOrders.length === 0 ? (
+        <div className="mt-6">
+          <AdminEmptyState
+            icon={XCircle}
+            title="No cancellations"
+            description="No orders have been cancelled in the last 30 days."
+          />
+        </div>
+      ) : (
+        <div className="mt-6 overflow-hidden rounded-2xl border border-neutral-100 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-neutral-100 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-900/80">
+                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">Order #</th>
+                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">Customer</th>
+                  <th className="px-4 py-3 text-left font-medium text-neutral-600 dark:text-neutral-400">Reason</th>
+                  <th className="px-4 py-3 text-right font-medium text-neutral-600 dark:text-neutral-400">Amount</th>
+                  <th className="px-4 py-3 text-right font-medium text-neutral-600 dark:text-neutral-400">Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                {cancelledOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-neutral-50/50 dark:hover:bg-neutral-800/30">
+                    <td className="px-4 py-3 font-mono text-xs font-medium text-neutral-900 dark:text-white">
+                      {order.orderNumber}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-700 dark:text-neutral-300">
+                      {order.customerName}
+                    </td>
+                    <td className="px-4 py-3 text-neutral-500 dark:text-neutral-400">
+                      {order.staffNote || "Not specified"}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums text-neutral-900 dark:text-white">
+                      ₹{Number(order.total).toLocaleString("en-IN")}
+                    </td>
+                    <td className="px-4 py-3 text-right text-neutral-500 dark:text-neutral-400">
+                      {formatDate(order.createdAt)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </AdminPageShell>
   );
 }

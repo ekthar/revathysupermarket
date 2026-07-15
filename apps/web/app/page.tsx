@@ -13,9 +13,12 @@ import { organizationSchema, websiteSchema } from "@/lib/structured-data";
 import { categories as demoCategories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
+import { getLoyaltyConfig } from "@/lib/loyalty-config";
 import type { Product } from "@/lib/types";
 import { auth } from "@/auth";
 import { getActiveOrderSummary } from "@/lib/live-order";
+import { LoyaltyProgressBar } from "@/components/home/loyalty-progress-bar";
+import { OrderStreak } from "@/components/home/order-streak";
 
 export const revalidate = 60;
 
@@ -79,6 +82,51 @@ export default async function HomePage() {
     getActiveOrderSummary(session?.user?.id)
   ]);
 
+  // Fetch loyalty data and order streak for logged-in users
+  let loyaltyPoints = 0;
+  let nextRewardAt = 200; // default: 200 points = ₹50 off (200 * 0.25)
+  let orderStreak = 0;
+
+  if (session?.user?.id) {
+    const [loyaltyAccount, loyaltyConfig, recentOrders] = await Promise.all([
+      prisma.loyaltyAccount.findUnique({
+        where: { userId: session.user.id },
+        select: { balance: true, lifetimeEarned: true }
+      }).catch(() => null),
+      getLoyaltyConfig(),
+      prisma.order.findMany({
+        where: {
+          userId: session.user.id,
+          createdAt: { gte: new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000) },
+          status: { notIn: ["CANCELLED"] }
+        },
+        select: { createdAt: true }
+      }).catch(() => [])
+    ]);
+
+    if (loyaltyAccount) {
+      loyaltyPoints = loyaltyAccount.balance;
+      // Calculate points needed for ₹50 off: ₹50 / pointValueRupees
+      nextRewardAt = Math.ceil(50 / loyaltyConfig.pointValueRupees);
+    }
+
+    // Calculate order streak: count distinct ISO weeks with orders
+    if (recentOrders.length > 0) {
+      const weeks = new Set(
+        recentOrders.map((o) => {
+          const d = new Date(o.createdAt);
+          // Get ISO week number
+          const temp = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+          temp.setDate(temp.getDate() + 3 - ((temp.getDay() + 6) % 7));
+          const week1 = new Date(temp.getFullYear(), 0, 4);
+          const weekNum = 1 + Math.round(((temp.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
+          return `${temp.getFullYear()}-W${weekNum}`;
+        })
+      );
+      orderStreak = weeks.size;
+    }
+  }
+
   const allProducts: Product[] = dbProducts.length > 0
     ? dbProducts.map((p) => ({
         id: p.id, slug: p.slug, name: p.name,
@@ -110,7 +158,7 @@ export default async function HomePage() {
   const heroHref = banner?.href || "/products";
 
   return (
-    <main className="min-h-screen bg-[#F7F7FA] dark:bg-[#020617]">
+    <main className="min-h-[100dvh] bg-[#F7F7FA] dark:bg-[#020617]">
       {/* SEO structured data — Organization + WebSite with SearchAction */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
 
@@ -130,6 +178,20 @@ export default async function HomePage() {
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4">
         <HomeSearch products={allProducts.slice(0, 20)} />
       </div>
+
+      {/* Loyalty progress + order streak for logged-in users */}
+      {session?.user?.id && (loyaltyPoints > 0 || orderStreak >= 2) && (
+        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+            {loyaltyPoints > 0 && (
+              <div className="flex-1">
+                <LoyaltyProgressBar points={loyaltyPoints} nextRewardAt={nextRewardAt} />
+              </div>
+            )}
+            <OrderStreak weekCount={orderStreak} />
+          </div>
+        </div>
+      )}
 
       {/* Promo banners — admin-managed, unified glass cards */}
       <PromoBanners banners={promoBanners} />

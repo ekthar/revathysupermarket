@@ -62,7 +62,7 @@ export function CartSuggestions() {
             >
               <div className="relative aspect-square rounded-xl overflow-hidden bg-muted mb-2">
                 {s.image ? (
-                  <Image src={s.image} alt="" fill className="object-cover" sizes="148px" />
+                  <Image src={s.image} alt={s.name} fill className="object-cover" sizes="148px" />
                 ) : null}
               </div>
               <p className="text-xs font-bold text-foreground line-clamp-2 min-h-[2rem]">{s.name}</p>

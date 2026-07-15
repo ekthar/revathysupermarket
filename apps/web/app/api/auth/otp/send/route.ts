@@ -4,6 +4,7 @@ import { normalizeIndianPhone, createOtpToken, countRecentOtps, otpRateLimitPer1
 import { sendOtpViaWhatsApp } from "@/lib/whatsapp";
 import { sendOtpViaSms } from "@/lib/sms";
 import { isFeatureEnabled } from "@/lib/feature-flags";
+import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
 export async function POST(request: Request) {
   try {
@@ -16,6 +17,12 @@ export async function POST(request: Request) {
     }
 
     const normalizedPhone = normalizeIndianPhone(phone);
+
+    // Distributed rate limiting: max 3 OTP requests per phone per 5 minutes
+    const rl = await enforceRateLimit(`otp-send:${normalizedPhone}`, 3, 300);
+    if (rl.limited) {
+      return rateLimitResponse(rl.reset);
+    }
 
     // If role filter is provided (e.g., DELIVERY_PARTNER), verify the user exists with that role
     if (role === "DELIVERY_PARTNER") {

@@ -1,3 +1,4 @@
+import crypto from "node:crypto";
 import { SITE, STORE_COORDINATES } from "@/lib/constants";
 import { calculateDistanceKm } from "@/lib/distance";
 
@@ -49,7 +50,7 @@ export function deliverySummary(radiusKm = SITE.deliveryRadiusKm) {
 }
 
 export function createDeliveryOtp() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+  return crypto.randomInt(100000, 999999).toString();
 }
 
 export function deliveryOtpExpiryDate(minutes = 30) {

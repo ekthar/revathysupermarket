@@ -1,52 +1,101 @@
+import { getAuthContext } from "@/lib/auth-guard";
+import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
-import { canManageSettings } from "@/lib/authz";
-import { OfferManagementClient } from "@/components/admin/offer-management-client";
+import { AdminAccessDenied, AdminPageShell, AdminDataTable, AdminStatusBadge } from "@/components/admin/shared";
+import { Plus } from "lucide-react";
+import Link from "next/link";
+import type { Column } from "@/components/admin/shared/AdminDataTable";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminOffersPage() {
-  const session = await auth();
-  if (!canManageSettings(session?.user?.role)) {
-    return (
-      <div className="rounded-xl border border-border bg-card p-8 shadow-soft">
-        <h2 className="font-display text-3xl font-black">Offers</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Owner access is required.</p>
-      </div>
-    );
+interface Props { searchParams: Promise<{ page?: string }> }
+
+export default async function AdminOffersPage({ searchParams }: Props) {
+  const ctx = await getAuthContext();
+  if (!ctx || !hasPermission(ctx, "marketing.view")) {
+    return <AdminAccessDenied permission="marketing.view" />;
   }
 
-  const [offers, categories] = await Promise.all([
-    prisma.offer.findMany({ orderBy: { createdAt: "desc" } }).catch(() => []),
-    prisma.category.findMany({ select: { id: true, name: true }, orderBy: { name: "asc" } }).catch(() => [])
+  const params = await searchParams;
+  const page = Math.max(1, Number(params.page) || 1);
+  const pageSize = 20;
+
+  const [offers, total] = await Promise.all([
+    prisma.offer.findMany({
+      orderBy: { createdAt: "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize,
+    }),
+    prisma.offer.count(),
   ]);
 
+  type OfferRow = (typeof offers)[number];
+
+  const columns: Column<OfferRow>[] = [
+    { key: "title", label: "Title", render: (o) => (
+      <div className="flex items-center gap-2">
+        <span className="font-medium text-neutral-900 dark:text-neutral-100">{o.title}</span>
+        {o.badge && (
+          <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+            {o.badge}
+          </span>
+        )}
+      </div>
+    )},
+    { key: "discountType", label: "Type", render: (o) => (
+      <span className="capitalize text-neutral-600 dark:text-neutral-400">{o.discountType}</span>
+    )},
+    { key: "discountValue", label: "Value", render: (o) => (
+      <span className="font-semibold">
+        {o.discountType === "percentage" ? `${Number(o.discountValue)}% OFF` : `₹${Number(o.discountValue)} OFF`}
+      </span>
+    )},
+    { key: "categoryId", label: "Scope", hideOnMobile: true, render: (o) => (
+      <span className="text-xs text-neutral-500">
+        {o.productId ? "Product" : o.categoryId ? "Category" : "All"}
+      </span>
+    )},
+    { key: "isActive", label: "Status", render: (o) => (
+      <AdminStatusBadge label={o.isActive ? "Active" : "Inactive"} variant={o.isActive ? "success" : "neutral"} />
+    )},
+    { key: "startsAt", label: "Dates", hideOnMobile: true, render: (o) => (
+      <span className="text-xs text-neutral-500">
+        {o.startsAt ? new Date(o.startsAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "—"}
+        {" → "}
+        {o.expiresAt ? new Date(o.expiresAt).toLocaleDateString("en-IN", { day: "numeric", month: "short" }) : "∞"}
+      </span>
+    )},
+    { key: "actions", label: "", align: "right", render: (o) => (
+      <Link href={`/admin/offers/${o.id}`} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">
+        Edit
+      </Link>
+    )},
+  ];
+
   return (
-    <div>
-      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <p className="text-xs font-black uppercase text-primary">Promotions</p>
-        <h1 className="mt-2 font-display text-4xl font-black leading-tight">Offers & Deals</h1>
-        <p className="mt-2 text-sm text-muted-foreground">Create product or category-level offers. Customers see badges on applicable products.</p>
-      </section>
-      <OfferManagementClient
-        offers={offers.map((o) => ({
-          id: o.id,
-          title: o.title,
-          description: o.description,
-          discountType: o.discountType,
-          discountValue: Number(o.discountValue),
-          categoryId: o.categoryId,
-          productId: o.productId,
-          minQuantity: o.minQuantity,
-          maxDiscount: o.maxDiscount ? Number(o.maxDiscount) : null,
-          isActive: o.isActive,
-          startsAt: o.startsAt?.toISOString() || null,
-          expiresAt: o.expiresAt?.toISOString() || null,
-          image: o.image,
-          badge: o.badge
-        }))}
-        categories={categories}
+    <AdminPageShell
+      eyebrow="Marketing"
+      title="Offers"
+      variant="green"
+      breadcrumbs={[{ label: "Marketing" }, { label: "Offers" }]}
+      actions={
+        <Link href="/admin/offers/new" className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm font-medium text-neutral-900 shadow-sm transition-colors hover:bg-neutral-50">
+          <Plus className="h-4 w-4" />
+          Add Offer
+        </Link>
+      }
+    >
+      <AdminDataTable
+        columns={columns}
+        data={offers}
+        getRowKey={(o) => o.id}
+        emptyState={{ title: "No offers yet", description: "Create your first offer to attract customers.", action: { label: "Add Offer", href: "/admin/offers/new" } }}
       />
-    </div>
+      {total > pageSize && (
+        <div className="mt-4 text-center text-xs text-neutral-500">
+          Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
+        </div>
+      )}
+    </AdminPageShell>
   );
 }

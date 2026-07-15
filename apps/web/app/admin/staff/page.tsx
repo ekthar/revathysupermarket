@@ -37,7 +37,7 @@ export default async function AdminStaffPage() {
       vehicleInfo: true,
       staffPermissions: { select: { permission: true } },
     },
-  });
+  }).catch(() => []);
 
   const serialized = staffMembers.map((m) => ({
     id: m.id,

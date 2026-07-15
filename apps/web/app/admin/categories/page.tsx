@@ -18,7 +18,7 @@ export default async function AdminCategoriesPage() {
     include: {
       _count: { select: { products: true } },
     },
-  });
+  }).catch(() => []);
 
   // Check which categories have products with orders (can't be deleted)
   const categoriesWithOrders = await prisma.category.findMany({
@@ -26,7 +26,7 @@ export default async function AdminCategoriesPage() {
       products: { some: { orderItems: { some: {} } } },
     },
     select: { id: true },
-  });
+  }).catch(() => []);
   const salesSet = new Set(categoriesWithOrders.map((c) => c.id));
 
   const serialized = categories.map((cat) => ({

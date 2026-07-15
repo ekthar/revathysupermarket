@@ -31,7 +31,7 @@ export async function POST(req: Request) {
   if (limit.limited) return rateLimitResponse(limit.reset);
 
   const body = await req.json();
-  const { name, email, phone, password, role, permissions, vehicleInfo } = body as {
+  const { name, email, phone, password, role, permissions, vehicleInfo, adminPassword } = body as {
     name: string;
     email: string;
     phone?: string;
@@ -39,11 +39,20 @@ export async function POST(req: Request) {
     role: StaffRole;
     permissions: PermissionKey[];
     vehicleInfo?: string;
+    adminPassword?: string;
   };
 
   // Validation
   if (!name || !email || !password || !role) {
     return NextResponse.json({ error: "Missing required fields", code: "VALIDATION_ERROR" }, { status: 400 });
+  }
+
+  // Verify admin password for authorization
+  if (adminPassword) {
+    const admin = await prisma.user.findUnique({ where: { id: result.ctx.userId }, select: { passwordHash: true } });
+    if (!admin?.passwordHash || !(await bcrypt.compare(adminPassword, admin.passwordHash))) {
+      return NextResponse.json({ error: "Admin password incorrect. Cannot create staff.", code: "AUTH_FAILED" }, { status: 403 });
+    }
   }
 
   if (!["MANAGER", "STAFF", "PACKING_STAFF", "DELIVERY_PARTNER"].includes(role)) {

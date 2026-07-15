@@ -16,13 +16,17 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   const parsed = staffUpdateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ error: "Invalid staff update." }, { status: 400 });
 
-  const data = {
-    isActive: parsed.data.isActive,
-    passwordHash: parsed.data.password ? await bcrypt.hash(parsed.data.password, 12) : undefined,
-    passwordVersion: parsed.data.password ? { increment: 1 } : undefined,
-    authVersion: parsed.data.password || parsed.data.isActive !== undefined ? { increment: 1 } : undefined
-  };
-  const staff = await prisma.user.update({ where: { id }, data, select: { id: true, role: true } });
+  const data: Record<string, unknown> = {};
+  if (parsed.data.name !== undefined) data.name = parsed.data.name;
+  if (parsed.data.isActive !== undefined) data.isActive = parsed.data.isActive;
+  if (parsed.data.password) {
+    data.passwordHash = await bcrypt.hash(parsed.data.password, 12);
+    data.passwordVersion = { increment: 1 };
+  }
+  if (parsed.data.password || parsed.data.isActive !== undefined) {
+    data.authVersion = { increment: 1 };
+  }
+  const staff = await prisma.user.update({ where: { id }, data, select: { id: true, role: true, name: true } });
   if (parsed.data.password || parsed.data.isActive !== undefined) await prisma.session.deleteMany({ where: { userId: id } });
   await writeAuditLog({
     actorId: session?.user?.id,

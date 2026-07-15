@@ -15,7 +15,7 @@ export default async function AdminPromoCodesPage() {
 
   const codes = await prisma.promoCode.findMany({
     orderBy: { createdAt: "desc" },
-  });
+  }).catch(() => []);
 
   const serialized = codes.map((c) => ({
     id: c.id,

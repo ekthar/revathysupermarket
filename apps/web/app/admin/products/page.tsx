@@ -34,22 +34,22 @@ export default async function AdminProductsPage() {
         category: { select: { name: true } },
       },
       orderBy: { createdAt: "desc" },
-    }),
+    }).catch(() => []),
     prisma.category.findMany({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
-    }),
+    }).catch(() => []),
     prisma.unit.findMany({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
-    }),
+    }).catch(() => []),
   ]);
 
   // Count products per unit manually (no prisma relation)
   const productCounts = await prisma.product.groupBy({
     by: ["unit"],
     _count: { _all: true },
-  });
+  }).catch(() => []);
   const countMap = new Map(productCounts.map((c) => [c.unit, c._count._all]));
 
   // Serialize for client (Decimal → number, safe image URLs)

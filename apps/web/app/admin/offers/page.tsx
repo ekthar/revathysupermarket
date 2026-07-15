@@ -16,11 +16,11 @@ export default async function AdminOffersPage() {
   const [offers, categories] = await Promise.all([
     prisma.offer.findMany({
       orderBy: { createdAt: "desc" },
-    }),
+    }).catch(() => []),
     prisma.category.findMany({
       select: { id: true, name: true },
       orderBy: { name: "asc" },
-    }),
+    }).catch(() => []),
   ]);
 
   const serialized = offers.map((o) => ({

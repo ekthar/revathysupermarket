@@ -125,6 +125,7 @@ export const staffSchema = z.object({
 });
 
 export const staffUpdateSchema = z.object({
+  name: z.string().min(2).max(100).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(8).optional()
 });

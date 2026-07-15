@@ -25,6 +25,17 @@ export async function DELETE(_request: Request, { params }: { params: Promise<{ 
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const { id } = await params;
+
+  // Check if this is the primary (default) address — cannot delete
+  const address = await prisma.address.findFirst({ where: { id, userId: session.user.id } });
+  if (!address) return NextResponse.json({ error: "Address not found." }, { status: 404 });
+  if (address.isDefault) {
+    return NextResponse.json(
+      { error: "Primary address cannot be deleted. Set another address as primary first." },
+      { status: 400 }
+    );
+  }
+
   await prisma.address.deleteMany({ where: { id, userId: session.user.id } });
   return NextResponse.json({ ok: true });
 }

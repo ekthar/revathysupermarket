@@ -589,26 +589,38 @@ function BottomSheet({
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", stiffness: 350, damping: 35 }}
-        drag="y"
-        dragConstraints={{ top: 0 }}
-        dragElastic={0.1}
-        onDragEnd={(_, info) => { if (info.offset.y > 100) onClose(); }}
-        className="max-h-[92dvh] w-full max-w-lg overflow-y-auto rounded-t-3xl bg-white p-5 shadow-2xl dark:bg-slate-900"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 1.25rem)" }}
+        className="flex max-h-[90dvh] w-full max-w-lg flex-col rounded-t-3xl bg-white shadow-2xl dark:bg-slate-900"
       >
-        {/* Drag Handle */}
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-slate-300 dark:bg-slate-700" />
-
-        <div className="flex items-center justify-between">
-          <h2 className="text-xl font-black text-slate-900 dark:text-white">{title}</h2>
-          <button
-            onClick={onClose}
-            className="h-10 rounded-xl px-3 text-sm font-bold text-slate-500 dark:text-slate-400"
-          >
-            Close
-          </button>
+        {/* Drag Handle + Title (drag area) */}
+        <div
+          className="shrink-0 px-5 pt-4 pb-3 border-b border-slate-100 dark:border-slate-800 cursor-grab active:cursor-grabbing"
+          onPointerDown={(e) => {
+            const el = e.currentTarget.parentElement;
+            if (!el) return;
+            const startY = e.clientY;
+            const handleMove = (ev: PointerEvent) => {
+              const dy = ev.clientY - startY;
+              if (dy > 80) { onClose(); document.removeEventListener("pointermove", handleMove); document.removeEventListener("pointerup", handleUp); }
+            };
+            const handleUp = () => { document.removeEventListener("pointermove", handleMove); document.removeEventListener("pointerup", handleUp); };
+            document.addEventListener("pointermove", handleMove);
+            document.addEventListener("pointerup", handleUp);
+          }}
+        >
+          <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-200 dark:bg-slate-700" />
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-black text-slate-900 dark:text-white">{title}</h3>
+            <button type="button" onClick={onClose} className="text-sm font-bold text-slate-400 hover:text-slate-600">Close</button>
+          </div>
         </div>
-        <div className="mt-4">{children}</div>
+
+        {/* Scrollable content */}
+        <div
+          className="flex-1 overflow-y-auto overscroll-contain px-5 py-4"
+          style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        >
+          {children}
+        </div>
       </motion.div>
     </motion.div>
   );

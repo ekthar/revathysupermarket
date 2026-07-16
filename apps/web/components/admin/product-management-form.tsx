@@ -126,7 +126,7 @@ export function ProductManagementForm({ categories, units }: Props) {
       category: validateField("category", category),
       price: validateField("price", price),
       discountPrice: validateField("discountPrice", discountPrice, { price, discountPrice }),
-      description: validateField("description", description)
+      description: !description.trim() ? "Description is required" : validateField("description", description)
     };
 
     const hasErrors = Object.values(newErrors).some(Boolean);
@@ -240,7 +240,7 @@ export function ProductManagementForm({ categories, units }: Props) {
           name="discountPrice"
           placeholder="Sales price (optional)"
           type="number"
-          min="1"
+          min="0"
           step="0.01"
           className="h-12 rounded-2xl"
           onBlur={handleBlur}
@@ -275,11 +275,11 @@ export function ProductManagementForm({ categories, units }: Props) {
           className="h-12 w-full rounded-2xl border border-input bg-background px-4 text-sm font-semibold outline-none focus:border-primary focus:ring-1 focus:ring-primary"
         >
           <option value="">Select GST %</option>
-          <option value="0">0%</option>
-          <option value="3">3%</option>
+          <option value="0">0% (Exempt)</option>
           <option value="5">5%</option>
           <option value="12">12%</option>
-          <option value="40">40%</option>
+          <option value="18">18%</option>
+          <option value="28">28%</option>
         </select>
       </div>
 
@@ -340,8 +340,7 @@ export function ProductManagementForm({ categories, units }: Props) {
         <Textarea
           name="description"
           className="rounded-2xl"
-          placeholder="Product description (min 10 characters)"
-          required
+          placeholder="Product description (min 3 characters)"
           onBlur={handleBlur}
         />
         {errors.description && <p className="text-xs font-semibold text-red-600">{errors.description}</p>}
@@ -354,7 +353,7 @@ export function ProductManagementForm({ categories, units }: Props) {
           <Upload className="h-4 w-4" />
           {isUploading ? "Uploading..." : "Upload image"}
         </Button>
-        <Button className="w-full sm:w-auto" disabled={isSubmitting || isUploading}>
+        <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || isUploading}>
           <Plus className="h-4 w-4" />
           {isSubmitting ? "Adding product..." : "Add product"}
         </Button>

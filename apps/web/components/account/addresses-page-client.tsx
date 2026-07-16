@@ -55,9 +55,8 @@ export function AddressesPageClient({ addresses: initial }: { addresses: Address
   }
 
   async function addAddress() {
-    if (!form.houseName || !form.street || !form.landmark || !form.pincode) { showToast("Fill all required fields", "error"); return; }
-    if (!/^\d{6}$/.test(form.pincode)) { showToast("Pincode must be 6 digits", "error"); return; }
     if (!form.houseName.trim()) { showToast("House name / flat number is required", "error"); return; }
+    if (!form.pincode || !/^\d{6}$/.test(form.pincode)) { showToast("Pincode must be 6 digits", "error"); return; }
     setSaving(true);
     try {
       const res = await fetch("/api/account/addresses", {

@@ -430,7 +430,7 @@ export function AddressSelector({
                     return;
                   }
                   if (!locationOk) {
-                    showToast("Please pin your home location using GPS or map before saving", "error");
+                    showToast("Pin your home location first — tap Detect or Pin on map above", "error");
                     return;
                   }
                   // Save the address to DB

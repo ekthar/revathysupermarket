@@ -1,5 +1,17 @@
 # Animation Library Guidelines
 
+## Decision: Keep Both (GSAP + Framer Motion)
+
+**Rationale:** Each library excels at different things. The 60KB combined cost is
+acceptable for a consumer grocery app where engagement and perceived quality
+matter more than saving 30KB. Attempting to do everything with one library
+would result in worse code quality and fighting against each library's design.
+
+**Bundle impact:** ~60KB gzipped total (GSAP 28KB + Framer Motion 32KB).
+This is less than a single product image and loads in parallel with content.
+
+**Rule: Never remove one without migrating ALL its usages first.**
+
 ## When to use GSAP (lib/gsap.ts)
 - Scroll-triggered animations (ScrollTrigger)
 - Timeline sequences (orchestrated reveals)

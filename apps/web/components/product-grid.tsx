@@ -10,10 +10,10 @@ import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
 import { EmptySearchState } from "@/components/ui/empty-states";
+import { LazyRender } from "@/components/ui/lazy-render";
 import { categories as demoCategories } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { prefetchProductImages } from "@/lib/hooks/use-preload";
-import { useVirtualGrid } from "@/lib/hooks/use-virtual-grid";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
@@ -55,41 +55,7 @@ async function fetchProducts(params: {
   return res.json();
 }
 
-// Lazy-rendered product card - only renders when near viewport
-const LazyProductCard = memo(function LazyProductCard({ product }: { product: Product }) {
-  const ref = useRef<HTMLDivElement>(null);
-  const [isVisible, setIsVisible] = useState(false);
-
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: "200px" } // Start rendering 200px before it enters viewport
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
-
-  if (!isVisible) {
-    // Placeholder with same dimensions to avoid layout shift
-    return <div ref={ref} className="aspect-[3/4] rounded-2xl bg-neutral-50 dark:bg-neutral-900 animate-pulse" />;
-  }
-
-  return (
-    <div ref={ref}>
-      <ProductCard product={product} />
-    </div>
-  );
-});
-
-// Virtualized product list - only renders visible items + 2 screens buffer
+// Virtualized product list - first 8 render immediately, rest use LazyRender groups
 const VirtualProductList = memo(function VirtualProductList({
   items,
   hasNextPage,
@@ -101,30 +67,38 @@ const VirtualProductList = memo(function VirtualProductList({
   isFetchingNextPage: boolean;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
 }) {
-  const { renderCount, hasMoreToRender, sentinelRef } = useVirtualGrid({
-    totalItems: items.length,
-    initialRenderCount: 8, // Above-the-fold
-    bufferItems: 8, // Render 8 more at a time (2 rows × 4 cols or 4 rows × 2 cols)
-    estimatedRowHeight: 320,
-  });
+  // D5: Split items — first 8 above-the-fold, rest in LazyRender groups of 4
+  const aboveFold = items.slice(0, 8);
+  const belowFold = items.slice(8);
+
+  // Chunk below-fold items into groups of 4 for LazyRender
+  const chunks: Product[][] = [];
+  for (let i = 0; i < belowFold.length; i += 4) {
+    chunks.push(belowFold.slice(i, i + 4));
+  }
 
   return (
     <>
       <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(min(150px,45vw),1fr))] gap-2 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {items.slice(0, renderCount).map((product, index) => (
-          // First 8 render immediately, rest use lazy rendering as they enter buffer
-          index < 8 ? (
-            <ProductCard key={product.id} product={product} />
-          ) : (
-            <LazyProductCard key={product.id} product={product} />
-          )
+        {/* First 8 cards render immediately (above the fold) */}
+        {aboveFold.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+
+        {/* Cards 9+ wrapped in LazyRender groups of 4 */}
+        {chunks.map((chunk, chunkIndex) => (
+          <LazyRender
+            key={`chunk-${chunkIndex}`}
+            className="contents"
+            height={320}
+            rootMargin="200px"
+          >
+            {chunk.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))}
+          </LazyRender>
         ))}
       </div>
-
-      {/* Sentinel for progressive rendering - triggers more items to render */}
-      {hasMoreToRender && (
-        <div ref={sentinelRef} className="h-1" aria-hidden="true" />
-      )}
 
       {/* Infinite scroll trigger for fetching next page from server */}
       {hasNextPage ? (

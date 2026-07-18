@@ -56,28 +56,49 @@
         </provider>
     </application>
 
-    <!-- ═══ CUSTOMER APP PERMISSIONS ═══ -->
-    <!-- Only permissions needed for the shopping experience. -->
-    <!-- Delivery/Staff apps add their own via Capacitor plugin manifests. -->
+    <!-- ═══════════════════════════════════════════════════════════════════════
+         PERMISSIONS — Base set (Customer app).
+         Delivery/Staff variants get additional permissions injected at build time.
+         See build-capacitor.yml for per-variant manifest merging.
+    ═══════════════════════════════════════════════════════════════════════ -->
 
     <!-- Core: Internet access -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- Location: foreground only (for address selection / delivery radius check) -->
+    <!-- Location: foreground (address selection / delivery radius check) -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <!-- Push notifications (Android 13+) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- Vibration: haptic feedback -->
+    <!-- Vibration: haptic feedback + alarm vibration -->
     <uses-permission android:name="android.permission.VIBRATE" />
 
-    <!-- Camera: profile picture upload (optional) -->
+    <!-- Camera: profile picture upload -->
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!-- Biometric: fingerprint/face login -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
+
+    <!-- Wake lock: keep screen on during alarm -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+
+    <!-- ═══ DELIVERY + STAFF ONLY (injected at build time) ═══ -->
+    <!-- Background location (delivery GPS tracking) -->
+    <!-- android.permission.ACCESS_BACKGROUND_LOCATION -->
+    <!-- Foreground service (background GPS + alarm) -->
+    <!-- android.permission.FOREGROUND_SERVICE -->
+    <!-- android.permission.FOREGROUND_SERVICE_LOCATION -->
+    <!-- Exact alarms (order assignment wake-up) -->
+    <!-- android.permission.SCHEDULE_EXACT_ALARM -->
+    <!-- android.permission.USE_EXACT_ALARM -->
+    <!-- Full-screen intent (show alarm over lock screen) -->
+    <!-- android.permission.USE_FULL_SCREEN_INTENT -->
+    <!-- Boot receiver (re-register alarms after reboot) -->
+    <!-- android.permission.RECEIVE_BOOT_COMPLETED -->
+    <!-- Battery optimization exemption request -->
+    <!-- android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS -->
 
 </manifest>

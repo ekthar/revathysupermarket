@@ -65,6 +65,12 @@ const config: CapacitorConfig = {
       iconColor: "#059669",
       sound: "delivery_alarm.wav",
     },
+    Camera: {
+      // Proof-of-delivery photos
+    },
+    BackgroundGeolocation: {
+      // @capacitor-community/background-geolocation
+    },
   },
 };
 

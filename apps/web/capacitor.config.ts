@@ -58,6 +58,12 @@ const config: CapacitorConfig = {
     CapacitorHttp: {
       enabled: true, // Native HTTP for better performance
     },
+    LocalNotifications: {
+      smallIcon: "ic_stat_icon",
+      iconColor: "#22C55E",
+      sound: "notification.wav",
+    },
+    Geolocation: {},
   },
 };
 

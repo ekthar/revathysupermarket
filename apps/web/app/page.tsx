@@ -21,6 +21,7 @@ import { getActiveOrderSummary } from "@/lib/live-order";
 import { LoyaltyProgressBar } from "@/components/home/loyalty-progress-bar";
 import { OrderStreak } from "@/components/home/order-streak";
 import { InfiniteMarquee } from "@/components/ui/gsap/infinite-marquee";
+import { SplashHider } from "@/components/ui/splash-hider";
 
 export const revalidate = 60;
 
@@ -182,6 +183,9 @@ export default async function HomePage() {
     <main className="min-h-[100dvh] bg-background">
       {/* SEO structured data — Organization + WebSite with SearchAction */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
+
+      {/* Hide native splash screen after first paint */}
+      <SplashHider />
 
       {/* Location prompt — shown on first visit if no saved location */}
       <LocationPrompt />

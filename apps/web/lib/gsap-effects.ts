@@ -6,7 +6,14 @@
  *   gsap.effects.fadeUp(element);
  *   gsap.effects.countUp(element, { endValue: 45 });
  *   gsap.effects.clipReveal(element);
+ *
+ * This file is safe to import only in client components.
+ * Effects are registered once at module evaluation time.
  */
+
+if (typeof window === "undefined") {
+  throw new Error("lib/gsap-effects.ts must only be imported in client components (requires window/DOM).");
+}
 
 import { gsap } from "@/lib/gsap";
 

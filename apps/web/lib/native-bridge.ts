@@ -28,6 +28,7 @@ export async function syncStatusBarToRoute(pathname: string, isDark: boolean): P
   if (!isNative) return;
 
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { StatusBar, Style } = await import(/* webpackIgnore: true */ "@capacitor/status-bar");
 
     if (pathname.startsWith("/admin")) {
@@ -48,6 +49,7 @@ export async function syncStatusBarToRoute(pathname: string, isDark: boolean): P
 export async function setStatusBarLight(): Promise<void> {
   if (!isNative) return;
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { StatusBar, Style } = await import(/* webpackIgnore: true */ "@capacitor/status-bar");
     await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: "#FFFFFF" });
@@ -57,6 +59,7 @@ export async function setStatusBarLight(): Promise<void> {
 export async function setStatusBarDark(): Promise<void> {
   if (!isNative) return;
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { StatusBar, Style } = await import(/* webpackIgnore: true */ "@capacitor/status-bar");
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: "#0A0A0A" });
@@ -76,6 +79,7 @@ export async function hapticImpact(style: "light" | "medium" | "heavy" = "light"
     return;
   }
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { Haptics, ImpactStyle } = await import(/* webpackIgnore: true */ "@capacitor/haptics");
     const map = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy };
     await Haptics.impact({ style: map[style] });
@@ -95,6 +99,7 @@ export async function hapticNotification(type: "success" | "warning" | "error" =
     return;
   }
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { Haptics, NotificationType } = await import(/* webpackIgnore: true */ "@capacitor/haptics");
     const map = { success: NotificationType.Success, warning: NotificationType.Warning, error: NotificationType.Error };
     await Haptics.notification({ type: map[type] });
@@ -110,6 +115,7 @@ export async function hapticSelection(): Promise<void> {
     return;
   }
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { Haptics } = await import(/* webpackIgnore: true */ "@capacitor/haptics");
     await Haptics.selectionChanged();
   } catch {
@@ -122,6 +128,7 @@ export async function hapticSelection(): Promise<void> {
 export async function setKeyboardStyle(isDark: boolean): Promise<void> {
   if (!isNative) return;
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { Keyboard, KeyboardStyle } = await import(/* webpackIgnore: true */ "@capacitor/keyboard");
     await Keyboard.setStyle({ style: isDark ? KeyboardStyle.Dark : KeyboardStyle.Light });
   } catch {}
@@ -137,8 +144,9 @@ export function registerBackButton(handler: () => void): () => void {
   if (!isNative) return () => {};
 
   let listener: any;
-  import(/* webpackIgnore: true */ "@capacitor/app").then(({ App }) => {
-    listener = App.addListener("backButton", ({ canGoBack }) => {
+  // @ts-ignore — only available in Capacitor native shell
+  import(/* webpackIgnore: true */ "@capacitor/app").then(({ App }: any) => {
+    listener = App.addListener("backButton", ({ canGoBack }: { canGoBack: boolean }) => {
       if (canGoBack) {
         handler();
       } else {
@@ -160,8 +168,9 @@ export function onAppStateChange(cb: (isActive: boolean) => void): () => void {
   if (!isNative) return () => {};
 
   let listener: any;
-  import(/* webpackIgnore: true */ "@capacitor/app").then(({ App }) => {
-    listener = App.addListener("appStateChange", ({ isActive }) => cb(isActive));
+  // @ts-ignore — only available in Capacitor native shell
+  import(/* webpackIgnore: true */ "@capacitor/app").then(({ App }: any) => {
+    listener = App.addListener("appStateChange", ({ isActive }: { isActive: boolean }) => cb(isActive));
   }).catch(() => {});
 
   return () => {
@@ -177,6 +186,7 @@ export function onAppStateChange(cb: (isActive: boolean) => void): () => void {
 export async function hideSplash(): Promise<void> {
   if (!isNative) return;
   try {
+    // @ts-ignore — only available in Capacitor native shell
     const { SplashScreen } = await import(/* webpackIgnore: true */ "@capacitor/splash-screen");
     await SplashScreen.hide({ fadeOutDuration: 300 });
   } catch {}

@@ -105,8 +105,8 @@ export function AnimatedProductSection({
     { scope: sectionRef }
   );
 
-  // A8: Refresh ScrollTrigger when cv-auto section enters viewport for the first time
-  // This recalculates trigger positions after content-visibility: auto renders the content
+  // A8: Refresh ScrollTrigger when cv-auto section enters viewport
+  // Pre-refresh with generous margin so animations are ready before visible
   useEffect(() => {
     const el = sectionRef.current;
     if (!el) return;
@@ -115,13 +115,16 @@ export function AnimatedProductSection({
       (entries) => {
         for (const entry of entries) {
           if (entry.isIntersecting) {
-            ScrollTrigger.refresh();
+            // Small delay to ensure content-visibility has rendered content
+            requestAnimationFrame(() => {
+              ScrollTrigger.refresh();
+            });
             observer.disconnect();
             break;
           }
         }
       },
-      { rootMargin: "100px" }
+      { rootMargin: "300px" } // Increased from 100px — refresh BEFORE user reaches section
     );
 
     observer.observe(el);

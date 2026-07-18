@@ -279,26 +279,16 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
         </motion.div>
       )}
 
-      {/* Savings celebration when over ₹100 */}
-      {totalSavings > 100 && (
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mt-2 flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2.5 border border-amber-200 dark:bg-amber-950/30 dark:border-amber-800"
-        >
-          <Sparkles className="h-4 w-4 text-amber-500" />
-          <span className="text-sm font-semibold text-amber-700 dark:text-amber-300">You&apos;re saving {formatCurrency(totalSavings)} on this order!</span>
-        </motion.div>
-      )}
+      {/* Savings celebration when over ₹100 — merged into main banner above */}
 
       {/* Cart Items */}
-      <div className="mt-3 rounded-lg bg-white shadow-elevation-3 divide-y divide-neutral-50 dark:divide-neutral-800">
+      <div className="mt-3 rounded-lg bg-white dark:bg-neutral-900 shadow-elevation-3 divide-y divide-neutral-50 dark:divide-neutral-800">
         <AnimatePresence initial={false}>
           {items.map((item) => {
             const price = item.discountPrice ?? item.price;
             return (
               <div key={item.id} className="relative overflow-hidden">
-                {/* Swipe delete indicator (background — hidden until swiped) */}
+                {/* Swipe delete indicator (background) */}
                 <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center bg-red-500">
                   <Trash2 className="h-5 w-5 text-white" />
                 </div>
@@ -310,7 +300,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                   transition={springs.layout}
                   drag="x"
                   dragConstraints={{ left: -80, right: 0 }}
-                  dragElastic={0.05}
+                  dragElastic={0.15}
                   onDragEnd={(_, info) => {
                     if (info.offset.x < -60) {
                       haptic("medium");
@@ -320,10 +310,6 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                   className="relative bg-white dark:bg-neutral-900 px-4 py-3"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="h-4 w-4 rounded-sm border-2 border-secondary-500 flex items-center justify-center shrink-0 hidden xs:flex">
-                      <div className="h-2 w-2 rounded-full bg-secondary-500" />
-                    </div>
-
                     <div className="flex-1 min-w-0">
                       <p className="text-body font-semibold text-neutral-800 dark:text-white truncate">{item.name}</p>
                       <p className="text-caption text-neutral-400 mt-0.5">{item.unit || "per item"}</p>
@@ -333,28 +319,38 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                         aria-label={`Decrease ${item.name} quantity`}
                       >
-                        <Minus className="h-3 w-3" />
+                        <Minus className="h-3.5 w-3.5" />
                       </button>
-                      <span className="w-5 text-center text-caption font-bold text-white">{item.quantity}</span>
+                      <span className="w-6 text-center text-caption font-bold text-white tabular-nums">{item.quantity}</span>
                       <button
                         type="button"
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-10 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
+                        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
                         aria-label={`Increase ${item.name} quantity`}
                       >
-                        <Plus className="h-3 w-3" />
+                        <Plus className="h-3.5 w-3.5" />
                       </button>
                     </div>
 
                     <div className="text-right shrink-0 min-w-[52px]">
-                      <p className="text-body font-bold text-neutral-900 dark:text-white">{formatCurrency(price * item.quantity)}</p>
+                      <p className="text-body font-bold text-neutral-900 dark:text-white tabular-nums">{formatCurrency(price * item.quantity)}</p>
                       {item.discountPrice && (
                         <p className="text-micro text-neutral-400 line-through">{formatCurrency(item.price * item.quantity)}</p>
                       )}
                     </div>
+
+                    {/* Visible delete button — always accessible */}
+                    <button
+                      type="button"
+                      onClick={() => handleRemove(item)}
+                      className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                      aria-label={`Remove ${item.name} from cart`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
                   </div>
                 </motion.div>
               </div>
@@ -457,13 +453,6 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
             {gstRate > 0 && (
               <p className="text-micro text-neutral-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>
             )}
-          </div>
-        )}
-        {totalSavings > 0 && (
-          <div className="mt-3 rounded-lg bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-100 dark:border-secondary-900 px-3 py-2">
-            <p className="text-caption font-semibold text-secondary-700 dark:text-secondary-300">
-              You&apos;re saving {formatCurrency(totalSavings)} on this order!
-            </p>
           </div>
         )}
       </div>

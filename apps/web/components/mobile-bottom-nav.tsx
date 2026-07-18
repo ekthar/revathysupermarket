@@ -98,16 +98,14 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
       aria-current={active ? "page" : undefined}
       className={cn(
         "relative flex min-w-[44px] flex-col items-center justify-center gap-0.5 rounded-2xl px-2 py-2 text-micro transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-primary/30",
-        active ? "text-white dark:text-black" : "text-neutral-500 hover:bg-white/65 dark:hover:bg-neutral-800/65"
+        active ? "text-white dark:text-neutral-900" : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
       )}
     >
-      {/* Shared-layout active indicator — a single pill that slides between
-          tabs via GPU layout projection. `initial={false}` prevents a slide-in
-          from the wrong position on first mount. */}
+      {/* Shared-layout active indicator — slides between tabs via GPU layout projection */}
       {active && (
         <motion.div
           layoutId="nav-active-indicator"
-          className="absolute inset-0 rounded-2xl bg-black dark:bg-white shadow-elevation-3"
+          className="absolute inset-0 rounded-2xl bg-neutral-900 dark:bg-neutral-100 shadow-sm"
           style={{ willChange: "transform" }}
           transition={springs.indicator}
           initial={false}

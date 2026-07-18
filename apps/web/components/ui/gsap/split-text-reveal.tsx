@@ -1,16 +1,17 @@
 "use client";
 
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 
 /**
  * SplitTextReveal — per-word (or per-character) text entrance animation.
  *
- * Splits text into <span> wrappers and staggers them in with GSAP.
- * Supports ScrollTrigger for on-scroll reveals.
+ * Safety: text is VISIBLE by default (opacity: 1). GSAP sets it to 0 then
+ * animates to 1. If GSAP fails (CSP, ad-blocker, SSR mismatch), text remains
+ * visible because the CSS default is opacity: 1.
  *
- * Honors `prefers-reduced-motion`: shows text immediately with a simple fade.
+ * This prevents the critical bug where hero text could be permanently invisible.
  */
 export function SplitTextReveal({
   children,
@@ -36,8 +37,9 @@ export function SplitTextReveal({
   delay?: number;
 }) {
   const containerRef = useRef<HTMLSpanElement>(null);
+  const animatedRef = useRef(false);
 
-  // Normalize whitespace before splitting (A18)
+  // Normalize whitespace
   const normalizedText = children.replace(/\s+/g, ' ').trim();
 
   const segments =
@@ -51,7 +53,11 @@ export function SplitTextReveal({
       if (!el) return;
 
       if (prefersReducedMotion()) {
-        gsap.set(el.querySelectorAll(".split-segment"), { opacity: 1, y: 0 });
+        // Ensure all visible
+        el.querySelectorAll(".split-segment").forEach((s) => {
+          (s as HTMLElement).style.opacity = "1";
+          (s as HTMLElement).style.transform = "none";
+        });
         return;
       }
 
@@ -74,6 +80,9 @@ export function SplitTextReveal({
             toggleActions: once ? "play none none none" : "play none none reverse",
             once,
           },
+          onComplete: () => {
+            animatedRef.current = true;
+          },
         });
       }, el);
 
@@ -81,6 +90,19 @@ export function SplitTextReveal({
     },
     { scope: containerRef, dependencies: [splitBy, stagger, duration, y, rotateX, once, delay] }
   );
+
+  // Safety: if after 3 seconds GSAP hasn't animated (failed to load, etc.), force visible
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!animatedRef.current && containerRef.current) {
+        containerRef.current.querySelectorAll(".split-segment").forEach((s) => {
+          (s as HTMLElement).style.opacity = "1";
+          (s as HTMLElement).style.transform = "none";
+        });
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <span ref={containerRef} className={className} style={{ display: "inline" }}>
@@ -92,7 +114,7 @@ export function SplitTextReveal({
           <span
             key={i}
             className="split-segment"
-            style={{ display: "inline-block", willChange: "transform, opacity" }}
+            style={{ display: "inline-block" }}
           >
             {segment}
           </span>

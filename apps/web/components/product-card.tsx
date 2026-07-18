@@ -169,9 +169,6 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         </div>
       )}
       <div className={cn("p-3", compact && "p-2.5")}>
-        {!outOfStock && product.popularity > 30 && (
-          <p className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 mb-1">🔥 {product.popularity}+ ordered recently</p>
-        )}
         <Link
           href={productHref}
           className={cn(outOfStock && "pointer-events-none")}
@@ -183,7 +180,8 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             compact ? "text-caption" : "text-body"
           )}>{product.name}</h3>
           <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pack"}</p>
-          {product.avgRating && product.avgRating > 0 && (
+          {/* Rating — only show on non-compact cards to reduce density */}
+          {!compact && product.avgRating && product.avgRating > 0 && (
             <div className="flex items-center gap-1 mt-0.5">
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
               <span className="text-micro font-bold text-neutral-600 dark:text-neutral-400">{product.avgRating.toFixed(1)}</span>
@@ -197,7 +195,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         <div className="flex items-end justify-between mt-2.5 gap-1">
           <div>
             <span className={cn("font-black text-neutral-900 dark:text-white", compact ? "text-body" : "text-title")}>{formatCurrency(price)}</span>
-            <span className="text-micro text-neutral-400 ml-0.5 font-medium">/ {product.unit || "per kg"}</span>
+            {!compact && <span className="text-micro text-neutral-400 ml-0.5 font-medium">/ {product.unit || "per kg"}</span>}
             {product.discountPrice && (
               <span className="ml-1.5 text-micro text-neutral-400 line-through">{formatCurrency(product.price)}</span>
             )}
@@ -300,7 +298,7 @@ const QuantityStepper = memo(function QuantityStepper({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
         transition={springs.snappy}
-        className="flex flex-col items-center h-[72px] w-[32px] rounded-full bg-black overflow-hidden shadow-sm"
+        className="flex flex-col items-center h-[88px] w-[36px] rounded-full bg-black overflow-hidden shadow-sm"
       >
         <motion.button
           type="button"
@@ -311,14 +309,14 @@ const QuantityStepper = memo(function QuantityStepper({
           aria-label="Increase quantity"
           className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
-          <Plus className="h-3 w-3" />
+          <Plus className="h-3.5 w-3.5" />
         </motion.button>
         <motion.span
           key={quantity}
           initial={{ scale: 1.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={springs.tap}
-          className="text-caption font-bold text-white"
+          className="text-caption font-bold text-white tabular-nums"
           aria-label={`Quantity: ${quantity}`}
         >
           {quantity}
@@ -331,7 +329,7 @@ const QuantityStepper = memo(function QuantityStepper({
           aria-label="Decrease quantity"
           className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
         >
-          <Minus className="h-3 w-3" />
+          <Minus className="h-3.5 w-3.5" />
         </motion.button>
       </motion.div>
     );
@@ -343,7 +341,7 @@ const QuantityStepper = memo(function QuantityStepper({
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
       transition={springs.snappy}
-      className="flex h-[36px] items-center overflow-hidden rounded-full bg-black shadow-sm"
+      className="flex h-[44px] items-center overflow-hidden rounded-full bg-black shadow-sm"
     >
       <motion.button
         type="button"
@@ -351,7 +349,7 @@ const QuantityStepper = memo(function QuantityStepper({
         whileTap={{ scale: 1.4 }}
         transition={springs.tap}
         aria-label="Decrease quantity"
-        className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
       >
         <Minus className="h-3.5 w-3.5" />
       </motion.button>
@@ -360,7 +358,7 @@ const QuantityStepper = memo(function QuantityStepper({
         initial={{ scale: 1.5, opacity: 0, y: -5 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={springs.tap}
-        className="w-6 text-center text-caption font-bold text-white"
+        className="w-6 text-center text-caption font-bold text-white tabular-nums"
         aria-label={`Quantity: ${quantity}`}
       >
         {quantity}
@@ -372,7 +370,7 @@ const QuantityStepper = memo(function QuantityStepper({
         whileTap={quantity < maxStock ? { scale: 1.4 } : undefined}
         transition={springs.tap}
         aria-label="Increase quantity"
-        className="w-9 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <Plus className="h-3.5 w-3.5" />
       </motion.button>

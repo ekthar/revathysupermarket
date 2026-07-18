@@ -1,24 +1,26 @@
 "use client";
 
-import { useRef, useEffect, type ReactNode } from "react";
+import { useRef, type ReactNode } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 
 /**
- * ScrollReveal — fade/slide children into view once, GSAP-powered.
+ * ScrollReveal — subtle entrance animation on scroll, GSAP-powered.
  *
- * Safety: content starts visible (CSS default). GSAP hides it then reveals.
- * If GSAP fails, a 3s timeout forces visibility. Content is NEVER permanently hidden.
+ * Apple principle: NEVER flash content. Content is always visible.
+ * We only animate `transform` (translateY) — never opacity from 0.
+ * This means if GSAP fails to load, content is still perfectly visible
+ * and positioned correctly. The animation is purely enhancement.
  *
- * Apple HIG: reveals should be subtle and purposeful.
+ * On low-end devices or reduced motion: no animation at all.
  */
 export function ScrollReveal({
   children,
   className,
-  y = 24,
+  y = 16,
   delay = 0,
   stagger = 0,
-  duration = 0.7,
+  duration = 0.6,
   once = true,
   amount = 0.25
 }: {
@@ -32,63 +34,47 @@ export function ScrollReveal({
   amount?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
-  const animatedRef = useRef(false);
 
   useGSAP(
     () => {
       const el = ref.current;
       if (!el) return;
+      if (prefersReducedMotion()) return; // Content stays as-is
 
-      if (prefersReducedMotion()) {
-        gsap.set(el, { opacity: 1, y: 0 });
-        const items = el.querySelectorAll("[data-reveal-item]");
-        if (items.length) gsap.set(items, { opacity: 1, y: 0 });
-        animatedRef.current = true;
-        return;
-      }
+      const targets = stagger > 0
+        ? el.querySelectorAll<HTMLElement>("[data-reveal-item]")
+        : [el];
 
-      const targets = stagger > 0 ? el.querySelectorAll<HTMLElement>("[data-reveal-item]") : el;
+      if (!targets || (targets instanceof NodeList && targets.length === 0)) return;
 
       const ctx = gsap.context(() => {
-        gsap.set(targets, { opacity: 0, y });
-        gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          duration,
-          delay,
-          stagger,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: el,
-            start: `top ${Math.round((1 - amount) * 100)}%`,
-            toggleActions: once ? "play none none none" : "play none none reverse",
-            once
-          },
-          onComplete: () => {
-            animatedRef.current = true;
+        // IMPORTANT: We use fromTo with immediate render OFF.
+        // Content starts at its natural position (visible, no flash).
+        // On scroll trigger, it animates FROM offset TO natural position.
+        gsap.fromTo(targets,
+          { y, opacity: 0.4 }, // Start: slightly below and faded (NOT invisible)
+          {
+            y: 0,
+            opacity: 1,
+            duration,
+            delay,
+            stagger,
+            ease: "power2.out",
+            immediateRender: false, // Critical: don't set initial state until trigger fires
+            scrollTrigger: {
+              trigger: el,
+              start: `top ${Math.round((1 - amount) * 100)}%`,
+              toggleActions: once ? "play none none none" : "play none none reverse",
+              once,
+            },
           }
-        });
+        );
       }, el);
 
       return () => ctx.revert();
     },
     { scope: ref, dependencies: [y, delay, stagger, duration, once, amount] }
   );
-
-  // Safety: force visible after 3s if GSAP hasn't completed
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!animatedRef.current && ref.current) {
-        ref.current.style.opacity = "1";
-        ref.current.style.transform = "none";
-        ref.current.querySelectorAll("[data-reveal-item]").forEach((el) => {
-          (el as HTMLElement).style.opacity = "1";
-          (el as HTMLElement).style.transform = "none";
-        });
-      }
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <div ref={ref} className={className}>

@@ -43,39 +43,47 @@ export function AnimatedProductSection({
       if (prefersReducedMotion()) return;
 
       const ctx = gsap.context(() => {
-        // Fade in header
+        // Header subtle reveal — never fully invisible
         if (headerRef.current) {
-          gsap.from(headerRef.current, {
-            opacity: 0,
-            y: 12,
-            duration: 0.5,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: headerRef.current,
-              start: "top 85%",
-              toggleActions: "play none none none",
-              once: true
+          gsap.fromTo(headerRef.current,
+            { opacity: 0.5, y: 8 },
+            {
+              opacity: 1,
+              y: 0,
+              duration: 0.5,
+              ease: "power2.out",
+              immediateRender: false,
+              scrollTrigger: {
+                trigger: headerRef.current,
+                start: "top 85%",
+                toggleActions: "play none none none",
+                once: true
+              }
             }
-          });
+          );
         }
 
         // Stagger items in scroll track (mobile horizontal)
         if (scrollTrackRef.current) {
           const items = scrollTrackRef.current.querySelectorAll<HTMLElement>(".product-scroll-item");
           if (items.length > 0) {
-            gsap.from(items, {
-              opacity: 0,
-              y: 12,
-              duration: 0.35,
-              stagger: 0.03,
-              ease: "power2.out",
-              scrollTrigger: {
-                trigger: scrollTrackRef.current,
-                start: "top 90%",
-                toggleActions: "play none none none",
-                once: true
+            gsap.fromTo(items,
+              { opacity: 0.4, y: 8 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.35,
+                stagger: 0.03,
+                ease: "power2.out",
+                immediateRender: false,
+                scrollTrigger: {
+                  trigger: scrollTrackRef.current,
+                  start: "top 90%",
+                  toggleActions: "play none none none",
+                  once: true
+                }
               }
-            });
+            );
           }
         }
 
@@ -83,19 +91,23 @@ export function AnimatedProductSection({
         if (gridRef.current) {
           const items = gridRef.current.querySelectorAll<HTMLElement>(".product-grid-item");
           if (items.length > 0) {
-            gsap.from(items, {
-              opacity: 0,
-              y: 16,
-              duration: 0.4,
-              stagger: 0.04,
-              ease: "power2.out",
-              scrollTrigger: {
-                trigger: gridRef.current,
-                start: "top 85%",
-                toggleActions: "play none none none",
-                once: true
+            gsap.fromTo(items,
+              { opacity: 0.4, y: 10 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 0.4,
+                stagger: 0.04,
+                ease: "power2.out",
+                immediateRender: false,
+                scrollTrigger: {
+                  trigger: gridRef.current,
+                  start: "top 85%",
+                  toggleActions: "play none none none",
+                  once: true
+                }
               }
-            });
+            );
           }
         }
       }, sectionRef.current!);

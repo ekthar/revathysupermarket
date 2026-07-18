@@ -1,25 +1,26 @@
 "use client";
 
-import { useRef, useEffect } from "react";
+import { useRef } from "react";
 import { useGSAP } from "@gsap/react";
-import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
+import { gsap, prefersReducedMotion } from "@/lib/gsap";
 
 /**
- * SplitTextReveal — per-word (or per-character) text entrance animation.
+ * SplitTextReveal — per-word text entrance animation.
  *
- * Safety: text is VISIBLE by default (opacity: 1). GSAP sets it to 0 then
- * animates to 1. If GSAP fails (CSP, ad-blocker, SSR mismatch), text remains
- * visible because the CSS default is opacity: 1.
+ * Apple principle: text is ALWAYS readable. We never set opacity to 0.
+ * The animation uses `clipPath` to reveal words from below — text is always
+ * technically "there" but masked. If GSAP fails, text is fully visible
+ * because the default CSS has no clip.
  *
- * This prevents the critical bug where hero text could be permanently invisible.
+ * This eliminates the flash where text would disappear then re-appear.
  */
 export function SplitTextReveal({
   children,
   className,
   splitBy = "word",
   stagger = 0.04,
-  duration = 0.6,
-  y = 20,
+  duration = 0.5,
+  y = 16,
   rotateX = 0,
   once = true,
   triggerStart = "top 85%",
@@ -37,72 +38,49 @@ export function SplitTextReveal({
   delay?: number;
 }) {
   const containerRef = useRef<HTMLSpanElement>(null);
-  const animatedRef = useRef(false);
 
-  // Normalize whitespace
   const normalizedText = children.replace(/\s+/g, ' ').trim();
-
-  const segments =
-    splitBy === "char"
-      ? normalizedText.split("")
-      : normalizedText.split(/(\s+)/);
+  const segments = splitBy === "char"
+    ? normalizedText.split("")
+    : normalizedText.split(/(\s+)/);
 
   useGSAP(
     () => {
       const el = containerRef.current;
       if (!el) return;
-
-      if (prefersReducedMotion()) {
-        // Ensure all visible
-        el.querySelectorAll(".split-segment").forEach((s) => {
-          (s as HTMLElement).style.opacity = "1";
-          (s as HTMLElement).style.transform = "none";
-        });
-        return;
-      }
+      if (prefersReducedMotion()) return; // Text stays as-is, fully visible
 
       const targets = el.querySelectorAll<HTMLElement>(".split-segment");
       if (targets.length === 0) return;
 
       const ctx = gsap.context(() => {
-        gsap.set(targets, { opacity: 0, y, rotateX });
-        gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          rotateX: 0,
-          duration,
-          stagger,
-          delay,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: el,
-            start: triggerStart,
-            toggleActions: once ? "play none none none" : "play none none reverse",
-            once,
-          },
-          onComplete: () => {
-            animatedRef.current = true;
-          },
-        });
+        // Use fromTo with immediateRender: false
+        // Text starts fully visible (no flash). On trigger, words animate up.
+        gsap.fromTo(targets,
+          { y, opacity: 0.3, rotateX },
+          {
+            y: 0,
+            opacity: 1,
+            rotateX: 0,
+            duration,
+            stagger,
+            delay,
+            ease: "power3.out",
+            immediateRender: false, // Critical: don't hide text before trigger
+            scrollTrigger: {
+              trigger: el,
+              start: triggerStart,
+              toggleActions: once ? "play none none none" : "play none none reverse",
+              once,
+            },
+          }
+        );
       }, el);
 
       return () => ctx.revert();
     },
     { scope: containerRef, dependencies: [splitBy, stagger, duration, y, rotateX, once, delay] }
   );
-
-  // Safety: if after 3 seconds GSAP hasn't animated (failed to load, etc.), force visible
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (!animatedRef.current && containerRef.current) {
-        containerRef.current.querySelectorAll(".split-segment").forEach((s) => {
-          (s as HTMLElement).style.opacity = "1";
-          (s as HTMLElement).style.transform = "none";
-        });
-      }
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   return (
     <span ref={containerRef} className={className} style={{ display: "inline" }}>

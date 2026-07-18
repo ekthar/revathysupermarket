@@ -5,7 +5,7 @@ import { useEffect, useRef } from "react";
 
 const scrollPositions = new Map<string, number>();
 
-/** Tab-level routes: instant swap, no animation overhead. */
+/** Tab-level routes: instant swap, zero animation. */
 const TAB_ROUTES = new Set(["/", "/products", "/cart", "/account", "/offers"]);
 
 function isTabRoute(path: string) {
@@ -16,38 +16,48 @@ function isTabRoute(path: string) {
 }
 
 /**
- * RouteTransition — lightweight scroll-restore + subtle CSS fade.
+ * RouteTransition — Apple-native page transitions WITHOUT remounting.
  *
- * Apple approach: tab switches are INSTANT (no animation = feels native).
- * Depth navigation (product pages, checkout) gets a simple CSS fade (no
- * AnimatePresence, no unmount/remount delay, no white flash).
+ * The previous implementation used `key={pathname}` which caused React to
+ * unmount and remount the entire page content on every navigation — this is
+ * the root cause of the flash.
  *
- * This replaces the heavy Framer Motion AnimatePresence approach that caused
- * a visible flash and 200ms delay on every navigation.
+ * Apple's approach: content is ALWAYS mounted. Navigation simply restores
+ * scroll position. There is NO opacity animation on route change because
+ * iOS native apps don't flash between views — they just appear.
+ *
+ * The only visual cue is scroll-to-top for new pages.
  */
 export function RouteTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const prevPath = useRef(pathname);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
+    // Skip scroll logic on first render (SSR hydration)
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+
     const prev = prevPath.current;
     if (prev !== pathname) {
+      // Save current scroll position for the page we're leaving
       scrollPositions.set(prev, window.scrollY);
       prevPath.current = pathname;
     }
+
+    // Restore saved scroll position or scroll to top
     const saved = scrollPositions.get(pathname);
-    if (saved !== undefined) {
+    if (saved !== undefined && isTabRoute(pathname)) {
+      // Tab routes: restore their scroll position (feels native)
       requestAnimationFrame(() => window.scrollTo(0, saved));
-    } else {
+    } else if (prev !== pathname) {
+      // Depth routes: scroll to top instantly
       window.scrollTo(0, 0);
     }
   }, [pathname]);
 
-  const soft = isTabRoute(pathname);
-
-  return (
-    <div key={pathname} className={soft ? "route-soft-enter" : "animate-fadeIn"}>
-      {children}
-    </div>
-  );
+  // No key prop = no remount = no flash
+  return <>{children}</>;
 }

@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { syncStatusBarToRoute } from "@/lib/native-bridge";
 
 /**
  * Dynamically updates the meta[name="theme-color"] tag based on the current route
@@ -40,11 +41,16 @@ export function ThemeColorSync() {
 
   useEffect(() => {
     // Set initial theme color based on current route and theme
-    updateMetaThemeColor(getThemeColor(pathname, isDarkMode()));
+    const isDark = isDarkMode();
+    updateMetaThemeColor(getThemeColor(pathname, isDark));
+    // Also sync native status bar (no-op on web)
+    syncStatusBarToRoute(pathname, isDark);
 
     // Observe class changes on <html> to detect theme toggling
     const observer = new MutationObserver(() => {
-      updateMetaThemeColor(getThemeColor(pathname, isDarkMode()));
+      const dark = isDarkMode();
+      updateMetaThemeColor(getThemeColor(pathname, dark));
+      syncStatusBarToRoute(pathname, dark);
     });
 
     observer.observe(document.documentElement, {

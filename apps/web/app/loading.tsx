@@ -46,17 +46,17 @@ export default async function HomeLoading() {
         )}
 
         {/* Store name */}
-        <h1 className="font-display text-2xl font-black tracking-tight text-neutral-900 dark:text-white uppercase animate-[fadeInUp_0.5s_0.2s_cubic-bezier(0.16,1,0.3,1)_both]">
+        <h1 className="font-display text-2xl font-black tracking-tight text-neutral-900 dark:text-white uppercase">
           {settings.storeName}
         </h1>
 
         {/* Tagline */}
-        <p className="mt-2 text-sm font-medium text-neutral-500 dark:text-neutral-400 animate-[fadeInUp_0.5s_0.4s_cubic-bezier(0.16,1,0.3,1)_both]">
+        <p className="mt-2 text-sm font-medium text-neutral-500 dark:text-neutral-400">
           Fresh &amp; Fast Delivery
         </p>
 
         {/* Loading indicator — three bouncing dots */}
-        <div className="flex items-center gap-1.5 mt-8 animate-[fadeInUp_0.5s_0.6s_cubic-bezier(0.16,1,0.3,1)_both]">
+        <div className="flex items-center gap-1.5 mt-8">
           <div className="h-2 w-2 rounded-full bg-secondary-500 animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1s" }} />
           <div className="h-2 w-2 rounded-full bg-secondary-500 animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1s" }} />
           <div className="h-2 w-2 rounded-full bg-secondary-500 animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1s" }} />

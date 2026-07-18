@@ -71,7 +71,7 @@ export async function setStatusBarDark(): Promise<void> {
  */
 export async function hapticImpact(style: "light" | "medium" | "heavy" = "light"): Promise<void> {
   if (!isNative) {
-    const durations = { light: 5, medium: 10, heavy: 20 };
+    const durations: Record<string, number> = { light: 5, medium: 10, heavy: 20 };
     navigator.vibrate?.(durations[style]);
     return;
   }
@@ -80,7 +80,8 @@ export async function hapticImpact(style: "light" | "medium" | "heavy" = "light"
     const map = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy };
     await Haptics.impact({ style: map[style] });
   } catch {
-    navigator.vibrate?.({ light: 5, medium: 10, heavy: 20 }[style] ?? 5);
+    const durations: Record<string, number> = { light: 5, medium: 10, heavy: 20 };
+    navigator.vibrate?.(durations[style]);
   }
 }
 

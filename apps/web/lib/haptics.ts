@@ -15,25 +15,25 @@ import { hapticImpact, hapticNotification, hapticSelection as nativeSelection } 
  * @param type - Intensity level: "light" (tap), "medium" (action), "heavy" (destructive)
  */
 export function haptic(type: "light" | "medium" | "heavy" = "light"): void {
-  hapticImpact(type);
+  void hapticImpact(type);
 }
 
 /** Success haptic — order placed, action completed */
 export function hapticSuccess(): void {
-  hapticNotification("success");
+  void hapticNotification("success");
 }
 
 /** Warning haptic — low stock, approaching limit */
 export function hapticWarning(): void {
-  hapticNotification("warning");
+  void hapticNotification("warning");
 }
 
 /** Error haptic — failed action, validation error */
 export function hapticError(): void {
-  hapticNotification("error");
+  void hapticNotification("error");
 }
 
 /** Selection haptic — picker tick, scroll snap, tab change */
 export function hapticSelection(): void {
-  nativeSelection();
+  void nativeSelection();
 }

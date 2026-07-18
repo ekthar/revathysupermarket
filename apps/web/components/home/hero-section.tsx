@@ -67,7 +67,7 @@ export function HeroSection({
   return (
     <>
       {/* Desktop Hero */}
-      <section ref={desktopRef} className="hidden md:block relative overflow-hidden bg-[#F7F7FA] dark:bg-[#020617]">
+      <section ref={desktopRef} className="hidden md:block relative overflow-hidden bg-background">
         <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12 lg:py-16">
           <div className="grid grid-cols-2 gap-8 items-center">
             {/* Left: text */}

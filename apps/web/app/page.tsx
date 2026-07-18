@@ -80,7 +80,7 @@ export default async function HomePage() {
     const msg = maintenanceFlag.config?.message || "We're performing scheduled maintenance. Please check back soon.";
     const eta = maintenanceFlag.config?.eta || "";
     return (
-      <main className="flex min-h-[80dvh] flex-col items-center justify-center px-4 text-center bg-[#F7F7FA] dark:bg-[#020617]">
+      <main className="flex min-h-[80dvh] flex-col items-center justify-center px-4 text-center bg-background">
         <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-8 max-w-md shadow-lg">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
             <span className="text-3xl">🔧</span>
@@ -206,15 +206,15 @@ export default async function HomePage() {
       <div className="py-3 border-y border-[var(--border-subtle)]">
         <InfiniteMarquee speed={35} className="text-caption font-semibold text-neutral-500 dark:text-neutral-400">
           <span>Free delivery over ₹499</span>
-          <span className="text-secondary-500">*</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
           <span>COD &amp; UPI on delivery</span>
-          <span className="text-secondary-500">*</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
           <span>Fresh from farm to door</span>
-          <span className="text-secondary-500">*</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
           <span>~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery</span>
-          <span className="text-secondary-500">*</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
           <span>100% quality guaranteed</span>
-          <span className="text-secondary-500">*</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
         </InfiniteMarquee>
       </div>
 

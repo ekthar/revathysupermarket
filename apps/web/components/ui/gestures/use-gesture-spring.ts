@@ -60,7 +60,6 @@ export function useGestureSpring(config: GestureSpringConfig): GestureSpringRetu
     min = -Infinity,
     max = Infinity,
     dimension = 400,
-    velocityThreshold = 300,
     onSnap,
     onUpdate,
     onStart,

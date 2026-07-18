@@ -11,8 +11,8 @@ import { syncStatusBarToRoute } from "@/lib/native-bridge";
  * Route-specific colors:
  * - /admin/*  -> "#1e293b" (dark slate for admin panel)
  * - /delivery/* -> "#059669" (emerald for delivery interface)
- * - Default light -> "#F7F7FA" (off-white per design system)
- * - Default dark  -> "#020617" (slate-950)
+ * - Default light -> "#FFFFFF" (matches glass header)
+ * - Default dark  -> "#0A0A0A" (matches dark glass header)
  */
 function getThemeColor(pathname: string, isDark: boolean): string {
   if (pathname.startsWith("/admin")) {

@@ -64,7 +64,7 @@ export function CountUp({
 
   return (
     <span ref={ref} className={className}>
-      {prefix}{end}{suffix}
+      {prefix}{start}{suffix}
     </span>
   );
 }

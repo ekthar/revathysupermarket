@@ -79,7 +79,7 @@ export function HeroSection({
                 </span>
               </div>
 
-              <h1 className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] tracking-tight text-neutral-900 dark:text-white">
+              <h1 className="font-display text-5xl lg:text-6xl xl:text-7xl font-black leading-[0.95] text-neutral-900 dark:text-white">
                 <SplitTextReveal
                   splitBy="word"
                   stagger={0.06}
@@ -117,16 +117,17 @@ export function HeroSection({
                 <span>Free delivery over ₹499</span>
               </div>
 
-              {/* Integrated search entry */}
+              {/* Integrated search entry — button styled as input for accessibility (B8) */}
               <div className="mt-5 relative max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-                <input
-                  type="text"
-                  placeholder="Search for groceries..."
-                  className="w-full rounded-full border border-neutral-200 bg-white py-3 pl-11 pr-4 text-sm shadow-sm transition-all placeholder:text-neutral-400 focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:ring-green-900"
-                  readOnly
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
+                <button
+                  type="button"
+                  className="w-full rounded-full border border-neutral-200 bg-white py-3 pl-11 pr-4 text-sm text-left text-neutral-400 shadow-sm transition-all focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:ring-green-900"
                   onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
-                />
+                  aria-label="Search for groceries"
+                >
+                  Search for groceries...
+                </button>
               </div>
             </div>
 

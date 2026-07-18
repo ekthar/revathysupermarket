@@ -31,6 +31,7 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
   const overlayRef = useRef<HTMLDivElement>(null);
   const isTrackingRef = useRef(false);
   const isCommittedRef = useRef(false); // committed to horizontal swipe
+  const isCommittingBackRef = useRef(false); // B10: animation in progress, block input
   const startXRef = useRef(0);
   const startYRef = useRef(0);
   const currentXRef = useRef(0);
@@ -92,6 +93,9 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
     const overlay = overlayRef.current;
     if (!container || !overlay) return;
 
+    // B10: Block new gestures during commit animation
+    isCommittingBackRef.current = true;
+
     const width = getWidth();
     container.style.transition = "transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)";
     overlay.style.transition = "opacity 0.25s cubic-bezier(0.25, 0.1, 0.25, 1)";
@@ -99,6 +103,7 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
     overlay.style.opacity = "0";
 
     setTimeout(() => {
+      isCommittingBackRef.current = false;
       resetTransform();
       router.back();
     }, 260);
@@ -120,6 +125,8 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
     function onTouchStart(e: TouchEvent) {
       const touch = e.touches[0];
       if (touch.clientX > EDGE_ZONE) return;
+      // B10: Block new gestures during commit animation
+      if (isCommittingBackRef.current) return;
       // Don't interfere with elements that opt out
       const target = e.target as HTMLElement;
       if (target.closest("[data-disable-edge-swipe]")) return;
@@ -147,7 +154,7 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
         const totalDist = Math.sqrt(dx * dx + dy * dy);
         if (totalDist < DISAMBIGUATION_DISTANCE) return;
 
-        // If more vertical than horizontal, abort
+        // If more vertical than horizontal, abort — let scroll happen normally
         if (Math.abs(dy) > Math.abs(dx)) {
           isTrackingRef.current = false;
           return;
@@ -162,8 +169,15 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
         isCommittedRef.current = true;
       }
 
+      // B4 FIX: Only prevent default AFTER we've confirmed horizontal intent
+      // This preserves scroll performance for vertical gestures
+      if (isCommittedRef.current) {
+        e.preventDefault();
+      }
+
       // 1:1 tracking with slight rubber-band in the first few px
-      let x = dx;
+      // B6 FIX: Clamp dx to reasonable range (prevent unrealistic velocities)
+      let x = Math.min(dx, getWidth());
       if (x < 0) {
         x = -rubberband(-x, getWidth(), 0.3); // resist backward
       }
@@ -189,7 +203,8 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
 
       const velocity = getVelocity();
-      const vx = velocity.x;
+      // B6 FIX: Clamp velocity to reasonable max (prevents unrealistic projections)
+      const vx = Math.min(Math.max(velocity.x, -2000), 2000);
       const x = currentXRef.current;
       const width = getWidth();
 

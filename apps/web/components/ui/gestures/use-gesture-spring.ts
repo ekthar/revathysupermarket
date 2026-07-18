@@ -125,8 +125,8 @@ export function useGestureSpring(config: GestureSpringConfig): GestureSpringRetu
         currentPosRef.current = spring.position;
         onUpdate?.(spring.position);
 
-        // Settle check
-        if (Math.abs(displacement) < 0.5 && Math.abs(spring.velocity) < 0.5) {
+        // Settle check — A11: use tighter threshold for stability
+        if (Math.abs(displacement) < 0.3 && Math.abs(spring.velocity) < 10) {
           spring.active = false;
           spring.position = spring.target;
           currentPosRef.current = spring.target;

@@ -47,7 +47,7 @@ const getHomepageProducts = unstable_cache(
     where: { isActive: true },
     select: { id: true, slug: true, name: true, description: true, image: true, price: true, discountPrice: true, stock: true, popularity: true, unit: true, isFeatured: true, createdAt: true, category: { select: { name: true } } },
     orderBy: [{ isFeatured: "desc" }, { popularity: "desc" }, { createdAt: "desc" }],
-    take: 60
+    take: 24
   }).catch(() => []),
   ["homepage-products"],
   { revalidate: 60, tags: ["homepage", "products"] }
@@ -294,7 +294,7 @@ export default async function HomePage() {
         <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 p-8 md:p-12 text-center">
           <h2 className="section-title text-2xl md:text-3xl">Hungry for more?</h2>
           <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
-            Browse our full catalogue of {allProducts.length} fresh products.
+            Browse our full catalogue of fresh products.
           </p>
           <Link
             href="/products"

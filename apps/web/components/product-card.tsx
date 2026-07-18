@@ -100,7 +100,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       whileTap={tapScale.subtle}
       transition={springs.snappy}
       className={cn(
-        "group relative overflow-hidden rounded-2xl bg-white border border-neutral-100 dark:bg-neutral-900 dark:border-neutral-800 product-card-animated shadow-elevation-1",
+        "group relative overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 dark:border dark:border-neutral-800 product-card-animated shadow-elevation-1",
         outOfStock && "opacity-50"
       )}
     >
@@ -164,7 +164,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       )}
       {!outOfStock && product.stock > 0 && product.stock <= 5 && (
         <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 px-3 py-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
+          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse [animation-duration:4s]" />
           <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">Only {product.stock} left</span>
         </div>
       )}
@@ -262,7 +262,7 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
           aria-label={`Add ${product.name} to cart`}
           className={variant === "horizontal"
             ? "flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
-            : "flex h-[34px] w-[34px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+            : "flex h-[44px] w-[44px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
           }
         >
           <Plus className="h-4 w-4" />

@@ -492,7 +492,7 @@ html[data-keyboard-open] .pb-safe {
 /* Section header with bold typography */
 .section-title {
   font-family: var(--font-display, "Manrope"), system-ui, sans-serif;
-  font-weight: 900;
+  font-weight: 800;
   font-size: 1.5rem;
   letter-spacing: -0.03em;
   line-height: 1.2;
@@ -1032,8 +1032,7 @@ html[data-keyboard-open] .pb-safe {
 
 /* ===== PERFORMANCE: GPU ACCELERATION & PAINT OPTIMIZATION ===== */
 
-/* Hardware-accelerated elements — promote to own compositor layer */
-.product-card-animated,
+/* Hardware-accelerated elements — promote to own compositor layer on interaction */
 .ios-sticky-tracking-header,
 .ios-bottom-bar,
 .ios-glass {
@@ -1044,6 +1043,7 @@ html[data-keyboard-open] .pb-safe {
 /* Contain paint for card grids — prevents repaint cascade */
 .product-card-animated {
   contain: layout style paint;
+  transform: translateZ(0);
 }
 
 /* Reduce backdrop-blur on low-end mobile devices (saves ~30% GPU) */

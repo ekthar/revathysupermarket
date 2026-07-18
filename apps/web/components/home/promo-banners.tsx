@@ -121,6 +121,9 @@ function BannerCarousel({ banners }: { banners: Banner[] }) {
               <CarouselItem
                 key={banner.id}
                 className="basis-[92%] md:basis-full pl-2 md:pl-4"
+                role="group"
+                aria-roledescription="slide"
+                aria-label={`Slide ${index + 1} of ${banners.length}`}
               >
                 <BannerCard banner={banner} index={index} />
               </CarouselItem>

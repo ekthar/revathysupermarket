@@ -235,11 +235,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addItem, addItems, removeItem, updateQuantity, clearCart
   }), [addItem, addItems, removeItem, updateQuantity, clearCart]);
 
+  // E5: Server renders empty cart. Client hydrates from localStorage.
+  // This is intentional — the brief empty→filled flash is handled by
+  // AnimatePresence in cart-page-client.tsx and FloatingCartBar.
   return (
     <CartStoreContext.Provider value={store}>
       <CartActionsContext.Provider value={actions}>
         <CartStateContext.Provider value={state}>
-          {children}
+          <div suppressHydrationWarning>
+            {children}
+          </div>
         </CartStateContext.Provider>
       </CartActionsContext.Provider>
     </CartStoreContext.Provider>

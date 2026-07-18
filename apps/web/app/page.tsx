@@ -207,6 +207,7 @@ export default async function HomePage() {
       </div>
 
       {/* Infinite marquee — trust signals */}
+      {/* G1: TODO — these should use getTranslations("home") when translation keys are authored */}
       <div className="py-3 border-y border-[var(--border-subtle)]">
         <span className="sr-only">Free delivery over ₹499. COD &amp; UPI on delivery. Fresh from farm to door. ~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery. 100% quality guaranteed.</span>
         <InfiniteMarquee speed={35} className="text-caption font-semibold text-neutral-500 dark:text-neutral-400">

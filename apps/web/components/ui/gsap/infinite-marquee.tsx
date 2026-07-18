@@ -32,21 +32,27 @@ export function InfiniteMarquee({
       if (prefersReducedMotion() || !containerRef.current || !trackRef.current) return;
 
       const track = trackRef.current;
-      const contentWidth = track.scrollWidth / 2;
 
-      if (contentWidth <= 0) return;
+      // D3: Delay measurement to avoid forced reflow on mount
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          const contentWidth = track.scrollWidth / 2;
 
-      const duration = contentWidth / speed;
-      const xStart = direction === "left" ? 0 : -contentWidth;
-      const xEnd = direction === "left" ? -contentWidth : 0;
+          if (contentWidth <= 0) return;
 
-      gsap.set(track, { x: xStart });
+          const duration = contentWidth / speed;
+          const xStart = direction === "left" ? 0 : -contentWidth;
+          const xEnd = direction === "left" ? -contentWidth : 0;
 
-      tweenRef.current = gsap.to(track, {
-        x: xEnd,
-        duration,
-        ease: "none",
-        repeat: -1,
+          gsap.set(track, { x: xStart });
+
+          tweenRef.current = gsap.to(track, {
+            x: xEnd,
+            duration,
+            ease: "none",
+            repeat: -1,
+          });
+        });
       });
     },
     { scope: containerRef }

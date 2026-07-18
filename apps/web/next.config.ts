@@ -39,6 +39,11 @@ const nextConfig: NextConfig = {
       config.resolve.fallback = {
         ...config.resolve.fallback,
         "@capacitor-community/background-geolocation": false,
+        "@capacitor/app": false,
+        "@capacitor/haptics": false,
+        "@capacitor/status-bar": false,
+        "@capacitor/keyboard": false,
+        "@capacitor/splash-screen": false,
       };
     }
     return config;

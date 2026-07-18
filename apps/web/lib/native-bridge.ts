@@ -28,7 +28,7 @@ export async function syncStatusBarToRoute(pathname: string, isDark: boolean): P
   if (!isNative) return;
 
   try {
-    const { StatusBar, Style } = await import("@capacitor/status-bar");
+    const { StatusBar, Style } = await import(/* webpackIgnore: true */ "@capacitor/status-bar");
 
     if (pathname.startsWith("/admin")) {
       await StatusBar.setStyle({ style: Style.Dark });
@@ -48,7 +48,7 @@ export async function syncStatusBarToRoute(pathname: string, isDark: boolean): P
 export async function setStatusBarLight(): Promise<void> {
   if (!isNative) return;
   try {
-    const { StatusBar, Style } = await import("@capacitor/status-bar");
+    const { StatusBar, Style } = await import(/* webpackIgnore: true */ "@capacitor/status-bar");
     await StatusBar.setStyle({ style: Style.Light });
     await StatusBar.setBackgroundColor({ color: "#FFFFFF" });
   } catch {}
@@ -57,7 +57,7 @@ export async function setStatusBarLight(): Promise<void> {
 export async function setStatusBarDark(): Promise<void> {
   if (!isNative) return;
   try {
-    const { StatusBar, Style } = await import("@capacitor/status-bar");
+    const { StatusBar, Style } = await import(/* webpackIgnore: true */ "@capacitor/status-bar");
     await StatusBar.setStyle({ style: Style.Dark });
     await StatusBar.setBackgroundColor({ color: "#0A0A0A" });
   } catch {}
@@ -76,7 +76,7 @@ export async function hapticImpact(style: "light" | "medium" | "heavy" = "light"
     return;
   }
   try {
-    const { Haptics, ImpactStyle } = await import("@capacitor/haptics");
+    const { Haptics, ImpactStyle } = await import(/* webpackIgnore: true */ "@capacitor/haptics");
     const map = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy };
     await Haptics.impact({ style: map[style] });
   } catch {
@@ -95,7 +95,7 @@ export async function hapticNotification(type: "success" | "warning" | "error" =
     return;
   }
   try {
-    const { Haptics, NotificationType } = await import("@capacitor/haptics");
+    const { Haptics, NotificationType } = await import(/* webpackIgnore: true */ "@capacitor/haptics");
     const map = { success: NotificationType.Success, warning: NotificationType.Warning, error: NotificationType.Error };
     await Haptics.notification({ type: map[type] });
   } catch {}
@@ -110,7 +110,7 @@ export async function hapticSelection(): Promise<void> {
     return;
   }
   try {
-    const { Haptics } = await import("@capacitor/haptics");
+    const { Haptics } = await import(/* webpackIgnore: true */ "@capacitor/haptics");
     await Haptics.selectionChanged();
   } catch {
     navigator.vibrate?.(3);
@@ -122,7 +122,7 @@ export async function hapticSelection(): Promise<void> {
 export async function setKeyboardStyle(isDark: boolean): Promise<void> {
   if (!isNative) return;
   try {
-    const { Keyboard, KeyboardStyle } = await import("@capacitor/keyboard");
+    const { Keyboard, KeyboardStyle } = await import(/* webpackIgnore: true */ "@capacitor/keyboard");
     await Keyboard.setStyle({ style: isDark ? KeyboardStyle.Dark : KeyboardStyle.Light });
   } catch {}
 }
@@ -137,7 +137,7 @@ export function registerBackButton(handler: () => void): () => void {
   if (!isNative) return () => {};
 
   let listener: any;
-  import("@capacitor/app").then(({ App }) => {
+  import(/* webpackIgnore: true */ "@capacitor/app").then(({ App }) => {
     listener = App.addListener("backButton", ({ canGoBack }) => {
       if (canGoBack) {
         handler();
@@ -160,7 +160,7 @@ export function onAppStateChange(cb: (isActive: boolean) => void): () => void {
   if (!isNative) return () => {};
 
   let listener: any;
-  import("@capacitor/app").then(({ App }) => {
+  import(/* webpackIgnore: true */ "@capacitor/app").then(({ App }) => {
     listener = App.addListener("appStateChange", ({ isActive }) => cb(isActive));
   }).catch(() => {});
 
@@ -177,7 +177,7 @@ export function onAppStateChange(cb: (isActive: boolean) => void): () => void {
 export async function hideSplash(): Promise<void> {
   if (!isNative) return;
   try {
-    const { SplashScreen } = await import("@capacitor/splash-screen");
+    const { SplashScreen } = await import(/* webpackIgnore: true */ "@capacitor/splash-screen");
     await SplashScreen.hide({ fadeOutDuration: 300 });
   } catch {}
 }

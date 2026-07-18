@@ -133,7 +133,7 @@ export function OffersClient({ offers, promoCodes, catMap, isLoggedIn }: OffersC
   const isEmpty = filteredOffers.length === 0 && filteredPromos.length === 0;
 
   return (
-    <main className="min-h-[100dvh] bg-[#F7F7FA] dark:bg-[#020617]">
+    <main className="min-h-[100dvh] bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
         {/* Hero Section */}
         <section className="relative overflow-hidden rounded-2xl p-6 sm:p-8 bg-white dark:bg-neutral-900">
@@ -175,7 +175,7 @@ export function OffersClient({ offers, promoCodes, catMap, isLoggedIn }: OffersC
               aria-label={`Filter by ${tab.label}`}
               className={`min-h-[44px] px-5 rounded-full font-medium text-sm whitespace-nowrap transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500 ${
                 activeTab === tab.id
-                  ? "bg-[#050505] text-white dark:bg-white dark:text-black"
+                  ? "bg-primary text-white dark:bg-white dark:text-black"
                   : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
               }`}
             >
@@ -227,7 +227,7 @@ function OfferCard({
   catMap: Record<string, string>;
 }) {
   const isActive = offer.isActive;
-  const accentColor = isActive ? "bg-[#22C55E]" : "bg-neutral-300 dark:bg-neutral-600";
+  const accentColor = isActive ? "bg-secondary" : "bg-neutral-300 dark:bg-neutral-600";
 
   return (
     <article
@@ -376,7 +376,7 @@ function EmptyState() {
       </p>
       <Link
         href="/products"
-        className="mt-6 inline-flex items-center gap-2 min-h-[44px] px-6 rounded-full bg-[#050505] dark:bg-white text-white dark:text-black text-sm font-bold transition-colors hover:bg-neutral-800 dark:hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500"
+        className="mt-6 inline-flex items-center gap-2 min-h-[44px] px-6 rounded-full bg-primary dark:bg-white text-white dark:text-black text-sm font-bold transition-colors hover:bg-neutral-800 dark:hover:bg-neutral-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-500"
         aria-label="Browse products"
       >
         Browse Products

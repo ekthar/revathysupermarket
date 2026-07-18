@@ -47,8 +47,8 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     lang: "en",
     prefer_related_applications: false,
     shortcuts,
-    background_color: "#F7F7FA",
-    theme_color: "#020617",
+    background_color: "#FFFFFF",
+    theme_color: "#FFFFFF",
     icons: [
       {
         src: "/icons/icon-192.png",

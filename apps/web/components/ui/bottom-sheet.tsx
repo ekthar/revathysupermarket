@@ -14,7 +14,7 @@ export function BottomSheet({ open, onClose, title, children }: BottomSheetProps
   return (
     <Drawer.Root open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 z-[91] bg-black/40 backdrop-blur-sm" />
+        <Drawer.Overlay className="fixed inset-0 z-[91] bg-black/40 backdrop-blur-lg" />
         <Drawer.Content className="fixed inset-x-0 bottom-0 z-[92] max-h-[85dvh] rounded-t-3xl bg-white dark:bg-neutral-900 shadow-2xl outline-none">
           {/* Drag handle */}
           <div className="flex justify-center pt-3 pb-2">

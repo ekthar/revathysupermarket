@@ -163,7 +163,7 @@ export function AddressSelector({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="rounded-lg bg-white p-5 shadow-elevation-3 dark:bg-neutral-900"
+      className="rounded-lg bg-card p-5 shadow-elevation-3 dark:bg-neutral-900"
     >
       <h2 className="text-title font-black text-neutral-900 dark:text-white mb-4">Delivery Address</h2>
 
@@ -203,7 +203,7 @@ export function AddressSelector({
                   onChange={(e) => onUpdate("customerName", e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") e.preventDefault(); }}
                   placeholder="Your name"
-                  className="h-9 w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
+                  className="h-9 w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 <input
                   value={form.phone}
@@ -212,7 +212,7 @@ export function AddressSelector({
                   placeholder="Phone number"
                   type="tel"
                   autoComplete="tel"
-                  className="h-9 w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
+                  className="h-9 w-0 flex-1 rounded-lg border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-800 px-3 text-caption font-medium outline-none focus:ring-2 focus:ring-primary/30"
                 />
               </div>
             </div>
@@ -339,7 +339,7 @@ export function AddressSelector({
               <button
                 type="button"
                 onClick={() => setShowPinPicker(true)}
-                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 py-2 text-caption font-bold text-neutral-700 dark:text-neutral-300 press"
+                className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-full border border-neutral-200 dark:border-neutral-700 bg-card dark:bg-neutral-900 py-2 text-caption font-bold text-neutral-700 dark:text-neutral-300 press"
               >
                 <MapPinned className="h-3.5 w-3.5" />
                 Pin exact location on map
@@ -520,7 +520,7 @@ function CheckoutField({
         inputMode={inputMode}
         value={value}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1.5 w-full h-11 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3.5 text-body text-neutral-900 dark:text-white outline-none focus:border-primary/40 focus:bg-white dark:focus:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
+        className="mt-1.5 w-full h-11 rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 px-3.5 text-body text-neutral-900 dark:text-white outline-none focus:border-primary/40 focus:bg-card dark:focus:bg-neutral-700 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all"
       />
     </label>
   );

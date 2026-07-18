@@ -492,7 +492,7 @@ export function CheckoutForm({
           <button
             type="button"
             onClick={() => setShowConfirm(false)}
-            className="h-12 rounded-2xl border border-neutral-200 bg-white text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+            className="h-12 rounded-2xl border border-neutral-200 bg-card text-sm font-bold text-neutral-700 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
           >
             Cancel
           </button>
@@ -527,7 +527,7 @@ export function CheckoutForm({
           <button
             type="button"
             onClick={() => setRazorpayOrderId("")}
-            className="w-full h-11 rounded-2xl border border-neutral-200 bg-white text-sm font-bold text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+            className="w-full h-11 rounded-2xl border border-neutral-200 bg-card text-sm font-bold text-neutral-600 transition-colors hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
           >
             Cancel
           </button>
@@ -590,7 +590,7 @@ export function CheckoutForm({
         ];
         const activeIndex = steps.findIndex((s) => !s.done);
         return (
-          <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-3 py-3 shadow-elevation-2">
+          <div className="mb-5 rounded-2xl border border-neutral-100 dark:border-neutral-800 bg-card dark:bg-neutral-900 px-3 py-3 shadow-elevation-2">
             <div className="flex items-center justify-between gap-1">
               {steps.map((item, idx) => {
                 const isActive = activeIndex === idx || (activeIndex === -1 && idx === steps.length - 1);
@@ -636,7 +636,7 @@ export function CheckoutForm({
         {/* Left column - Forms */}
         <div className="space-y-5">
           {/* Delivery ETA + Minimum Order Info */}
-          <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-white px-4 py-3 shadow-elevation-2 dark:bg-neutral-900">
+          <div className="flex items-center justify-between rounded-2xl border border-black/5 bg-card px-4 py-3 shadow-elevation-2 dark:bg-neutral-900">
             <div className="flex items-center gap-2.5">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white">
                 <Clock className="h-4 w-4" />
@@ -674,7 +674,7 @@ export function CheckoutForm({
           />
 
           {/* Delivery Options Accordion */}
-          <section className="rounded-2xl border border-neutral-100 bg-white dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
+          <section className="rounded-2xl border border-neutral-100 bg-card dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
             <button
               type="button"
               onClick={() => setDeliveryOptionsOpen(!deliveryOptionsOpen)}
@@ -722,7 +722,7 @@ export function CheckoutForm({
 
           {/* Offers and Rewards - Collapsible */}
           {rewardsEnabled && (
-            <section className="rounded-2xl border border-neutral-100 bg-white dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
+            <section className="rounded-2xl border border-neutral-100 bg-card dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
               <button
                 type="button"
                 onClick={() => setOffersSectionOpen(!offersSectionOpen)}

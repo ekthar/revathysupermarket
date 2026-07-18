@@ -51,7 +51,7 @@ export function FloatingCartBar() {
           }}
           initial={{ opacity: 0, y: 24, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 16, scale: 0.96 }}
+          exit={{ opacity: 0, y: 24, scale: 0.92 }}
           transition={springs.snappy}
         >
           <motion.div whileTap={tapScale.primary} transition={springs.tap} style={{ pointerEvents: "auto" }}>
@@ -59,7 +59,8 @@ export function FloatingCartBar() {
               href="/cart"
               data-cart-icon
               onClick={() => haptic("light")}
-              className="floating-cart-bar"
+              className="floating-cart-bar backdrop-blur-xl"
+              style={{ background: "rgba(5, 5, 5, 0.85)" }}
               aria-label={`View cart, ${totalItems} item${totalItems === 1 ? "" : "s"}, subtotal ${formatCurrency(subtotal)}`}
             >
               {/* Leading: green-tinted circular icon */}

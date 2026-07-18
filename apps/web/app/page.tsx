@@ -20,6 +20,8 @@ import { auth } from "@/auth";
 import { getActiveOrderSummary } from "@/lib/live-order";
 import { LoyaltyProgressBar } from "@/components/home/loyalty-progress-bar";
 import { OrderStreak } from "@/components/home/order-streak";
+import { InfiniteMarquee } from "@/components/ui/gsap/infinite-marquee";
+import { SplashHider } from "@/components/ui/splash-hider";
 
 export const revalidate = 60;
 
@@ -45,7 +47,7 @@ const getHomepageProducts = unstable_cache(
     where: { isActive: true },
     select: { id: true, slug: true, name: true, description: true, image: true, price: true, discountPrice: true, stock: true, popularity: true, unit: true, isFeatured: true, createdAt: true, category: { select: { name: true } } },
     orderBy: [{ isFeatured: "desc" }, { popularity: "desc" }, { createdAt: "desc" }],
-    take: 60
+    take: 24
   }).catch(() => []),
   ["homepage-products"],
   { revalidate: 60, tags: ["homepage", "products"] }
@@ -79,7 +81,7 @@ export default async function HomePage() {
     const msg = maintenanceFlag.config?.message || "We're performing scheduled maintenance. Please check back soon.";
     const eta = maintenanceFlag.config?.eta || "";
     return (
-      <main className="flex min-h-[80dvh] flex-col items-center justify-center px-4 text-center bg-[#F7F7FA] dark:bg-[#020617]">
+      <main className="flex min-h-[80dvh] flex-col items-center justify-center px-4 text-center bg-background">
         <div className="rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 p-8 max-w-md shadow-lg">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30">
             <span className="text-3xl">🔧</span>
@@ -178,9 +180,12 @@ export default async function HomePage() {
   const heroHref = banner?.href || "/products";
 
   return (
-    <main className="min-h-[100dvh] bg-[#F7F7FA] dark:bg-[#020617]">
+    <main className="min-h-[100dvh] bg-background">
       {/* SEO structured data — Organization + WebSite with SearchAction */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
+
+      {/* Hide native splash screen after first paint */}
+      <SplashHider />
 
       {/* Location prompt — shown on first visit if no saved location */}
       <LocationPrompt />
@@ -199,6 +204,24 @@ export default async function HomePage() {
       {/* Search entry — below hero so the value prop lands first */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4">
         <HomeSearch products={allProducts.slice(0, 20)} />
+      </div>
+
+      {/* Infinite marquee — trust signals */}
+      {/* G1: TODO — these should use getTranslations("home") when translation keys are authored */}
+      <div className="py-3 border-y border-[var(--border-subtle)]">
+        <span className="sr-only">Free delivery over ₹499. COD &amp; UPI on delivery. Fresh from farm to door. ~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery. 100% quality guaranteed.</span>
+        <InfiniteMarquee speed={35} className="text-caption font-semibold text-neutral-500 dark:text-neutral-400">
+          <span>Free delivery over ₹499</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
+          <span>COD &amp; UPI on delivery</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
+          <span>Fresh from farm to door</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
+          <span>~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
+          <span>100% quality guaranteed</span>
+          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
+        </InfiniteMarquee>
       </div>
 
       {/* Loyalty progress + order streak for logged-in users */}
@@ -273,7 +296,7 @@ export default async function HomePage() {
         <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 p-8 md:p-12 text-center">
           <h2 className="section-title text-2xl md:text-3xl">Hungry for more?</h2>
           <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
-            Browse our full catalogue of {allProducts.length} fresh products.
+            Browse our full catalogue of fresh products.
           </p>
           <Link
             href="/products"

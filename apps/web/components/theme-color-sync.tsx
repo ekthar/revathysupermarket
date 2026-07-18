@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { syncStatusBarToRoute } from "@/lib/native-bridge";
 
 /**
  * Dynamically updates the meta[name="theme-color"] tag based on the current route
@@ -10,8 +11,8 @@ import { usePathname } from "next/navigation";
  * Route-specific colors:
  * - /admin/*  -> "#1e293b" (dark slate for admin panel)
  * - /delivery/* -> "#059669" (emerald for delivery interface)
- * - Default light -> "#F7F7FA" (off-white per design system)
- * - Default dark  -> "#020617" (slate-950)
+ * - Default light -> "#FFFFFF" (matches glass header)
+ * - Default dark  -> "#0A0A0A" (matches dark glass header)
  */
 function getThemeColor(pathname: string, isDark: boolean): string {
   if (pathname.startsWith("/admin")) {
@@ -20,7 +21,7 @@ function getThemeColor(pathname: string, isDark: boolean): string {
   if (pathname.startsWith("/delivery")) {
     return "#059669";
   }
-  return isDark ? "#020617" : "#F7F7FA";
+  return isDark ? "#0A0A0A" : "#FFFFFF";
 }
 
 function isDarkMode(): boolean {
@@ -40,11 +41,16 @@ export function ThemeColorSync() {
 
   useEffect(() => {
     // Set initial theme color based on current route and theme
-    updateMetaThemeColor(getThemeColor(pathname, isDarkMode()));
+    const isDark = isDarkMode();
+    updateMetaThemeColor(getThemeColor(pathname, isDark));
+    // Also sync native status bar (no-op on web)
+    syncStatusBarToRoute(pathname, isDark);
 
     // Observe class changes on <html> to detect theme toggling
     const observer = new MutationObserver(() => {
-      updateMetaThemeColor(getThemeColor(pathname, isDarkMode()));
+      const dark = isDarkMode();
+      updateMetaThemeColor(getThemeColor(pathname, dark));
+      syncStatusBarToRoute(pathname, dark);
     });
 
     observer.observe(document.documentElement, {

@@ -41,7 +41,13 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
     HIDDEN.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 
   // Polling for active order — stops when no order found for 2 consecutive checks
+  // D9: Skip poll entirely for logged-out users (no session cookie = no orders)
   useEffect(() => {
+    // Quick check: if no auth cookie exists, skip polling entirely
+    const hasSession = document.cookie.includes("next-auth.session-token") ||
+      document.cookie.includes("__Secure-next-auth.session-token");
+    if (!hasSession && !initialOrder) return;
+
     let active = true;
     let emptyCount = 0;
     let interval: ReturnType<typeof setInterval> | null = null;

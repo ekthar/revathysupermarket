@@ -25,12 +25,19 @@ export function AnimatedStoreName({
     () => {
       if (prefersReducedMotion() || !ref.current) return;
 
+      // A3: Only animate on first visit per session
+      const SESSION_KEY = "store-name-animated";
+      if (typeof window !== "undefined" && sessionStorage.getItem(SESSION_KEY)) return;
+
       gsap.to(ref.current, {
         backgroundPositionX: "200%",
         duration: 3.5,
         ease: "none",
-        repeat: -1,
+        repeat: 2,
         yoyo: true,
+        onComplete: () => {
+          try { sessionStorage.setItem(SESSION_KEY, "1"); } catch {}
+        },
       });
     },
     { scope: ref }

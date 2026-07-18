@@ -40,8 +40,6 @@ export default async function AccountPage() {
 
       {/* Profile card */}
       <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-secondary-500 via-secondary-600 to-teal-700 p-4 text-white shadow-premium">
-        <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-white/12" />
-        <div className="absolute right-4 top-12 h-24 w-24 rounded-full bg-white/10" />
         <div className="flex items-center gap-3">
           <div className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-white/20 ring-1 ring-white/35">
             {user?.image ? (

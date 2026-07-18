@@ -53,6 +53,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Keep ref in sync
   itemsRef.current = items;
 
+  // Debounce timer for localStorage writes (D4)
+  const persistTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(CART_STORAGE_KEY);
@@ -69,9 +72,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!hydrated) return;
-    window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-    // Notify granular subscribers
+    // Debounce localStorage writes: only persist after 500ms of no changes
+    if (persistTimerRef.current) clearTimeout(persistTimerRef.current);
+    persistTimerRef.current = setTimeout(() => {
+      window.localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    }, 500);
+    // Notify granular subscribers immediately (UI stays responsive)
     listenersRef.current.forEach((listener) => listener());
+    return () => { if (persistTimerRef.current) clearTimeout(persistTimerRef.current); };
   }, [hydrated, items]);
 
   // Reconcile the cart against current server stock/price once after hydration.
@@ -227,11 +235,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     addItem, addItems, removeItem, updateQuantity, clearCart
   }), [addItem, addItems, removeItem, updateQuantity, clearCart]);
 
+  // E5: Server renders empty cart. Client hydrates from localStorage.
+  // This is intentional — the brief empty→filled flash is handled by
+  // AnimatePresence in cart-page-client.tsx and FloatingCartBar.
   return (
     <CartStoreContext.Provider value={store}>
       <CartActionsContext.Provider value={actions}>
         <CartStateContext.Provider value={state}>
-          {children}
+          <div suppressHydrationWarning>
+            {children}
+          </div>
         </CartStateContext.Provider>
       </CartActionsContext.Provider>
     </CartStoreContext.Provider>

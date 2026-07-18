@@ -20,7 +20,7 @@ function getThemeColor(pathname: string, isDark: boolean): string {
   if (pathname.startsWith("/delivery")) {
     return "#059669";
   }
-  return isDark ? "#020617" : "#F7F7FA";
+  return isDark ? "#0A0A0A" : "#FFFFFF";
 }
 
 function isDarkMode(): boolean {

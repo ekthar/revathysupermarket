@@ -112,34 +112,35 @@ const config: Config = {
         }
       },
       fontSize: {
-        display: ["32px", { lineHeight: "1.1", letterSpacing: "-0.02em", fontWeight: "900" }],
-        heading: ["24px", { lineHeight: "1.2", letterSpacing: "-0.02em", fontWeight: "700" }],
-        title: ["20px", { lineHeight: "1.25", letterSpacing: "-0.015em", fontWeight: "700" }],
+        display: ["32px", { lineHeight: "1.1", letterSpacing: "-0.04em", fontWeight: "900" }],
+        heading: ["24px", { lineHeight: "1.2", letterSpacing: "-0.03em", fontWeight: "700" }],
+        title: ["20px", { lineHeight: "1.25", letterSpacing: "-0.02em", fontWeight: "700" }],
         body: ["14px", { lineHeight: "1.5", letterSpacing: "0", fontWeight: "500" }],
-        caption: ["12px", { lineHeight: "1.4", letterSpacing: "0", fontWeight: "500" }],
-        micro: ["10px", { lineHeight: "1.3", letterSpacing: "0.01em", fontWeight: "600" }]
+        caption: ["12px", { lineHeight: "1.4", letterSpacing: "0.005em", fontWeight: "500" }],
+        micro: ["11px", { lineHeight: "1.3", letterSpacing: "0.02em", fontWeight: "600" }]
       },
       fontFamily: {
         sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "system-ui", "sans-serif"],
         display: ["var(--font-display)", "-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "system-ui", "sans-serif"]
       },
       boxShadow: {
-        "elevation-1": "0 1px 3px rgba(5, 5, 5, 0.04), 0 4px 12px rgba(5, 5, 5, 0.06)",
-        "elevation-2": "0 2px 8px rgba(5, 5, 5, 0.04), 0 4px 16px rgba(5, 5, 5, 0.06)",
-        "elevation-3": "0 4px 12px rgba(5, 5, 5, 0.06), 0 12px 32px rgba(5, 5, 5, 0.08)",
-        premium: "0 24px 80px -42px rgba(5, 5, 5, 0.65)",
-        soft: "0 18px 45px -30px rgba(5, 5, 5, 0.35)"
+        "elevation-1": "0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.04)",
+        "elevation-2": "0 2px 4px rgba(0, 0, 0, 0.03), 0 8px 24px rgba(0, 0, 0, 0.06)",
+        "elevation-3": "0 4px 8px rgba(0, 0, 0, 0.04), 0 16px 48px rgba(0, 0, 0, 0.08)",
+        float: "0 8px 32px -4px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06)",
+        glass: "0 8px 32px rgba(0, 0, 0, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.2)",
+        premium: "0 24px 80px -20px rgba(0, 0, 0, 0.20)",
+        soft: "0 18px 45px -30px rgba(0, 0, 0, 0.18)"
       },
-      // NOTE: These override Tailwind defaults significantly.
-      // rounded-lg = 20px (Tailwind default: 8px)
-      // rounded-xl = 28px (Tailwind default: 12px)
-      // Use these intentionally; check Tailwind docs for default values.
+      // Apple-proportional radius scale: tighter for dense grids, larger for containers
       borderRadius: {
         sm: "6px",
+        DEFAULT: "8px",
         md: "12px",
-        lg: "20px",
-        xl: "28px",
-        "2xl": "1.5rem",
+        lg: "16px",
+        xl: "20px",
+        "2xl": "24px",
+        "3xl": "32px",
         full: "9999px"
       }
     }

@@ -29,7 +29,7 @@ export function AnimatedStoreName({
         backgroundPositionX: "200%",
         duration: 3.5,
         ease: "none",
-        repeat: -1,
+        repeat: 2,
         yoyo: true,
       });
     },

@@ -59,7 +59,8 @@ export function FloatingCartBar() {
               href="/cart"
               data-cart-icon
               onClick={() => haptic("light")}
-              className="floating-cart-bar"
+              className="floating-cart-bar backdrop-blur-xl"
+              style={{ background: "rgba(5, 5, 5, 0.85)" }}
               aria-label={`View cart, ${totalItems} item${totalItems === 1 ? "" : "s"}, subtotal ${formatCurrency(subtotal)}`}
             >
               {/* Leading: green-tinted circular icon */}

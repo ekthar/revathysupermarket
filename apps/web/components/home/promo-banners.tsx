@@ -30,7 +30,7 @@ export function PromoBanners({ banners }: { banners?: Banner[] }) {
 function BannerCarousel({ banners }: { banners: Banner[] }) {
   const [api, setApi] = useState<CarouselApi>();
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [slideCount, setSlideCount] = useState(0);
+  const [slideCount, setSlideCount] = useState(banners.length);
   const [isHovered, setIsHovered] = useState(false);
   const [isTouched, setIsTouched] = useState(false);
   const touchResumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

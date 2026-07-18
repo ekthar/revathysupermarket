@@ -118,7 +118,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
           above the indicator. */}
       <motion.span
         className="relative z-10 flex flex-col items-center gap-0.5"
-        whileTap={{ scale: 0.88 }}
+        whileTap={{ scale: 0.92 }}
         transition={springs.tap}
       >
         <span className="relative">

@@ -21,6 +21,7 @@ import { getActiveOrderSummary } from "@/lib/live-order";
 import { LoyaltyProgressBar } from "@/components/home/loyalty-progress-bar";
 import { OrderStreak } from "@/components/home/order-streak";
 import { InfiniteMarquee } from "@/components/ui/gsap/infinite-marquee";
+import { LazyRender } from "@/components/ui/lazy-render";
 import { SplashHider } from "@/components/ui/splash-hider";
 
 export const revalidate = 60;
@@ -267,7 +268,7 @@ export default async function HomePage() {
 
       {/* On Sale Today — only when discounts exist */}
       {offers.length > 0 && (
-        <div className="cv-auto">
+        <LazyRender height={400} rootMargin="300px" className="cv-auto">
           <AnimatedProductSection
             title="On Sale Today"
             subtitle="Limited-time discounts you don&apos;t want to miss"
@@ -275,12 +276,12 @@ export default async function HomePage() {
             products={offers}
             layout="grid"
           />
-        </div>
+        </LazyRender>
       )}
 
       {/* Staff Picks — only when featured products exist */}
       {featuredProducts.length > 0 && (
-        <div className="cv-auto">
+        <LazyRender height={400} rootMargin="300px" className="cv-auto">
           <AnimatedProductSection
             title="Staff Picks"
             subtitle="Our featured favourites of the week"
@@ -288,7 +289,7 @@ export default async function HomePage() {
             products={featuredProducts}
             layout="grid"
           />
-        </div>
+        </LazyRender>
       )}
 
       {/* Final CTA row — browse all, no duplicate grid */}

@@ -1,16 +1,16 @@
 "use client";
 
-import { useRef, type ReactNode } from "react";
+import { useRef, useEffect, type ReactNode } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 
 /**
  * ScrollReveal — fade/slide children into view once, GSAP-powered.
  *
- * Use for section content that should announce itself on scroll.
- * For pinning / scrubbing use StickyStack or HorizontalPan instead.
+ * Safety: content starts visible (CSS default). GSAP hides it then reveals.
+ * If GSAP fails, a 3s timeout forces visibility. Content is NEVER permanently hidden.
  *
- * Honors `prefers-reduced-motion`: collapses to an instant fade.
+ * Apple HIG: reveals should be subtle and purposeful.
  */
 export function ScrollReveal({
   children,
@@ -32,6 +32,7 @@ export function ScrollReveal({
   amount?: number;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  const animatedRef = useRef(false);
 
   useGSAP(
     () => {
@@ -40,6 +41,9 @@ export function ScrollReveal({
 
       if (prefersReducedMotion()) {
         gsap.set(el, { opacity: 1, y: 0 });
+        const items = el.querySelectorAll("[data-reveal-item]");
+        if (items.length) gsap.set(items, { opacity: 1, y: 0 });
+        animatedRef.current = true;
         return;
       }
 
@@ -59,6 +63,9 @@ export function ScrollReveal({
             start: `top ${Math.round((1 - amount) * 100)}%`,
             toggleActions: once ? "play none none none" : "play none none reverse",
             once
+          },
+          onComplete: () => {
+            animatedRef.current = true;
           }
         });
       }, el);
@@ -67,6 +74,21 @@ export function ScrollReveal({
     },
     { scope: ref, dependencies: [y, delay, stagger, duration, once, amount] }
   );
+
+  // Safety: force visible after 3s if GSAP hasn't completed
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (!animatedRef.current && ref.current) {
+        ref.current.style.opacity = "1";
+        ref.current.style.transform = "none";
+        ref.current.querySelectorAll("[data-reveal-item]").forEach((el) => {
+          (el as HTMLElement).style.opacity = "1";
+          (el as HTMLElement).style.transform = "none";
+        });
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <div ref={ref} className={className}>
@@ -77,7 +99,6 @@ export function ScrollReveal({
 
 /**
  * ScrollRevealItem — marks a child to be staggered by a parent ScrollReveal.
- * Wrap items with this when using `stagger > 0`.
  */
 export function ScrollRevealItem({
   children,
@@ -93,7 +114,7 @@ export function ScrollRevealItem({
   );
 }
 
-/** Keep ScrollTrigger aware of layout changes (cart bars, route transitions). */
+/** Keep ScrollTrigger aware of layout changes. */
 export function refreshScrollTrigger() {
   if (typeof window === "undefined") return;
   ScrollTrigger.refresh();

@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ChevronRight, Bike, Search, Clock } from "lucide-react";
 import { useGSAP } from "@gsap/react";
-import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
+import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { useRef } from "react";
 import { Sparkles } from "lucide-react";
 import { SplitTextReveal } from "@/components/ui/gsap/split-text-reveal";
@@ -35,26 +35,26 @@ export function HeroSection({
       if (prefersReducedMotion() || !desktopRef.current || !imageRef.current) return;
 
       const ctx = gsap.context(() => {
-        // Parallax on hero image
+        // Parallax on hero image — gentle, only on desktop
         gsap.to(imageRef.current, {
-          y: 60,
+          y: 40,
           ease: "none",
           scrollTrigger: {
             trigger: desktopRef.current,
             start: "top top",
             end: "bottom top",
-            scrub: 1.5
+            scrub: 2
           }
         });
 
-        // Floating badge bob animation
+        // Floating badge bob — gentle, loops only 3 times
         if (badgeRef.current) {
           gsap.to(badgeRef.current, {
-            y: -6,
-            duration: 2,
+            y: -4,
+            duration: 2.5,
             ease: "power1.inOut",
             yoyo: true,
-            repeat: -1,
+            repeat: 5,
           });
         }
       }, desktopRef.current);
@@ -97,10 +97,7 @@ export function HeroSection({
               </p>
 
               <div className="mt-8 flex flex-wrap items-center gap-4">
-                <Link
-                  href={heroHref}
-                  className="show-all-pill inline-flex"
-                >
+                <Link href={heroHref} className="show-all-pill inline-flex">
                   Shop Now
                   <ChevronRight className="h-4 w-4" />
                 </Link>
@@ -117,7 +114,7 @@ export function HeroSection({
                 <span>Free delivery over ₹499</span>
               </div>
 
-              {/* Integrated search entry — button styled as input for accessibility (B8) */}
+              {/* Desktop search entry */}
               <div className="mt-5 relative max-w-md">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
                 <button
@@ -153,7 +150,7 @@ export function HeroSection({
         </div>
       </section>
 
-      {/* Mobile Hero Banner */}
+      {/* Mobile Hero — enhanced with key info (previously missing) */}
       <section className="px-4 pt-3 pb-1 md:hidden">
         <Link href={heroHref} className="block relative overflow-hidden rounded-2xl aspect-[2.2/1] press">
           <Image
@@ -169,12 +166,30 @@ export function HeroSection({
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <span className="inline-block text-micro font-semibold text-white/90 bg-white/20 backdrop-blur-sm rounded-full px-2 py-0.5 mb-1.5">
-              {deliveryRadiusKm} KM delivery
-            </span>
             <h2 className="text-title font-bold text-white leading-snug">{heroTitle}</h2>
           </div>
         </Link>
+
+        {/* Mobile value props — key info visible immediately */}
+        <div className="mt-3 flex items-center gap-3 overflow-x-auto no-scrollbar">
+          <div className="flex items-center gap-1.5 shrink-0 rounded-full bg-secondary-50 dark:bg-secondary-900/30 px-3 py-1.5">
+            <Clock className="h-3 w-3 text-secondary-600 dark:text-secondary-400" />
+            <span className="text-[11px] font-bold text-secondary-700 dark:text-secondary-300 whitespace-nowrap">
+              {deliveryEstimateMin}–{deliveryEstimateMax} min
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5">
+            <Bike className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
+            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
+              Free over ₹499
+            </span>
+          </div>
+          <div className="flex items-center gap-1.5 shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5">
+            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
+              COD & UPI
+            </span>
+          </div>
+        </div>
       </section>
     </>
   );

@@ -87,7 +87,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
       href={href}
       prefetch
       onMouseEnter={onPrefetch}
-      onTouchStart={onPrefetch}
+      onPointerDown={onPrefetch}
       onClick={(e) => {
         // Drive navigation ourselves so the indicator can move optimistically
         // in the same tick as the tap. Preserve modifier-click / middle-click.

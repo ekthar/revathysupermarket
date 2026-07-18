@@ -38,7 +38,7 @@ gsap.registerEffect({
   name: "countUp",
   effect(targets: gsap.TweenTarget, config: { endValue?: number; duration?: number; prefix?: string; suffix?: string }) {
     const el = (targets as HTMLElement[])[0] || targets;
-    const end = config.endValue ?? parseInt((el as HTMLElement).textContent || "0", 10);
+    const end = config.endValue ?? Number(((el as HTMLElement).textContent || "0").replace(/[^0-9.-]/g, ""));
     const obj = { value: 0 };
     return gsap.to(obj, {
       value: end,

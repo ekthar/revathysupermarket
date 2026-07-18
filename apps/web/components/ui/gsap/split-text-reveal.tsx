@@ -37,10 +37,13 @@ export function SplitTextReveal({
 }) {
   const containerRef = useRef<HTMLSpanElement>(null);
 
+  // Normalize whitespace before splitting (A18)
+  const normalizedText = children.replace(/\s+/g, ' ').trim();
+
   const segments =
     splitBy === "char"
-      ? children.split("")
-      : children.split(/(\s+)/);
+      ? normalizedText.split("")
+      : normalizedText.split(/(\s+)/);
 
   useGSAP(
     () => {

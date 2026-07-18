@@ -208,6 +208,7 @@ export default async function HomePage() {
 
       {/* Infinite marquee — trust signals */}
       <div className="py-3 border-y border-[var(--border-subtle)]">
+        <span className="sr-only">Free delivery over ₹499. COD &amp; UPI on delivery. Fresh from farm to door. ~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery. 100% quality guaranteed.</span>
         <InfiniteMarquee speed={35} className="text-caption font-semibold text-neutral-500 dark:text-neutral-400">
           <span>Free delivery over ₹499</span>
           <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>

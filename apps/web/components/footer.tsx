@@ -26,8 +26,22 @@ export function Footer({ storeName, address }: { storeName?: string; address?: s
   const name = storeName || SITE.name;
 
   return (
-    <footer className="hidden md:block border-t border-neutral-100 dark:border-neutral-800 mt-4 print:hidden">
-      <div className="max-w-7xl mx-auto px-6 lg:px-8 py-12">
+    <footer className="border-t border-neutral-100 dark:border-neutral-800 mt-4 print:hidden">
+      {/* Mobile simplified footer */}
+      <div className="md:hidden py-4 px-4">
+        <nav className="flex items-center justify-around">
+          <Link href="/" className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">Home</Link>
+          <Link href="/products" className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">Shop</Link>
+          <Link href="/support" className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">Help</Link>
+          <Link href="/account" className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white">Account</Link>
+        </nav>
+        <p className="mt-3 text-xs text-neutral-400 dark:text-neutral-500 text-center">
+          &copy; {new Date().getFullYear()} {name}
+        </p>
+      </div>
+
+      {/* Desktop full footer */}
+      <div className="hidden md:block max-w-7xl mx-auto px-6 lg:px-8 py-12">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-2 lg:grid-cols-4 footer-grid">
           <div>
             <h3 className="font-display text-lg font-black text-neutral-900 dark:text-white">{name}</h3>

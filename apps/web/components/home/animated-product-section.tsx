@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useGSAP } from "@gsap/react";
 import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
 import { ProductCard } from "@/components/product-card";
@@ -104,6 +104,29 @@ export function AnimatedProductSection({
     },
     { scope: sectionRef }
   );
+
+  // A8: Refresh ScrollTrigger when cv-auto section enters viewport for the first time
+  // This recalculates trigger positions after content-visibility: auto renders the content
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            ScrollTrigger.refresh();
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      { rootMargin: "100px" }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   return (
     <section

@@ -21,7 +21,7 @@ const config: CapacitorConfig = {
     backgroundColor: "#FFFFFF",
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: process.env.NODE_ENV !== "production",
+    webContentsDebuggingEnabled: false,
     initialFocus: false,
   },
   ios: {

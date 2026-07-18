@@ -123,6 +123,8 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     function onTouchStart(e: TouchEvent) {
+      // B5: Multi-touch guard — ignore multi-finger gestures
+      if (e.touches.length > 1) return;
       const touch = e.touches[0];
       if (touch.clientX > EDGE_ZONE) return;
       // B10: Block new gestures during commit animation
@@ -255,12 +257,12 @@ export function SwipeBack({ children }: { children: React.ReactNode }) {
       {/* Dark overlay behind the page (visible during swipe) */}
       <div
         ref={overlayRef}
-        className="fixed inset-0 bg-black/30 pointer-events-none z-[-1]"
+        className="fixed inset-0 bg-black/30 pointer-events-none z-[1]"
         style={{ opacity: 0 }}
         aria-hidden="true"
       />
       {/* Page content (transforms during swipe) */}
-      <div ref={containerRef} style={{ willChange: "transform" }}>
+      <div ref={containerRef} className="z-[2] relative" style={{ willChange: "transform" }}>
         {children}
       </div>
     </>

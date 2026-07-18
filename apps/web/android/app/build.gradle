@@ -1,10 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.revathysupermarket.delivery"
+    namespace = "in.revathysupermarket.customer"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.revathysupermarket.delivery"
+        applicationId "in.revathysupermarket.customer"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
@@ -63,11 +63,16 @@ dependencies {
 
 apply from: 'capacitor.build.gradle'
 
+// Firebase/Google Services — only apply if google-services.json exists AND
+// contains a matching client for our applicationId. Skip gracefully for
+// debug builds without Firebase configured.
 try {
     def servicesJSON = file('google-services.json')
-    if (servicesJSON.text) {
+    if (servicesJSON.exists() && servicesJSON.text.contains(android.defaultConfig.applicationId)) {
         apply plugin: 'com.google.gms.google-services'
+    } else {
+        logger.lifecycle("google-services.json not found or doesn't match package '${android.defaultConfig.applicationId}'. Push notifications disabled for this build.")
     }
 } catch(Exception e) {
-    logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+    logger.lifecycle("google-services.json error: ${e.message}. Push notifications disabled.")
 }

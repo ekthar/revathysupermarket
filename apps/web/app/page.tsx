@@ -20,6 +20,7 @@ import { auth } from "@/auth";
 import { getActiveOrderSummary } from "@/lib/live-order";
 import { LoyaltyProgressBar } from "@/components/home/loyalty-progress-bar";
 import { OrderStreak } from "@/components/home/order-streak";
+import { InfiniteMarquee } from "@/components/ui/gsap/infinite-marquee";
 
 export const revalidate = 60;
 
@@ -178,7 +179,7 @@ export default async function HomePage() {
   const heroHref = banner?.href || "/products";
 
   return (
-    <main className="min-h-[100dvh] bg-[#F7F7FA] dark:bg-[#020617]">
+    <main className="min-h-[100dvh] bg-background">
       {/* SEO structured data — Organization + WebSite with SearchAction */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
 
@@ -199,6 +200,22 @@ export default async function HomePage() {
       {/* Search entry — below hero so the value prop lands first */}
       <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4">
         <HomeSearch products={allProducts.slice(0, 20)} />
+      </div>
+
+      {/* Infinite marquee — trust signals */}
+      <div className="py-3 border-y border-[var(--border-subtle)]">
+        <InfiniteMarquee speed={35} className="text-caption font-semibold text-neutral-500 dark:text-neutral-400">
+          <span>Free delivery over ₹499</span>
+          <span className="text-secondary-500">*</span>
+          <span>COD &amp; UPI on delivery</span>
+          <span className="text-secondary-500">*</span>
+          <span>Fresh from farm to door</span>
+          <span className="text-secondary-500">*</span>
+          <span>~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery</span>
+          <span className="text-secondary-500">*</span>
+          <span>100% quality guaranteed</span>
+          <span className="text-secondary-500">*</span>
+        </InfiniteMarquee>
       </div>
 
       {/* Loyalty progress + order streak for logged-in users */}

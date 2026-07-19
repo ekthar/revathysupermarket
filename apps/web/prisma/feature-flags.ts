@@ -217,7 +217,7 @@ export const featureFlags: Array<{
   {
     id: "ff_telegram_enabled",
     key: "telegram_enabled",
-    enabled: false,
+    enabled: true,
     config: { fallbackOrder: ["telegram", "whatsapp", "sms"] },
   },
   {
@@ -244,6 +244,9 @@ export const featureFlags: Array<{
  * Upserts every feature flag. Existing rows are left untouched (update: {})
  * so operator toggles are preserved across re-runs; only missing flags are
  * created.
+ *
+ * Exception: `telegram_enabled` is force-enabled if it was previously seeded
+ * as disabled (migration from the old default).
  */
 export async function seedFeatureFlags(prisma: PrismaClient): Promise<number> {
   let created = 0;
@@ -256,5 +259,12 @@ export async function seedFeatureFlags(prisma: PrismaClient): Promise<number> {
     });
     if (!before) created += 1;
   }
+
+  // Force-enable telegram_enabled if it was seeded with the old default (false)
+  await prisma.featureFlag.updateMany({
+    where: { key: "telegram_enabled", enabled: false },
+    data: { enabled: true },
+  });
+
   return created;
 }

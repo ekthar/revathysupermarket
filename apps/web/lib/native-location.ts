@@ -24,7 +24,6 @@ let watchId: string | number | null = null;
 let backgroundWatchId: any = null;
 let isTracking = false;
 
-
 /** Start foreground location tracking */
 export async function startLocationTracking(
   callback: LocationCallback,
@@ -33,15 +32,12 @@ export async function startLocationTracking(
   if (isTracking) return;
   isTracking = true;
 
-  const interval = options?.interval ?? 15000;
   const highAccuracy = options?.highAccuracy ?? true;
 
   if (isNative) {
     try {
-      // @ts-ignore
-      const { Geolocation } = await import(
-        /* webpackIgnore: true */ "@capacitor/geolocation"
-      );
+      // @ts-ignore — only available in Capacitor native shell
+      const { Geolocation } = await import(/* webpackIgnore: true */ "@capacitor/geolocation");
       watchId = await Geolocation.watchPosition(
         { enableHighAccuracy: highAccuracy, timeout: 10000 },
         (position: any, err: any) => {
@@ -64,22 +60,18 @@ export async function startLocationTracking(
   }
 }
 
-
 /** Start background location tracking (delivery partners) */
 export async function startBackgroundTracking(
   callback: LocationCallback,
   options?: { interval?: number; notificationTitle?: string }
 ): Promise<void> {
   if (!isNative || platform !== "android") {
-    // Background tracking only supported on native Android
     return startLocationTracking(callback, { interval: options?.interval });
   }
 
   try {
-    // @ts-ignore
-    const BackgroundGeolocation = await import(
-      /* webpackIgnore: true */ "@capacitor-community/background-geolocation"
-    );
+    // @ts-ignore — only available in Capacitor native shell
+    const BackgroundGeolocation = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation");
 
     backgroundWatchId = await BackgroundGeolocation.addWatcher(
       {
@@ -87,7 +79,7 @@ export async function startBackgroundTracking(
         backgroundMessage: "Location is being shared with the store",
         requestPermissions: true,
         stale: false,
-        distanceFilter: 10, // meters
+        distanceFilter: 10,
       },
       (location: any, error: any) => {
         if (error || !location) return;
@@ -102,11 +94,9 @@ export async function startBackgroundTracking(
       }
     );
   } catch {
-    // Fallback to foreground tracking
     await startLocationTracking(callback, { interval: options?.interval });
   }
 }
-
 
 /** Stop all location tracking */
 export async function stopLocationTracking(): Promise<void> {
@@ -114,10 +104,8 @@ export async function stopLocationTracking(): Promise<void> {
 
   if (isNative && watchId !== null) {
     try {
-      // @ts-ignore
-      const { Geolocation } = await import(
-        /* webpackIgnore: true */ "@capacitor/geolocation"
-      );
+      // @ts-ignore — only available in Capacitor native shell
+      const { Geolocation } = await import(/* webpackIgnore: true */ "@capacitor/geolocation");
       await Geolocation.clearWatch({ id: watchId as string });
     } catch {}
     watchId = null;
@@ -125,16 +113,13 @@ export async function stopLocationTracking(): Promise<void> {
 
   if (backgroundWatchId !== null) {
     try {
-      // @ts-ignore
-      const BackgroundGeolocation = await import(
-        /* webpackIgnore: true */ "@capacitor-community/background-geolocation"
-      );
+      // @ts-ignore — only available in Capacitor native shell
+      const BackgroundGeolocation = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation");
       await BackgroundGeolocation.removeWatcher({ id: backgroundWatchId });
     } catch {}
     backgroundWatchId = null;
   }
 
-  // Web fallback cleanup
   if (!isNative && watchId !== null) {
     navigator.geolocation.clearWatch(watchId as number);
     watchId = null;
@@ -145,10 +130,8 @@ export async function stopLocationTracking(): Promise<void> {
 export async function getCurrentPosition(): Promise<LocationUpdate | null> {
   if (isNative) {
     try {
-      // @ts-ignore
-      const { Geolocation } = await import(
-        /* webpackIgnore: true */ "@capacitor/geolocation"
-      );
+      // @ts-ignore — only available in Capacitor native shell
+      const { Geolocation } = await import(/* webpackIgnore: true */ "@capacitor/geolocation");
       const pos = await Geolocation.getCurrentPosition({
         enableHighAccuracy: true,
         timeout: 10000,
@@ -166,7 +149,6 @@ export async function getCurrentPosition(): Promise<LocationUpdate | null> {
     }
   }
 
-  // Web fallback
   return new Promise((resolve) => {
     if (!navigator.geolocation) { resolve(null); return; }
     navigator.geolocation.getCurrentPosition(
@@ -195,7 +177,7 @@ function startWebLocationTracking(
   callback: LocationCallback,
   highAccuracy: boolean
 ): void {
-  if (!navigator.geolocation) return;
+  if (typeof navigator === "undefined" || !navigator.geolocation) return;
   watchId = navigator.geolocation.watchPosition(
     (pos) => {
       callback({

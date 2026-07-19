@@ -17,6 +17,7 @@ import { sendPushToUser } from "@/lib/push";
 import { sendFcmToAdmins } from "@/lib/fcm-admin";
 import { sendOrderConfirmationEmail } from "@/lib/email";
 import { notifyOrderSms } from "@/lib/sms/notify-order";
+import { notifyOrderViaTelegram } from "@/lib/telegram-notifications";
 import { getActiveDeliveryOtp } from "@/lib/delivery";
 
 function orderNumber() {
@@ -172,6 +173,8 @@ export async function POST(request: Request) {
         orderNumber: order!.orderNumber,
         total: Number(order!.total),
       }),
+      // Send order confirmation via Telegram (fire-and-forget, checks feature flag internally)
+      notifyOrderViaTelegram(order!.phone, order!.orderNumber, "ORDER_RECEIVED"),
     ]);
 
     return NextResponse.json({ orderId: order!.id, orderNumber: order!.orderNumber, total: Number(order!.total) });

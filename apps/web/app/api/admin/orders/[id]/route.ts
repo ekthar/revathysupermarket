@@ -9,6 +9,7 @@ import { sendWhatsAppTemplate } from "@/lib/whatsapp-business";
 import { notifyOrderStatus } from "@/lib/notifications";
 import { awardDeliveredOrderBenefits, releaseCancelledOrderReservations } from "@/lib/loyalty";
 import { publishOrderStatusChanged } from "@/lib/realtime/event-publisher";
+import { notifyOrderViaTelegram } from "@/lib/telegram-notifications";
 import { sendFcmToUser } from "@/lib/fcm-admin";
 import { createDeliveryOtp, deliveryOtpExpiryDate } from "@/lib/delivery";
 
@@ -138,6 +139,9 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     if (parsed.data.status === "OUT_FOR_DELIVERY") {
       await sendWhatsAppTemplate({ to: before.phone, template: "out_for_delivery", params: [before.orderNumber, before.deliveryOtp ?? ""], orderId: id }).catch(() => null);
     }
+
+    // Send Telegram notification for all status changes
+    notifyOrderViaTelegram(before.phone, before.orderNumber, parsed.data.status, before.deliveryOtp ?? undefined).catch(() => null);
   }
   // ─── PUBLISH REAL-TIME EVENT ───
   publishOrderStatusChanged({

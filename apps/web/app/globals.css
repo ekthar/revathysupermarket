@@ -1378,16 +1378,9 @@ html[data-keyboard-open] [data-hide-on-keyboard="true"] {
   background: rgba(255, 255, 255, 0.25);
 }
 
-/* Smooth color scheme transition */
-* {
-  transition-property: background-color, border-color;
+/* Dark mode color scheme transitions — ONLY on theme toggle elements */
+[data-theme-transition] {
+  transition-property: background-color, border-color, color;
   transition-duration: 200ms;
   transition-timing-function: ease;
-}
-
-/* Exclude animation elements from color transitions */
-[data-framer-motion],
-.animate-*,
-[class*="animate-"] {
-  transition-property: none;
 }

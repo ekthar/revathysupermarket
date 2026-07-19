@@ -52,7 +52,6 @@ export function getRedis(): Redis | null {
         port,
         username,
         password,
-        tls: {},
         maxRetriesPerRequest: 3,
         lazyConnect: true,
         enableReadyCheck: true,

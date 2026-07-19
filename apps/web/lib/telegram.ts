@@ -17,6 +17,7 @@
  */
 
 import { prisma } from "@/lib/prisma";
+import { normalizeIndianPhone } from "@/lib/otp";
 
 const TELEGRAM_API_BASE = "https://api.telegram.org";
 
@@ -71,9 +72,12 @@ async function sendTelegramMessage(chatId: string, text: string): Promise<Telegr
  * Returns success: false if user has no Telegram chat linked.
  */
 export async function sendOtpViaTelegram(phone: string, otp: string): Promise<TelegramResult> {
+  // Normalize phone to match TelegramLink storage format (e.g. "918086728253")
+  const normalizedPhone = normalizeIndianPhone(phone);
+
   // Look up user's Telegram chat ID from their linked account
   const link = await prisma.telegramLink.findUnique({
-    where: { phone },
+    where: { phone: normalizedPhone },
     select: { chatId: true, isVerified: true },
   }).catch(() => null);
 
@@ -105,13 +109,16 @@ export async function sendTelegramNotification(
   title: string,
   body: string
 ): Promise<TelegramResult> {
+  // Normalize phone to match TelegramLink storage format (e.g. "918086728253")
+  const normalizedPhone = normalizeIndianPhone(phone);
+
   const link = await prisma.telegramLink.findUnique({
-    where: { phone },
+    where: { phone: normalizedPhone },
     select: { chatId: true, isVerified: true },
   }).catch(() => null);
 
   if (!link || !link.isVerified) {
-    return { success: false, error: "No Telegram link" };
+    return { success: false, error: `No Telegram link for phone ${normalizedPhone}` };
   }
 
   const message = `<b>${title}</b>\n\n${body}`;

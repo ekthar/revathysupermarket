@@ -104,12 +104,20 @@ jobs:
               cp capacitor.delivery.config.ts capacitor.config.ts
               # Update Android package name for delivery
               sed -i 's/in.revathysupermarket.customer/in.revathysupermarket.delivery/g' android/app/build.gradle
+              # Inject delivery-specific permissions into AndroidManifest
+              sed -i '/<\/manifest>/d' android/app/src/main/AndroidManifest.xml
+              grep '<uses-permission' android/app/src/main/AndroidManifest.delivery.xml >> android/app/src/main/AndroidManifest.xml
+              echo '</manifest>' >> android/app/src/main/AndroidManifest.xml
               ;;
             staff)
               echo "Using capacitor.staff.config.ts"
               cp capacitor.staff.config.ts capacitor.config.ts
               # Update Android package name for staff
               sed -i 's/in.revathysupermarket.customer/in.revathysupermarket.staff/g' android/app/build.gradle
+              # Inject staff-specific permissions into AndroidManifest
+              sed -i '/<\/manifest>/d' android/app/src/main/AndroidManifest.xml
+              grep '<uses-permission' android/app/src/main/AndroidManifest.staff.xml >> android/app/src/main/AndroidManifest.xml
+              echo '</manifest>' >> android/app/src/main/AndroidManifest.xml
               ;;
           esac
 

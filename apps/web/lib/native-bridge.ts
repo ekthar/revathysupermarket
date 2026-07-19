@@ -191,3 +191,97 @@ export async function hideSplash(): Promise<void> {
     await SplashScreen.hide({ fadeOutDuration: 300 });
   } catch {}
 }
+
+
+// ─── Notification Channels (Android) ─────────────────────────────────────────
+
+/**
+ * Create Android notification channels on app start.
+ * Must be called early (before any notification is sent).
+ * iOS ignores this — channels are Android-only.
+ *
+ * Channels:
+ * - delivery_alarm: MAX priority, custom sound, bypass DND, full-screen intent
+ * - order_alerts: HIGH priority, custom sound, heads-up
+ * - order_updates: DEFAULT priority, system sound
+ * - promotions: LOW priority, no sound
+ */
+export async function createNotificationChannels(): Promise<void> {
+  if (!isNative || platform !== "android") return;
+
+  try {
+    // @ts-ignore
+    const { LocalNotifications } = await import(/* webpackIgnore: true */ "@capacitor/local-notifications");
+
+    await LocalNotifications.createChannel({
+      id: "delivery_alarm",
+      name: "Delivery Assignments",
+      description: "Critical alerts when a new delivery is assigned to you",
+      importance: 5, // MAX
+      visibility: 1, // PUBLIC
+      sound: "delivery_alarm.wav",
+      vibration: true,
+      lights: true,
+      lightColor: "#059669",
+    });
+
+    await LocalNotifications.createChannel({
+      id: "order_alerts",
+      name: "New Orders",
+      description: "Alerts when a new order comes in (staff/admin)",
+      importance: 4, // HIGH
+      visibility: 1,
+      sound: "order_alert.wav",
+      vibration: true,
+      lights: true,
+      lightColor: "#22C55E",
+    });
+
+    await LocalNotifications.createChannel({
+      id: "order_updates",
+      name: "Order Updates",
+      description: "Status updates for your orders (preparing, dispatched, delivered)",
+      importance: 3, // DEFAULT
+      visibility: 0, // PRIVATE
+      sound: "notification.wav",
+      vibration: true,
+    });
+
+    await LocalNotifications.createChannel({
+      id: "promotions",
+      name: "Promotions & Offers",
+      description: "Special deals and promotional offers",
+      importance: 2, // LOW
+      visibility: 0,
+      vibration: false,
+    });
+
+    await LocalNotifications.createChannel({
+      id: "location_tracking",
+      name: "Location Tracking",
+      description: "Shows while your location is being shared during deliveries",
+      importance: 2, // LOW (persistent, not intrusive)
+      visibility: 0,
+      vibration: false,
+    });
+
+  } catch {
+    // LocalNotifications plugin not available — ignore
+  }
+}
+
+// ─── App Initialization ──────────────────────────────────────────────────────
+
+/**
+ * Initialize all native features on app start.
+ * Call once from the root layout or providers component.
+ */
+export async function initializeNativeApp(): Promise<void> {
+  if (!isNative) return;
+
+  // Create notification channels (Android)
+  await createNotificationChannels();
+
+  // Hide splash after initialization
+  await hideSplash();
+}

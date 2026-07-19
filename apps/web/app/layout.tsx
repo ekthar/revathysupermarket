@@ -22,6 +22,8 @@ import { FloatingCartBar } from "@/components/cart/floating-cart-bar";
 import { LiveOrderMiniBar } from "@/components/tracking/live-order-mini-bar";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { PermissionGate } from "@/components/native/permission-gate";
+import { AlarmOverlay } from "@/components/native/alarm-overlay";
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
@@ -134,9 +136,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         </a>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers session={session}>
+            <PermissionGate>
             <ViewportStability />
             <ScrollProgress />
             <OnboardingTour />
+            <AlarmOverlay />
             <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
             <LiveOrderMiniBar />
             <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
@@ -152,6 +156,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <ScrollToTop />
             <FloatingCartBar />
             <MobileBottomNav user={user} />
+            </PermissionGate>
           </Providers>
         </NextIntlClientProvider>
       </body>

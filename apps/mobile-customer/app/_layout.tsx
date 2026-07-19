@@ -81,7 +81,8 @@ function RootLayoutInner() {
           headerTitleStyle: { fontWeight: "700", color: "#111827" },
           headerShadowVisible: false,
           contentStyle: { backgroundColor: "#FFFFFF" },
-          animation: "slide_from_right",
+          animation: "ios_from_right",
+          animationDuration: 350,
         }}
       >
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />

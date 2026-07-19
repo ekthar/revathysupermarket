@@ -369,7 +369,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
           <View className="flex-1 justify-center items-center px-8">
             {/* Icon container */}
             <Animated.View
-              entering={FadeInDown.duration(500).springify()}
+              entering={FadeInDown.duration(600).damping(18).stiffness(120)}
               key={`icon-${slide.id}`}
               className="mb-6"
             >
@@ -380,7 +380,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
             {/* Badge */}
             <Animated.View
-              entering={FadeInDown.delay(100).duration(400).springify()}
+              entering={FadeInDown.delay(100).duration(500).damping(18).stiffness(120)}
               key={`badge-${slide.id}`}
               className="mb-4"
             >
@@ -394,7 +394,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
             {/* Title */}
             <Animated.View
-              entering={FadeInDown.delay(200).duration(500).springify()}
+              entering={FadeInDown.delay(200).duration(600).damping(20).stiffness(100)}
               key={`title-${slide.id}`}
             >
               <Text className="text-center text-white text-[34px] font-black leading-[40px] tracking-tight">
@@ -404,7 +404,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
             {/* Subtitle */}
             <Animated.View
-              entering={FadeInDown.delay(300).duration(400).springify()}
+              entering={FadeInDown.delay(350).duration(500).damping(20).stiffness(100)}
               key={`subtitle-${slide.id}`}
               className="mt-4 max-w-[280px]"
             >
@@ -440,7 +440,7 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
 
             {/* Action buttons */}
             {isLast ? (
-              <Animated.View entering={FadeInUp.duration(400).springify()}>
+              <Animated.View entering={FadeInUp.duration(500).damping(18).stiffness(120)}>
                 {/* Primary CTA - Get Started */}
                 <Pressable
                   onPress={handleComplete}

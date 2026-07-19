@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { normalizeIndianPhone, createOtpToken, countRecentOtps, otpRateLimitPer10Min } from "@/lib/otp";
 import { sendOtpViaWhatsApp } from "@/lib/whatsapp";
 import { sendOtpViaSms } from "@/lib/sms";
+import { sendOtpViaTelegram } from "@/lib/telegram";
 import { isFeatureEnabled } from "@/lib/feature-flags";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
 
@@ -72,8 +73,19 @@ export async function POST(request: Request) {
     // Check feature flags for delivery channels
     const whatsappEnabled = await isFeatureEnabled("whatsapp_enabled");
     const smsEnabled = await isFeatureEnabled("sms_enabled");
+    const telegramEnabled = await isFeatureEnabled("telegram_enabled");
 
     const channels: string[] = [];
+
+    // Send OTP via Telegram if enabled (fastest delivery)
+    if (telegramEnabled) {
+      try {
+        const result = await sendOtpViaTelegram(normalizedPhone, otp);
+        if (result.success) channels.push("Telegram");
+      } catch (error) {
+        console.error("Telegram OTP send failed:", error);
+      }
+    }
 
     // Send OTP via WhatsApp if enabled
     if (whatsappEnabled) {
@@ -82,14 +94,23 @@ export async function POST(request: Request) {
         channels.push("WhatsApp");
       } catch (error) {
         console.error("WhatsApp OTP send failed:", error);
+        // SMS fallback: if WhatsApp fails and SMS is enabled, auto-fallback
+        if (smsEnabled && !channels.includes("SMS")) {
+          try {
+            const smsResult = await sendOtpViaSms(normalizedPhone, otp);
+            if (smsResult.success) channels.push("SMS");
+          } catch (smsError) {
+            console.error("SMS fallback also failed:", smsError);
+          }
+        }
       }
     }
 
-    // Send OTP via SMS if enabled
-    if (smsEnabled) {
+    // Send OTP via SMS if enabled (and not already sent as fallback)
+    if (smsEnabled && !channels.includes("SMS")) {
       try {
-        await sendOtpViaSms(normalizedPhone, otp);
-        channels.push("SMS");
+        const result = await sendOtpViaSms(normalizedPhone, otp);
+        if (result.success) channels.push("SMS");
       } catch (error) {
         console.error("SMS OTP send failed:", error);
       }

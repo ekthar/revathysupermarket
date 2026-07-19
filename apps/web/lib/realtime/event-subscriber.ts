@@ -25,7 +25,7 @@
  *   reads naturally prevent re-delivery.
  */
 
-import { Redis } from "@upstash/redis";
+import { getRedis } from "@/lib/redis";
 import type { RealtimeEvent } from "./event-publisher";
 
 // ============================================================
@@ -68,16 +68,7 @@ export type SubscriptionOptions = {
 // REDIS CONNECTION
 // ============================================================
 
-let redisInstance: Redis | null = null;
-
-function getRedis(): Redis | null {
-  if (redisInstance) return redisInstance;
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return null;
-  }
-  redisInstance = Redis.fromEnv();
-  return redisInstance;
-}
+// Uses shared connection from lib/redis.ts
 
 // ============================================================
 // STREAM SUBSCRIPTION
@@ -145,29 +136,27 @@ export function createStreamSubscription(options: SubscriptionOptions): () => vo
 
         if (cursor === "$") {
           // First poll with "$": no history, just set cursor to latest entry
-          // Read the latest entry to establish our starting position
-          const latest = (await redis.xrevrange(stream, "+", "-", 1)) as unknown as Array<{ id: string;[key: string]: unknown }> | null;
+          const latest = await redis.xrevrange(stream, "+", "-", "COUNT", 1);
           if (latest && latest.length > 0) {
-            // Set cursor to the latest entry ID — we'll start reading AFTER this
-            cursors.set(stream, latest[0].id);
+            cursors.set(stream, latest[0][0]);
           } else {
-            // Stream is empty or doesn't exist yet — use "0" and wait
             cursors.set(stream, "0-0");
           }
-          continue; // Skip to next poll cycle to start reading new events
+          continue;
         }
 
-        // Normal XREAD: get entries after our cursor
-        const result = (await redis.xrange(stream, `(${cursor}`, "+", batchSize)) as unknown as Array<{ id: string;[key: string]: unknown }> | null;
+        // Normal XRANGE: get entries after our cursor
+        const result = await redis.xrange(stream, `(${cursor}`, "+", "COUNT", batchSize);
 
         if (result && result.length > 0) {
-          entries = result.map((entry) => {
-            // Upstash returns entries as { id, field1: val1, field2: val2, ... }
+          // ioredis returns [[id, [field, value, field, value, ...]], ...]
+          entries = result.map((entry: [string, string[]]) => {
+            const [id, fields] = entry;
             const fieldMap: Record<string, string> = {};
-            for (const [key, value] of Object.entries(entry)) {
-              if (key !== "id") fieldMap[key] = String(value ?? "");
+            for (let i = 0; i < fields.length; i += 2) {
+              fieldMap[fields[i]] = fields[i + 1];
             }
-            return { id: entry.id, fields: fieldMap };
+            return { id, fields: fieldMap };
           });
         }
 
@@ -247,20 +236,21 @@ export async function readRecentEvents(
   if (!redis) return [];
 
   try {
-    const result = (await redis.xrevrange(streamKey, "+", "-", count)) as unknown as Array<{ id: string;[key: string]: unknown }> | null;
+    const result = await redis.xrevrange(streamKey, "+", "-", "COUNT", count);
     if (!result || result.length === 0) return [];
 
     return result
-      .map((entry) => {
+      .map((entry: [string, string[]]) => {
+        const [id, fields] = entry;
         const fieldMap: Record<string, string> = {};
-        for (const [key, value] of Object.entries(entry)) {
-          if (key !== "id") fieldMap[key] = String(value ?? "");
+        for (let i = 0; i < fields.length; i += 2) {
+          fieldMap[fields[i]] = fields[i + 1];
         }
         try {
           const event = JSON.parse(fieldMap.payload || "{}") as RealtimeEvent;
           return {
-            id: entry.id,
-            eventId: fieldMap.eventId || entry.id,
+            id,
+            eventId: fieldMap.eventId || id,
             type: fieldMap.type || event.type,
             event,
             timestamp: Number(fieldMap.ts) || 0,

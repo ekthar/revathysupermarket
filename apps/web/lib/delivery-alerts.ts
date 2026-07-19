@@ -4,7 +4,7 @@
  * Works alongside the push notification system for comprehensive alerting.
  */
 
-import { Redis } from "@upstash/redis";
+import { getRedis } from "@/lib/redis";
 import { prisma } from "@/lib/prisma";
 
 type AlertPayload = {
@@ -21,23 +21,15 @@ type AlertPayload = {
 /** TTL for alert keys in seconds. Alerts auto-expire after 5 minutes to handle brief reconnections. */
 const ALERT_KEY_TTL_SECONDS = 300;
 
-let redis: Redis | null = null;
 let fallbackWarningLogged = false;
 
-function getRedis(): Redis | null {
-  if (redis) return redis;
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    if (!fallbackWarningLogged) {
-      fallbackWarningLogged = true;
-      console.warn(
-        "[delivery-alerts] UPSTASH_REDIS_REST_URL or UPSTASH_REDIS_REST_TOKEN not configured. " +
-          "Delivery alerts will be no-ops until Redis is available."
-      );
-    }
-    return null;
+function getDeliveryRedis() {
+  const client = getRedis();
+  if (!client && !fallbackWarningLogged) {
+    fallbackWarningLogged = true;
+    console.warn("[delivery-alerts] Redis not configured. Delivery alerts will be no-ops.");
   }
-  redis = Redis.fromEnv();
-  return redis;
+  return client;
 }
 
 /**
@@ -53,7 +45,7 @@ function partnerAlertKey(partnerId: string): string {
  * Returns true if the alert was successfully enqueued; false if Redis is unavailable.
  */
 export async function sendDeliveryAlert(partnerId: string, payload: AlertPayload): Promise<boolean> {
-  const client = getRedis();
+  const client = getDeliveryRedis();
   if (!client) return false;
 
   try {
@@ -77,7 +69,7 @@ export async function sendDeliveryAlert(partnerId: string, payload: AlertPayload
  * the same shared broadcast key (LRANGE + DEL is non-atomic).
  */
 export async function broadcastToAllDeliveryPartners(payload: AlertPayload): Promise<void> {
-  const client = getRedis();
+  const client = getDeliveryRedis();
   if (!client) return;
 
   try {

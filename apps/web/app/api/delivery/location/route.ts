@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { Redis } from "@upstash/redis";
+import { getRedis } from "@/lib/redis";
 import { prisma } from "@/lib/prisma";
 import { deliveryLocationSchema } from "@/lib/validations";
 import { enforceRateLimit, rateLimitResponse } from "@/lib/distributed-rate-limit";
@@ -10,11 +10,6 @@ import { ARRIVAL_RADIUS_METERS } from "@/lib/constants";
 
 const AUTO_ARRIVE_HOLD_SECONDS = 20;
 const PROXIMITY_KEY_TTL = 60;
-
-function getRedis(): Redis | null {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) return null;
-  return Redis.fromEnv();
-}
 
 async function autoArrive(orderId: string, partnerId: string, latitude: number, longitude: number, distanceM: number) {
   const order = await prisma.order.findUnique({
@@ -111,9 +106,10 @@ export async function POST(request: Request) {
 
     if (distanceMetres <= ARRIVAL_RADIUS_METERS) {
       if (redis) {
-        const entered = await redis.get<number>(proxKey);
+        const enteredRaw = await redis.get(proxKey);
+        const entered = enteredRaw ? Number(enteredRaw) : null;
         if (entered === null) {
-          await redis.set(proxKey, Date.now(), { ex: PROXIMITY_KEY_TTL });
+          await redis.set(proxKey, String(Date.now()), "EX", PROXIMITY_KEY_TTL);
         } else if (Date.now() - entered >= AUTO_ARRIVE_HOLD_SECONDS * 1000) {
           await redis.del(proxKey).catch(() => {});
           await autoArrive(activeOrder.id, authResult.userId, parsed.data.latitude, parsed.data.longitude, distanceMetres);

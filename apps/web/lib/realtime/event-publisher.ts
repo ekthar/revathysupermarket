@@ -22,7 +22,7 @@
  * Old events auto-evict via approximate trimming.
  */
 
-import { Redis } from "@upstash/redis";
+import { getRedis } from "@/lib/redis";
 import { randomUUID } from "crypto";
 
 // ============================================================
@@ -106,16 +106,7 @@ export const channels = {
 // REDIS CONNECTION
 // ============================================================
 
-let redisInstance: Redis | null = null;
-
-function getRedis(): Redis | null {
-  if (redisInstance) return redisInstance;
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return null;
-  }
-  redisInstance = Redis.fromEnv();
-  return redisInstance;
-}
+// Uses shared connection from lib/redis.ts
 
 // ============================================================
 // PUBLISHER
@@ -152,12 +143,13 @@ async function publishToStreams(streamKeys: string[], event: RealtimeEvent): Pro
     // Publish to all target streams in parallel
     await Promise.all(
       streamKeys.map(async (key) => {
-        // XADD with approximate MAXLEN trimming
-        // Upstash xadd signature: xadd(key, id, fields)
-        // For MAXLEN trimming, we use a separate XTRIM call
-        await redis.xadd(key, "*", entry);
-        // Trim to approximate MAXLEN to bound memory
-        await redis.xtrim(key, { strategy: "MAXLEN", threshold: STREAM_MAXLEN, exactness: "~" });
+        // XADD with MAXLEN trimming using ioredis
+        await redis.xadd(key, "MAXLEN", "~", STREAM_MAXLEN, "*",
+          "eventId", eventId,
+          "type", event.type,
+          "payload", JSON.stringify(event),
+          "ts", String(event.timestamp)
+        );
         // Refresh TTL so inactive streams expire
         await redis.expire(key, STREAM_TTL_SECONDS);
       })

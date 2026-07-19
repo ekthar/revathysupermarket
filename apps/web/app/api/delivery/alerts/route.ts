@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { auth } from "@/auth";
-import { Redis } from "@upstash/redis";
+import { getRedis } from "@/lib/redis";
 
 /**
  * Redis polling interval in milliseconds.
@@ -14,20 +14,8 @@ import { Redis } from "@upstash/redis";
  */
 const POLL_INTERVAL_MS = 2500;
 
-function getRedis(): Redis | null {
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
-    return null;
-  }
-  return Redis.fromEnv();
-}
-
 /**
  * SSE endpoint for delivery partner real-time order alerts.
- * Delivery partners connect here to receive instant alerts when orders are assigned.
- *
- * Implementation uses Redis list polling instead of in-memory global state,
- * enabling multi-instance deployments where any server can publish alerts
- * and any server can deliver them to connected partners.
  */
 export async function GET(request: NextRequest) {
   const session = await auth();

@@ -6,8 +6,8 @@ export const DynamicMotionDiv = dynamic(
   { ssr: false }
 );
 
-// Onboarding tour - only loaded when needed
-export const DynamicOnboardingTour = dynamic(
-  () => import("@/components/ui/onboarding-tour").then((mod) => mod.OnboardingTour),
-  { ssr: false, loading: () => <div className="h-8" /> }
+// Welcome onboarding - only loaded when needed
+export const DynamicWelcomeOnboarding = dynamic(
+  () => import("@/components/onboarding/welcome-onboarding").then((mod) => mod.WelcomeOnboarding),
+  { ssr: false, loading: () => null }
 );

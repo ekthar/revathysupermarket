@@ -16,6 +16,7 @@ import { GlobalSearchSheet } from "@/components/search/global-search";
 import { AnimatedStoreName } from "@/components/ui/gsap/animated-store-name";
 import { useTranslations } from "next-intl";
 import { ThemeToggleIcon } from "@/components/theme-toggle";
+import { MegaMenu } from "@/components/navigation/mega-menu";
 
 const navLinks = [
   { href: "/products", label: "Shop" },
@@ -42,6 +43,18 @@ export const Header = memo(function Header({
   const router = useRouter();
   const t = useTranslations("common");
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // Keyboard shortcut: ⌘K / Ctrl+K to open search
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "k") {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   // Prefer native back navigation (preserves scroll position + history) and
   // fall back to the parent path when there is no in-app history to return to
@@ -91,20 +104,17 @@ export const Header = memo(function Header({
               </Link>
             </div>
 
-            {/* Navigation links */}
+            {/* Navigation links + Mega Menu */}
             <nav className="hidden lg:flex items-center gap-1">
-              {navLinks.map((link) => {
+              {navLinks.slice(0, 2).map((link) => {
                 const [linkPath, linkQuery] = link.href.split("?");
                 const linkParams = new URLSearchParams(linkQuery || "");
-                // Exact path match for simple routes, path + query match for param-based routes
                 let isActive = false;
                 if (linkQuery) {
-                  // Has query params: match path AND all query params must match
                   isActive = pathname === linkPath && [...linkParams.entries()].every(
                     ([key, val]) => searchParams.get(key) === val
                   );
                 } else {
-                  // No query params: exact path match only (avoid matching /products when on /products?category=X)
                   isActive = pathname === linkPath && !searchParams.has("category") && !searchParams.has("sort");
                 }
                 return (
@@ -121,6 +131,7 @@ export const Header = memo(function Header({
                   </Link>
                 );
               })}
+              <MegaMenu />
             </nav>
 
             {/* Right actions */}
@@ -137,11 +148,14 @@ export const Header = memo(function Header({
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="hidden md:flex items-center gap-2 h-10 pl-3 pr-4 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press text-sm font-medium text-neutral-500"
+                className="hidden md:flex items-center gap-2 h-10 pl-4 pr-5 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 ring-1 ring-neutral-200/60 dark:ring-neutral-700/60 hover:ring-neutral-300 dark:hover:ring-neutral-600 transition-all press text-sm font-medium text-neutral-500 min-w-[200px] lg:min-w-[260px]"
                 aria-label="Search products"
               >
-                <Search className="h-4 w-4" />
-                <span className="max-w-[7rem] truncate">Search…</span>
+                <Search className="h-4 w-4 shrink-0" />
+                <span className="truncate">Search products...</span>
+                <kbd className="ml-auto hidden xl:inline-flex h-5 items-center rounded border border-neutral-200 dark:border-neutral-700 px-1.5 text-[10px] font-semibold text-neutral-400">
+                  ⌘K
+                </kbd>
               </button>
 
               <Link

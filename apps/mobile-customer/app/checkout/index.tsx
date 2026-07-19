@@ -12,6 +12,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { router, Stack } from "expo-router";
 import { ArrowLeft, Check, MapPin, CreditCard, Navigation, Gift } from "lucide-react-native";
 import { useCartStore } from "@/stores/cart";
+import { useAuthStore } from "@/stores/auth";
 import { useSettingsStore } from "@/stores/settings";
 import { api } from "@/services/api";
 import {
@@ -39,6 +40,15 @@ interface DeliverySlot {
 }
 
 export default function CheckoutScreen() {
+  // Gate: require authentication to checkout
+  const { status } = useAuthStore();
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      showToast("Please sign in to checkout", "info");
+      router.replace("/(auth)/login");
+    }
+  }, [status]);
+
   const [step, setStep] = useState(0);
   const [addresses, setAddresses] = useState<Address[]>([]);
   const [loadingAddresses, setLoadingAddresses] = useState(true);

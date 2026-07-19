@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Redirect, Tabs } from "expo-router";
+import { Tabs, router } from "expo-router";
 import { View, Text } from "react-native";
 import {
   Home,
@@ -32,12 +32,10 @@ export default function TabsLayout() {
     return () => clearInterval(interval);
   }, [status]);
 
-  // Redirect unauthenticated users to login
-  if (status === "unauthenticated") {
-    return <Redirect href="/(auth)/login" />;
-  }
+  // Guest browsing: allow unauthenticated users to browse Home, Categories, Cart
+  // Only gate Orders and Account tabs — redirect to login on tap
 
-  // Show loading
+  // Show loading only during initial auth check
   if (status === "loading") {
     return (
       <View className="flex-1 items-center justify-center bg-white">
@@ -118,7 +116,13 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="orders"
-        listeners={{ tabPress: () => lightHaptic() }}
+        listeners={{ tabPress: (e) => {
+          lightHaptic();
+          if (status !== "authenticated") {
+            e.preventDefault();
+            router.push("/(auth)/login");
+          }
+        }}}
         options={{
           title: "Orders",
           tabBarIcon: ({ focused, color }) => (
@@ -134,7 +138,13 @@ export default function TabsLayout() {
       />
       <Tabs.Screen
         name="account"
-        listeners={{ tabPress: () => lightHaptic() }}
+        listeners={{ tabPress: (e) => {
+          lightHaptic();
+          if (status !== "authenticated") {
+            e.preventDefault();
+            router.push("/(auth)/login");
+          }
+        }}}
         options={{
           title: "You",
           tabBarIcon: ({ focused, color }) => (

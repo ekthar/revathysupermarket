@@ -11,7 +11,9 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import { Providers } from "@/components/providers";
 import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
-import { OnboardingTour } from "@/components/ui/onboarding-tour";
+import { WelcomeOnboarding } from "@/components/onboarding/welcome-onboarding";
+import { CoachMarks } from "@/components/onboarding/coach-marks";
+import { AnnouncementBar } from "@/components/navigation/announcement-bar";
 import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
 import { Footer } from "@/components/footer";
@@ -20,6 +22,7 @@ import { RouteTransition } from "@/components/ui/route-transition";
 import { SwipeBack } from "@/components/ui/swipe-back";
 import { FloatingCartBar } from "@/components/cart/floating-cart-bar";
 import { LiveOrderMiniBar } from "@/components/tracking/live-order-mini-bar";
+import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { PermissionGate } from "@/components/native/permission-gate";
@@ -139,8 +142,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <PermissionGate>
             <ViewportStability />
             <ScrollProgress />
-            <OnboardingTour />
+            <WelcomeOnboarding />
+            <CoachMarks />
             <AlarmOverlay />
+            <AnnouncementBar />
             <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
             <LiveOrderMiniBar />
             <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
@@ -150,7 +155,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 tabIndex={-1}
                 aria-live="polite"
                 aria-label="Page content"
-              ><RouteTransition><SwipeBack>{children}</SwipeBack></RouteTransition></div>
+              >
+              <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-3">
+                <Breadcrumbs />
+              </div>
+              <RouteTransition><SwipeBack>{children}</SwipeBack></RouteTransition></div>
             </Suspense>
             <Footer storeName={settings.storeName} address={settings.address} />
             <ScrollToTop />

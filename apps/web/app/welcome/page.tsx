@@ -1,16 +1,18 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { SITE } from "@/lib/constants";
-import { safeCallbackUrl } from "@/lib/safe-redirect";
-import { getPublicShellSettings } from "@/lib/store-settings";
 
 export const metadata: Metadata = {
   title: "Welcome",
-  description: `Set up your ${SITE.name} grocery delivery account.`
+  description: `Welcome to ${SITE.name}. Start shopping fresh groceries.`
 };
 
+/**
+ * Welcome page now redirects to products (no forced login gate).
+ * The new onboarding experience is shown as a non-blocking overlay
+ * on the main page via WelcomeOnboarding component in layout.tsx.
+ */
 export default async function WelcomePage({
   searchParams
 }: {
@@ -18,13 +20,12 @@ export default async function WelcomePage({
 }) {
   const session = await auth();
   const { callbackUrl } = await searchParams;
-  const safeCallback = safeCallbackUrl(callbackUrl, "/", ["/", "/products", "/cart", "/checkout", "/dashboard", "/account", "/support"]);
 
+  // If authenticated, go to callback or home
   if (session?.user?.id) {
-    redirect(safeCallback);
+    redirect(callbackUrl || "/");
   }
 
-  const { logoUrl } = await getPublicShellSettings();
-
-  return <OnboardingFlow callbackUrl={safeCallback} logoUrl={logoUrl} />;
+  // Not authenticated — redirect to products (browse-first experience)
+  redirect("/products");
 }

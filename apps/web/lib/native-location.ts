@@ -71,7 +71,7 @@ export async function startBackgroundTracking(
 
   try {
     // @ts-ignore — only available in Capacitor native shell
-    const BackgroundGeolocation = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation");
+    const BackgroundGeolocation = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation") as any;
 
     backgroundWatchId = await BackgroundGeolocation.addWatcher(
       {
@@ -114,7 +114,7 @@ export async function stopLocationTracking(): Promise<void> {
   if (backgroundWatchId !== null) {
     try {
       // @ts-ignore — only available in Capacitor native shell
-      const BackgroundGeolocation = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation");
+      const BackgroundGeolocation = await import(/* webpackIgnore: true */ "@capacitor-community/background-geolocation") as any;
       await BackgroundGeolocation.removeWatcher({ id: backgroundWatchId });
     } catch {}
     backgroundWatchId = null;

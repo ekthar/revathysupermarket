@@ -187,6 +187,16 @@ const FLAG_META: Record<string, { label: string; description: string; icon: Reac
     description: "Send OTPs and order updates via SMS",
     icon: Phone,
   },
+  telegram_enabled: {
+    label: "Telegram OTP & Notifications",
+    description: "Send OTP codes and order updates via Telegram bot",
+    icon: MessageCircle,
+  },
+  email_enabled: {
+    label: "Email Notifications",
+    description: "Send order confirmations and status updates via email (Resend)",
+    icon: Bell,
+  },
 };
 
 const FLAG_CATEGORIES: { title: string; keys: string[]; color: string }[] = [
@@ -212,7 +222,7 @@ const FLAG_CATEGORIES: { title: string; keys: string[]; color: string }[] = [
   },
   {
     title: "Notifications & Messaging",
-    keys: ["whatsapp_enabled", "sms_enabled", "ring_alert_rules", "print_required_alert"],
+    keys: ["whatsapp_enabled", "sms_enabled", "telegram_enabled", "email_enabled", "ring_alert_rules", "print_required_alert"],
     color: "indigo",
   },
   {

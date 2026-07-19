@@ -141,8 +141,10 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
     }
 
     // Send Telegram notification for all status changes
-    notifyOrderViaTelegram(before.phone, before.orderNumber, parsed.data.status, before.deliveryOtp ?? undefined).catch(() => null);
+    console.log(`[Telegram] About to call notifyOrderViaTelegram: phone=${before.phone}, order=${before.orderNumber}, status=${parsed.data.status}`);
+    notifyOrderViaTelegram(before.phone, before.orderNumber, parsed.data.status, before.deliveryOtp ?? undefined).catch((e) => console.error("[Telegram] notifyOrderViaTelegram threw:", e));
   }
+
   // ─── PUBLISH REAL-TIME EVENT ───
   publishOrderStatusChanged({
     orderId: id,

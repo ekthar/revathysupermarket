@@ -64,12 +64,17 @@ export async function notifyOrderViaTelegram(
 ): Promise<void> {
   try {
     const enabled = await isFeatureEnabled("telegram_enabled");
+    console.log(`[Telegram] notifyOrderViaTelegram called: phone=${phone}, order=${orderNumber}, status=${status}, enabled=${enabled}`);
     if (!enabled) return;
 
     const msg = ORDER_MESSAGES[status];
-    if (!msg) return; // Unknown status, skip
+    if (!msg) {
+      console.log(`[Telegram] No message template for status: ${status}`);
+      return;
+    }
 
-    await sendTelegramNotification(phone, msg.title, msg.body(orderNumber, extra));
+    const result = await sendTelegramNotification(phone, msg.title, msg.body(orderNumber, extra));
+    console.log(`[Telegram] Notification result:`, JSON.stringify(result));
   } catch (error) {
     console.error("[Telegram] Order notification failed:", error);
   }

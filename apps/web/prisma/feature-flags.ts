@@ -215,6 +215,12 @@ export const featureFlags: Array<{
     config: Prisma.JsonNull,
   },
   {
+    id: "ff_telegram_enabled",
+    key: "telegram_enabled",
+    enabled: false,
+    config: { fallbackOrder: ["telegram", "whatsapp", "sms"] },
+  },
+  {
     id: "ff_razorpay_enabled",
     key: "razorpay_enabled",
     enabled: false,

@@ -419,18 +419,20 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             {/* Slide indicator dots */}
             <View className="flex-row items-center justify-center mb-8">
               {slides.map((_, idx) => (
-                <Animated.View
+                <View
                   key={idx}
                   className={`mx-1 rounded-full ${
                     idx === currentIndex
-                      ? "w-8 h-2 bg-white"
-                      : "w-2 h-2 bg-white/30"
+                      ? "w-8 h-2.5 bg-white"
+                      : idx < currentIndex
+                      ? "w-2.5 h-2.5 bg-white/60"
+                      : "w-2.5 h-2.5 bg-white/25"
                   }`}
                   style={idx === currentIndex ? {
                     shadowColor: "#FFFFFF",
                     shadowOffset: { width: 0, height: 0 },
-                    shadowOpacity: 0.5,
-                    shadowRadius: 4,
+                    shadowOpacity: 0.6,
+                    shadowRadius: 6,
                   } : undefined}
                 />
               ))}
@@ -439,41 +441,69 @@ export function OnboardingScreen({ onComplete }: OnboardingScreenProps) {
             {/* Action buttons */}
             {isLast ? (
               <Animated.View entering={FadeInUp.duration(400).springify()}>
+                {/* Primary CTA - Get Started */}
                 <Pressable
                   onPress={handleComplete}
-                  className="h-14 rounded-2xl bg-white items-center justify-center flex-row shadow-lg"
+                  className="h-[56px] rounded-2xl bg-white items-center justify-center flex-row"
                   style={{
                     shadowColor: "#000000",
-                    shadowOffset: { width: 0, height: 8 },
-                    shadowOpacity: 0.15,
-                    shadowRadius: 16,
+                    shadowOffset: { width: 0, height: 10 },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 20,
+                    elevation: 8,
                   }}
                 >
-                  <Text className="text-body font-black text-neutral-900 mr-2">
+                  <Text className="text-[15px] font-black text-neutral-900 mr-2.5 tracking-tight">
                     Get Started
                   </Text>
-                  <ArrowRight size={18} color="#050505" strokeWidth={2.5} />
+                  <View className="h-7 w-7 rounded-full bg-neutral-900 items-center justify-center">
+                    <ArrowRight size={14} color="#FFFFFF" strokeWidth={2.5} />
+                  </View>
                 </Pressable>
 
+                {/* Secondary - Browse as Guest */}
                 <Pressable
                   onPress={handleComplete}
-                  className="mt-3 h-12 rounded-xl items-center justify-center border border-white/25"
+                  className="mt-4 h-[50px] rounded-2xl items-center justify-center bg-white/10 border border-white/20"
                 >
-                  <Text className="text-body font-bold text-white/80">
+                  <Text className="text-[14px] font-bold text-white">
                     Browse as Guest
                   </Text>
                 </Pressable>
               </Animated.View>
             ) : (
-              <Pressable
-                onPress={goToNext}
-                className="h-14 rounded-2xl bg-white/15 border border-white/25 items-center justify-center flex-row"
-              >
-                <Text className="text-body font-bold text-white mr-2">
-                  Next
-                </Text>
-                <ArrowRight size={16} color="#FFFFFF" strokeWidth={2} />
-              </Pressable>
+              <View>
+                {/* Next button - beautiful glass style */}
+                <Pressable
+                  onPress={goToNext}
+                  className="h-[56px] rounded-2xl items-center justify-center flex-row bg-white/15 border border-white/25"
+                  style={{
+                    shadowColor: "#FFFFFF",
+                    shadowOffset: { width: 0, height: 4 },
+                    shadowOpacity: 0.08,
+                    shadowRadius: 12,
+                  }}
+                >
+                  <Text className="text-[15px] font-bold text-white mr-2.5">
+                    Continue
+                  </Text>
+                  <View className="h-7 w-7 rounded-full bg-white/20 items-center justify-center">
+                    <ArrowRight size={14} color="#FFFFFF" strokeWidth={2.5} />
+                  </View>
+                </Pressable>
+
+                {/* Skip text link */}
+                <Pressable
+                  onPress={handleComplete}
+                  className="mt-4 items-center justify-center py-2"
+                >
+                  <Text className="text-[13px] font-semibold text-white/50">
+                    Skip intro
+                  </Text>
+                </Pressable>
+              </View>
+            )}
+                </Pressable>
             )}
           </View>
         </Animated.View>

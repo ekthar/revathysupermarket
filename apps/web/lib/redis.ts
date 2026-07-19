@@ -41,7 +41,7 @@ export function getRedis(): Redis | null {
         lazyConnect: true,
         enableReadyCheck: true,
         retryStrategy(times) {
-          if (times > 5) return null; // Stop retrying after 5 attempts
+          if (times > 5) return null;
           return Math.min(times * 200, 2000);
         },
       });
@@ -51,7 +51,6 @@ export function getRedis(): Redis | null {
         port,
         username,
         password,
-        tls: port === 6380 || port === 6379 ? undefined : {},
         maxRetriesPerRequest: 3,
         lazyConnect: true,
         enableReadyCheck: true,

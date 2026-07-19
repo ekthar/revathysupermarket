@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   TextInput,
   Switch,
   TouchableWithoutFeedback,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { Plus, SlidersHorizontal, X } from "lucide-react-native";
@@ -19,6 +20,8 @@ import type { Product, Category } from "@msm/shared/types";
 import { formatCurrency } from "@msm/shared/utils";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { showToast } from "@/components/ui/Toast";
+
+const PAGE_SIZE = 20;
 
 const SORT_OPTIONS = [
   { value: "", label: "Popular" },
@@ -33,12 +36,15 @@ export default function CategoriesScreen() {
   const [products, setProducts] = useState<Product[]>([]);
   const [activeCategory, setActiveCategory] = useState<string | null>(selectedSlug || null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState("");
   const [filterVisible, setFilterVisible] = useState(false);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [inStockOnly, setInStockOnly] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
   const { addItem } = useCartStore();
 
   useEffect(() => {
@@ -46,18 +52,23 @@ export default function CategoriesScreen() {
   }, []);
 
   useEffect(() => {
-    fetchProducts();
+    // Reset and fetch when filters change
+    setProducts([]);
+    setNextCursor(null);
+    setHasMore(true);
+    fetchProducts(true);
   }, [activeCategory, sortBy, minPrice, maxPrice, inStockOnly]);
 
-  const buildQueryString = useCallback(() => {
+  const buildQueryString = useCallback((cursor?: string | null) => {
     const params = new URLSearchParams();
     if (activeCategory) params.set("category", activeCategory);
     if (sortBy) params.set("sort", sortBy);
     if (minPrice) params.set("minPrice", minPrice);
     if (maxPrice) params.set("maxPrice", maxPrice);
     if (inStockOnly) params.set("inStock", "true");
-    const qs = params.toString();
-    return qs ? `?${qs}` : "";
+    params.set("limit", String(PAGE_SIZE));
+    if (cursor) params.set("cursor", cursor);
+    return `?${params.toString()}`;
   }, [activeCategory, sortBy, minPrice, maxPrice, inStockOnly]);
 
   const fetchCategories = async () => {
@@ -67,17 +78,48 @@ export default function CategoriesScreen() {
     } catch {}
   };
 
-  const fetchProducts = async () => {
-    setIsLoading(true);
+  const fetchProducts = async (isInitial: boolean = false) => {
+    if (isInitial) {
+      setIsLoading(true);
+    } else {
+      setIsLoadingMore(true);
+    }
     setError(null);
+
     try {
-      const { data } = await api.get(`/products${buildQueryString()}`);
-      setProducts(data.items || data || []);
+      const cursor = isInitial ? null : nextCursor;
+      const { data } = await api.get(`/products${buildQueryString(cursor)}`);
+      const items = data.items || data || [];
+      const serverCursor = data.nextCursor || null;
+
+      if (isInitial) {
+        setProducts(items);
+      } else {
+        setProducts((prev) => [...prev, ...items]);
+      }
+
+      setNextCursor(serverCursor);
+      setHasMore(!!serverCursor && items.length >= PAGE_SIZE);
     } catch {
       setError("Failed to load products. Pull down to retry.");
     }
+
     setIsLoading(false);
+    setIsLoadingMore(false);
   };
+
+  const loadMore = useCallback(() => {
+    if (!isLoadingMore && hasMore && !isLoading) {
+      fetchProducts(false);
+    }
+  }, [isLoadingMore, hasMore, isLoading, nextCursor]);
+
+  const onRefresh = useCallback(() => {
+    setProducts([]);
+    setNextCursor(null);
+    setHasMore(true);
+    fetchProducts(true);
+  }, [buildQueryString]);
 
   const clearFilters = () => {
     setMinPrice("");
@@ -154,8 +196,19 @@ export default function CategoriesScreen() {
     </Pressable>
   ), [handleAddToCart]);
 
+  // Footer component for loading indicator
+  const renderFooter = useCallback(() => {
+    if (!isLoadingMore) return null;
+    return (
+      <View className="py-6 items-center">
+        <ActivityIndicator size="small" color="#050505" />
+        <Text className="text-micro text-neutral-400 mt-2 font-medium">Loading more...</Text>
+      </View>
+    );
+  }, [isLoadingMore]);
+
   if (error && products.length === 0) {
-    return <ErrorState message={error} onRetry={fetchProducts} />;
+    return <ErrorState message={error} onRetry={onRefresh} />;
   }
 
   return (
@@ -234,7 +287,7 @@ export default function CategoriesScreen() {
         }}
       />
 
-      {/* Products Grid */}
+      {/* Products Grid with Infinite Scroll */}
       <FlatList
         data={products}
         numColumns={2}
@@ -243,13 +296,21 @@ export default function CategoriesScreen() {
         columnWrapperStyle={{ gap: 12 }}
         ItemSeparatorComponent={() => <View className="h-3" />}
         refreshControl={
-          <RefreshControl refreshing={isLoading} onRefresh={fetchProducts} tintColor="#050505" />
+          <RefreshControl refreshing={isLoading && products.length === 0} onRefresh={onRefresh} tintColor="#050505" />
         }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.5}
+        ListFooterComponent={renderFooter}
         ListEmptyComponent={
           !isLoading ? (
             <View className="py-16 items-center">
               <Text className="text-3xl mb-2">{'\uD83D\uDCE6'}</Text>
-              <Text className="text-neutral-400 text-caption">No products found</Text>
+              <Text className="text-neutral-400 text-caption font-medium">No products found</Text>
+              {hasActiveFilters && (
+                <Pressable onPress={clearFilters} className="mt-3 px-4 py-2 rounded-full bg-neutral-100">
+                  <Text className="text-caption font-bold text-neutral-600">Clear filters</Text>
+                </Pressable>
+              )}
             </View>
           ) : null
         }
@@ -284,7 +345,7 @@ export default function CategoriesScreen() {
               onChangeText={setMinPrice}
               className="flex-1 h-11 rounded-xl border border-neutral-200 bg-neutral-50 px-4 text-body text-neutral-900 font-medium"
             />
-            <Text className="text-neutral-400 text-caption">—</Text>
+            <Text className="text-neutral-400 text-caption">{'\u2014'}</Text>
             <TextInput
               placeholder="Max"
               placeholderTextColor="#9CA3AF"

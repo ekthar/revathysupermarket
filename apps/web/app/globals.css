@@ -1313,3 +1313,81 @@ html[data-keyboard-open] [data-hide-on-keyboard="true"] {
 
 /* Zero-flash guarantee: elements are visible until GSAP explicitly sets them.
    GSAP's immediateRender:false means they stay visible until ScrollTrigger fires. */
+
+
+
+/* ===== DESIGN SYSTEM REVAMP — DARK MODE PARITY ===== */
+
+/**
+ * Enhanced dark mode tokens ensuring perfect parity between
+ * desktop (web) and mobile (React Native) dark appearances.
+ * Reference: /packages/shared/design-tokens.ts (darkMode)
+ */
+
+.dark .ios-glass {
+  background: rgba(10, 10, 10, 0.78);
+  border-color: rgba(255, 255, 255, 0.06);
+}
+
+/* Announcement bar dark mode */
+.dark .announcement-bar {
+  background: linear-gradient(to right, #1f2937, #111827, #1f2937);
+}
+
+/* Mega menu dark mode enhancement */
+.dark [data-mega-menu] {
+  background: hsl(222 47% 7%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Breadcrumb dark mode */
+.dark nav[aria-label="Breadcrumb"] a {
+  color: rgba(255, 255, 255, 0.5);
+}
+.dark nav[aria-label="Breadcrumb"] a:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Quick view modal dark mode */
+.dark [role="dialog"] .aspect-square {
+  background: hsl(222 47% 9%);
+}
+
+/* Coach marks dark mode */
+.dark [data-coach-mark] {
+  background: hsl(222 47% 9%);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Login panel dark mode adjustments */
+.dark .login-feature-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.08);
+}
+
+/* Onboarding overlay dark mode */
+.dark [data-onboarding-overlay] {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+/* Enhanced scrollbar for dark mode */
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+}
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Smooth color scheme transition */
+* {
+  transition-property: background-color, border-color;
+  transition-duration: 200ms;
+  transition-timing-function: ease;
+}
+
+/* Exclude animation elements from color transitions */
+[data-framer-motion],
+.animate-*,
+[class*="animate-"] {
+  transition-property: none;
+}

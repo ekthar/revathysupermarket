@@ -10,9 +10,10 @@ export default function AuthLayout() {
   }
 
   return (
-    <Stack screenOptions={{ headerShown: false }}>
+    <Stack screenOptions={{ headerShown: false, presentation: "modal" }}>
       <Stack.Screen name="login" />
       <Stack.Screen name="otp" />
+      <Stack.Screen name="forgot-password" />
     </Stack>
   );
 }

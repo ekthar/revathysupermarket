@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
-import { OnboardingFlow } from "@/components/onboarding/onboarding-flow";
 import { SITE } from "@/lib/constants";
 import { safeCallbackUrl } from "@/lib/safe-redirect";
 import { getPublicShellSettings } from "@/lib/store-settings";
+import { LoginPanel } from "@/components/auth/login-panel";
 
 export const metadata: Metadata = {
   title: "Login",
@@ -29,5 +29,5 @@ export default async function LoginPage({
 
   const { logoUrl } = await getPublicShellSettings();
 
-  return <OnboardingFlow callbackUrl={safeCallback} logoUrl={logoUrl} />;
+  return <LoginPanel callbackUrl={safeCallback} logoUrl={logoUrl} />;
 }

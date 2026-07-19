@@ -40,6 +40,7 @@ export function getRedis(): Redis | null {
         maxRetriesPerRequest: 3,
         lazyConnect: true,
         enableReadyCheck: true,
+        tls: redisUrl.startsWith("rediss://") ? {} : undefined,
         retryStrategy(times) {
           if (times > 5) return null;
           return Math.min(times * 200, 2000);
@@ -51,6 +52,7 @@ export function getRedis(): Redis | null {
         port,
         username,
         password,
+        tls: {},
         maxRetriesPerRequest: 3,
         lazyConnect: true,
         enableReadyCheck: true,

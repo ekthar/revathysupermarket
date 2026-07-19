@@ -1,8 +1,13 @@
+/**
+ * Sentry Server-side Configuration
+ * Initialize Sentry for error tracking on the server.
+ */
+
 import * as Sentry from "@sentry/nextjs";
 
-if (process.env.NODE_ENV === "production") {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    tracesSampleRate: 0.2,
-  });
-}
+Sentry.init({
+  dsn: process.env.SENTRY_DSN ?? "",
+  enabled: !!process.env.SENTRY_DSN,
+  tracesSampleRate: 0.2,
+  environment: process.env.NODE_ENV,
+});

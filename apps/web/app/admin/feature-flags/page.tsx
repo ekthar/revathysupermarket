@@ -3,6 +3,7 @@ import { hasPermission } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import { AdminAccessDenied } from "@/components/admin/shared";
 import { FeatureFlagSettings } from "@/components/admin/feature-flag-settings";
+import { featureFlags } from "@/prisma/feature-flags";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,19 @@ export default async function AdminFeatureFlagsPage() {
   let serializedPartners: { id: string; name: string }[] = [];
 
   try {
+    // Auto-seed any missing feature flags from code defaults
+    const existingKeys = await prisma.featureFlag.findMany({ select: { key: true } });
+    const existingKeySet = new Set(existingKeys.map((f) => f.key));
+    const missingFlags = featureFlags.filter((f) => !existingKeySet.has(f.key));
+
+    if (missingFlags.length > 0) {
+      await Promise.all(
+        missingFlags.map((flag) =>
+          prisma.featureFlag.create({ data: flag }).catch(() => null)
+        )
+      );
+    }
+
     const [flags, deliveryPartners] = await Promise.all([
       prisma.featureFlag.findMany({ orderBy: { key: "asc" } }),
       prisma.user.findMany({

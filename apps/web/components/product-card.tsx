@@ -14,6 +14,7 @@ import { FavoriteButton } from "@/components/favorite-button";
 import { tapScale, springs, durations, easings } from "@/lib/motion";
 import { useRoutePreload } from "@/lib/hooks/use-preload";
 import { haptic } from "@/lib/haptics";
+import { useProductQuickSheet } from "@/components/product-quick-sheet-provider";
 
 interface ProductCardProps {
   product: Product;
@@ -38,6 +39,16 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
 
   // Preload product detail page on hover/touch intent
   const preload = useRoutePreload(productHref);
+
+  // Quick sheet for mobile — opens sheet instead of full page navigation
+  const quickSheet = useProductQuickSheet();
+  const handleMobileClick = useCallback((e: React.MouseEvent) => {
+    // Only intercept on mobile (coarse pointer / narrow viewport)
+    if (typeof window !== "undefined" && window.innerWidth < 768 && quickSheet) {
+      e.preventDefault();
+      quickSheet.openProduct(product);
+    }
+  }, [quickSheet, product]);
 
   // Horizontal list layout
   if (horizontal) {
@@ -116,6 +127,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       <Link
         href={productHref}
         className={cn(outOfStock && "pointer-events-none")}
+        onClick={outOfStock ? undefined : handleMobileClick}
         onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
         onTouchStart={outOfStock ? undefined : preload.onTouchStart}
       >
@@ -153,6 +165,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         <Link
           href={productHref}
           className={cn(outOfStock && "pointer-events-none")}
+          onClick={outOfStock ? undefined : handleMobileClick}
           onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
           onTouchStart={outOfStock ? undefined : preload.onTouchStart}
         >

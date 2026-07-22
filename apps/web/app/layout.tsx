@@ -21,6 +21,7 @@ import { ViewportStability } from "@/components/ui/viewport-stability";
 import { RouteTransition } from "@/components/ui/route-transition";
 import { SwipeBack } from "@/components/ui/swipe-back";
 import { NavigationDirection } from "@/components/ui/navigation-direction";
+import { PredictivePrefetch } from "@/components/predictive-prefetch";
 import { FloatingCartBar } from "@/components/cart/floating-cart-bar";
 import { LiveOrderMiniBar } from "@/components/tracking/live-order-mini-bar";
 import { Breadcrumbs } from "@/components/navigation/breadcrumbs";
@@ -153,6 +154,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <ViewportStability />
             <ScrollProgress />
             <NavigationDirection />
+            <PredictivePrefetch />
             <WelcomeOnboarding />
             <CoachMarks />
             <AlarmOverlay />

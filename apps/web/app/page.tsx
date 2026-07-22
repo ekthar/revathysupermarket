@@ -16,6 +16,7 @@ import { getFeatureFlag } from "@/lib/feature-flags";
 import type { Product } from "@/lib/types";
 import { auth } from "@/auth";
 import { LazyRender } from "@/components/ui/lazy-render";
+import { SmartReorderPill } from "@/components/home/smart-reorder-pill";
 
 
 export const revalidate = 60;
@@ -200,6 +201,8 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
+      {/* Smart Reorder Pill — floating 'Your Usual' for returning users */}
+      <SmartReorderPill />
     </main>
   );
 }

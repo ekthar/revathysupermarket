@@ -9,6 +9,7 @@ import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
+import { StickySearchBar } from "@/components/products/sticky-search-bar";
 import { EmptySearchState } from "@/components/ui/empty-states";
 import { LazyRender } from "@/components/ui/lazy-render";
 import { categories as demoCategories } from "@/lib/products";
@@ -151,6 +152,7 @@ export function ProductGrid({
   const [filterOpen, setFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const searchAreaRef = useRef<HTMLDivElement>(null);
 
   const debouncedQuery = useDebounce(query, 300);
 
@@ -277,9 +279,23 @@ export function ProductGrid({
     });
   }, [startTransition]);
 
+  const scrollToSearch = useCallback(() => {
+    searchAreaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
-      <div className="rounded-xl bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+      {/* Compact sticky search bar — appears when main search scrolls away */}
+      <StickySearchBar
+        query={debouncedQuery}
+        category={category}
+        total={total}
+        observeRef={searchAreaRef}
+        onTap={scrollToSearch}
+        onOpenFilters={() => setFilterOpen(true)}
+      />
+
+      <div ref={searchAreaRef} className="rounded-xl bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-neutral-400" />
           <Input

@@ -1,4 +1,7 @@
-const CACHE = "msm-supermarket-v8";
+const CACHE = "msm-supermarket-v9";
+const API_CACHE = "msm-api-cache-v2";
+const IMG_CACHE = "msm-images-v1";
+
 const STATIC_ASSETS = [
   "/offline",
   "/manifest.webmanifest",
@@ -7,6 +10,13 @@ const STATIC_ASSETS = [
   "/icons/icon-maskable-512.png",
   "/icons/apple-touch-icon.png"
 ];
+
+// Max cached API responses (LRU eviction)
+const MAX_API_ENTRIES = 80;
+// Max cached images
+const MAX_IMG_ENTRIES = 200;
+
+// ─── INSTALL ──────────────────────────────────────────────────────────────────
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
@@ -19,20 +29,27 @@ self.addEventListener("install", (event) => {
   );
 });
 
+// ─── ACTIVATE ─────────────────────────────────────────────────────────────────
+
+self.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys.filter((key) => key !== CACHE && key !== API_CACHE && key !== IMG_CACHE)
+          .map((key) => caches.delete(key))
+      ))
+      .then(() => self.clients.claim())
+      .then(() => registerPeriodicSync())
+  );
+});
+
+// ─── MESSAGES ─────────────────────────────────────────────────────────────────
+
 self.addEventListener("message", (event) => {
   if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
   if (event.data?.type === "REGISTER_PERIODIC_SYNC") {
     event.waitUntil(registerPeriodicSync());
   }
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-      .then(() => registerPeriodicSync())
-  );
 });
 
 async function registerPeriodicSync() {
@@ -43,69 +60,174 @@ async function registerPeriodicSync() {
   }
 }
 
-const API_CACHE = "msm-api-cache-v1";
+// ─── FETCH ────────────────────────────────────────────────────────────────────
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
   const url = new URL(event.request.url);
-  if (url.origin !== self.location.origin) return;
-
+  if (url.origin !== self.location.origin && !isImageHost(url)) return;
   if (event.request.headers.get("range")) return;
 
+  // ── Product images (external hosts: unsplash, etc.)
+  if (isImageHost(url) || isProductImage(url)) {
+    event.respondWith(cacheFirstWithLimit(event.request, IMG_CACHE, MAX_IMG_ENTRIES));
+    return;
+  }
+
+  // ── API routes: network-first with offline fallback
   if (url.pathname.startsWith("/api/")) {
-    if (url.pathname === "/api/products" || url.pathname.startsWith("/api/products?") || url.pathname.startsWith("/api/categories") || url.pathname === "/api/settings/public") {
-      event.respondWith(
-        caches.open(API_CACHE).then((cache) =>
-          fetch(event.request)
-            .then((response) => {
-              if (response.ok) {
-                cache.put(event.request, response.clone());
-              }
-              return response;
-            })
-            .catch(() => cache.match(event.request).then((cached) => cached || new Response(JSON.stringify({ error: "Offline" }), { status: 503, headers: { "Content-Type": "application/json" } })))
-        )
-      );
+    if (isCacheableAPI(url.pathname)) {
+      event.respondWith(networkFirstWithCache(event.request, API_CACHE, MAX_API_ENTRIES));
       return;
     }
     return;
   }
 
+  // ── Navigation: network-first, offline fallback page
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          if (response.ok || response.type === "opaqueredirect") return response;
+          // Cache successful product detail page navigations for offline browsing
+          if (response.ok && url.pathname.startsWith("/products/")) {
+            caches.open(CACHE).then((cache) => cache.put(event.request, response.clone()));
+          }
           return response;
         })
-        .catch(() => caches.match("/offline").then((cached) => cached || new Response("Offline", { status: 503, headers: { "Content-Type": "text/html" } })))
+        .catch(() =>
+          // Try cached version of this specific page first
+          caches.match(event.request).then((cached) =>
+            cached || caches.match("/offline").then((offline) =>
+              offline || new Response("Offline", { status: 503, headers: { "Content-Type": "text/html" } })
+            )
+          )
+        )
     );
     return;
   }
 
-  const isPublicAsset = url.pathname.startsWith("/_next/static/") || 
-                        url.pathname.startsWith("/icons/") || 
+  // ── Static assets: stale-while-revalidate
+  const isPublicAsset = url.pathname.startsWith("/_next/static/") ||
+                        url.pathname.startsWith("/icons/") ||
                         url.pathname === "/manifest.webmanifest";
   if (!isPublicAsset) return;
 
-  event.respondWith(
-    caches.match(event.request).then((cached) => {
-      const fetchPromise = fetch(event.request).then((response) => {
-        if (response.ok && (response.type === "basic" || response.type === "cors")) {
-          const clone = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      }).catch(() => new Response("", { status: 404 }));
-      if (cached) {
-        fetchPromise.catch(() => {});
-        return cached;
-      }
-      return fetchPromise;
-    })
-  );
+  event.respondWith(staleWhileRevalidate(event.request, CACHE));
 });
+
+// ─── Caching Strategies ───────────────────────────────────────────────────────
+
+/** Network-first: try network, cache response, fallback to cache on failure */
+async function networkFirstWithCache(request, cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      // Clone and cache
+      cache.put(request, response.clone());
+      // LRU eviction
+      trimCache(cacheName, maxEntries);
+    }
+    return response;
+  } catch {
+    // Offline: serve from cache
+    const cached = await cache.match(request);
+    if (cached) {
+      // Add offline indicator header so client knows this is cached
+      const headers = new Headers(cached.headers);
+      headers.set("X-SW-Cache", "offline");
+      return new Response(cached.body, { status: cached.status, statusText: cached.statusText, headers });
+    }
+    return new Response(JSON.stringify({ error: "Offline", cached: false }), {
+      status: 503,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+}
+
+/** Cache-first with network fallback (for images) */
+async function cacheFirstWithLimit(request, cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  if (cached) return cached;
+
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+      trimCache(cacheName, maxEntries);
+    }
+    return response;
+  } catch {
+    // Return transparent 1x1 pixel as fallback for failed images
+    return new Response(
+      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E",
+      { headers: { "Content-Type": "image/svg+xml" } }
+    );
+  }
+}
+
+/** Stale-while-revalidate: serve cache immediately, update in background */
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  const fetchPromise = fetch(request).then((response) => {
+    if (response.ok && (response.type === "basic" || response.type === "cors")) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  }).catch(() => null);
+
+  if (cached) {
+    // Serve cached immediately, update in background
+    fetchPromise.catch(() => {});
+    return cached;
+  }
+
+  // No cache: wait for network
+  const response = await fetchPromise;
+  return response || new Response("", { status: 404 });
+}
+
+/** Trim cache to maxEntries (LRU: delete oldest entries) */
+async function trimCache(cacheName, maxEntries) {
+  const cache = await caches.open(cacheName);
+  const keys = await cache.keys();
+  if (keys.length > maxEntries) {
+    // Delete oldest entries (first in = first out)
+    const toDelete = keys.slice(0, keys.length - maxEntries);
+    await Promise.all(toDelete.map((key) => cache.delete(key)));
+  }
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Check if URL is a cacheable API endpoint */
+function isCacheableAPI(pathname) {
+  return pathname === "/api/products" ||
+    pathname.startsWith("/api/products?") ||
+    pathname.startsWith("/api/products/") ||
+    pathname.startsWith("/api/categories") ||
+    pathname === "/api/settings/public" ||
+    pathname === "/api/store-settings";
+}
+
+/** Check if URL is an external image host we should cache */
+function isImageHost(url) {
+  return url.hostname === "images.unsplash.com" ||
+    url.hostname.includes("cloudinary.com") ||
+    url.hostname.includes("supabase.co");
+}
+
+/** Check if URL is a product image on our own domain */
+function isProductImage(url) {
+  return url.pathname.startsWith("/uploads/") ||
+    url.pathname.startsWith("/images/products/");
+}
+
+// ─── PUSH NOTIFICATIONS ───────────────────────────────────────────────────────
 
 self.addEventListener("push", (event) => {
   let payload = {
@@ -154,6 +276,8 @@ self.addEventListener("push", (event) => {
   );
 });
 
+// ─── NOTIFICATION CLICK ───────────────────────────────────────────────────────
+
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
@@ -188,6 +312,8 @@ self.addEventListener("notificationclick", (event) => {
   );
 });
 
+// ─── BACKGROUND SYNC ──────────────────────────────────────────────────────────
+
 self.addEventListener("periodicsync", (event) => {
   if (event.tag === "delivery-poll") {
     event.waitUntil(pollForDeliveries());
@@ -204,6 +330,9 @@ self.addEventListener("sync", (event) => {
   if (event.tag === "update-delivery") {
     event.waitUntil(syncOfflineOrders());
   }
+  if (event.tag === "cart-sync") {
+    event.waitUntil(syncCartMutations());
+  }
 });
 
 async function pollForDeliveries() {
@@ -214,8 +343,7 @@ async function pollForDeliveries() {
       cache.put("/api/delivery/poll", response.clone());
       const data = await response.json();
       if (data.orders?.length > 0) {
-        const title = "New delivery assignment!";
-        self.registration.showNotification(title, {
+        self.registration.showNotification("New delivery assignment!", {
           body: `You have ${data.orders.length} order(s) ready for delivery`,
           icon: "/icons/icon-192.png",
           badge: "/icons/icon-192.png",
@@ -249,4 +377,13 @@ async function syncOfflineOrders() {
       } catch {}
     }
   } catch {}
+}
+
+async function syncCartMutations() {
+  // Cart sync queue handles its own persistence and retry logic
+  // This sync event just wakes the page to trigger the queue flush
+  const clients = await self.clients.matchAll({ type: "window" });
+  clients.forEach((client) => {
+    client.postMessage({ type: "CART_SYNC_WAKE" });
+  });
 }

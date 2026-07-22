@@ -19,12 +19,12 @@ export default async function CheckoutPage() {
   const session = await auth();
   if (!session?.user?.id) {
     return (
-      <main className="mx-auto max-w-xl px-4 py-16 text-center">
-        <h1 className="font-display text-4xl font-black">Create an account to order</h1>
-        <p className="mt-3 text-muted-foreground">Orders require an account so tracking, returns, OTP delivery, and saved addresses work reliably.</p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <Link href="/register?callbackUrl=/checkout" className="rounded-2xl bg-primary px-5 py-3 text-sm font-black text-white">Create account</Link>
-          <Link href="/login?callbackUrl=/checkout" className="rounded-2xl border border-border px-5 py-3 text-sm font-black">Log in</Link>
+      <main className="mx-auto max-w-sm px-4 py-20 text-center">
+        <h1 className="font-display text-2xl font-black text-neutral-900 dark:text-white">Sign in to checkout</h1>
+        <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400">Create an account for order tracking, saved addresses, and delivery updates.</p>
+        <div className="mt-6 grid gap-3">
+          <Link href="/register?callbackUrl=/checkout" className="flex h-12 items-center justify-center rounded-2xl bg-neutral-900 dark:bg-white text-sm font-bold text-white dark:text-neutral-900 transition-transform press">Create account</Link>
+          <Link href="/login?callbackUrl=/checkout" className="flex h-12 items-center justify-center rounded-2xl border border-neutral-200 dark:border-neutral-700 text-sm font-bold text-neutral-700 dark:text-neutral-300 transition-transform press">Log in</Link>
         </div>
       </main>
     );
@@ -47,19 +47,14 @@ export default async function CheckoutPage() {
   const allowScheduledDelivery = deliveryMode === "both" || deliveryMode === "scheduled" || slotOnlyMode;
   const allowInstantDelivery = !slotOnlyMode && instantDeliveryEnabled && (deliveryMode === "both" || deliveryMode === "instant");
   return (
-    <main className="mx-auto max-w-7xl overflow-x-hidden px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-      <section className="rounded-xl bg-[linear-gradient(135deg,rgba(15,138,95,0.12),rgba(167,209,41,0.16))] p-5 sm:p-7">
-        <nav className="mb-3 flex items-center gap-2 text-xs font-medium text-neutral-500">
-          <Link href="/cart" className="hover:text-neutral-700 dark:hover:text-neutral-300 transition-colors">Cart</Link>
-          <span>/</span>
-          <span className="text-neutral-900 dark:text-white">Checkout</span>
-        </nav>
-        <p className="text-xs font-black uppercase text-primary">Secure local order</p>
-        <h1 className="mt-2 font-display text-4xl font-black leading-tight">Checkout</h1>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground sm:text-base">
-          Add your address, serviceable pincode, and GPS location. Orders submit only when you are within the {settings.deliveryRadiusKm} KM delivery radius.
+    <main className="mx-auto max-w-3xl overflow-x-hidden px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+      {/* Clean, focused checkout header */}
+      <div className="mb-6">
+        <h1 className="font-display text-2xl font-black text-neutral-900 dark:text-white">Checkout</h1>
+        <p className="mt-1 text-caption text-neutral-500 dark:text-neutral-400">
+          Delivery within {settings.deliveryRadiusKm} km · ~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min
         </p>
-      </section>
+      </div>
       <CheckoutForm
         deliveryRadiusKm={settings.deliveryRadiusKm}
         deliveryEstimateMin={settings.deliveryEstimateMin}

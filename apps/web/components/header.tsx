@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft, Bell, Clock, Heart, HelpCircle, MapPin, Search, ShoppingBag, User } from "lucide-react";
+import { ArrowLeft, Bell, Clock, MapPin, Search, ShoppingBag, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { springs } from "@/lib/motion";
 import { memo, useCallback, useEffect, useState } from "react";
@@ -11,19 +11,15 @@ import { useCartItemCount } from "@/components/cart/cart-provider";
 import { SITE } from "@/lib/constants";
 import { getSavedLocation, type DeliveryLocation } from "@/components/location-prompt";
 import type { SessionIdentity } from "@/components/session-identity-card";
-import { LanguageSwitcher } from "@/components/language-switcher";
 import { GlobalSearchSheet } from "@/components/search/global-search";
 import { AnimatedStoreName } from "@/components/ui/gsap/animated-store-name";
 import { useTranslations } from "next-intl";
-import { ThemeToggleIcon } from "@/components/theme-toggle";
 import { MegaMenu } from "@/components/navigation/mega-menu";
 import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
 const navLinks = [
   { href: "/products", label: "Shop" },
   { href: "/offers", label: "Deals" },
-  { href: "/products?category=Fruits", label: "Fresh Produce" },
-  { href: "/products?category=Vegetables", label: "Vegetables" },
 ];
 
 export const Header = memo(function Header({
@@ -62,9 +58,7 @@ export const Header = memo(function Header({
   }, []);
 
   // Prefer native back navigation (preserves scroll position + history) and
-  // fall back to the parent path when there is no in-app history to return to
-  // (e.g. the user opened this inner page from a direct link or fresh tab).
-  // Defined before any early return so hook order stays stable.
+  // fall back to the parent path when there is no in-app history to return to.
   const handleBack = useCallback(() => {
     const parent = pathname.startsWith("/account/") ? "/account" : pathname.startsWith("/checkout") ? "/cart" : "/";
     if (typeof window !== "undefined" && window.history.length > 1) {
@@ -81,37 +75,34 @@ export const Header = memo(function Header({
   const innerPages = ["/account/settings", "/account/favorites", "/account/loyalty", "/account/notifications", "/account/edit", "/account/wallet", "/account/addresses", "/support", "/checkout"];
   const isInnerPage = innerPages.some((p) => pathname.startsWith(p)) || (pathname.startsWith("/account/") && pathname !== "/account");
 
-
-
   return (
     <>
-      {/* Desktop Header */}
-      <header className="sticky top-0 z-40 hidden md:block bg-white dark:bg-neutral-950 border-b border-neutral-100 dark:border-neutral-800">
-        {/* Top bar */}
+      {/* Desktop Header — clean, 5-element right section */}
+      <header className="sticky top-0 z-40 hidden md:block bg-white/80 dark:bg-neutral-950/80 backdrop-blur-xl border-b border-neutral-100/80 dark:border-neutral-800/80">
         <div className="max-w-7xl mx-auto px-6 lg:px-8">
-          <div className="flex items-center justify-between h-[70px]">
-            {/* Logo + Back button for inner pages */}
+          <div className="flex items-center justify-between h-[64px]">
+            {/* Left: Logo + Back button */}
             <div className="flex items-center gap-3">
               {isInnerPage && (
                 <button
                   onClick={handleBack}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors press"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700 transition-colors press"
                   aria-label="Go back"
                 >
-                  <ArrowLeft className="h-5 w-5 text-neutral-600 dark:text-neutral-300" />
+                  <ArrowLeft className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
                 </button>
               )}
               <Link href="/" className="flex items-center gap-2.5 press">
                 {logoUrl && (
-                  <Image src={logoUrl} alt={storeName} width={36} height={36} className="h-9 w-9 rounded-lg object-contain" unoptimized />
+                  <Image src={logoUrl} alt={storeName} width={32} height={32} className="h-8 w-8 rounded-lg object-contain" unoptimized />
                 )}
-                <AnimatedStoreName name={storeName} className="font-display text-2xl font-black tracking-tight uppercase" />
+                <AnimatedStoreName name={storeName} className="font-display text-xl font-black tracking-tight uppercase" />
               </Link>
             </div>
 
-            {/* Navigation links + Mega Menu */}
-            <nav className="hidden lg:flex items-center gap-1">
-              {navLinks.slice(0, 2).map((link) => {
+            {/* Center: Navigation + Mega Menu */}
+            <nav className="hidden lg:flex items-center gap-0.5">
+              {navLinks.map((link) => {
                 const [linkPath, linkQuery] = link.href.split("?");
                 const linkParams = new URLSearchParams(linkQuery || "");
                 let isActive = false;
@@ -126,10 +117,10 @@ export const Header = memo(function Header({
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`relative px-4 py-2 text-sm font-bold rounded-full transition-all ${
+                    className={`relative px-4 py-2 text-sm font-semibold rounded-full transition-all ${
                       isActive
-                        ? "bg-primary/10 text-primary dark:bg-white/10 dark:text-white"
-                        : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-300 dark:hover:text-white dark:hover:bg-neutral-800"
+                        ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900"
+                        : "text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50 dark:text-neutral-400 dark:hover:text-white dark:hover:bg-neutral-800"
                     }`}
                   >
                     {link.label}
@@ -139,64 +130,50 @@ export const Header = memo(function Header({
               <MegaMenu />
             </nav>
 
-            {/* Right actions */}
-            <div className="flex items-center gap-3 ml-6">
-              {/* Location indicator */}
-              <LocationIndicator onOpenLocationPrompt={onOpenLocationPrompt} />
-
-              {/* Language switcher */}
-              <LanguageSwitcher />
-
-              {/* Theme toggle */}
-              <ThemeToggleIcon />
-
+            {/* Right: Search, Location, Notifications, Cart, Account — 5 items max */}
+            <div className="flex items-center gap-2">
+              {/* Search trigger */}
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="hidden md:flex items-center gap-2 h-10 pl-4 pr-5 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 ring-1 ring-neutral-200/60 dark:ring-neutral-700/60 hover:ring-neutral-300 dark:hover:ring-neutral-600 transition-all press text-sm font-medium text-neutral-500 min-w-[200px] lg:min-w-[260px]"
+                className="flex items-center gap-2 h-9 pl-3.5 pr-4 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 ring-1 ring-neutral-200/50 dark:ring-neutral-700/50 hover:ring-neutral-300 dark:hover:ring-neutral-600 transition-all press text-sm text-neutral-500 dark:text-neutral-400 min-w-[180px] lg:min-w-[220px]"
                 aria-label="Search products"
               >
-                <Search className="h-4 w-4 shrink-0" />
-                <span className="truncate">Search products...</span>
+                <Search className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate text-[13px]">Search...</span>
                 <kbd className="ml-auto hidden xl:inline-flex h-5 items-center rounded border border-neutral-200 dark:border-neutral-700 px-1.5 text-[10px] font-semibold text-neutral-400">
                   ⌘K
                 </kbd>
               </button>
 
-              <Link
-                href="/support"
-                className="hidden xl:flex items-center gap-1.5 text-sm font-medium text-neutral-600 hover:text-neutral-900 dark:text-neutral-300 dark:hover:text-white transition-colors"
-              >
-                <HelpCircle className="h-4 w-4" />
-                Help & Support
-              </Link>
+              {/* Location indicator */}
+              <LocationIndicator onOpenLocationPrompt={onOpenLocationPrompt} />
 
-              <Link href="/account/favorites" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Favorites">
-                <Heart className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
-              </Link>
-
-              <Link href="/account/notifications" className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Notifications">
+              {/* Notifications */}
+              <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors press" aria-label="Notifications">
                 <Bell className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
               </Link>
 
-              {/* Isolated cart badge - only this re-renders on cart changes */}
+              {/* Cart */}
               <CartBadgeLink />
 
+              {/* Account */}
               {user?.id ? (
                 <Link
                   href="/account"
-                  className="flex items-center gap-2 h-10 px-4 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press"
+                  className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-900 dark:bg-white transition-transform press"
+                  aria-label="Your account"
                 >
-                  <User className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
-                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">{user.name?.split(" ")[0] || "Account"}</span>
+                  <span className="text-xs font-black text-white dark:text-neutral-900">
+                    {user.name?.charAt(0)?.toUpperCase() || "U"}
+                  </span>
                 </Link>
               ) : (
                 <Link
                   href="/login"
-                  className="flex items-center gap-2 h-10 px-4 rounded-full border border-neutral-200 dark:border-neutral-700 hover:border-primary/30 hover:bg-primary/5 transition-all press"
+                  className="flex items-center gap-1.5 h-9 px-4 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 text-sm font-semibold transition-transform press"
                 >
-                  <User className="h-4 w-4 text-neutral-600 dark:text-neutral-300" />
-                  <span className="text-sm font-semibold text-neutral-700 dark:text-neutral-200">Login/Signup</span>
+                  Login
                 </Link>
               )}
             </div>
@@ -221,22 +198,21 @@ export const Header = memo(function Header({
             </button>
           ) : (
             <Link href="/" className="flex items-center gap-2.5 min-w-0 press">
-            {logoUrl ? (
-              <Image src={logoUrl} alt={storeName} width={32} height={32} className="h-8 w-8 rounded-xl object-contain" unoptimized />
-            ) : (
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-secondary-500 to-secondary-600 shadow-sm shadow-secondary-200 dark:shadow-secondary-900/30">
-                <span className="text-sm font-black text-white">{storeName.charAt(0)}</span>
+              {logoUrl ? (
+                <Image src={logoUrl} alt={storeName} width={32} height={32} className="h-8 w-8 rounded-xl object-contain" unoptimized />
+              ) : (
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-neutral-900 dark:bg-white">
+                  <span className="text-xs font-black text-white dark:text-neutral-900">{storeName.charAt(0)}</span>
+                </div>
+              )}
+              <div className="min-w-0">
+                <AnimatedStoreName name={storeName} className="font-display text-lg font-black tracking-tight truncate" />
               </div>
-            )}
-            <div className="min-w-0">
-              <AnimatedStoreName name={storeName} className="font-display text-title font-black tracking-tight truncate" />
-              <p className="text-micro font-medium text-secondary-600 dark:text-secondary-400">Fresh & Fast Delivery</p>
-            </div>
-          </Link>
+            </Link>
           )}
 
           {/* Right icons */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2">
             <LocationIndicator onOpenLocationPrompt={onOpenLocationPrompt} compact />
             <Link href="/account/notifications" className="relative flex items-center justify-center h-9 w-9 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label="Notifications">
               <Bell className="h-[17px] w-[17px] text-neutral-600 dark:text-neutral-300" />
@@ -244,6 +220,9 @@ export const Header = memo(function Header({
           </div>
         </div>
       </header>
+
+      {/* Global search sheet */}
+      <GlobalSearchSheet open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 });
@@ -252,7 +231,7 @@ export const Header = memo(function Header({
 function CartBadgeLink() {
   const totalItems = useCartItemCount();
   return (
-    <Link href="/cart" data-cart-icon className="relative flex items-center justify-center h-10 w-10 rounded-full bg-neutral-50 dark:bg-neutral-800 hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors press" aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}>
+    <Link href="/cart" data-cart-icon className="relative flex items-center justify-center h-9 w-9 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors press" aria-label={`Cart${totalItems > 0 ? `, ${totalItems} items` : ""}`}>
       <ShoppingBag className="h-[18px] w-[18px] text-neutral-600 dark:text-neutral-300" />
       <AnimatePresence mode="popLayout">
         {totalItems > 0 && (
@@ -262,7 +241,7 @@ function CartBadgeLink() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.5, opacity: 0 }}
             transition={springs.tap}
-            className="absolute -top-0.5 -right-0.5 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-primary text-micro font-bold text-white px-1"
+            className="absolute -top-0.5 -right-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-[10px] font-black text-white dark:text-neutral-900 px-1 ring-2 ring-white dark:ring-neutral-950"
           >
             {totalItems}
           </motion.span>
@@ -308,16 +287,16 @@ function LocationIndicator({ onOpenLocationPrompt, compact }: { onOpenLocationPr
   return (
     <button
       onClick={onOpenLocationPrompt}
-      className="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary-50 dark:bg-secondary-900/30 hover:bg-secondary-100 dark:hover:bg-secondary-900/50 transition-colors press"
+      className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary-50 dark:bg-secondary-900/30 hover:bg-secondary-100 dark:hover:bg-secondary-900/50 transition-colors press"
       aria-label="Change delivery location"
     >
-      <MapPin className="h-4 w-4 text-secondary-600 dark:text-secondary-400" />
-      <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 max-w-[120px] truncate">
-        {location.area || location.pincode || "Location set"}
+      <MapPin className="h-3.5 w-3.5 text-secondary-600 dark:text-secondary-400" />
+      <span className="text-xs font-semibold text-neutral-700 dark:text-neutral-300 max-w-[100px] truncate">
+        {location.area || location.pincode || "Location"}
       </span>
       {location.eta && (
-        <span className="flex items-center gap-0.5 text-micro font-semibold text-secondary-600 dark:text-secondary-400">
-          <Clock className="h-3 w-3" />
+        <span className="flex items-center gap-0.5 text-[10px] font-bold text-secondary-600 dark:text-secondary-400">
+          <Clock className="h-2.5 w-2.5" />
           {location.eta}
         </span>
       )}

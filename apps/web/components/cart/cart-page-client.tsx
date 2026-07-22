@@ -1,15 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Minus, Plus, Trash2, Tag, Info, Truck, Sparkles } from "lucide-react";
+import { ArrowLeft, Minus, Plus, Trash2, Tag, Truck } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast as sonnerToast } from "sonner";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatCurrency } from "@/lib/utils";
 import { springs, tapScale } from "@/lib/motion";
-import { ExpressCheckout } from "@/components/cart/express-checkout";
-import { FreeDeliveryProgress } from "@/components/cart/free-delivery-progress";
 import { CartSuggestions } from "@/components/cart/cart-suggestions";
 import { EmptyCartState } from "@/components/ui/empty-states";
 import { haptic } from "@/lib/haptics";
@@ -56,21 +54,15 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
 
   // Calculate dynamic values
   const qualifiesFreeDelivery = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold;
-  // Show estimated delivery fee; exact fee is confirmed at checkout based on address.
   const deliveryFee = qualifiesFreeDelivery ? 0 : config.deliveryFee;
-  
-  // GST is inclusive (already in price) - show breakdown for transparency
+
+  // GST is inclusive (already in price) — show breakdown for transparency
   const gstRate = config.gstRatePercent;
   const taxableValue = gstRate > 0 ? subtotal / (1 + gstRate / 100) : subtotal;
   const gstAmount = gstRate > 0 ? subtotal - taxableValue : 0;
-  
+
   const totalAmount = subtotal - promoDiscount + deliveryFee;
   const belowMinimum = subtotal < config.minimumOrderValue && items.length > 0;
-
-  const totalSavings = items.reduce((sum, item) => {
-    if (item.discountPrice) return sum + (item.price - item.discountPrice) * item.quantity;
-    return sum;
-  }, 0) + promoDiscount;
 
   // Re-validate promo when subtotal changes
   const validatingPromoRef = useRef(false);
@@ -94,14 +86,13 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
           setPromoDiscount(0);
           setPromoDescription("");
           setPromoCode("");
-          setPromoError("Your promo code was removed because it is no longer valid for this cart.");
+          setPromoError("Promo code no longer valid for this cart.");
         }
       } catch {
         setPromoApplied(false);
         setPromoDiscount(0);
         setPromoDescription("");
         setPromoCode("");
-        setPromoError("Your promo code was removed because it is no longer valid for this cart.");
       } finally {
         validatingPromoRef.current = false;
       }
@@ -116,7 +107,6 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
     if (savedCode && savedApplied) {
       setPromoCode(savedCode);
       setPromoApplied(true);
-      // Re-validation will trigger via the effect above when subtotal is stable
     }
   }, []);
 
@@ -137,10 +127,8 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
       setPromoError("Enter a valid code");
       return;
     }
-
     setPromoError("");
     setPromoLoading(true);
-
     try {
       const res = await fetch("/api/promo-codes/validate", {
         method: "POST",
@@ -160,9 +148,6 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
         setPromoError(data.error || "Invalid or expired code");
       }
     } catch {
-      setPromoApplied(false);
-      setPromoDiscount(0);
-      setPromoDescription("");
       setPromoError("Could not validate code. Please try again.");
     } finally {
       setPromoLoading(false);
@@ -202,18 +187,27 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
     );
   }
 
+  // Smart contextual message — ONE banner, shows the most relevant info
+  const contextMessage = belowMinimum
+    ? { icon: "warn" as const, text: `Add ${formatCurrency(config.minimumOrderValue - subtotal)} more to place order (min ${formatCurrency(config.minimumOrderValue)})` }
+    : !qualifiesFreeDelivery && config.freeDeliveryThreshold > 0 && (config.freeDeliveryThreshold - subtotal) <= 100
+      ? { icon: "truck" as const, text: `Add ${formatCurrency(config.freeDeliveryThreshold - subtotal)} more for free delivery` }
+      : qualifiesFreeDelivery
+        ? { icon: "truck" as const, text: "Free delivery · Estimated ~30 min" }
+        : { icon: "truck" as const, text: "Estimated delivery in ~30 min" };
+
   return (
     <main className="mx-auto min-h-screen max-w-2xl bg-background px-4 pb-36 pt-5 md:pb-8">
       {/* Sticky Header */}
-      <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-md">
+      <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-xl">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/products" aria-label="Back to products" className="flex h-9 w-9 items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors press">
               <ArrowLeft className="h-4 w-4 text-neutral-700 dark:text-neutral-300" />
             </Link>
             <div>
-              <p className="text-caption font-black uppercase tracking-[0.28em] text-neutral-400">{items.length} item{items.length > 1 ? "s" : ""} in cart</p>
               <h1 className="text-title font-black text-neutral-900 dark:text-white">{t("title")}</h1>
+              <p className="text-micro font-semibold text-neutral-500 dark:text-neutral-400">{items.length} item{items.length > 1 ? "s" : ""}</p>
             </div>
           </div>
           <span className="text-body font-bold text-neutral-900 dark:text-white tabular-nums">
@@ -222,138 +216,79 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
         </div>
       </div>
 
-      {/* Continue Shopping Link */}
-      <div className="mt-2 mb-1">
-        <Link href="/products" className="inline-flex items-center gap-1.5 text-caption font-semibold text-primary hover:underline press">
-          <ArrowLeft className="h-3 w-3" />
-          Continue Shopping
-        </Link>
+      {/* Single contextual message — replaces 6 separate banners */}
+      <div className={`mt-3 rounded-xl px-4 py-2.5 flex items-center gap-2.5 ${
+        belowMinimum
+          ? "bg-amber-50 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-800/40"
+          : "bg-neutral-50 dark:bg-neutral-800/50"
+      }`}>
+        <Truck className={`h-4 w-4 shrink-0 ${belowMinimum ? "text-amber-600" : "text-secondary-600 dark:text-secondary-400"}`} />
+        <span className={`text-caption font-medium ${belowMinimum ? "text-amber-700 dark:text-amber-300" : "text-neutral-600 dark:text-neutral-300"}`}>
+          {contextMessage.text}
+        </span>
       </div>
 
-      {/* Estimated delivery time */}
-      {items.length > 0 && (
-        <div className="flex items-center gap-2 rounded-xl bg-green-50 px-4 py-2.5 dark:bg-green-950/30 mt-2">
-          <Truck className="h-4 w-4 text-green-600" />
-          <span className="text-sm font-medium text-green-700 dark:text-green-300">Estimated delivery in ~30 minutes</span>
-        </div>
-      )}
-
-      {/* Free delivery progress */}
-      <FreeDeliveryProgress subtotal={subtotal} threshold={config.freeDeliveryThreshold} />
-
-      {/* "Add more for free delivery" nudge */}
-      {!qualifiesFreeDelivery && config.freeDeliveryThreshold > 0 && (config.freeDeliveryThreshold - subtotal) <= 50 && (config.freeDeliveryThreshold - subtotal) > 0 && (
-        <p className="text-xs font-medium text-green-600 dark:text-green-400 mt-1">
-          Add just {formatCurrency(config.freeDeliveryThreshold - subtotal)} more for free delivery!
-        </p>
-      )}
-
-      {/* Minimum order warning */}
-      {belowMinimum && (
-        <div className="mt-3 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800 p-3 flex items-start gap-2">
-          <Info className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-          <p className="text-caption font-semibold text-amber-700 dark:text-amber-300">
-            Minimum order value is {formatCurrency(config.minimumOrderValue)}. Add {formatCurrency(config.minimumOrderValue - subtotal)} more to place order.
-          </p>
-        </div>
-      )}
-
-      {/* Express Checkout */}
-      <div className="mt-3">
-        <ExpressCheckout />
-      </div>
-
-      {/* Savings Summary Banner */}
-      {totalSavings > 0 && (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="mt-3 rounded-2xl bg-secondary-50 dark:bg-secondary-900/20 border border-secondary-200 dark:border-secondary-800 p-3 flex items-center gap-2.5"
-        >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-800 shrink-0">
-            <Tag className="h-4 w-4 text-secondary-600" />
-          </div>
-          <p className="text-caption font-bold text-secondary-700 dark:text-secondary-300">
-            You are saving {formatCurrency(totalSavings)} on this order!
-          </p>
-        </motion.div>
-      )}
-
-      {/* Savings celebration when over ₹100 — merged into main banner above */}
-
-      {/* Cart Items */}
-      <div className="mt-3 rounded-lg bg-white dark:bg-neutral-900 shadow-elevation-3 divide-y divide-neutral-50 dark:divide-neutral-800">
+      {/* Cart Items — clean list without swipe gestures */}
+      <div className="mt-4 rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 overflow-hidden divide-y divide-neutral-100 dark:divide-neutral-800">
         <AnimatePresence initial={false}>
           {items.map((item) => {
             const price = item.discountPrice ?? item.price;
             return (
-              <div key={item.id} className="relative overflow-hidden">
-                {/* Swipe delete indicator (background) */}
-                <div className="absolute inset-y-0 right-0 w-20 flex items-center justify-center bg-red-500">
-                  <Trash2 className="h-5 w-5 text-white" />
-                </div>
-                <motion.div
-                  layout
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
-                  transition={springs.layout}
-                  drag="x"
-                  dragConstraints={{ left: -80, right: 0 }}
-                  dragElastic={0.15}
-                  onDragEnd={(_, info) => {
-                    if (info.offset.x < -60) {
-                      haptic("medium");
-                      handleRemove(item);
-                    }
-                  }}
-                  className="relative bg-white dark:bg-neutral-900 px-4 py-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-body font-semibold text-neutral-800 dark:text-white truncate">{item.name}</p>
-                      <p className="text-caption text-neutral-400 mt-0.5">{item.unit || "per item"}</p>
-                    </div>
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0, transition: { duration: 0.2 } }}
+                transition={springs.layout}
+                className="px-4 py-3.5"
+              >
+                <div className="flex items-center gap-3">
+                  {/* Item info */}
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-neutral-800 dark:text-white truncate">{item.name}</p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                      {formatCurrency(price)} {item.unit ? `/ ${item.unit}` : "each"}
+                    </p>
+                  </div>
 
-                    <div className="flex h-[44px] shrink-0 items-center overflow-hidden rounded-full bg-black">
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
-                        aria-label={`Decrease ${item.name} quantity`}
-                      >
-                        <Minus className="h-3.5 w-3.5" />
-                      </button>
-                      <span className="w-6 text-center text-caption font-bold text-white tabular-nums">{item.quantity}</span>
-                      <button
-                        type="button"
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 active:bg-white/20 transition-colors press"
-                        aria-label={`Increase ${item.name} quantity`}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
-                    </div>
-
-                    <div className="text-right shrink-0 min-w-[52px]">
-                      <p className="text-body font-bold text-neutral-900 dark:text-white tabular-nums">{formatCurrency(price * item.quantity)}</p>
-                      {item.discountPrice && (
-                        <p className="text-micro text-neutral-400 line-through">{formatCurrency(item.price * item.quantity)}</p>
-                      )}
-                    </div>
-
-                    {/* Visible delete button — always accessible */}
+                  {/* Quantity stepper */}
+                  <div className="flex h-9 shrink-0 items-center overflow-hidden rounded-full bg-neutral-900 dark:bg-white">
                     <button
                       type="button"
-                      onClick={() => handleRemove(item)}
-                      className="flex h-[44px] w-[44px] shrink-0 items-center justify-center rounded-full text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
-                      aria-label={`Remove ${item.name} from cart`}
+                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
+                      aria-label={`Decrease ${item.name} quantity`}
                     >
-                      <Trash2 className="h-4 w-4" />
+                      <Minus className="h-3 w-3" />
+                    </button>
+                    <span className="w-5 text-center text-xs font-bold text-white dark:text-neutral-900 tabular-nums">{item.quantity}</span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
+                      aria-label={`Increase ${item.name} quantity`}
+                    >
+                      <Plus className="h-3 w-3" />
                     </button>
                   </div>
-                </motion.div>
-              </div>
+
+                  {/* Price */}
+                  <div className="text-right shrink-0 min-w-[48px]">
+                    <p className="text-sm font-bold text-neutral-900 dark:text-white tabular-nums">{formatCurrency(price * item.quantity)}</p>
+                  </div>
+
+                  {/* Delete */}
+                  <button
+                    type="button"
+                    onClick={() => handleRemove(item)}
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-neutral-300 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                    aria-label={`Remove ${item.name}`}
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              </motion.div>
             );
           })}
         </AnimatePresence>
@@ -363,14 +298,14 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
       <CartSuggestions />
 
       {/* Coupon Section */}
-      <div className="mt-3 rounded-lg bg-white p-3.5 shadow-elevation-2 dark:bg-neutral-900">
-        <div className="flex items-center gap-2">
+      <div className="mt-4 rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 p-4">
+        <div className="flex items-center gap-2.5">
           <Tag className="h-4 w-4 text-neutral-400 shrink-0" />
           {promoApplied ? (
             <div className="flex-1 flex items-center justify-between">
               <div>
-                <p className="text-caption font-semibold text-secondary-600">Code applied: {promoCode.toUpperCase()}</p>
-                <p className="text-micro text-neutral-400">{promoDescription} &mdash; You save {formatCurrency(promoDiscount)}</p>
+                <p className="text-caption font-semibold text-secondary-600">{promoCode.toUpperCase()} applied</p>
+                <p className="text-micro text-neutral-500 dark:text-neutral-400">You save {formatCurrency(promoDiscount)}</p>
               </div>
               <button type="button" onClick={removePromo} className="text-caption font-semibold text-red-500 press">Remove</button>
             </div>
@@ -381,14 +316,14 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                   type="text"
                   value={promoCode}
                   onChange={(e) => { setPromoCode(e.target.value.toUpperCase()); setPromoError(""); }}
-                  placeholder="Apply coupon code"
-                  className="flex-1 h-9 bg-transparent text-body font-medium text-neutral-800 dark:text-white outline-none placeholder:text-neutral-400"
+                  placeholder="Coupon code"
+                  className="flex-1 h-9 bg-transparent text-sm font-medium text-neutral-800 dark:text-white outline-none placeholder:text-neutral-400"
                 />
                 <button
                   type="button"
                   onClick={applyPromo}
                   disabled={promoLoading}
-                  className="text-caption font-bold text-primary press disabled:opacity-50"
+                  className="text-caption font-bold text-neutral-900 dark:text-white press disabled:opacity-50"
                 >
                   {promoLoading ? "..." : "Apply"}
                 </button>
@@ -400,49 +335,43 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
       </div>
 
       {/* Bill Details */}
-      <div className="mt-3 rounded-lg bg-white p-4 shadow-elevation-2 dark:bg-neutral-900">
-        <h2 className="text-body font-bold text-neutral-900 dark:text-white mb-3">Bill Details</h2>
+      <div className="mt-4 rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 p-4">
+        <h2 className="text-sm font-bold text-neutral-900 dark:text-white mb-3">Bill Details</h2>
         {configLoading ? (
           <div className="space-y-3 py-1">
             <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-full" />
             <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-3/4" />
             <div className="h-4 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-1/2" />
-            <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 h-6 bg-neutral-100 dark:bg-neutral-800 rounded animate-pulse w-full" />
           </div>
         ) : (
-          <div className="space-y-2.5 text-caption">
+          <div className="space-y-2 text-caption">
             <div className="flex justify-between">
               <span className="text-neutral-500 dark:text-neutral-400">Item total</span>
               <span className="font-medium text-neutral-700 dark:text-neutral-300">{formatCurrency(subtotal)}</span>
             </div>
             {gstRate > 0 && (
               <div className="flex justify-between">
-                <span className="text-neutral-500 dark:text-neutral-400">GST ({gstRate}% inclusive)</span>
+                <span className="text-neutral-500 dark:text-neutral-400">GST ({gstRate}% incl.)</span>
                 <span className="font-medium text-neutral-500 dark:text-neutral-400">{formatCurrency(gstAmount)}</span>
               </div>
             )}
             {promoApplied && (
               <div className="flex justify-between">
-                <span className="text-neutral-500 dark:text-neutral-400">Coupon discount</span>
+                <span className="text-neutral-500 dark:text-neutral-400">Coupon</span>
                 <span className="font-medium text-secondary-600">-{formatCurrency(promoDiscount)}</span>
               </div>
             )}
             <div className="flex justify-between">
-              <span className="text-neutral-500 dark:text-neutral-400">Delivery fee</span>
+              <span className="text-neutral-500 dark:text-neutral-400">Delivery</span>
               <span className="font-medium text-neutral-700 dark:text-neutral-300">
-                {qualifiesFreeDelivery ? <span className="text-secondary-600">FREE</span> : <span>~{formatCurrency(deliveryFee)}</span>}
+                {qualifiesFreeDelivery ? <span className="text-secondary-600">FREE</span> : `~${formatCurrency(deliveryFee)}`}
               </span>
             </div>
-            {qualifiesFreeDelivery ? (
-              <p className="text-micro text-secondary-600 -mt-1">Free delivery on orders above {formatCurrency(config.freeDeliveryThreshold)}</p>
-            ) : (
-              <p className="text-micro text-neutral-400 -mt-1">Estimated fee — exact amount confirmed at checkout based on your address.</p>
-            )}
-            <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 flex justify-between">
-              <span className="font-bold text-neutral-900 dark:text-white">Cart total</span>
+            <div className="border-t border-neutral-100 dark:border-neutral-800 pt-2.5 mt-1 flex justify-between">
+              <span className="font-bold text-neutral-900 dark:text-white">Total</span>
               <motion.span
                 key={totalAmount}
-                initial={{ scale: 1.06, opacity: 0.7 }}
+                initial={{ scale: 1.05, opacity: 0.7 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={springs.snappy}
                 className="font-bold text-neutral-900 dark:text-white tabular-nums"
@@ -450,9 +379,6 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                 {formatCurrency(totalAmount)}
               </motion.span>
             </div>
-            {gstRate > 0 && (
-              <p className="text-micro text-neutral-400">Prices are inclusive of {gstRate}% GST{config.gstin ? ` (GSTIN: ${config.gstin})` : ""}</p>
-            )}
           </div>
         )}
       </div>
@@ -463,13 +389,14 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
           <Link
             href={belowMinimum ? "#" : "/checkout"}
             onClick={(e) => { if (belowMinimum) e.preventDefault(); }}
-            className={`mx-auto flex h-[54px] max-w-md items-center justify-between rounded-2xl px-5 shadow-premium press ${belowMinimum ? "bg-neutral-300 dark:bg-neutral-700 cursor-not-allowed" : "bg-black text-white"}`}
+            className={`mx-auto flex h-[52px] max-w-md items-center justify-between rounded-2xl px-5 press ${
+              belowMinimum
+                ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
+                : "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-lg"
+            }`}
           >
-            <div>
-              <p className="text-body font-bold">{belowMinimum ? "Add more items" : t("checkout")}</p>
-              <p className="text-micro text-white/70">{items.length} item{items.length > 1 ? "s" : ""}</p>
-            </div>
-            <span className="text-title font-bold">{formatCurrency(totalAmount)}</span>
+            <span className="text-sm font-bold">{belowMinimum ? "Add more items" : t("checkout")}</span>
+            <span className="text-sm font-black tabular-nums">{formatCurrency(totalAmount)}</span>
           </Link>
         </motion.div>
       </div>

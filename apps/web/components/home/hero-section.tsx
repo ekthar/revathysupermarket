@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ChevronRight, Bike, Search, Clock } from "lucide-react";
+import { ChevronRight, Bike, Clock } from "lucide-react";
 import { useGSAP } from "@gsap/react";
 import { gsap, prefersReducedMotion } from "@/lib/gsap";
 import { useRef } from "react";
@@ -108,23 +108,10 @@ export function HeroSection({
                 Delivery in ~{deliveryEstimateMin}–{deliveryEstimateMax} mins
               </p>
 
-              <div className="mt-4 flex items-center gap-4 text-sm font-semibold text-neutral-400 dark:text-neutral-500">
+              <div className="mt-4 flex items-center gap-4 text-sm font-semibold text-neutral-500 dark:text-neutral-400">
                 <span>COD & UPI</span>
                 <span className="h-3 w-px bg-neutral-200 dark:bg-neutral-700" />
                 <span>Free delivery over ₹499</span>
-              </div>
-
-              {/* Desktop search entry */}
-              <div className="mt-5 relative max-w-md">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" />
-                <button
-                  type="button"
-                  className="w-full rounded-full border border-neutral-200 bg-white py-3 pl-11 pr-4 text-sm text-left text-neutral-400 shadow-sm transition-all focus:border-green-400 focus:outline-none focus:ring-2 focus:ring-green-100 dark:border-neutral-700 dark:bg-neutral-800 dark:focus:ring-green-900"
-                  onClick={() => document.dispatchEvent(new CustomEvent('open-global-search'))}
-                  aria-label="Search for groceries"
-                >
-                  Search for groceries...
-                </button>
               </div>
             </div>
 
@@ -150,9 +137,9 @@ export function HeroSection({
         </div>
       </section>
 
-      {/* Mobile Hero — enhanced with key info (previously missing) */}
-      <section className="px-4 pt-3 pb-1 md:hidden">
-        <Link href={heroHref} className="block relative overflow-hidden rounded-2xl aspect-[2.2/1] press">
+      {/* Mobile Hero — delivery ETA as hero-level information */}
+      <section className="px-4 pt-3 pb-2 md:hidden">
+        <Link href={heroHref} className="block relative overflow-hidden rounded-2xl aspect-[2.1/1] press">
           <Image
             src={heroImage}
             alt={heroTitle}
@@ -164,30 +151,24 @@ export function HeroSection({
             placeholder="blur"
             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjM2NCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZTVlN2ViIi8+PC9zdmc+"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
           <div className="absolute bottom-0 left-0 right-0 p-4">
-            <h2 className="text-title font-bold text-white leading-snug">{heroTitle}</h2>
+            <h2 className="text-lg font-bold text-white leading-snug">{heroTitle}</h2>
           </div>
         </Link>
 
-        {/* Mobile value props — key info visible immediately */}
-        <div className="mt-3 flex items-center gap-3 overflow-x-auto no-scrollbar">
-          <div className="flex items-center gap-1.5 shrink-0 rounded-full bg-secondary-50 dark:bg-secondary-900/30 px-3 py-1.5">
-            <Clock className="h-3 w-3 text-secondary-600 dark:text-secondary-400" />
-            <span className="text-[11px] font-bold text-secondary-700 dark:text-secondary-300 whitespace-nowrap">
+        {/* Delivery ETA — THE primary information (Swiggy/Zomato pattern) */}
+        <div className="mt-4 flex items-center gap-3">
+          <div className="flex items-center gap-2 rounded-xl bg-neutral-900 dark:bg-white px-4 py-2.5">
+            <Clock className="h-4 w-4 text-secondary-400 dark:text-secondary-600" />
+            <span className="text-sm font-black text-white dark:text-neutral-900">
               {deliveryEstimateMin}–{deliveryEstimateMax} min
             </span>
           </div>
-          <div className="flex items-center gap-1.5 shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5">
-            <Bike className="h-3 w-3 text-neutral-500 dark:text-neutral-400" />
-            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
-              Free over ₹499
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 shrink-0 rounded-full bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5">
-            <span className="text-[11px] font-bold text-neutral-600 dark:text-neutral-300 whitespace-nowrap">
-              COD & UPI
-            </span>
+          <div className="flex items-center gap-3 text-[12px] font-semibold text-neutral-500 dark:text-neutral-400">
+            <span>Free over ₹499</span>
+            <span className="h-3 w-px bg-neutral-200 dark:bg-neutral-700" />
+            <span>COD & UPI</span>
           </div>
         </div>
       </section>

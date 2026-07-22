@@ -793,6 +793,68 @@ html[data-keyboard-open] .pb-safe {
   backface-visibility: hidden;
 }
 
+/* ===== 120fps / HIGH REFRESH RATE OPTIMIZATION ===== */
+/**
+ * Devices with 120Hz displays (iPhone 13 Pro+, Pixel 6+, Samsung Galaxy S21+)
+ * have an 8.3ms frame budget instead of 16.6ms.
+ *
+ * Rules for 120fps:
+ * 1. NEVER use will-change permanently (wastes GPU memory & forces compositing)
+ * 2. Promote layers ONLY during active animation (via :active/:hover/class toggle)
+ * 3. Use contain: layout style paint on scrollable item grids
+ * 4. Avoid filter/backdrop-filter changes during scroll (causes jank at 120Hz)
+ * 5. Use passive event listeners for scroll/touch (already done in JS hooks)
+ */
+
+/* During active touch interaction, promote to own layer for jank-free 120fps */
+@media (pointer: coarse) {
+  .press:active,
+  .product-card-animated:active,
+  .category-card-animated:active {
+    will-change: transform;
+  }
+}
+
+/* Scrollable containers: hint the browser to optimize for scroll performance */
+.wheel-scroll,
+.scroll-x,
+[data-scroll-container] {
+  will-change: scroll-position;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Animated elements during transition: promote ONLY while animating */
+[style*="transform"] {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+/* Prevent layout shifts from font loading on 120Hz (visible at high refresh) */
+html {
+  font-display: optional;
+  text-rendering: optimizeSpeed;
+}
+
+/* Images: prevent decode jank on 120Hz screens by decoding async */
+img:not([decoding]) {
+  decoding: async;
+}
+
+/* Smooth scrollbar hiding during momentum scroll (120Hz shows micro-flashes) */
+@media (pointer: coarse) {
+  * {
+    scrollbar-width: none;
+  }
+  *::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* Route transition container: use contain to prevent layout recalculation propagation */
+.route-scroll-container {
+  contain: layout style;
+}
+
 /* Optimized scroll container for mobile */
 .scroll-x {
   overflow-x: auto;

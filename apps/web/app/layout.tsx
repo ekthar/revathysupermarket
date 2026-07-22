@@ -28,6 +28,9 @@ import { getLocale, getMessages } from "next-intl/server";
 import { PermissionGate } from "@/components/native/permission-gate";
 import { AlarmOverlay } from "@/components/native/alarm-overlay";
 import { NativeInit } from "@/components/native/native-init";
+import { NativeBackButton } from "@/components/native/native-back-button";
+import { AppLifecycle } from "@/components/native/app-lifecycle";
+import { NetworkStatus } from "@/components/native/network-status";
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
@@ -107,7 +110,8 @@ export const viewport: Viewport = {
   ],
   width: "device-width",
   initialScale: 1,
-  maximumScale: 3,
+  maximumScale: 1,
+  userScalable: false,
   viewportFit: "cover"
 };
 
@@ -142,6 +146,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Providers session={session}>
             <PermissionGate>
             <NativeInit />
+            <NativeBackButton />
+            <AppLifecycle />
+            <NetworkStatus />
             <ViewportStability />
             <ScrollProgress />
             <WelcomeOnboarding />

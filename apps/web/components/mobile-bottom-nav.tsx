@@ -9,6 +9,7 @@ import { useCartItemCount } from "@/components/cart/cart-provider";
 import type { SessionIdentity } from "@/components/session-identity-card";
 import { cn } from "@/lib/utils";
 import { springs } from "@/lib/motion";
+import { hapticSelection } from "@/lib/haptics";
 
 export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: SessionIdentity }) {
   const pathname = usePathname();
@@ -30,6 +31,7 @@ export const MobileBottomNav = memo(function MobileBottomNav({ user }: { user: S
   useEffect(() => () => { if (resetTimer.current) clearTimeout(resetTimer.current); }, []);
 
   const select = useCallback((href: string) => {
+    hapticSelection(); // Native tab-switch tick
     setPendingHref(href);
     router.push(href);
     // Safety net: if navigation never lands (e.g. blocked/offline), fall back

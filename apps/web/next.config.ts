@@ -45,6 +45,7 @@ const nextConfig: NextConfig = {
         "@capacitor/haptics": false,
         "@capacitor/keyboard": false,
         "@capacitor/local-notifications": false,
+        "@capacitor/navigation-bar": false,
         "@capacitor/push-notifications": false,
         "@capacitor/splash-screen": false,
         "@capacitor/status-bar": false,

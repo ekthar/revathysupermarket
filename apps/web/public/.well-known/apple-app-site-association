@@ -1,0 +1,26 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appID": "TEAMID.in.revathysupermarket.customer",
+        "paths": ["/", "/products/*", "/cart", "/orders/*", "/account/*", "/offers/*"]
+      },
+      {
+        "appID": "TEAMID.in.revathysupermarket.delivery",
+        "paths": ["/delivery/*"]
+      },
+      {
+        "appID": "TEAMID.in.revathysupermarket.staff",
+        "paths": ["/staff/*", "/admin/*"]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID.in.revathysupermarket.customer",
+      "TEAMID.in.revathysupermarket.delivery",
+      "TEAMID.in.revathysupermarket.staff"
+    ]
+  }
+}

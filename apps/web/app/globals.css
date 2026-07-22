@@ -1158,6 +1158,45 @@ button, a, [role="button"], .press {
   }
 }
 
+/* ═══ NATIVE FEEL: OVERSCROLL RUBBER-BAND ═══ */
+/* iOS has natural rubber-band via WebKit. On Android WebView, we disable the
+   glow effect and let the web rubber-band (via overscroll-behavior: none above
+   + JS-based pull-to-refresh) handle the feel. */
+
+/* Disable long-press context menu on interactive elements (native apps don't show it) */
+button,
+a,
+[role="button"],
+.press,
+[data-no-context-menu] {
+  -webkit-touch-callout: none;
+}
+
+/* Disable text selection on cards, nav items, and other non-text interactive surfaces */
+.product-card-animated,
+.category-card,
+.category-card-animated,
+.wheel-scroll-item,
+.ios-bottom-bar,
+.ios-glass,
+.floating-cart-bar,
+[data-no-select] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ═══ NATIVE FEEL: INPUT ACCESSORIES ═══ */
+/* Style inputs with enterkeyhint for proper keyboard "Done"/"Search"/"Go" buttons.
+   This is automatic via the HTML attribute — no CSS needed.
+   Components should add enterKeyHint="done|search|go|send|next" to inputs. */
+
+/* Ensure inputs don't have rounded corners that conflict with iOS native input style */
+input[enterkeyhint],
+textarea[enterkeyhint] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
 /* ===== KEYBOARD DISMISSAL ===== */
 /* Graceful transition when keyboard opens/closes */
 html[data-keyboard-open] .ios-bottom-bar,

@@ -623,6 +623,13 @@ html[data-keyboard-open] .pb-safe {
   to { opacity: 1; transform: translateY(0); }
 }
 
+/* Confetti particle fall — order success celebration */
+@keyframes confettiFall {
+  0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+  50% { opacity: 1; }
+  100% { opacity: 0; transform: translateY(80vh) rotate(720deg) scale(0.5); }
+}
+
 /* Scale-in animation */
 @keyframes scaleIn {
   from { opacity: 0; transform: scale(0.9); }

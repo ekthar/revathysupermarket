@@ -40,10 +40,14 @@ const nextConfig: NextConfig = {
         ...config.resolve.fallback,
         "@capacitor-community/background-geolocation": false,
         "@capacitor/app": false,
+        "@capacitor/camera": false,
+        "@capacitor/geolocation": false,
         "@capacitor/haptics": false,
-        "@capacitor/status-bar": false,
         "@capacitor/keyboard": false,
+        "@capacitor/local-notifications": false,
+        "@capacitor/push-notifications": false,
         "@capacitor/splash-screen": false,
+        "@capacitor/status-bar": false,
       };
     }
     return config;
@@ -72,7 +76,7 @@ const nextConfig: NextConfig = {
         // accessible from any origin since they serve public catalog data.
         source: "/api/mobile/:path*",
         headers: [
-          { key: "Access-Control-Allow-Origin", value: process.env.MOBILE_CORS_ORIGIN || "https://revathysupermarket.vercel.app" },
+          { key: "Access-Control-Allow-Origin", value: process.env.MOBILE_CORS_ORIGINS?.split(",")[0]?.trim() || "https://revathysupermarket.vercel.app" },
           { key: "Access-Control-Allow-Methods", value: "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
           { key: "Access-Control-Allow-Headers", value: "Content-Type, Authorization" },
           { key: "Access-Control-Max-Age", value: "86400" },

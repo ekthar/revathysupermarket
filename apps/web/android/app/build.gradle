@@ -34,11 +34,10 @@ android {
         }
     }
     splits {
+        // ABI splits disabled — this is a WebView-only app loading remote content.
+        // A single universal APK is sufficient and simplifies distribution.
         abi {
-            enable true
-            reset()
-            include 'arm64-v8a', 'armeabi-v7a', 'x86_64'
-            universalApk true
+            enable false
         }
     }
 }

@@ -222,9 +222,26 @@ jobs:
         env:
           CAPACITOR_SERVER_URL: ${{ vars.CAPACITOR_SERVER_URL || 'https://revathysupermarket.vercel.app' }}
 
-      - name: Install CocoaPods
-        run: pod install
-        working-directory: apps/web/ios/App
+      - name: Resolve Swift Package Manager dependencies
+        run: |
+          cd ios/App
+          xcodebuild -resolvePackageDependencies \
+            -workspace App.xcworkspace \
+            -scheme App
+
+      - name: Update Info.plist display name for variant
+        run: |
+          case "${{ inputs.app }}" in
+            customer)
+              /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'Revathy Supermarket'" ios/App/App/Info.plist
+              ;;
+            delivery)
+              /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'Revathy Delivery'" ios/App/App/Info.plist
+              ;;
+            staff)
+              /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName 'Revathy Staff'" ios/App/App/Info.plist
+              ;;
+          esac
 
       - name: Build iOS Archive
         run: |

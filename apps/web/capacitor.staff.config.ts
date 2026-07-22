@@ -10,21 +10,25 @@ import type { CapacitorConfig } from "@capacitor/cli";
  *
  * For customer app, see capacitor.config.ts.
  * For delivery partner app, see capacitor.delivery.config.ts.
+ *
+ * NOTE: `webDir` is required by Capacitor CLI even in remote mode.
+ * It points to a placeholder directory; the actual content is served
+ * from the remote `server.url`.
  */
 const config: CapacitorConfig = {
   appId: "in.revathysupermarket.staff",
   appName: "Revathy Staff",
-  webDir: "out",
+  webDir: "public",
   server: {
     url: process.env.CAPACITOR_SERVER_URL || "https://revathysupermarket.vercel.app/staff",
     cleartext: false,
-    allowNavigation: ["revathysupermarket.vercel.app", "*.vercel.app"],
+    allowNavigation: ["revathysupermarket.vercel.app"],
   },
   android: {
     backgroundColor: "#1e293b",
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: process.env.NODE_ENV !== "production",
+    webContentsDebuggingEnabled: false,
     initialFocus: false,
   },
   ios: {
@@ -56,10 +60,13 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"],
     },
     Haptics: {},
+    CapacitorHttp: {
+      enabled: true, // Native HTTP for better performance
+    },
     LocalNotifications: {
       smallIcon: "ic_stat_icon",
       iconColor: "#059669",
-      sound: "delivery_alarm.wav",
+      sound: "delivery_alarm",
     },
   },
 };

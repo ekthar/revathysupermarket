@@ -27,6 +27,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { PermissionGate } from "@/components/native/permission-gate";
 import { AlarmOverlay } from "@/components/native/alarm-overlay";
+import { NativeInit } from "@/components/native/native-init";
 
 const interTight = Inter_Tight({ subsets: ["latin"], variable: "--font-sans", display: "swap" });
 const manrope = Manrope({ subsets: ["latin"], variable: "--font-display", display: "swap" });
@@ -140,6 +141,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers session={session}>
             <PermissionGate>
+            <NativeInit />
             <ViewportStability />
             <ScrollProgress />
             <WelcomeOnboarding />

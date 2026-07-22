@@ -52,6 +52,7 @@ const dismissListeners: Set<() => void> = new Set();
 
 const ALARM_CONFIG: Record<AlarmType, {
   sound: string;
+  nativeSound: string;
   vibrationPattern: number[];
   loopInterval: number;
   autoStopSeconds: number;
@@ -60,6 +61,7 @@ const ALARM_CONFIG: Record<AlarmType, {
 }> = {
   delivery_assigned: {
     sound: "/sounds/delivery_alarm.wav",
+    nativeSound: "delivery_alarm",
     vibrationPattern: [300, 100, 300, 100, 300, 200, 500],
     loopInterval: 3000, // Replay every 3 seconds
     autoStopSeconds: 60, // Auto-stop after 60 seconds
@@ -68,6 +70,7 @@ const ALARM_CONFIG: Record<AlarmType, {
   },
   new_order: {
     sound: "/sounds/order_alert.wav",
+    nativeSound: "order_alert",
     vibrationPattern: [200, 100, 200, 100, 400],
     loopInterval: 5000, // Replay every 5 seconds
     autoStopSeconds: 30,
@@ -76,6 +79,7 @@ const ALARM_CONFIG: Record<AlarmType, {
   },
   order_update: {
     sound: "/sounds/notification.wav",
+    nativeSound: "notification",
     vibrationPattern: [100, 50, 100],
     loopInterval: 0, // No loop
     autoStopSeconds: 0,
@@ -192,7 +196,7 @@ async function triggerNativeAlarm(
         title: config.title,
         body: config.body,
         channelId: alarmDef.channelId,
-        sound: alarmDef.sound.replace("/sounds/", "").replace(".wav", ""),
+        sound: alarmDef.nativeSound,
         smallIcon: "ic_stat_icon",
         largeIcon: "ic_launcher",
         ongoing: true, // Can't be swiped away

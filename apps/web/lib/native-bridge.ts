@@ -12,11 +12,11 @@
 
 /** Whether we're running inside a Capacitor native shell */
 export const isNative: boolean =
-  typeof window !== "undefined" && !!(window as any).Capacitor?.isNativePlatform?.();
+  typeof window !== "undefined" && !!window.Capacitor?.isNativePlatform?.();
 
 /** Current platform: 'android' | 'ios' | 'web' */
 export const platform: "android" | "ios" | "web" =
-  typeof window !== "undefined" && (window as any).Capacitor?.getPlatform?.() || "web";
+  typeof window !== "undefined" && window.Capacitor?.getPlatform?.() || "web";
 
 // ─── Status Bar ──────────────────────────────────────────────────────────────
 
@@ -83,7 +83,10 @@ export async function hapticImpact(style: "light" | "medium" | "heavy" = "light"
     const { Haptics, ImpactStyle } = await import(/* webpackIgnore: true */ "@capacitor/haptics");
     const map = { light: ImpactStyle.Light, medium: ImpactStyle.Medium, heavy: ImpactStyle.Heavy };
     await Haptics.impact({ style: map[style] });
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[native-bridge] hapticImpact failed:", err);
+    }
     const durations: Record<string, number> = { light: 5, medium: 10, heavy: 20 };
     navigator.vibrate?.(durations[style]);
   }
@@ -144,6 +147,8 @@ export function registerBackButton(handler: () => void): () => void {
   if (!isNative) return () => {};
 
   let listener: any;
+  let importFailed = false;
+
   // @ts-ignore — only available in Capacitor native shell
   import(/* webpackIgnore: true */ "@capacitor/app").then(({ App }: any) => {
     listener = App.addListener("backButton", ({ canGoBack }: { canGoBack: boolean }) => {
@@ -153,10 +158,17 @@ export function registerBackButton(handler: () => void): () => void {
         App.exitApp();
       }
     });
-  }).catch(() => {});
+  }).catch((err) => {
+    importFailed = true;
+    if (process.env.NODE_ENV === "development") {
+      console.warn("[native-bridge] registerBackButton: @capacitor/app import failed:", err);
+    }
+  });
 
   return () => {
-    listener?.remove?.();
+    if (!importFailed) {
+      listener?.remove?.();
+    }
   };
 }
 
@@ -219,7 +231,7 @@ export async function createNotificationChannels(): Promise<void> {
       description: "Critical alerts when a new delivery is assigned to you",
       importance: 5, // MAX
       visibility: 1, // PUBLIC
-      sound: "delivery_alarm.wav",
+      sound: "delivery_alarm",
       vibration: true,
       lights: true,
       lightColor: "#059669",
@@ -231,7 +243,7 @@ export async function createNotificationChannels(): Promise<void> {
       description: "Alerts when a new order comes in (staff/admin)",
       importance: 4, // HIGH
       visibility: 1,
-      sound: "order_alert.wav",
+      sound: "order_alert",
       vibration: true,
       lights: true,
       lightColor: "#22C55E",
@@ -243,7 +255,7 @@ export async function createNotificationChannels(): Promise<void> {
       description: "Status updates for your orders (preparing, dispatched, delivered)",
       importance: 3, // DEFAULT
       visibility: 0, // PRIVATE
-      sound: "notification.wav",
+      sound: "notification",
       vibration: true,
     });
 

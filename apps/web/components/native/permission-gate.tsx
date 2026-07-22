@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapPin, Bell, Camera, Battery, Shield, Check, ChevronRight } from "lucide-react";
 import { springs } from "@/lib/motion";
@@ -58,7 +58,14 @@ const PERMISSION_INFO: Record<PermissionType, {
 
 /**
  * PermissionGate — Full-screen first-launch permission onboarding.
+ *
  * Apple HIG: explain WHY before asking, one at a time, allow skip for non-critical.
+ *
+ * Flow:
+ * 1. Show explanation screen for each permission
+ * 2. User taps "Allow" → requestPermission() triggers the actual system dialog
+ * 3. After notification permission is granted, immediately register for push + set up listeners
+ * 4. After all permissions are handled, mark complete and dismiss the gate
  */
 export function PermissionGate({ children }: { children: React.ReactNode }) {
   const [showGate, setShowGate] = useState(false);
@@ -67,6 +74,7 @@ export function PermissionGate({ children }: { children: React.ReactNode }) {
   const [results, setResults] = useState<PermissionResult[]>([]);
   const [requesting, setRequesting] = useState(false);
   const [permissions, setPermissions] = useState<{ type: PermissionType; required: boolean }[]>([]);
+  const pushSetupDone = useRef(false);
 
   useEffect(() => {
     if (!isNative) return;
@@ -80,9 +88,31 @@ export function PermissionGate({ children }: { children: React.ReactNode }) {
   const handleRequest = useCallback(async () => {
     if (currentStep >= permissions.length) return;
     setRequesting(true);
+
     const perm = permissions[currentStep];
     const status = await requestPermission(perm.type);
-    setResults((prev) => [...prev, { type: perm.type, status, required: perm.required }]);
+
+    const result: PermissionResult = { type: perm.type, status, required: perm.required };
+    setResults((prev) => [...prev, result]);
+
+    // If notification permission was just granted, immediately set up push
+    // listeners so we can receive messages right away (don't wait for all
+    // permissions to complete).
+    if (perm.type === "notifications" && status === "granted" && !pushSetupDone.current) {
+      pushSetupDone.current = true;
+      // registerNativePush() is already called inside requestNotificationPermission()
+      // (it calls PushNotifications.register() after grant). Here we just wire up
+      // the foreground message listener and save the FCM token.
+      try {
+        await registerNativePush();
+        await setupPushListeners();
+      } catch (err) {
+        if (process.env.NODE_ENV === "development") {
+          console.warn("[permission-gate] Push setup failed:", err);
+        }
+      }
+    }
+
     setRequesting(false);
     setCurrentStep((prev) => prev + 1);
   }, [currentStep, permissions]);
@@ -96,8 +126,20 @@ export function PermissionGate({ children }: { children: React.ReactNode }) {
 
   const handleComplete = useCallback(async () => {
     markPermissionsCompleted(results);
-    await registerNativePush();
-    await setupPushListeners();
+
+    // If push wasn't set up during the notification step (e.g., it was skipped
+    // or the permission was already granted from a previous session), try now.
+    if (!pushSetupDone.current) {
+      pushSetupDone.current = true;
+      const notifResult = results.find((r) => r.type === "notifications");
+      if (notifResult?.status === "granted") {
+        try {
+          await registerNativePush();
+          await setupPushListeners();
+        } catch {}
+      }
+    }
+
     setShowGate(false);
   }, [results]);
 

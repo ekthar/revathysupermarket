@@ -709,6 +709,21 @@ html[data-keyboard-open] .pb-safe {
   padding-top: 12px;
 }
 
+/* iOS-native toast glass — dark translucent pill */
+.ios-toast-glass {
+  background: rgba(28, 28, 30, 0.88);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.dark .ios-toast-glass {
+  background: rgba(44, 44, 46, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .ios-toast-glass { background: rgba(28, 28, 30, 0.97); }
+}
+
 /* Fix promo card in dark */
 .dark .promo-card {
   border: 1px solid rgba(255,255,255,0.06);

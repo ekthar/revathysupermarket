@@ -2,6 +2,45 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ===== VIEW TRANSITIONS API ===== */
+/* Shared element transitions for product card → detail page morphing */
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(product-image) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(product-image) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Smooth morphing between source (card) and target (detail hero) */
+::view-transition-group(product-image) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Default page transition: subtle crossfade */
+::view-transition-old(root) {
+  animation: vt-fade-out 0.15s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+::view-transition-new(root) {
+  animation: vt-fade-in 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+@keyframes vt-fade-out {
+  to { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+  from { opacity: 0; }
+}
+
 :root {
   --background: 0 0% 98%;
   --foreground: 0 0% 7%;

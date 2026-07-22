@@ -119,10 +119,13 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
         onTouchStart={outOfStock ? undefined : preload.onTouchStart}
       >
-        <div className={cn(
-          "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
-          compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
-        )}>
+        <div
+          className={cn(
+            "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
+            compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
+          )}
+          style={{ viewTransitionName: `product-img-${product.id}` }}
+        >
           <motion.div
             whileHover={{ scale: 1.06 }}
             transition={{ duration: durations.slow, ease: easings.easeOutQuart }}

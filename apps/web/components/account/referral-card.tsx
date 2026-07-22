@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Copy, Share2, Check } from "lucide-react";
+import { nativeShare } from "@/lib/native-share";
 
 export function ReferralCard({
   referralCode,
@@ -19,21 +20,18 @@ export function ReferralCard({
   }
 
   async function handleShare() {
-    const shareData = {
-      title: "Get ₹50 off your first grocery order!",
-      text: `Use my referral code ${referralCode} on MSM Supermarket and we both earn ${referralRewardPoints} points! 🛒`,
-      url: typeof window !== "undefined" ? `${window.location.origin}?ref=${referralCode}` : "",
-    };
+    const shareUrl = typeof window !== "undefined" ? `${window.location.origin}?ref=${referralCode}` : "";
+    const shareText = `Use my referral code ${referralCode} on MSM Supermarket and we both earn ${referralRewardPoints} points! 🛒`;
 
-    if (typeof navigator !== "undefined" && navigator.share) {
-      try {
-        await navigator.share(shareData);
-      } catch {
-        // User cancelled or not supported - fall back to WhatsApp
-        openWhatsApp(shareData.text, shareData.url);
-      }
-    } else {
-      openWhatsApp(shareData.text, shareData.url);
+    const shared = await nativeShare({
+      title: "Get ₹50 off your first grocery order!",
+      text: shareText,
+      url: shareUrl,
+    });
+
+    if (!shared) {
+      // Fallback to WhatsApp if share was cancelled or unavailable
+      openWhatsApp(shareText, shareUrl);
     }
   }
 

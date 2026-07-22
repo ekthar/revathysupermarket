@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { getSession, signIn, signOut } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, Eye, EyeOff, LockKeyhole, Mail, Phone, ShoppingBasket, Sparkles, UserRound } from "lucide-react";
+import { ArrowRight, CheckCircle2, Eye, EyeOff, Fingerprint, LockKeyhole, Mail, Phone, ShoppingBasket, Sparkles, UserRound } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SITE } from "@/lib/constants";
 import { Input } from "@/components/ui/input";
@@ -14,6 +14,8 @@ import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
 import { isCustomerRole, isDeliveryPartnerRole, isStaffLoginRole, roleLabel } from "@/lib/roles";
 import { haptic } from "@/lib/haptics";
+import { isNative } from "@/lib/native-bridge";
+import { canUseBiometric, authenticateWithBiometric, getBiometricType, getSecureCredentials, setSecureCredentials, type BiometricType } from "@/lib/native-biometric";
 
 type Mode = "login" | "register";
 
@@ -33,8 +35,58 @@ export function LoginForm({
   const [register, setRegister] = useState({ name: "", phone: "", email: "", password: "", confirmPassword: "" });
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState<BiometricType>("none");
+
+  // Check if biometric login is available on this device
+  useEffect(() => {
+    if (isNative) {
+      canUseBiometric().then((available) => {
+        setBiometricAvailable(available);
+        if (available) getBiometricType().then(setBiometricType);
+      });
+    }
+  }, []);
 
   const safeCallback = callbackUrl.startsWith("/") && !callbackUrl.startsWith("/admin") ? callbackUrl : "/dashboard";
+
+  /** Attempt biometric login using stored credentials */
+  async function handleBiometricLogin() {
+    haptic("medium");
+    setLoading(true);
+    setMessage("");
+    try {
+      // Verify identity with Face ID / fingerprint
+      const authenticated = await authenticateWithBiometric("Log in to your account");
+      if (!authenticated) {
+        setLoading(false);
+        return;
+      }
+
+      // Retrieve stored credentials from secure keychain
+      const credentials = await getSecureCredentials("revathysupermarket.vercel.app");
+      if (!credentials) {
+        setMessage("No saved login found. Please sign in with email first.");
+        setLoading(false);
+        return;
+      }
+
+      // Sign in with the stored credentials
+      const loginType = await customerLogin(credentials.username, credentials.password);
+      if (loginType === "delivery") {
+        showToast(`Opening ${roleLabel("DELIVERY_PARTNER")} panel`, "success");
+        return;
+      }
+      showToast("Welcome back!", "success");
+      router.push(safeCallback);
+      router.refresh();
+    } catch (error) {
+      const nextMessage = error instanceof Error ? error.message : "Biometric login failed.";
+      setMessage(nextMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   async function customerLogin(email: string, password: string) {
     const result = await signIn("credentials", { email, password, redirect: false });
@@ -64,6 +116,10 @@ export function LoginForm({
     setMessage("");
     try {
       const loginType = await customerLogin(login.email, login.password);
+      // Save credentials for future biometric login
+      if (biometricAvailable) {
+        void setSecureCredentials("revathysupermarket.vercel.app", login.email, login.password);
+      }
       if (loginType === "delivery") {
         showToast(`Opening ${roleLabel("DELIVERY_PARTNER")} panel`, "success");
         return;
@@ -204,6 +260,18 @@ export function LoginForm({
                 {loading ? "Signing in" : "Login"}
                 <ArrowRight className="h-4 w-4" />
               </Button>
+              {/* Biometric login button — only shown on native devices with Face ID / fingerprint */}
+              {biometricAvailable && (
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  disabled={loading}
+                  className="mt-3 flex w-full items-center justify-center gap-2.5 h-12 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 text-sm font-bold text-neutral-700 dark:text-neutral-200 transition hover:border-neutral-300 dark:hover:border-neutral-600 disabled:opacity-50 press"
+                >
+                  <Fingerprint className="h-5 w-5 text-emerald-600" />
+                  {biometricType === "face" ? "Sign in with Face ID" : "Sign in with Fingerprint"}
+                </button>
+              )}
               <div className="mt-4 flex justify-between text-sm font-semibold">
                 <button type="button" onClick={() => setMode("register")} className="text-black">Create account</button>
                 <Link href="/forgot-password" className="text-black">Forgot password</Link>

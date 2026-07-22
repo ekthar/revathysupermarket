@@ -1,7 +1,10 @@
+"use client";
+
 import * as React from "react";
 import { Slot } from "@radix-ui/react-slot";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { haptic } from "@/lib/haptics";
 
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 rounded-full text-sm font-semibold transition active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
@@ -33,12 +36,37 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean;
+  /** Haptic intensity on tap: "light" (default), "medium", "heavy", or "none" to disable */
+  hapticStyle?: "light" | "medium" | "heavy" | "none";
 }
 
+/**
+ * Button with native haptic feedback on every tap.
+ * Fires haptic on pointerDown for instant feedback (matches iOS UIButton).
+ */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, type = 'button' as React.ButtonHTMLAttributes<HTMLButtonElement>['type'], asChild = false, ...props }, ref) => {
+  ({ className, variant, size, type = "button", asChild = false, hapticStyle = "light", onPointerDown, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return <Comp type={type} className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+
+    const handlePointerDown = React.useCallback(
+      (e: React.PointerEvent<HTMLButtonElement>) => {
+        if (hapticStyle !== "none") {
+          haptic(hapticStyle);
+        }
+        onPointerDown?.(e);
+      },
+      [hapticStyle, onPointerDown]
+    );
+
+    return (
+      <Comp
+        type={type}
+        className={cn(buttonVariants({ variant, size, className }))}
+        ref={ref}
+        onPointerDown={handlePointerDown}
+        {...props}
+      />
+    );
   }
 );
 Button.displayName = "Button";

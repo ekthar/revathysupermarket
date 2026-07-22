@@ -13,7 +13,8 @@ import { formatCurrency } from "@/lib/utils";
 import { readApiResponse } from "@/lib/client-api";
 import { useToast } from "@/components/toast-provider";
 import { useTranslations } from "next-intl";
-import { haptic } from "@/lib/haptics";
+import { haptic, hapticSuccess, hapticError } from "@/lib/haptics";
+import { trackOrderForReview, maybeRequestReview } from "@/lib/native-review";
 import type { StoreSettings } from "@/lib/store-settings";
 import { AnimatedCheckmark, SuccessRing } from "@/components/ui/animated-checkmark";
 import { Confetti } from "@/components/ui/confetti";
@@ -456,9 +457,13 @@ export function CheckoutForm({
       clearCart();
       if (data.orderId) setPlacedOrderId(data.orderId);
       triggerCelebration();
+      hapticSuccess();
+      trackOrderForReview();
+      void maybeRequestReview(); // Non-blocking: OS may or may not show dialog
       showToast("Order placed successfully", "success");
     } catch {
       setIsSubmitting(false);
+      hapticError();
       showToast("Order could not be placed", "error");
     }
   }
@@ -468,6 +473,9 @@ export function CheckoutForm({
     setPlacedOrderId(razorpayOrderId);
     setRazorpayOrderId("");
     triggerCelebration();
+    hapticSuccess();
+    trackOrderForReview();
+    void maybeRequestReview();
     showToast("Order placed and payment successful!", "success");
   }
 

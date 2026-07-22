@@ -17,6 +17,7 @@ import { AnimatedStoreName } from "@/components/ui/gsap/animated-store-name";
 import { useTranslations } from "next-intl";
 import { ThemeToggleIcon } from "@/components/theme-toggle";
 import { MegaMenu } from "@/components/navigation/mega-menu";
+import { useScrollDirection } from "@/hooks/use-scroll-direction";
 
 const navLinks = [
   { href: "/products", label: "Shop" },
@@ -43,6 +44,10 @@ export const Header = memo(function Header({
   const router = useRouter();
   const t = useTranslations("common");
   const [searchOpen, setSearchOpen] = useState(false);
+  const { direction, isAtTop } = useScrollDirection({ threshold: 8, startOffset: 50 });
+
+  // Mobile header collapses on scroll down, reappears on scroll up (iOS-style)
+  const mobileHeaderHidden = direction === "down" && !isAtTop;
 
   // Keyboard shortcut: ⌘K / Ctrl+K to open search
   useEffect(() => {
@@ -199,8 +204,12 @@ export const Header = memo(function Header({
         </div>
       </header>
 
-      {/* Mobile Header */}
-      <header className="ios-sticky-tracking-header ios-glass md:hidden">
+      {/* Mobile Header — collapses on scroll down, reappears on scroll up */}
+      <header
+        className={`ios-sticky-tracking-header ios-glass md:hidden transition-transform duration-300 ease-out ${
+          mobileHeaderHidden ? "-translate-y-full" : "translate-y-0"
+        }`}
+      >
         <div className="flex h-14 items-center justify-between px-4">
           {/* Back button on inner pages OR store branding on home */}
           {isInnerPage ? (

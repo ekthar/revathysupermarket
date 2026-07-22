@@ -419,7 +419,7 @@ export function ProductGrid({
               onChange={handlePriceChange}
               className="w-full accent-primary"
             />
-            <div className="flex justify-between text-caption text-neutral-400 mt-1">
+            <div className="flex justify-between text-caption text-neutral-500 dark:text-neutral-400 mt-1">
               <span>{"\u20B9"}20</span>
               <span>{"\u20B9"}350</span>
             </div>

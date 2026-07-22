@@ -3,16 +3,14 @@
 import Link from "next/link";
 import { Minus, Plus, Star } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { memo, useCallback, useRef } from "react";
+import { memo, useCallback } from "react";
 import { useCartItem, useCartActions } from "@/components/cart/cart-provider";
 import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "@/components/product-image";
-import { useToast } from "@/components/toast-provider";
 import { cn } from "@/lib/utils";
-import { FavoriteButton, type FavoriteButtonHandle } from "@/components/favorite-button";
-import { DoubleTapHeart } from "@/components/ui/double-tap-heart";
+import { FavoriteButton } from "@/components/favorite-button";
 import { tapScale, springs, durations, easings } from "@/lib/motion";
 import { useRoutePreload } from "@/lib/hooks/use-preload";
 
@@ -23,15 +21,22 @@ interface ProductCardProps {
   priority?: boolean;
 }
 
-// Memoized product card - only re-renders when product prop changes
+/**
+ * Product Card — Apple-grade design
+ *
+ * Design principles:
+ * - ONE badge max per card (priority: discount > featured > new)
+ * - Clean unit display (only real units, no filler text)
+ * - Consistent card heights (no conditional bars that break grid rhythm)
+ * - Isolated cart controls (only re-renders on cart state change)
+ */
 export const ProductCard = memo(function ProductCard({ product, compact = false, horizontal = false, priority }: ProductCardProps) {
   const price = product.discountPrice ?? product.price;
   const outOfStock = product.stock <= 0;
   const productHref = `/products/${product.slug}`;
-  
+
   // Preload product detail page on hover/touch intent
   const preload = useRoutePreload(productHref);
-  const favoriteBtnRef = useRef<FavoriteButtonHandle>(null);
 
   // Horizontal list layout
   if (horizontal) {
@@ -68,20 +73,21 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             <h3 className="text-body font-bold text-neutral-800 dark:text-neutral-100 leading-snug line-clamp-1">
               {product.name}
             </h3>
-            <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pick"}</p>
+            {product.unit && (
+              <p className="text-micro text-neutral-500 dark:text-neutral-400 mt-0.5 font-medium">{product.unit}</p>
+            )}
             {product.avgRating && product.avgRating > 0 && (
               <div className="flex items-center gap-1 mt-0.5">
                 <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
                 <span className="text-micro font-bold text-neutral-600 dark:text-neutral-400">{product.avgRating.toFixed(1)}</span>
-                {product.reviewCount && product.reviewCount > 0 && (
-                  <span className="text-micro text-neutral-400">({product.reviewCount})</span>
-                )}
               </div>
             )}
           </Link>
-          <div className="flex items-center gap-1 mt-1.5">
+          <div className="flex items-center gap-1.5 mt-1.5">
             <span className="text-title font-black text-neutral-900 dark:text-white">{formatCurrency(price)}</span>
-            <span className="text-micro text-neutral-400 font-medium">/ {product.unit || "per kg"}</span>
+            {product.discountPrice && (
+              <span className="text-micro text-neutral-400 dark:text-neutral-500 line-through">{formatCurrency(product.price)}</span>
+            )}
           </div>
         </div>
 
@@ -93,7 +99,8 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   }
 
   // Grid / Compact card layout
-  const isNew = product.createdAt && new Date(product.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  // Single badge logic — only ONE badge per card, priority order
+  const badge = getBadge(product);
 
   return (
     <motion.article
@@ -104,70 +111,40 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         outOfStock && "opacity-50"
       )}
     >
+      {/* Image section */}
       <Link
         href={productHref}
         className={cn(outOfStock && "pointer-events-none")}
         onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
         onTouchStart={outOfStock ? undefined : preload.onTouchStart}
       >
-        <DoubleTapHeart onDoubleTap={() => favoriteBtnRef.current?.toggle()}>
-          <div className={cn(
-            "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
-            compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
-          )}>
-            <motion.div
-              whileHover={{ scale: 1.08 }}
-              transition={{ duration: durations.slow, ease: easings.easeOutQuart }}
-              className="h-full w-full"
-            >
-              <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
-            </motion.div>
-            {/* Unified badge: discount % + featured in one compact pill */}
-            <div className="absolute top-2 left-2 z-10 flex items-center gap-1">
-              {isNew && !product.discountPrice && !product.isFeatured && (
-                <span className="rounded-full bg-blue-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow-md">
-                  New
-                </span>
-              )}
-              {(product.discountPrice || product.isFeatured) && (
-                <span className="flex items-center gap-1 rounded-full bg-black px-2 py-1 text-micro font-bold text-white shadow-md">
-                  {product.isFeatured && <Star className="h-2.5 w-2.5 fill-white" />}
-                  {product.discountPrice
-                    ? `${Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF`
-                    : "Featured"}
-                </span>
-              )}
-              {/* Bestseller badge — only if no other badge is showing */}
-              {!isNew && !product.discountPrice && !product.isFeatured && product.popularity > 50 && (
-                <span className="flex items-center gap-1 rounded-full bg-amber-500 px-2 py-0.5 text-[10px] font-bold uppercase text-white shadow-md">
-                  <Star className="h-2.5 w-2.5 fill-current" /> Best
-                </span>
-              )}
-            </div>
-            {/* Favorite button - always top-right */}
-            <div className="absolute top-2 right-2 z-10">
-              <FavoriteButton ref={favoriteBtnRef} productId={product.id} size="sm" />
-            </div>
-            {/* Quick add button - appears on hover (desktop only) */}
-            {!outOfStock && (
-              <QuickAddOverlay product={product} />
-            )}
+        <div className={cn(
+          "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
+          compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
+        )}>
+          <motion.div
+            whileHover={{ scale: 1.06 }}
+            transition={{ duration: durations.slow, ease: easings.easeOutQuart }}
+            className="h-full w-full"
+          >
+            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
+          </motion.div>
+
+          {/* Single badge — top left */}
+          {badge && (
+            <span className="absolute top-2.5 left-2.5 z-10 rounded-lg bg-neutral-900/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold text-white">
+              {badge}
+            </span>
+          )}
+
+          {/* Favorite button — top right */}
+          <div className="absolute top-2.5 right-2.5 z-10">
+            <FavoriteButton productId={product.id} size="sm" />
           </div>
-        </DoubleTapHeart>
+        </div>
       </Link>
 
-      {outOfStock && (
-        <div className="flex items-center gap-2 bg-neutral-100 dark:bg-neutral-800 px-3 py-1.5">
-          <span className="h-2 w-2 rounded-full bg-neutral-400" />
-          <span className="text-micro font-semibold text-neutral-500">Out of stock</span>
-        </div>
-      )}
-      {!outOfStock && product.stock > 0 && product.stock <= 5 && (
-        <div className="flex items-center gap-2 bg-amber-50 dark:bg-amber-950/30 px-3 py-1">
-          <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse [animation-duration:4s]" />
-          <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400">Only {product.stock} left</span>
-        </div>
-      )}
+      {/* Content section */}
       <div className={cn("p-3", compact && "p-2.5")}>
         <Link
           href={productHref}
@@ -179,29 +156,44 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             "font-semibold text-neutral-800 dark:text-neutral-100 leading-snug line-clamp-2",
             compact ? "text-caption" : "text-body"
           )}>{product.name}</h3>
-          <p className="text-micro text-neutral-400 mt-0.5 font-medium">{product.unit || "Fresh pack"}</p>
-          {/* Rating — only show on non-compact cards to reduce density */}
+
+          {/* Unit + low stock indicator (inline, never breaks grid rhythm) */}
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {product.unit && (
+              <span className="text-micro text-neutral-500 dark:text-neutral-400 font-medium">{product.unit}</span>
+            )}
+            {!outOfStock && product.stock > 0 && product.stock <= 5 && (
+              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                {product.unit ? "·" : ""} Only {product.stock} left
+              </span>
+            )}
+            {outOfStock && (
+              <span className="text-[10px] font-bold text-neutral-500">Out of stock</span>
+            )}
+          </div>
+
+          {/* Rating — only on non-compact cards */}
           {!compact && product.avgRating && product.avgRating > 0 && (
-            <div className="flex items-center gap-1 mt-0.5">
+            <div className="flex items-center gap-1 mt-1">
               <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
               <span className="text-micro font-bold text-neutral-600 dark:text-neutral-400">{product.avgRating.toFixed(1)}</span>
               {product.reviewCount && product.reviewCount > 0 && (
-                <span className="text-micro text-neutral-400">({product.reviewCount})</span>
+                <span className="text-micro text-neutral-500 dark:text-neutral-400">({product.reviewCount})</span>
               )}
             </div>
           )}
         </Link>
 
-        <div className="flex items-end justify-between mt-2.5 gap-1">
-          <div>
+        {/* Price + Cart control row */}
+        <div className="flex items-end justify-between mt-2.5 gap-2">
+          <div className="min-w-0">
             <span className={cn("font-black text-neutral-900 dark:text-white", compact ? "text-body" : "text-title")}>{formatCurrency(price)}</span>
-            {!compact && <span className="text-micro text-neutral-400 ml-0.5 font-medium">/ {product.unit || "per kg"}</span>}
             {product.discountPrice && (
-              <span className="ml-1.5 text-micro text-neutral-400 line-through">{formatCurrency(product.price)}</span>
+              <span className="ml-1.5 text-micro text-neutral-400 dark:text-neutral-500 line-through">{formatCurrency(product.price)}</span>
             )}
           </div>
 
-          {/* Cart control - isolated to prevent parent re-render */}
+          {/* Cart control — isolated to prevent parent re-render */}
           <CartControls product={product} outOfStock={outOfStock} variant="grid" />
         </div>
       </div>
@@ -209,7 +201,25 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   );
 });
 
-// Isolated cart controls component - only this re-renders on cart changes
+// ─── Badge Logic ──────────────────────────────────────────────────────────────
+// Priority: discount > featured > new (only ONE badge per card)
+function getBadge(product: Product): string | null {
+  if (product.discountPrice) {
+    const pct = Math.round(((product.price - product.discountPrice) / product.price) * 100);
+    return `${pct}% OFF`;
+  }
+  if (product.isFeatured) {
+    return "Staff Pick";
+  }
+  const isNew = product.createdAt && new Date(product.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  if (isNew) {
+    return "New";
+  }
+  return null;
+}
+
+// ─── Cart Controls ────────────────────────────────────────────────────────────
+// Isolated component — only re-renders on cart state changes
 function CartControls({ product, outOfStock, variant }: { product: Product; outOfStock: boolean; variant: "grid" | "horizontal" }) {
   const cartItem = useCartItem(product.id);
   const { addItem, updateQuantity } = useCartActions();
@@ -218,7 +228,6 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
   const handleAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (outOfStock) return;
     addItem(product);
-    // Haptic feedback on mobile - non-blocking
     if (typeof navigator !== "undefined" && "vibrate" in navigator) {
       navigator.vibrate(10);
     }
@@ -259,25 +268,19 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
           onClick={handleAdd}
           aria-label={`Add ${product.name} to cart`}
           className={variant === "horizontal"
-            ? "flex items-center gap-1 rounded-full bg-black px-3 py-2 text-caption font-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
-            : "flex h-[44px] w-[44px] items-center justify-center rounded-full bg-black text-white hover:bg-neutral-800 active:bg-neutral-700 transition-colors disabled:cursor-not-allowed disabled:opacity-30"
+            ? "flex items-center gap-1.5 rounded-full bg-neutral-900 dark:bg-white px-3.5 py-2 text-caption font-bold text-white dark:text-neutral-900 transition-colors disabled:cursor-not-allowed disabled:opacity-30 press"
+            : "flex h-[44px] w-[44px] items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 transition-colors disabled:cursor-not-allowed disabled:opacity-30 press"
           }
         >
           <Plus className="h-4 w-4" />
-          {variant === "horizontal" && "Add to Cart"}
+          {variant === "horizontal" && <span>Add</span>}
         </motion.button>
       )}
     </AnimatePresence>
   );
 }
 
-// Quick add overlay removed — the black + button in the card footer handles add-to-cart
-function QuickAddOverlay({ product }: { product: Product }) {
-  void product;
-  return null;
-}
-
-// Animated quantity stepper with number bounce
+// ─── Quantity Stepper ─────────────────────────────────────────────────────────
 const QuantityStepper = memo(function QuantityStepper({
   quantity,
   onIncrement,
@@ -298,7 +301,7 @@ const QuantityStepper = memo(function QuantityStepper({
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
         transition={springs.snappy}
-        className="flex flex-col items-center h-[88px] w-[36px] rounded-full bg-black overflow-hidden shadow-sm"
+        className="flex flex-col items-center h-[84px] w-[36px] rounded-full bg-neutral-900 dark:bg-white overflow-hidden"
       >
         <motion.button
           type="button"
@@ -307,7 +310,7 @@ const QuantityStepper = memo(function QuantityStepper({
           whileTap={quantity < maxStock ? { scale: 1.3 } : undefined}
           transition={springs.tap}
           aria-label="Increase quantity"
-          className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="flex-1 w-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
         >
           <Plus className="h-3.5 w-3.5" />
         </motion.button>
@@ -316,7 +319,7 @@ const QuantityStepper = memo(function QuantityStepper({
           initial={{ scale: 1.5, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={springs.tap}
-          className="text-caption font-bold text-white tabular-nums"
+          className="text-caption font-bold text-white dark:text-neutral-900 tabular-nums"
           aria-label={`Quantity: ${quantity}`}
         >
           {quantity}
@@ -327,7 +330,7 @@ const QuantityStepper = memo(function QuantityStepper({
           whileTap={{ scale: 1.3 }}
           transition={springs.tap}
           aria-label="Decrease quantity"
-          className="flex-1 w-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+          className="flex-1 w-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors"
         >
           <Minus className="h-3.5 w-3.5" />
         </motion.button>
@@ -341,7 +344,7 @@ const QuantityStepper = memo(function QuantityStepper({
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0.8, opacity: 0 }}
       transition={springs.snappy}
-      className="flex h-[44px] items-center overflow-hidden rounded-full bg-black shadow-sm"
+      className="flex h-[44px] items-center overflow-hidden rounded-full bg-neutral-900 dark:bg-white"
     >
       <motion.button
         type="button"
@@ -349,7 +352,7 @@ const QuantityStepper = memo(function QuantityStepper({
         whileTap={{ scale: 1.4 }}
         transition={springs.tap}
         aria-label="Decrease quantity"
-        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors"
+        className="w-11 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors"
       >
         <Minus className="h-3.5 w-3.5" />
       </motion.button>
@@ -358,7 +361,7 @@ const QuantityStepper = memo(function QuantityStepper({
         initial={{ scale: 1.5, opacity: 0, y: -5 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={springs.tap}
-        className="w-6 text-center text-caption font-bold text-white tabular-nums"
+        className="w-6 text-center text-caption font-bold text-white dark:text-neutral-900 tabular-nums"
         aria-label={`Quantity: ${quantity}`}
       >
         {quantity}
@@ -370,7 +373,7 @@ const QuantityStepper = memo(function QuantityStepper({
         whileTap={quantity < maxStock ? { scale: 1.4 } : undefined}
         transition={springs.tap}
         aria-label="Increase quantity"
-        className="w-11 h-full flex items-center justify-center text-white hover:bg-white/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+        className="w-11 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
         <Plus className="h-3.5 w-3.5" />
       </motion.button>

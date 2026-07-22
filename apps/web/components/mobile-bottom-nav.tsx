@@ -124,7 +124,7 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
         <span className="relative">
           <Icon className="h-[20px] w-[20px]" strokeWidth={active ? 2.2 : 1.8} />
           {badge ? (
-            <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary-500 px-1 text-micro font-black text-white">
+            <span className="absolute -right-1.5 -top-1 flex h-[15px] min-w-[15px] items-center justify-center rounded-full bg-secondary-500 px-0.5 text-[9px] font-black text-white ring-2 ring-white/80 dark:ring-neutral-900/80">
               {badge > 99 ? "99+" : badge}
             </span>
           ) : null}

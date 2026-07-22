@@ -1,26 +1,20 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { ChevronRight, Star, Zap } from "lucide-react";
+import { ChevronRight, Zap } from "lucide-react";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
 import { HeroSection } from "@/components/home/hero-section";
 import { AnimatedCategories } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
-import { HomeSearch } from "@/components/home/home-search";
 import { LocationPrompt } from "@/components/location-prompt";
 import { StructuredData } from "@/components/structured-data";
 import { organizationSchema, websiteSchema } from "@/lib/structured-data";
 import { categories as demoCategories, products } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
-import { getLoyaltyConfig } from "@/lib/loyalty-config";
 import { getFeatureFlag } from "@/lib/feature-flags";
 import type { Product } from "@/lib/types";
 import { auth } from "@/auth";
-import { getActiveOrderSummary } from "@/lib/live-order";
-import { LoyaltyProgressBar } from "@/components/home/loyalty-progress-bar";
-import { OrderStreak } from "@/components/home/order-streak";
-import { InfiniteMarquee } from "@/components/ui/gsap/infinite-marquee";
 import { LazyRender } from "@/components/ui/lazy-render";
 
 
@@ -96,59 +90,13 @@ export default async function HomePage() {
   }
 
   const session = await auth();
-  const [settings, banner, dbProducts, dbCategories, promoBanners, activeOrder] = await Promise.all([
+  const [settings, banner, dbProducts, dbCategories, promoBanners] = await Promise.all([
     getPublicStoreSettings(),
     getHomepageBanner(),
     getHomepageProducts(),
     getHomepageCategories(),
     getPromoBanners(),
-    getActiveOrderSummary(session?.user?.id)
   ]);
-
-  // Fetch loyalty data and order streak for logged-in users
-  let loyaltyPoints = 0;
-  let nextRewardAt = 200; // default: 200 points = ₹50 off (200 * 0.25)
-  let orderStreak = 0;
-
-  if (session?.user?.id) {
-    const [loyaltyAccount, loyaltyConfig, recentOrders] = await Promise.all([
-      prisma.loyaltyAccount.findUnique({
-        where: { userId: session.user.id },
-        select: { balance: true, lifetimeEarned: true }
-      }).catch(() => null),
-      getLoyaltyConfig(),
-      prisma.order.findMany({
-        where: {
-          userId: session.user.id,
-          createdAt: { gte: new Date(Date.now() - 8 * 7 * 24 * 60 * 60 * 1000) },
-          status: { notIn: ["CANCELLED"] }
-        },
-        select: { createdAt: true }
-      }).catch(() => [])
-    ]);
-
-    if (loyaltyAccount) {
-      loyaltyPoints = loyaltyAccount.balance;
-      // Calculate points needed for ₹50 off: ₹50 / pointValueRupees
-      nextRewardAt = Math.ceil(50 / loyaltyConfig.pointValueRupees);
-    }
-
-    // Calculate order streak: count distinct ISO weeks with orders
-    if (recentOrders.length > 0) {
-      const weeks = new Set(
-        recentOrders.map((o) => {
-          const d = new Date(o.createdAt);
-          // Get ISO week number
-          const temp = new Date(d.getFullYear(), d.getMonth(), d.getDate());
-          temp.setDate(temp.getDate() + 3 - ((temp.getDay() + 6) % 7));
-          const week1 = new Date(temp.getFullYear(), 0, 4);
-          const weekNum = 1 + Math.round(((temp.getTime() - week1.getTime()) / 86400000 - 3 + ((week1.getDay() + 6) % 7)) / 7);
-          return `${temp.getFullYear()}-W${weekNum}`;
-        })
-      );
-      orderStreak = weeks.size;
-    }
-  }
 
   const allProducts: Product[] = dbProducts.length > 0
     ? dbProducts.map((p) => ({
@@ -167,14 +115,12 @@ export default async function HomePage() {
   const categoryImages: Record<string, string> = dbCategories.length > 0
     ? Object.fromEntries(dbCategories.filter((c) => c.image).map((c) => [c.name, c.image as string]))
     : demoCategoryImages;
-  // AnimatedCategories falls back to built-in Lucide icons; no emoji fallback needed
   const categoryIcons: Record<string, string> = dbCategories.length > 0
     ? Object.fromEntries(dbCategories.filter((c) => c.icon).map((c) => [c.name, c.icon as string]))
     : {};
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);
   const offers = allProducts.filter((p) => p.discountPrice).slice(0, 8);
-  const featuredProducts = allProducts.filter((p) => p.isFeatured);
 
   const heroImage = banner?.image || "https://images.unsplash.com/photo-1542838132-92c53300491e?q=80&w=1800&auto=format&fit=crop";
   const heroTitle = banner?.title || "Fresh Groceries Delivered Fast";
@@ -182,14 +128,13 @@ export default async function HomePage() {
 
   return (
     <main className="min-h-[100dvh] bg-background">
-      {/* SEO structured data — Organization + WebSite with SearchAction */}
+      {/* SEO structured data */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
-
 
       {/* Location prompt — shown on first visit if no saved location */}
       <LocationPrompt />
 
-      {/* Hero Section — GSAP parallax */}
+      {/* ── Section 1: Hero ── */}
       <HeroSection
         storeName={settings.storeName}
         heroImage={heroImage}
@@ -200,50 +145,13 @@ export default async function HomePage() {
         deliveryEstimateMax={settings.deliveryEstimateMax}
       />
 
-      {/* Search entry — below hero so the value prop lands first */}
-      <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-4">
-        <HomeSearch products={allProducts.slice(0, 20)} />
-      </div>
-
-      {/* Infinite marquee — trust signals */}
-      {/* G1: TODO — these should use getTranslations("home") when translation keys are authored */}
-      <div className="py-3 border-y border-[var(--border-subtle)]">
-        <span className="sr-only">Free delivery over ₹499. COD &amp; UPI on delivery. Fresh from farm to door. ~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery. 100% quality guaranteed.</span>
-        <InfiniteMarquee speed={35} className="text-caption font-semibold text-neutral-500 dark:text-neutral-400">
-          <span>Free delivery over ₹499</span>
-          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
-          <span>COD &amp; UPI on delivery</span>
-          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
-          <span>Fresh from farm to door</span>
-          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
-          <span>~{settings.deliveryEstimateMin}-{settings.deliveryEstimateMax} min delivery</span>
-          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
-          <span>100% quality guaranteed</span>
-          <span className="text-neutral-300 dark:text-neutral-600 mx-2">·</span>
-        </InfiniteMarquee>
-      </div>
-
-      {/* Loyalty progress + order streak for logged-in users */}
-      {session?.user?.id && (loyaltyPoints > 0 || orderStreak >= 2) && (
-        <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-3">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-            {loyaltyPoints > 0 && (
-              <div className="flex-1">
-                <LoyaltyProgressBar points={loyaltyPoints} nextRewardAt={nextRewardAt} />
-              </div>
-            )}
-            <OrderStreak weekCount={orderStreak} />
-          </div>
-        </div>
-      )}
-
-      {/* Promo banners — admin-managed, unified glass cards */}
+      {/* ── Section 2: Promo banners (if any) ── */}
       <PromoBanners banners={promoBanners} />
 
-      {/* Recent Orders — hidden when empty */}
+      {/* ── Section 3: Recent Orders (hidden when empty) ── */}
       <RecentOrdersSection />
 
-      {/* Popular Categories — GSAP staggered reveal */}
+      {/* ── Section 4: Categories ── */}
       <AnimatedCategories
         categories={categories}
         categoryImages={categoryImages}
@@ -251,7 +159,7 @@ export default async function HomePage() {
         allProducts={allProducts}
       />
 
-      {/* Trending This Week */}
+      {/* ── Section 5: Trending Products ── */}
       <div className="cv-auto">
         <AnimatedProductSection
           title="Trending This Week"
@@ -264,12 +172,12 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* On Sale Today — only when discounts exist */}
+      {/* ── Section 6: On Sale (only when discounts exist) ── */}
       {offers.length > 0 && (
         <LazyRender height={400} rootMargin="300px" className="cv-auto">
           <AnimatedProductSection
             title="On Sale Today"
-            subtitle="Limited-time discounts you don&apos;t want to miss"
+            subtitle="Limited-time discounts"
             icon={<Zap className="h-5 w-5 text-amber-500" />}
             products={offers}
             layout="grid"
@@ -277,29 +185,15 @@ export default async function HomePage() {
         </LazyRender>
       )}
 
-      {/* Staff Picks — only when featured products exist */}
-      {featuredProducts.length > 0 && (
-        <LazyRender height={400} rootMargin="300px" className="cv-auto">
-          <AnimatedProductSection
-            title="Staff Picks"
-            subtitle="Our featured favourites of the week"
-            icon={<Star className="h-5 w-5 text-amber-500" />}
-            products={featuredProducts}
-            layout="grid"
-          />
-        </LazyRender>
-      )}
-
-      {/* Final CTA row — browse all, no duplicate grid */}
-      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-8 md:pt-12 pb-6 md:pb-8">
-        <div className="rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-100 dark:border-neutral-800 p-8 md:p-12 text-center">
-          <h2 className="section-title text-2xl md:text-3xl">Hungry for more?</h2>
-          <p className="mt-2 text-sm text-neutral-500 dark:text-neutral-400 max-w-md mx-auto">
-            Browse our full catalogue of fresh products.
+      {/* ── Section 7: Browse All CTA ── */}
+      <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-10 md:pt-14 pb-8 md:pb-10">
+        <div className="flex flex-col items-center text-center">
+          <p className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
+            Explore our full catalogue
           </p>
           <Link
             href="/products"
-            className="show-all-pill mt-6 inline-flex"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-neutral-900 dark:bg-white px-6 py-3 text-sm font-bold text-white dark:text-neutral-900 shadow-sm transition-transform press"
           >
             Browse all products
             <ChevronRight className="h-4 w-4" />

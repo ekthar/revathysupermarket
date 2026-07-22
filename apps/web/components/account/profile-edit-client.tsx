@@ -6,6 +6,8 @@ import { Camera, Check, Chrome, Loader2, Mail, Phone, Save, Trash2, User } from 
 import { signIn } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import { readApiResponse } from "@/lib/client-api";
+import { isNative } from "@/lib/native-bridge";
+import { pickOrCapture } from "@/lib/native-camera";
 
 interface ProfileEditProps {
   user: {
@@ -34,7 +36,11 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
   async function handleAvatarUpload(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
+    await uploadAvatarFile(file);
+  }
 
+  /** Upload avatar from a File object (web file input) */
+  async function uploadAvatarFile(file: File) {
     if (file.size > 5 * 1024 * 1024) {
       setMessage({ type: "error", text: "Image too large. Max 5MB." });
       return;
@@ -60,6 +66,50 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
       setMessage({ type: "error", text: "Upload failed. Try again." });
     } finally {
       setUploading(false);
+    }
+  }
+
+  /** Upload avatar from a base64 data URL (native camera) */
+  async function uploadAvatarDataUrl(dataUrl: string) {
+    setUploading(true);
+    setMessage(null);
+
+    try {
+      // Convert data URL to Blob for FormData upload
+      const response = await fetch(dataUrl);
+      const blob = await response.blob();
+      const file = new File([blob], "avatar.jpg", { type: "image/jpeg" });
+
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await fetch("/api/account/avatar", { method: "POST", body: formData });
+      const data = await readApiResponse<{ image?: string; error?: string }>(res);
+
+      if (res.ok && data.image) {
+        setImage(data.image);
+        setMessage({ type: "success", text: "Profile photo updated!" });
+      } else {
+        setMessage({ type: "error", text: data.error || "Upload failed." });
+      }
+    } catch {
+      setMessage({ type: "error", text: "Upload failed. Try again." });
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  /** Handle camera button tap — uses native camera on Capacitor, file input on web */
+  async function handleCameraPress() {
+    if (isNative) {
+      // On native: show Camera / Photo Library action sheet
+      const photo = await pickOrCapture({ quality: 85, maxWidth: 512, maxHeight: 512 });
+      if (photo) {
+        await uploadAvatarDataUrl(photo.dataUrl);
+      }
+    } else {
+      // On web: trigger file input
+      fileRef.current?.click();
     }
   }
 
@@ -169,7 +219,7 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
             {/* Camera overlay button */}
             <button
               type="button"
-              onClick={() => fileRef.current?.click()}
+              onClick={handleCameraPress}
               disabled={uploading}
               className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-primary flex items-center justify-center shadow-md press"
             >

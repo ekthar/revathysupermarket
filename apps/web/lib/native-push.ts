@@ -11,6 +11,7 @@
  */
 
 import { isNative, platform } from "@/lib/native-bridge";
+import { setBadgeCount, clearBadge, getBadgeCount } from "@/lib/native-badge";
 
 const TOKEN_KEY = "native-push-token";
 
@@ -80,12 +81,19 @@ export async function setupPushListeners(): Promise<() => void> {
     // Foreground push received
     const foregroundListener = await PushNotifications.addListener(
       "pushNotificationReceived",
-      (notification: { data?: PushPayload; title?: string; body?: string }) => {
+      async (notification: { data?: PushPayload; title?: string; body?: string }) => {
         const payload: PushPayload = {
           ...notification.data,
           title: notification.title || notification.data?.title,
           body: notification.body || notification.data?.body,
         };
+
+        // Increment app icon badge count
+        try {
+          const current = await getBadgeCount();
+          await setBadgeCount(current + 1);
+        } catch {}
+
         // Notify all registered listeners
         listeners.forEach((cb) => cb(payload));
       }
@@ -94,7 +102,10 @@ export async function setupPushListeners(): Promise<() => void> {
     // Notification tapped (app opened from notification)
     const tapListener = await PushNotifications.addListener(
       "pushNotificationActionPerformed",
-      (action: { notification: { data?: PushPayload } }) => {
+      async (action: { notification: { data?: PushPayload } }) => {
+        // Clear badge when user taps a notification (they're engaging with the app)
+        await clearBadge();
+
         const payload = action.notification.data;
         if (payload?.url) {
           // Navigate to the deep link URL

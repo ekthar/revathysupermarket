@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { onAppStateChange, syncStatusBarToRoute } from "@/lib/native-bridge";
 import { isNative } from "@/lib/native-bridge";
+import { clearBadge } from "@/lib/native-badge";
 
 /**
  * AppLifecycle — handles app foreground/background transitions.
@@ -32,6 +33,9 @@ export function AppLifecycle() {
 
       // App came to foreground
       const elapsed = Date.now() - lastBackgrounded.current;
+
+      // Clear app icon badge when user opens the app
+      void clearBadge();
 
       // Only refresh if app was in background for more than 30 seconds
       // (avoids unnecessary refetch for quick app-switcher peeks)

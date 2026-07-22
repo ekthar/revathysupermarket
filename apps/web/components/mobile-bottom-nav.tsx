@@ -95,6 +95,14 @@ const NavTab = memo(function NavTab({ href, icon: Icon, label, active, badge, on
         // in the same tick as the tap. Preserve modifier-click / middle-click.
         if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
         e.preventDefault();
+
+        // iOS behavior: tapping the already-active tab scrolls to top
+        if (active) {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          hapticSelection();
+          return;
+        }
+
         onSelect(href);
       }}
       aria-current={active ? "page" : undefined}

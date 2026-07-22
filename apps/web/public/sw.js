@@ -231,9 +231,10 @@ function isProductImage(url) {
 
 self.addEventListener("push", (event) => {
   let payload = {
-    title: "New order!",
-    body: "A new order is waiting.",
+    title: "Revathy Supermarket",
+    body: "You have a new notification.",
     url: "/",
+    type: "promo",
     requireInteraction: false
   };
 
@@ -245,36 +246,66 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  const isDelivery = payload.type === "delivery_assignment";
-  const isNewOrder = payload.type === "new_order_alert";
-
+  // Build rich notification options from payload
   const options = {
     body: payload.body,
-    icon: "/icons/icon-192.png",
+    icon: payload.badge || "/icons/icon-192.png",
     badge: "/icons/icon-192.png",
-    tag: payload.orderId ? `order-${payload.orderId}` : "new-order",
-    data: { url: payload.url, orderId: payload.orderId, type: payload.type },
-    requireInteraction: isDelivery || isNewOrder,
+    // Rich image (product photo, promo banner) — shows as large image
+    image: payload.image || undefined,
+    // Tag for grouping — same tag replaces previous notification
+    tag: payload.tag || payload.orderId ? `order-${payload.orderId}` : `${payload.type}-${Date.now()}`,
+    // Data passed to notificationclick handler
+    data: {
+      url: payload.url,
+      orderId: payload.orderId,
+      productId: payload.productId,
+      type: payload.type,
+      ...(payload.data || {}),
+    },
+    requireInteraction: payload.requireInteraction || false,
     renotify: true,
-    vibrate: [300, 100, 300, 100, 300, 200, 500],
+    silent: false,
+    // Vibration pattern from payload or sensible default
+    vibrate: payload.vibrate || [200, 100, 200],
     timestamp: Date.now(),
-    actions: [
-      { action: "accept", title: isDelivery ? "Accept" : "Accept Order" },
-      { action: "view", title: isDelivery ? "View Delivery" : "View Order" }
-    ],
+    // Action buttons — use payload's actions or generate from type
+    actions: payload.actions || getDefaultActions(payload.type),
   };
 
   event.waitUntil(
     Promise.all([
       self.registration.showNotification(payload.title, options),
+      // Forward to open tabs for in-app handling
       self.clients.matchAll({ includeUncontrolled: true, type: "window" }).then((clients) => {
         clients.forEach((client) => {
-          client.postMessage({ type: "HEAVY_ALARM", payload: { title: payload.title, ...payload } });
+          client.postMessage({ type: "PUSH_RECEIVED", payload });
         });
       })
     ])
   );
 });
+
+/** Get default action buttons based on notification type */
+function getDefaultActions(type) {
+  switch (type) {
+    case "order_confirmed":
+    case "order_ready":
+      return [{ action: "track", title: "Track" }, { action: "view", title: "Details" }];
+    case "order_delivered":
+      return [{ action: "rate", title: "Rate" }, { action: "reorder", title: "Reorder" }];
+    case "delivery_assignment":
+    case "new_order_alert":
+      return [{ action: "accept", title: "Accept" }, { action: "view", title: "View" }];
+    case "price_drop":
+    case "back_in_stock":
+      return [{ action: "add-cart", title: "Add to Cart" }, { action: "view", title: "View" }];
+    case "promo":
+      return [{ action: "shop", title: "Shop Now" }];
+    default:
+      return [{ action: "view", title: "Open" }];
+  }
+}
 
 // ─── NOTIFICATION CLICK ───────────────────────────────────────────────────────
 

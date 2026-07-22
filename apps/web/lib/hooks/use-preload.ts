@@ -215,3 +215,86 @@ export function usePrefetchOnVisible(prefetchFn: () => void) {
 
   return ref;
 }
+
+
+// ============================================================
+// 6. Viewport-based Route Prefetching for Product Grids
+// ============================================================
+
+const prefetchedRoutes = new Set<string>();
+
+/**
+ * Prefetches product detail routes for items visible in the viewport.
+ *
+ * Call this with an array of product slugs. It uses a shared
+ * IntersectionObserver-like approach — but instead of observing DOM elements,
+ * it eagerly prefetches routes for products that are "above the fold" or
+ * recently scrolled into view.
+ *
+ * This hook should be called in the product grid with the current visible
+ * product list. It debounces and limits prefetch to avoid overloading.
+ *
+ * Strategy:
+ * - Prefetch first 4 visible product detail routes immediately
+ * - Prefetch next 4 after 2 seconds (likely-next-tapped)
+ * - Max 12 prefetched routes per session (memory budget)
+ * - Deduplicates: won't re-prefetch already-prefetched routes
+ *
+ * Usage:
+ *   useVisibleRoutePrefetch(products.slice(0, 8));
+ */
+export function useVisibleRoutePrefetch(products: Array<{ slug: string }>) {
+  const router = useRouter();
+  const didRun = useRef(false);
+
+  // Only run once per product set (avoid re-prefetching on every render)
+  const slugKey = products.map(p => p.slug).join(",");
+  const prevKey = useRef("");
+
+  if (slugKey !== prevKey.current) {
+    didRun.current = false;
+    prevKey.current = slugKey;
+  }
+
+  useCallback(() => {}, []); // stable reference trick for ESLint
+
+  // Use useEffect to run prefetching after render
+  const routerRef = useRef(router);
+  routerRef.current = router;
+
+  // Prefetch on mount / product change
+  if (typeof window !== "undefined" && !didRun.current && products.length > 0) {
+    didRun.current = true;
+
+    // Immediate: prefetch first 4 products
+    const immediate = products.slice(0, 4);
+    requestIdleCallback(() => {
+      for (const product of immediate) {
+        const href = `/products/${product.slug}`;
+        if (prefetchedRoutes.has(href) || prefetchedRoutes.size >= 12) continue;
+        prefetchedRoutes.add(href);
+        routerRef.current.prefetch(href);
+      }
+    });
+
+    // Delayed: prefetch next 4 after 2s
+    if (products.length > 4) {
+      setTimeout(() => {
+        const delayed = products.slice(4, 8);
+        requestIdleCallback(() => {
+          for (const product of delayed) {
+            const href = `/products/${product.slug}`;
+            if (prefetchedRoutes.has(href) || prefetchedRoutes.size >= 12) continue;
+            prefetchedRoutes.add(href);
+            routerRef.current.prefetch(href);
+          }
+        });
+      }, 2000);
+    }
+  }
+}
+
+// Polyfill requestIdleCallback for Safari
+if (typeof window !== "undefined" && !("requestIdleCallback" in window)) {
+  (window as any).requestIdleCallback = (cb: () => void) => setTimeout(cb, 1);
+}

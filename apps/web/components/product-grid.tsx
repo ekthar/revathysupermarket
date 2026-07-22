@@ -14,7 +14,7 @@ import { EmptySearchState } from "@/components/ui/empty-states";
 import { LazyRender } from "@/components/ui/lazy-render";
 import { categories as demoCategories } from "@/lib/products";
 import type { Product } from "@/lib/types";
-import { prefetchProductImages } from "@/lib/hooks/use-preload";
+import { prefetchProductImages, useVisibleRoutePrefetch } from "@/lib/hooks/use-preload";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +71,9 @@ const VirtualProductList = memo(function VirtualProductList({
   // D5: Split items — first 8 above-the-fold, rest in LazyRender groups of 4
   const aboveFold = items.slice(0, 8);
   const belowFold = items.slice(8);
+
+  // Prefetch product detail routes for visible items (instant navigation)
+  useVisibleRoutePrefetch(aboveFold);
 
   // Chunk below-fold items into groups of 4 for LazyRender
   const chunks: Product[][] = [];

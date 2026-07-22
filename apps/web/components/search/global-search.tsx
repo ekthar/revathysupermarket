@@ -13,6 +13,7 @@ import { springs } from "@/lib/motion";
 import { haptic } from "@/lib/haptics";
 import type { Product } from "@/lib/types";
 import { useFlyToCart } from "@/components/ui/fly-to-cart";
+import { VoiceSearchButton } from "@/components/search/voice-search-button";
 
 const HISTORY_KEY = "msm-search-history";
 const TRENDING = ["Rice", "Milk", "Eggs", "Onion", "Tomato", "Bread"];
@@ -189,7 +190,14 @@ export function GlobalSearchSheet({
                 >
                   <X className="h-4 w-4" />
                 </button>
-              ) : null}
+              ) : (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <VoiceSearchButton
+                    onTranscript={(text) => setQuery(text)}
+                    onFinalResult={(text) => { setQuery(text); if (text.trim()) runSearch(text.trim()); }}
+                  />
+                </div>
+              )}
             </div>
             <button
               type="button"

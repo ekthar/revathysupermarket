@@ -1,172 +1,220 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { Download, Share, Plus, X } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Download, X, Zap, Wifi, Bell } from "lucide-react";
+import { springs, tapScale } from "@/lib/motion";
+import { haptic } from "@/lib/haptics";
 
-type InstallEvent = Event & { prompt: () => Promise<void>; userChoice: Promise<{ outcome: "accepted" | "dismissed" }> };
+/**
+ * SmartInstallPrompt — intelligent PWA install banner with engagement-based timing.
+ *
+ * Shows the install prompt only when the user is engaged enough to benefit:
+ * - After 2+ page navigations (they're browsing, not bouncing)
+ * - After 45+ seconds on site (they're interested)
+ * - OR after adding an item to cart (strong purchase intent)
+ *
+ * Respects user choice:
+ * - Dismissed → hidden for 7 days (localStorage)
+ * - Already installed → never shown
+ * - Native Capacitor → never shown
+ *
+ * Uses the `beforeinstallprompt` event to trigger the native Chrome install dialog
+ * when the user taps "Install". Falls back to manual instructions on iOS Safari.
+ */
 
-const DISMISSED_KEY = "app-install-dismissed-at";
-const VISITS_KEY = "app-install-visits";
-
-function isIosDevice() {
-  if (typeof navigator === "undefined") return false;
-  return /iphone|ipad|ipod/i.test(navigator.userAgent) ||
-    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPad on iOS 13+
-}
-
-function isSafari() {
-  if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent;
-  return /safari/i.test(ua) && !/chrome|crios|fxios|edgios|opera/i.test(ua);
-}
-
-function isStandalone() {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(display-mode: standalone)").matches ||
-    Boolean((navigator as Navigator & { standalone?: boolean }).standalone);
-}
+const DISMISS_KEY = "msm-install-dismissed";
+const DISMISS_DURATION_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const MIN_PAGE_VIEWS = 2;
+const MIN_TIME_ON_SITE_MS = 45_000; // 45 seconds
 
 export function InstallAppPrompt() {
-  const pathname = usePathname();
-  const { data: session } = useSession();
-  const [event, setEvent] = useState<InstallEvent | null>(null);
   const [visible, setVisible] = useState(false);
-  const [ios, setIos] = useState(false);
-  const capturedRef = useRef(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const deferredPromptRef = useRef<any>(null);
+  const pageViewsRef = useRef(0);
+  const startTimeRef = useRef(Date.now());
 
+  // Check eligibility on mount
   useEffect(() => {
-    if (process.env.NEXT_PUBLIC_ENABLE_INSTALL_PROMPT === "false") return;
-    if (isStandalone()) return;
+    // Skip if already installed
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as any).standalone === true;
+    if (isStandalone) return;
 
-    const visits = Number(localStorage.getItem(VISITS_KEY) || "0") + 1;
-    localStorage.setItem(VISITS_KEY, String(visits));
+    // Skip if native Capacitor shell
+    if ((window as any).Capacitor?.isNativePlatform?.()) return;
 
-    const dismissedAt = Number(localStorage.getItem(DISMISSED_KEY) || "0");
-    // On iOS/Safari: re-show after 3 days (they need more nudges since no native prompt)
-    // On others: re-show after 14 days
-    const cooldown = isIosDevice() ? 3 * 24 * 60 * 60 * 1000 : 14 * 24 * 60 * 60 * 1000;
-    if (Date.now() - dismissedAt < cooldown) return;
+    // Skip if recently dismissed
+    const dismissedAt = localStorage.getItem(DISMISS_KEY);
+    if (dismissedAt && Date.now() - Number(dismissedAt) < DISMISS_DURATION_MS) return;
 
-    // Show on first visit for iOS (no beforeinstallprompt), 2nd visit for others
-    const minVisits = isIosDevice() ? 1 : 2;
-    if (visits < minVisits) return;
+    // Detect iOS (no beforeinstallprompt, needs manual instructions)
+    const ios = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(ios);
 
-    const isIos = isIosDevice();
-    setIos(isIos);
-
-    const reveal = () => {
-      if (!document.querySelector("[data-push-prompt], [role='dialog']")) setVisible(true);
+    // Capture beforeinstallprompt (Chrome/Edge/Samsung)
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      deferredPromptRef.current = e;
+      checkEngagement();
     };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
 
-    // For iOS/Safari: show after 4 seconds (no beforeinstallprompt event fires)
-    if (isIos || isSafari()) {
-      const timer = window.setTimeout(reveal, 4000);
-      const openFromMenu = () => setVisible(true);
-      window.addEventListener("msm:install-app", openFromMenu);
-      return () => { window.clearTimeout(timer); window.removeEventListener("msm:install-app", openFromMenu); };
+    // Track page views via pathname changes
+    const observer = new MutationObserver(() => {
+      pageViewsRef.current++;
+      checkEngagement();
+    });
+    observer.observe(document.querySelector("title") || document.head, {
+      subtree: true, characterData: true, childList: true,
+    });
+
+    // Timer: check after minimum time on site
+    const timer = setTimeout(() => checkEngagement(), MIN_TIME_ON_SITE_MS);
+
+    // Listen for cart-add events (strong intent signal)
+    const handleCartAdd = () => {
+      pageViewsRef.current = MIN_PAGE_VIEWS; // Treat as sufficient engagement
+      checkEngagement();
+    };
+    window.addEventListener("msm:cart-item-added", handleCartAdd);
+
+    // Also listen for the legacy install trigger
+    const handleLegacyInstall = () => showPrompt();
+    window.addEventListener("msm:install-app", handleLegacyInstall);
+
+    // For iOS: show after engagement even without beforeinstallprompt
+    if (ios) {
+      const iosTimer = setTimeout(() => checkEngagement(), MIN_TIME_ON_SITE_MS);
+      return () => {
+        clearTimeout(iosTimer);
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+        window.removeEventListener("msm:cart-item-added", handleCartAdd);
+        window.removeEventListener("msm:install-app", handleLegacyInstall);
+        observer.disconnect();
+        clearTimeout(timer);
+      };
     }
 
-    // For Chrome/Edge/etc: wait for beforeinstallprompt
-    const timer = window.setTimeout(() => { if (isIos) reveal(); }, 7000);
-    const capture = (value: Event) => {
-      if (capturedRef.current) return;
-      capturedRef.current = true;
-      value.preventDefault();
-      setEvent(value as InstallEvent);
-      window.setTimeout(reveal, 5000);
-    };
-    window.addEventListener("beforeinstallprompt", capture);
-    const openFromMenu = () => setVisible(true);
-    window.addEventListener("msm:install-app", openFromMenu);
-    window.addEventListener("appinstalled", () => setVisible(false), { once: true });
-
     return () => {
-      window.clearTimeout(timer);
-      window.removeEventListener("beforeinstallprompt", capture);
-      window.removeEventListener("msm:install-app", openFromMenu);
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.removeEventListener("msm:cart-item-added", handleCartAdd);
+      window.removeEventListener("msm:install-app", handleLegacyInstall);
+      observer.disconnect();
+      clearTimeout(timer);
     };
   }, []);
 
-  if (!visible || ["/login", "/welcome", "/checkout", "/delivery", "/admin", "/staff"].some((route) => pathname.startsWith(route))) return null;
+  const checkEngagement = useCallback(() => {
+    const timeOnSite = Date.now() - startTimeRef.current;
+    const hasEnoughViews = pageViewsRef.current >= MIN_PAGE_VIEWS;
+    const hasEnoughTime = timeOnSite >= MIN_TIME_ON_SITE_MS;
 
-  const role = session?.user?.role;
-  const copy = role === "DELIVERY_PARTNER"
-    ? "Install the delivery workspace for faster access to assigned orders."
-    : role && role !== "CUSTOMER"
-      ? "Install store operations for quicker order and inventory access."
-      : "Install the shop for faster ordering and live delivery updates.";
+    // Show if either condition met AND (has deferred prompt OR is iOS)
+    if ((hasEnoughViews || hasEnoughTime) && (deferredPromptRef.current || isIOS)) {
+      showPrompt();
+    }
+  }, [isIOS]);
 
-  function dismiss() {
-    localStorage.setItem(DISMISSED_KEY, String(Date.now()));
+  const showPrompt = useCallback(() => {
+    setVisible(true);
+  }, []);
+
+  const handleInstall = useCallback(async () => {
+    haptic("medium");
+
+    if (deferredPromptRef.current) {
+      // Chrome/Edge: trigger native install dialog
+      deferredPromptRef.current.prompt();
+      const { outcome } = await deferredPromptRef.current.userChoice;
+      deferredPromptRef.current = null;
+
+      if (outcome === "accepted") {
+        setVisible(false);
+        // Don't save dismiss — they installed!
+      } else {
+        handleDismiss();
+      }
+    } else {
+      // iOS: can't trigger programmatic install — show instructions
+      // The banner itself shows iOS instructions when isIOS is true
+    }
+  }, []);
+
+  const handleDismiss = useCallback(() => {
     setVisible(false);
-  }
-
-  async function install() {
-    if (!event) return;
-    await event.prompt();
-    const choice = await event.userChoice;
-    if (choice.outcome === "accepted") setVisible(false);
-    else dismiss();
-  }
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
+  }, []);
 
   return (
-    <aside
-      data-hide-on-keyboard="true"
-      className="fixed left-[max(0.75rem,var(--safe-left))] right-[max(0.75rem,var(--safe-right))] bottom-[calc(var(--mobile-nav-height)+var(--safe-bottom)+0.5rem)] z-[80] mx-auto max-w-md rounded-3xl border border-black/10 bg-white p-5 shadow-2xl transition-[opacity,transform] dark:bg-slate-900 md:bottom-6 md:left-auto md:right-6 md:mx-0"
-      aria-label="Install application"
-    >
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Dismiss install suggestion"
-        className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800"
-      >
-        <X className="h-4 w-4" />
-      </button>
-
-      <div className="flex gap-3 pr-9">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-black text-white">
-          {ios ? <Share className="h-5 w-5" /> : <Download className="h-5 w-5" />}
-        </span>
-        <div>
-          <p className="font-display text-base font-black">Install this app</p>
-          <p className="mt-1 text-sm leading-5 text-muted-foreground">{copy}</p>
-        </div>
-      </div>
-
-      {ios ? (
-        <div className="mt-4 space-y-2.5">
-          {/* Step-by-step Safari instructions with visual indicators */}
-          <div className="rounded-2xl bg-slate-50 px-4 py-3 dark:bg-slate-800">
-            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mb-2">Add to Home Screen:</p>
-            <ol className="space-y-2 text-sm text-slate-600 dark:text-slate-300">
-              <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">1</span>
-                <span>Tap the <Share className="inline h-4 w-4 text-blue-500 -mt-0.5" /> Share button in Safari</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">2</span>
-                <span>Scroll down and tap <Plus className="inline h-4 w-4 -mt-0.5" /> <strong>Add to Home Screen</strong></span>
-              </li>
-              <li className="flex items-center gap-2">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-black text-xs font-bold text-white">3</span>
-                <span>Tap <strong>Add</strong> in the top right</span>
-              </li>
-            </ol>
-          </div>
-          <p className="text-center text-xs text-slate-400">Works best in Safari browser</p>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={install}
-          className="mt-3 h-11 w-full rounded-2xl bg-black text-sm font-black text-white transition-transform active:scale-[0.98]"
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: 100, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: 100, opacity: 0 }}
+          transition={springs.enter}
+          className="fixed bottom-[calc(var(--mobile-nav-height,82px)+1rem+var(--safe-bottom,0px))] inset-x-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
         >
-          Install app
-        </button>
+          <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-xl shadow-neutral-900/10 dark:shadow-neutral-900/50 border border-neutral-100 dark:border-neutral-800 p-4 relative">
+            {/* Dismiss button */}
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="absolute top-3 right-3 h-7 w-7 flex items-center justify-center rounded-full bg-neutral-100 dark:bg-neutral-800 text-neutral-400 hover:text-neutral-600 transition-colors"
+              aria-label="Dismiss"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+
+            {/* Content */}
+            <div className="pr-8">
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white">
+                Install the app
+              </h3>
+              <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                Get a faster, native experience with offline access.
+              </p>
+            </div>
+
+            {/* Benefits */}
+            <div className="mt-3 flex items-center gap-3">
+              <Benefit icon={<Zap className="h-3 w-3" />} text="2x faster" />
+              <Benefit icon={<Wifi className="h-3 w-3" />} text="Works offline" />
+              <Benefit icon={<Bell className="h-3 w-3" />} text="Order alerts" />
+            </div>
+
+            {/* Install CTA */}
+            <motion.button
+              type="button"
+              onClick={handleInstall}
+              whileTap={tapScale.primary}
+              transition={springs.tap}
+              className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-neutral-900 dark:bg-white text-sm font-bold text-white dark:text-neutral-900 press"
+            >
+              <Download className="h-4 w-4" />
+              {isIOS ? "Add to Home Screen" : "Install App"}
+            </motion.button>
+
+            {/* iOS instructions */}
+            {isIOS && (
+              <p className="mt-2 text-center text-[11px] text-neutral-400">
+                Tap <span className="inline-block translate-y-px">⎙</span> Share then "Add to Home Screen"
+              </p>
+            )}
+          </div>
+        </motion.div>
       )}
-    </aside>
+    </AnimatePresence>
+  );
+}
+
+function Benefit({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-1.5 rounded-full bg-neutral-50 dark:bg-neutral-800 px-2.5 py-1">
+      <span className="text-secondary-600 dark:text-secondary-400">{icon}</span>
+      <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-300">{text}</span>
+    </div>
   );
 }

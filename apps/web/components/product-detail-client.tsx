@@ -11,6 +11,8 @@ import { useCart } from "@/components/cart/cart-provider";
 import { useToast } from "@/components/toast-provider";
 import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { ProductImage } from "@/components/product-image";
+import { nativeShare } from "@/lib/native-share";
+import { haptic } from "@/lib/haptics";
 import type { Product } from "@/lib/types";
 
 export function ProductDetailClient({ product }: { product: Product }) {
@@ -26,18 +28,20 @@ export function ProductDetailClient({ product }: { product: Product }) {
   function handleAdd(e?: React.MouseEvent<HTMLButtonElement>) {
     if (outOfStock) return;
     addItem(product);
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate(10);
+    haptic("medium");
     showToast(`Added ${product.name}`, "success");
     if (e?.currentTarget) {
       flyToCart(product.image, e.currentTarget);
     }
   }
 
-  function handleShare() {
-    if (navigator.share) {
-      navigator.share({ title: product.name, text: product.description, url: window.location.href }).catch(() => {});
-    } else {
-      navigator.clipboard.writeText(window.location.href);
+  async function handleShare() {
+    const shared = await nativeShare({
+      title: product.name,
+      text: product.description,
+      url: window.location.href,
+    });
+    if (!shared) {
       showToast("Link copied!", "success");
     }
   }

@@ -46,9 +46,14 @@ const nextConfig: NextConfig = {
         "@capacitor/keyboard": false,
         "@capacitor/local-notifications": false,
         "@capacitor/navigation-bar": false,
+        "@capacitor/preferences": false,
         "@capacitor/push-notifications": false,
         "@capacitor/splash-screen": false,
         "@capacitor/status-bar": false,
+        "@capacitor/badge": false,
+        "capacitor-native-biometric": false,
+        "capacitor-rate-app": false,
+        "@capacitor-community/in-app-review": false,
       };
     }
     return config;

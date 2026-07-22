@@ -4,15 +4,20 @@ import { memo, useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { safeProductImageUrl, PRODUCT_IMAGE_FALLBACK } from "@/lib/image";
 import { cn } from "@/lib/utils";
+import { getCategoryColor } from "@/lib/blur-placeholder";
 
 /**
  * ProductImage — native-feel progressive image loading.
  *
- * Loading sequence (Apple/Instagram pattern):
- * 1. Instantly show a color swatch background (category-aware warm neutral)
- * 2. Overlay with a subtle shimmer animation
+ * Loading sequence (Apple/Instagram/Pinterest pattern):
+ * 1. Instantly show a category-aware color swatch (dominant color approximation)
+ * 2. Overlay with a subtle shimmer animation indicating load progress
  * 3. When image loads: cross-fade in with slight scale (1.02→1) over 300ms
- * 4. Result: perceived-instant loading, no blank white gaps
+ * 4. Result: perceived-instant loading with content-aware color preview
+ *
+ * The category color swatch mimics the "dominant color placeholder" technique
+ * used by Instagram and Pinterest — the background matches the general hue
+ * of the product category (warm gold for fruits, soft green for vegetables, etc.)
  *
  * Error handling:
  * - 1st failure → fallback product image
@@ -27,16 +32,22 @@ export const ProductImage = memo(function ProductImage({
   src,
   alt,
   className,
-  priority
+  priority,
+  category,
 }: {
   src?: string | null;
   alt: string;
   className?: string;
   priority?: boolean;
+  /** Product category — used for content-aware color placeholder */
+  category?: string;
 }) {
   const [currentSrc, setCurrentSrc] = useState(() => safeProductImageUrl(src));
   const [loaded, setLoaded] = useState(false);
   const retriedRef = useRef(false);
+
+  // Category-aware background color (warm gold for fruits, green for vegetables, etc.)
+  const placeholderColor = getCategoryColor(category);
 
   // Re-sync when src prop changes (e.g., after admin updates image)
   useEffect(() => {
@@ -70,7 +81,7 @@ export const ProductImage = memo(function ProductImage({
         />
       ) : (
         <>
-          {/* Color swatch + shimmer placeholder — visible while image loads */}
+          {/* Category-aware color swatch + shimmer — visible while image loads */}
           <div
             className={cn(
               "absolute inset-0 transition-opacity duration-300 ease-out",
@@ -78,8 +89,11 @@ export const ProductImage = memo(function ProductImage({
             )}
             aria-hidden="true"
           >
-            {/* Warm neutral base color (works for all food categories) */}
-            <div className="absolute inset-0 bg-neutral-100 dark:bg-neutral-800" />
+            {/* Category-specific color base (mimics dominant color extraction) */}
+            <div
+              className="absolute inset-0"
+              style={{ backgroundColor: placeholderColor }}
+            />
             {/* Shimmer overlay — moving gradient that indicates loading */}
             <div className="absolute inset-0 img-placeholder" />
           </div>

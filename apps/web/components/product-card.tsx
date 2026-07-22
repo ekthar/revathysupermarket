@@ -71,7 +71,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             whileHover={{ scale: 1.05 }}
             className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-800"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} category={product.category} />
           </motion.div>
         </Link>
 
@@ -143,7 +143,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             transition={{ duration: durations.slow, ease: easings.easeOutQuart }}
             className="h-full w-full"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} category={product.category} />
           </motion.div>
 
           {/* Single badge — top left */}

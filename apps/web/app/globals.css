@@ -41,6 +41,51 @@
   from { opacity: 0; }
 }
 
+/* ── iOS Navigation Stack: Directional transitions ── */
+/* Forward: new page slides in from right, old page shifts left slightly */
+html[data-nav-direction="forward"]::view-transition-old(root) {
+  animation: vt-slide-out-left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+html[data-nav-direction="forward"]::view-transition-new(root) {
+  animation: vt-slide-in-right 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Back: new page slides in from left, old page exits to right */
+html[data-nav-direction="back"]::view-transition-old(root) {
+  animation: vt-slide-out-right 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+html[data-nav-direction="back"]::view-transition-new(root) {
+  animation: vt-slide-in-left 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* Tab switches: instant, no animation */
+html[data-nav-direction="none"]::view-transition-old(root),
+html[data-nav-direction="none"]::view-transition-new(root) {
+  animation: none;
+}
+
+@keyframes vt-slide-out-left {
+  to { opacity: 0.6; transform: translateX(-8%); }
+}
+@keyframes vt-slide-in-right {
+  from { opacity: 0; transform: translateX(20%); }
+}
+@keyframes vt-slide-out-right {
+  to { opacity: 0.6; transform: translateX(20%); }
+}
+@keyframes vt-slide-in-left {
+  from { opacity: 0.6; transform: translateX(-8%); }
+}
+
+/* Disable view transitions for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
 :root {
   --background: 0 0% 98%;
   --foreground: 0 0% 7%;

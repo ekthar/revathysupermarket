@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/favorite-button";
 import { tapScale, springs, durations, easings } from "@/lib/motion";
 import { useRoutePreload } from "@/lib/hooks/use-preload";
+import { haptic } from "@/lib/haptics";
 
 interface ProductCardProps {
   product: Product;
@@ -228,20 +229,22 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
   const handleAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (outOfStock) return;
     addItem(product);
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(10);
-    }
+    haptic("light");
     flyToCart(product.image, e.currentTarget);
   }, [outOfStock, addItem, product, flyToCart]);
 
   const handleIncrement = useCallback(() => {
     if (cartItem && cartItem.quantity < product.stock) {
       updateQuantity(product.id, cartItem.quantity + 1);
+      haptic("light");
     }
   }, [cartItem, updateQuantity, product.id, product.stock]);
 
   const handleDecrement = useCallback(() => {
-    if (cartItem) updateQuantity(product.id, cartItem.quantity - 1);
+    if (cartItem) {
+      updateQuantity(product.id, cartItem.quantity - 1);
+      haptic("light");
+    }
   }, [cartItem, updateQuantity, product.id]);
 
   return (

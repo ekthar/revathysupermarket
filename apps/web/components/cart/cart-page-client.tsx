@@ -254,23 +254,35 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
 
                   {/* Quantity stepper */}
                   <div className="flex h-9 shrink-0 items-center overflow-hidden rounded-full bg-neutral-900 dark:bg-white">
-                    <button
+                    <motion.button
                       type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => { updateQuantity(item.id, item.quantity - 1); haptic("light"); }}
+                      whileTap={{ scale: 1.3 }}
+                      transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
                       aria-label={`Decrease ${item.name} quantity`}
                     >
                       <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-5 text-center text-xs font-bold text-white dark:text-neutral-900 tabular-nums">{item.quantity}</span>
-                    <button
+                    </motion.button>
+                    <motion.span
+                      key={item.quantity}
+                      initial={{ scale: 1.4, opacity: 0, y: -4 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      transition={springs.tap}
+                      className="w-5 text-center text-xs font-bold text-white dark:text-neutral-900 tabular-nums"
+                    >
+                      {item.quantity}
+                    </motion.span>
+                    <motion.button
                       type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => { updateQuantity(item.id, item.quantity + 1); haptic("light"); }}
+                      whileTap={{ scale: 1.3 }}
+                      transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
                       aria-label={`Increase ${item.name} quantity`}
                     >
                       <Plus className="h-3 w-3" />
-                    </button>
+                    </motion.button>
                   </div>
 
                   {/* Price */}

@@ -86,8 +86,8 @@ export function GlobalSearchSheet({
     if (open) {
       setHistory(loadHistory());
       setQuery(initialQuery);
-      // Focus after drawer opens
-      const t = setTimeout(() => inputRef.current?.focus(), 80);
+      // Focus after drawer animation settles (~320ms spring)
+      const t = setTimeout(() => inputRef.current?.focus(), 350);
       return () => clearTimeout(t);
     }
     setResults([]);
@@ -136,14 +136,24 @@ export function GlobalSearchSheet({
       if (!q) return;
       saveHistory(q);
       setHistory(loadHistory());
+      // Dismiss keyboard before navigating
+      inputRef.current?.blur();
       onClose();
       router.push(`/products?q=${encodeURIComponent(q)}`);
     },
     [onClose, router]
   );
 
+  // Dismiss keyboard before closing sheet to prevent visual glitch
+  // (keyboard collapsing mid-animation looks janky)
+  const handleClose = useCallback(() => {
+    inputRef.current?.blur();
+    // Small delay so keyboard starts dismissing before sheet animates down
+    setTimeout(() => onClose(), 60);
+  }, [onClose]);
+
   return (
-    <Drawer.Root open={open} onOpenChange={(isOpen) => { if (!isOpen) onClose(); }}>
+    <Drawer.Root open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-[93] bg-black/45 backdrop-blur-sm" />
         <Drawer.Content className="fixed inset-x-0 bottom-0 top-[8%] z-[94] flex flex-col rounded-t-3xl bg-background outline-none shadow-2xl">
@@ -183,7 +193,7 @@ export function GlobalSearchSheet({
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={handleClose}
               className="h-11 px-3 rounded-xl text-sm font-bold text-muted-foreground press"
             >
               Cancel
@@ -233,7 +243,7 @@ export function GlobalSearchSheet({
                 </section>
                 <Link
                   href="/products"
-                  onClick={onClose}
+                  onClick={handleClose}
                   className="flex h-11 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-white press"
                 >
                   Browse all products
@@ -287,7 +297,7 @@ export function GlobalSearchSheet({
                         product={product}
                         onNavigate={() => {
                           saveHistory(query);
-                          onClose();
+                          handleClose();
                         }}
                       />
                     </motion.div>

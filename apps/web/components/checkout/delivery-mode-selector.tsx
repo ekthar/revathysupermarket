@@ -93,14 +93,25 @@ export function DeliveryModeSelector({
             type="button"
             onClick={() => onModeChange("ASAP")}
             whileTap={{ scale: 0.96 }}
-            className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
+            className={`relative flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-sm font-bold transition-colors ${
               deliveryMode === "ASAP"
-                ? "bg-black text-white shadow-md"
+                ? "bg-neutral-900 text-white shadow-md dark:bg-white dark:text-neutral-900"
                 : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
             }`}
           >
-            <Zap className="h-4 w-4" />
-            ASAP
+            <div className="flex items-center gap-1.5">
+              <Zap className="h-3.5 w-3.5" />
+              <span>Express</span>
+            </div>
+            <span className={`text-[10px] font-semibold ${deliveryMode === "ASAP" ? "text-white/70 dark:text-neutral-900/60" : "text-neutral-500"}`}>
+              ~25-40 min
+            </span>
+            {/* Recommended badge */}
+            {deliveryMode !== "ASAP" && (
+              <span className="absolute -top-1.5 right-2 rounded-full bg-secondary-500 px-1.5 py-0.5 text-[8px] font-bold text-white">
+                Fastest
+              </span>
+            )}
           </motion.button>
         )}
         {scheduledEnabled && (
@@ -108,14 +119,19 @@ export function DeliveryModeSelector({
             type="button"
             onClick={() => onModeChange("SCHEDULED")}
             whileTap={{ scale: 0.96 }}
-            className={`flex h-12 items-center justify-center gap-2 rounded-xl text-sm font-bold transition-colors ${
+            className={`flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-sm font-bold transition-colors ${
               deliveryMode === "SCHEDULED"
-                ? "bg-black text-white shadow-md"
+                ? "bg-neutral-900 text-white shadow-md dark:bg-white dark:text-neutral-900"
                 : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
             }`}
           >
-            <Calendar className="h-4 w-4" />
-            Schedule
+            <div className="flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" />
+              <span>Schedule</span>
+            </div>
+            <span className={`text-[10px] font-semibold ${deliveryMode === "SCHEDULED" ? "text-white/70 dark:text-neutral-900/60" : "text-neutral-500"}`}>
+              Pick a time
+            </span>
           </motion.button>
         )}
       </div>
@@ -159,10 +175,11 @@ export function DeliveryModeSelector({
 
               {/* Time slot cards */}
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {currentDateSlots.map((slot) => {
+                {currentDateSlots.map((slot, idx) => {
                   const isSelected = deliverySlotId === slot.id;
                   const capacityPercent = Math.max(0, Math.min(100, (slot.remaining / 10) * 100));
                   const isLow = slot.remaining <= 3;
+                  const isFirstAvailable = slot.available && currentDateSlots.slice(0, idx).every(s => !s.available || s.id === slot.id);
 
                   return (
                     <motion.button
@@ -173,12 +190,18 @@ export function DeliveryModeSelector({
                       whileTap={slot.available ? { scale: 0.96 } : undefined}
                       className={`relative flex flex-col items-start rounded-xl border p-3 text-left transition-all ${
                         isSelected
-                          ? "border-black bg-black/5 shadow-sm dark:border-white dark:bg-white/5"
+                          ? "border-neutral-900 bg-neutral-900/5 shadow-sm dark:border-white dark:bg-white/5"
                           : slot.available
                           ? "border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
                           : "border-neutral-100 bg-neutral-50 opacity-50 dark:border-neutral-800 dark:bg-neutral-850"
                       }`}
                     >
+                      {/* Recommended badge on first available slot */}
+                      {isFirstAvailable && !isSelected && (
+                        <span className="absolute -top-1.5 left-3 rounded-full bg-secondary-500 px-1.5 py-0.5 text-[8px] font-bold text-white">
+                          Recommended
+                        </span>
+                      )}
                       <div className="flex w-full items-center justify-between">
                         <div className="flex items-center gap-1.5">
                           <Clock className="h-3.5 w-3.5 text-neutral-500" />

@@ -13,6 +13,7 @@ import { EmptyCartState } from "@/components/ui/empty-states";
 import { haptic } from "@/lib/haptics";
 import { useTranslations } from "next-intl";
 import type { CartItem } from "@/lib/types";
+import { CheckoutPreviewSheet } from "@/components/cart/checkout-preview-sheet";
 
 type StoreConfig = {
   gstRatePercent: number;
@@ -27,6 +28,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
   const { items, subtotal, removeItem, updateQuantity, addItem } = useCart();
   const t = useTranslations("cart");
   const [promoCode, setPromoCode] = useState("");
+  const [checkoutSheetOpen, setCheckoutSheetOpen] = useState(false);
   const [promoApplied, setPromoApplied] = useState(false);
   const [promoDiscount, setPromoDiscount] = useState(0);
   const [promoDescription, setPromoDescription] = useState("");
@@ -254,23 +256,35 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
 
                   {/* Quantity stepper */}
                   <div className="flex h-9 shrink-0 items-center overflow-hidden rounded-full bg-neutral-900 dark:bg-white">
-                    <button
+                    <motion.button
                       type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                      onClick={() => { updateQuantity(item.id, item.quantity - 1); haptic("light"); }}
+                      whileTap={{ scale: 1.3 }}
+                      transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
                       aria-label={`Decrease ${item.name} quantity`}
                     >
                       <Minus className="h-3 w-3" />
-                    </button>
-                    <span className="w-5 text-center text-xs font-bold text-white dark:text-neutral-900 tabular-nums">{item.quantity}</span>
-                    <button
+                    </motion.button>
+                    <motion.span
+                      key={item.quantity}
+                      initial={{ scale: 1.4, opacity: 0, y: -4 }}
+                      animate={{ scale: 1, opacity: 1, y: 0 }}
+                      transition={springs.tap}
+                      className="w-5 text-center text-xs font-bold text-white dark:text-neutral-900 tabular-nums"
+                    >
+                      {item.quantity}
+                    </motion.span>
+                    <motion.button
                       type="button"
-                      onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                      onClick={() => { updateQuantity(item.id, item.quantity + 1); haptic("light"); }}
+                      whileTap={{ scale: 1.3 }}
+                      transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
                       aria-label={`Increase ${item.name} quantity`}
                     >
                       <Plus className="h-3 w-3" />
-                    </button>
+                    </motion.button>
                   </div>
 
                   {/* Price */}
@@ -388,7 +402,15 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
         <motion.div whileTap={tapScale.subtle} transition={springs.enter}>
           <Link
             href={belowMinimum ? "#" : "/checkout"}
-            onClick={(e) => { if (belowMinimum) e.preventDefault(); }}
+            onClick={(e) => {
+              if (belowMinimum) { e.preventDefault(); return; }
+              // On mobile: open preview sheet instead of navigating
+              if (typeof window !== "undefined" && window.innerWidth < 768) {
+                e.preventDefault();
+                setCheckoutSheetOpen(true);
+                haptic("medium");
+              }
+            }}
             className={`mx-auto flex h-[52px] max-w-md items-center justify-between rounded-2xl px-5 press ${
               belowMinimum
                 ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
@@ -400,6 +422,16 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
           </Link>
         </motion.div>
       </div>
+
+      {/* Checkout preview sheet (mobile only) */}
+      <CheckoutPreviewSheet
+        open={checkoutSheetOpen}
+        onClose={() => setCheckoutSheetOpen(false)}
+        itemCount={items.length}
+        totalAmount={totalAmount}
+        deliveryFee={deliveryFee}
+        freeDelivery={qualifiesFreeDelivery}
+      />
     </main>
   );
 }

@@ -71,7 +71,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
         </div>
 
         {/* Product image - large */}
-        <div className="aspect-square bg-slate-50 dark:bg-slate-900 overflow-hidden">
+        <div
+          className="aspect-square bg-slate-50 dark:bg-slate-900 overflow-hidden"
+          style={{ viewTransitionName: `product-img-${product.id}` }}
+        >
           <motion.div
             initial={{ scale: 1.05, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}

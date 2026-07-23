@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { products as fallbackProducts } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { rankResults } from "@/lib/search/relevance";
+import { getCacheHeaders } from "@/lib/api-cache-headers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -146,7 +147,7 @@ export async function GET(request: NextRequest) {
           nextCursor: null,
           total: combined.length,
           suggestions,
-        });
+        }, { headers: getCacheHeaders("products") });
       }
 
       // When searching, add relevance scores to results
@@ -158,11 +159,11 @@ export async function GET(request: NextRequest) {
           nextCursor,
           total,
           suggestions: [],
-        });
+        }, { headers: getCacheHeaders("products") });
       }
 
       const nextCursor = hasMore ? baseItems[baseItems.length - 1].id : null;
-      return NextResponse.json({ items: baseItems, nextCursor, total });
+      return NextResponse.json({ items: baseItems, nextCursor, total }, { headers: getCacheHeaders("products") });
     }
 
     // Fallback to static products with filtering
@@ -189,7 +190,7 @@ export async function GET(request: NextRequest) {
     const page = filtered.slice(cursorIndex, cursorIndex + limit);
     const nextCursor = cursorIndex + limit < totalFiltered ? page[page.length - 1]?.id ?? null : null;
 
-    return NextResponse.json({ items: page, nextCursor, total: totalFiltered });
+    return NextResponse.json({ items: page, nextCursor, total: totalFiltered }, { headers: getCacheHeaders("products") });
   } catch (error) {
     console.error("Products API error", error);
     return NextResponse.json({ error: "Failed to load products." }, { status: 500 });

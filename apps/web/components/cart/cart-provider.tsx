@@ -3,6 +3,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { toast as sonnerToast } from "sonner";
 import type { CartItem, Product } from "@/lib/types";
+import { cartSyncQueue } from "@/lib/cart-sync";
 
 type CartActions = {
   addItem: (product: Product, quantity?: number) => void;
@@ -179,6 +180,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...current, { ...product, quantity: Math.min(quantity, max) }];
     });
+    // Background sync
+    cartSyncQueue.push({ type: "add", productId: product.id, quantity });
   }, []);
 
   const addItems = useCallback((productsToAdd: Array<Product & { quantity?: number }>) => {
@@ -201,11 +204,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
   const removeItem = useCallback((id: string) => {
     setItems((current) => current.filter((item) => item.id !== id));
+    cartSyncQueue.push({ type: "remove", productId: id });
   }, []);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
     if (quantity <= 0) {
       setItems((current) => current.filter((item) => item.id !== id));
+      cartSyncQueue.push({ type: "remove", productId: id });
       return;
     }
     setItems((current) => current.map((item) => {
@@ -214,10 +219,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const max = item.stock ?? Infinity;
       return { ...item, quantity: Math.min(quantity, max) };
     }));
+    cartSyncQueue.push({ type: "update", productId: id, quantity });
   }, []);
 
   const clearCart = useCallback(() => {
     setItems([]);
+    cartSyncQueue.push({ type: "clear" });
   }, []);
 
   // Memoize state separately from actions

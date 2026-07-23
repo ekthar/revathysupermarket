@@ -16,6 +16,8 @@ import { ThemeColorSync } from "@/components/theme-color-sync";
 import { QueryProvider } from "@/components/query-provider";
 import { MotionConfig } from "framer-motion";
 import { AnalyticsProvider } from "@/components/analytics-provider";
+import { ProductQuickSheetProvider } from "@/components/product-quick-sheet-provider";
+import { CartSyncConnector } from "@/components/cart/cart-sync-connector";
 
 export function Providers({ children, session }: { children: React.ReactNode; session?: Session | null }) {
   return (
@@ -26,10 +28,13 @@ export function Providers({ children, session }: { children: React.ReactNode; se
           <MotionConfig reducedMotion="user">
             <ToastProvider>
               <CartProvider>
+                <CartSyncConnector />
                 <FlyToCartProvider>
-                  <AnalyticsProvider>
-                    {children}
-                  </AnalyticsProvider>
+                  <ProductQuickSheetProvider>
+                    <AnalyticsProvider>
+                      {children}
+                    </AnalyticsProvider>
+                  </ProductQuickSheetProvider>
                 </FlyToCartProvider>
                 <ProfileSync />
                 <ServiceWorkerRegister />

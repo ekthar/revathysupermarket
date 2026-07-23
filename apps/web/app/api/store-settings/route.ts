@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getPublicStoreSettings } from "@/lib/store-settings";
+import { getCacheHeaders } from "@/lib/api-cache-headers";
 
 // GET /api/store-settings - Public endpoint for client-side components (cart, checkout)
 // Returns only the fields needed for billing calculations
@@ -13,7 +14,7 @@ export async function GET() {
       minimumOrderValue: settings.minimumOrderValue,
       storeName: settings.storeName,
       gstin: settings.gstin
-    });
+    }, { headers: getCacheHeaders("settings") });
   } catch {
     return NextResponse.json({
       gstRatePercent: 0,
@@ -22,6 +23,6 @@ export async function GET() {
       minimumOrderValue: 99,
       storeName: "",
       gstin: ""
-    });
+    }, { headers: getCacheHeaders("settings") });
   }
 }

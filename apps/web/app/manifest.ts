@@ -15,15 +15,17 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
   const sessionCookie = cookieStore.get("next-auth.session-token") || cookieStore.get("__Secure-next-auth.session-token");
   const isLoggedIn = !!sessionCookie?.value;
 
+  // ── Shortcuts: quick actions from home screen long-press ──
   const shortcuts: MetadataRoute.Manifest["shortcuts"] = [
     { name: "Search products", short_name: "Search", url: "/products", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
+    { name: "Today's deals", short_name: "Deals", url: "/offers", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
     { name: "Open cart", short_name: "Cart", url: "/cart", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
   ];
 
   if (isLoggedIn) {
     shortcuts.push(
+      { name: "Reorder last order", short_name: "Reorder", url: "/dashboard?action=reorder-last", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
       { name: "My orders", short_name: "Orders", url: "/dashboard", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] },
-      { name: "My account", short_name: "Account", url: "/account", icons: [{ src: "/icons/icon-192.png", sizes: "192x192" }] }
     );
   } else {
     shortcuts.push(
@@ -42,37 +44,49 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     display_override: ["standalone", "fullscreen", "minimal-ui"],
     orientation: "portrait-primary",
     launch_handler: { client_mode: "navigate-existing" },
+    handle_links: "preferred",
     categories: ["shopping", "food", "lifestyle"],
     dir: "ltr",
     lang: "en",
     prefer_related_applications: false,
     shortcuts,
+    // Share Target: receive shared text/URLs from other apps
+    // When someone shares a product link to this app, it opens the search
+    share_target: {
+      action: "/products",
+      method: "GET",
+      params: {
+        title: "q",
+        text: "q",
+        url: "shared_url",
+      },
+    },
     background_color: "#FFFFFF",
     theme_color: "#FFFFFF",
     icons: [
       {
         src: "/icons/icon-192.png",
         sizes: "192x192",
-        type: "image/png"
+        type: "image/png",
       },
       {
         src: "/icons/icon-512.png",
         sizes: "512x512",
-        type: "image/png"
+        type: "image/png",
       },
       {
         src: "/icons/icon-maskable-512.png",
         sizes: "512x512",
         type: "image/png",
-        purpose: "maskable"
+        purpose: "maskable",
       },
       {
         src: "/icons/apple-touch-icon.png",
         sizes: "180x180",
         type: "image/png",
-        purpose: "any"
-      }
+        purpose: "any",
+      },
     ],
     screenshots: [],
-  };
+  } as MetadataRoute.Manifest;
 }

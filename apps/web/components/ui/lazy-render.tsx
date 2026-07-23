@@ -7,7 +7,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
  * Uses IntersectionObserver with a generous rootMargin so content is ready
  * before the user scrolls to it (no visible pop-in).
  *
- * D5: Reduces initial DOM size for large product grids.
+ * Once visible, fades in content smoothly (native-feel morph).
  * Once rendered, stays rendered (no unmounting on scroll away).
  */
 export function LazyRender({
@@ -43,7 +43,14 @@ export function LazyRender({
   }, [rootMargin]);
 
   if (visible) {
-    return <div className={className}>{children}</div>;
+    return (
+      <div
+        className={className}
+        style={{ animation: "lazyFadeIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) both" }}
+      >
+        {children}
+      </div>
+    );
   }
 
   // Placeholder with estimated height to prevent layout shift

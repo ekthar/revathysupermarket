@@ -33,6 +33,7 @@ import {
   UserCog,
 } from "lucide-react";
 import { GoogleIcon } from "@/components/onboarding/google-icon";
+import { BiometricLoginButton } from "@/components/auth/biometric-login-button";
 import { SITE } from "@/lib/constants";
 import { safeCallbackUrl } from "@/lib/safe-redirect";
 import { springs, tapScale } from "@/lib/motion";
@@ -242,12 +243,22 @@ export function LoginPanel({
             </motion.p>
           )}
 
+          {/* Biometric Login (native app only — shown when credentials stored) */}
+          <motion.div
+            initial={reduceMotion ? {} : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25, ...springs.enter }}
+            className="mt-8"
+          >
+            <BiometricLoginButton callbackUrl={safeCallback} />
+          </motion.div>
+
           {/* Google Sign-In */}
           <motion.div
             initial={reduceMotion ? {} : { opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, ...springs.enter }}
-            className="mt-8"
+            className="mt-4"
           >
             <motion.button
               type="button"

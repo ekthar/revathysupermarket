@@ -3,17 +3,18 @@
 import { memo, useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { SlidersHorizontal, Search } from "lucide-react";
 import { useInfiniteQuery } from "@tanstack/react-query";
+import { AnimatePresence, motion } from "framer-motion";
 import { Input } from "@/components/ui/input";
 import { ProductCard } from "@/components/product-card";
 import { Button } from "@/components/ui/button";
-// Cart import removed - was unused and causing unnecessary re-renders on cart changes
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
+import { StickySearchBar } from "@/components/products/sticky-search-bar";
 import { EmptySearchState } from "@/components/ui/empty-states";
 import { LazyRender } from "@/components/ui/lazy-render";
 import { categories as demoCategories } from "@/lib/products";
 import type { Product } from "@/lib/types";
-import { prefetchProductImages } from "@/lib/hooks/use-preload";
+import { prefetchProductImages, useVisibleRoutePrefetch } from "@/lib/hooks/use-preload";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 
@@ -55,7 +56,7 @@ async function fetchProducts(params: {
   return res.json();
 }
 
-// Virtualized product list - first 8 render immediately, rest use LazyRender groups
+// Virtualized product list with staggered entrance animation
 const VirtualProductList = memo(function VirtualProductList({
   items,
   hasNextPage,
@@ -71,6 +72,9 @@ const VirtualProductList = memo(function VirtualProductList({
   const aboveFold = items.slice(0, 8);
   const belowFold = items.slice(8);
 
+  // Prefetch product detail routes for visible items (instant navigation)
+  useVisibleRoutePrefetch(aboveFold);
+
   // Chunk below-fold items into groups of 4 for LazyRender
   const chunks: Product[][] = [];
   for (let i = 0; i < belowFold.length; i += 4) {
@@ -79,10 +83,27 @@ const VirtualProductList = memo(function VirtualProductList({
 
   return (
     <>
-      <div className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(min(150px,45vw),1fr))] gap-2 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {/* First 8 cards render immediately (above the fold) */}
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={{
+          hidden: {},
+          visible: { transition: { staggerChildren: 0.04 } }
+        }}
+        className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(min(150px,45vw),1fr))] gap-2 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
+      >
+        {/* First 8 cards with staggered entrance */}
         {aboveFold.map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <motion.div
+            key={product.id}
+            variants={{
+              hidden: { opacity: 0, y: 8, scale: 0.97 },
+              visible: { opacity: 1, y: 0, scale: 1 }
+            }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+          >
+            <ProductCard product={product} />
+          </motion.div>
         ))}
 
         {/* Cards 9+ wrapped in LazyRender groups of 4 */}
@@ -98,7 +119,7 @@ const VirtualProductList = memo(function VirtualProductList({
             ))}
           </LazyRender>
         ))}
-      </div>
+      </motion.div>
 
       {/* Infinite scroll trigger for fetching next page from server */}
       {hasNextPage ? (
@@ -134,6 +155,7 @@ export function ProductGrid({
   const [filterOpen, setFilterOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const searchAreaRef = useRef<HTMLDivElement>(null);
 
   const debouncedQuery = useDebounce(query, 300);
 
@@ -260,9 +282,23 @@ export function ProductGrid({
     });
   }, [startTransition]);
 
+  const scrollToSearch = useCallback(() => {
+    searchAreaRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
-      <div className="rounded-xl bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
+      {/* Compact sticky search bar — appears when main search scrolls away */}
+      <StickySearchBar
+        query={debouncedQuery}
+        category={category}
+        total={total}
+        observeRef={searchAreaRef}
+        onTap={scrollToSearch}
+        onOpenFilters={() => setFilterOpen(true)}
+      />
+
+      <div ref={searchAreaRef} className="rounded-xl bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
           <Search className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-neutral-400" />
           <Input
@@ -357,26 +393,48 @@ export function ProductGrid({
             Retry
           </button>
         </div>
-      ) : isLoading && allItems.length === 0 ? (
-        <div className="mt-5">
-          <ProductSkeletonGrid count={8} />
-        </div>
-      ) : allItems.length > 0 ? (
-        <div className={isPending ? "opacity-60 transition-opacity duration-200" : "transition-opacity duration-200"}>
-          <VirtualProductList
-            items={allItems}
-            hasNextPage={!!hasNextPage}
-            isFetchingNextPage={isFetchingNextPage}
-            loadMoreRef={loadMoreRef}
-          />
-        </div>
       ) : (
-        <div className="mt-6">
-          <EmptySearchState />
-          <div className="mt-4 flex justify-center">
-            <Button onClick={handleResetFilters}>Reset filters</Button>
-          </div>
-        </div>
+        <AnimatePresence mode="wait">
+          {isLoading && allItems.length === 0 ? (
+            <motion.div
+              key="skeleton"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0, scale: 0.98 }}
+              transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+              className="mt-5"
+            >
+              <ProductSkeletonGrid count={8} />
+            </motion.div>
+          ) : allItems.length > 0 ? (
+            <motion.div
+              key="content"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+              className={isPending ? "opacity-60 transition-opacity duration-200" : ""}
+            >
+              <VirtualProductList
+                items={allItems}
+                hasNextPage={!!hasNextPage}
+                isFetchingNextPage={isFetchingNextPage}
+                loadMoreRef={loadMoreRef}
+              />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="mt-6"
+            >
+              <EmptySearchState />
+              <div className="mt-4 flex justify-center">
+                <Button onClick={handleResetFilters}>Reset filters</Button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       )}
 
       {/* Mobile filter bottom sheet */}

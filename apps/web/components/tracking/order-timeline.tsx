@@ -123,6 +123,7 @@ type OrderTimelineProps = {
 
 export function OrderTimeline({ currentStatus, distanceKm, etaMinutes, updatedAt }: OrderTimelineProps) {
   const currentStep = getTimelineStepIndex(currentStatus);
+  const progressPercent = Math.round((currentStep / (TIMELINE_STEPS.length - 1)) * 100);
 
   return (
     <motion.div
@@ -131,17 +132,33 @@ export function OrderTimeline({ currentStatus, distanceKm, etaMinutes, updatedAt
       transition={{ ...springs.enter, delay: 0.45 }}
       className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900"
     >
-      <div className="flex items-center justify-between mb-5">
+      <div className="flex items-center justify-between mb-3">
         <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           Order Status
         </p>
         {updatedAt && (
           <span className="inline-flex items-center gap-1 text-xs text-neutral-400 dark:text-neutral-500">
             <Clock className="h-3 w-3" />
-            Last updated: {timeAgo(updatedAt)}
+            {timeAgo(updatedAt)}
           </span>
         )}
       </div>
+
+      {/* Progress bar — visual completion indicator */}
+      <div className="mb-5 relative">
+        <div className="h-1 w-full rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+          <motion.div
+            initial={{ width: 0 }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.6 }}
+            className="h-full rounded-full bg-secondary-500"
+          />
+        </div>
+        <span className="absolute right-0 -top-4 text-[10px] font-bold text-secondary-600 dark:text-secondary-400">
+          {progressPercent}%
+        </span>
+      </div>
+
       <div className="space-y-0">
         {TIMELINE_STEPS.map((step, index) => {
           const isCompleted = index < currentStep;
@@ -183,7 +200,17 @@ export function OrderTimeline({ currentStatus, distanceKm, etaMinutes, updatedAt
                   ) : isCurrent ? (
                     <>
                       <StepIcon className="h-4 w-4 text-white" />
-                      <span className="absolute inset-0 rounded-full animate-ping bg-secondary-500/30" />
+                      {/* Pulsing ring — more refined than animate-ping */}
+                      <motion.span
+                        className="absolute inset-0 rounded-full border-2 border-secondary-500"
+                        animate={{ scale: [1, 1.6, 1.6], opacity: [0.6, 0, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
+                      />
+                      <motion.span
+                        className="absolute inset-0 rounded-full border-2 border-secondary-500"
+                        animate={{ scale: [1, 1.3, 1.3], opacity: [0.4, 0, 0] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay: 0.5 }}
+                      />
                     </>
                   ) : (
                     <CircleDot className="h-4 w-4 text-neutral-300 dark:text-neutral-600" />

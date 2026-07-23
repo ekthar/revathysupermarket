@@ -4,15 +4,36 @@
     "details": [
       {
         "appID": "TEAMID.in.revathysupermarket.customer",
-        "paths": ["/", "/products/*", "/cart", "/orders/*", "/account/*", "/offers/*"]
+        "paths": [
+          "/",
+          "/products",
+          "/products/*",
+          "/cart",
+          "/checkout",
+          "/track/*",
+          "/orders/*",
+          "/dashboard",
+          "/dashboard/*",
+          "/account",
+          "/account/*",
+          "/offers",
+          "/offers/*",
+          "/support",
+          "/support/*",
+          "NOT /api/*",
+          "NOT /admin/*",
+          "NOT /staff/*",
+          "NOT /delivery/*",
+          "NOT /_next/*"
+        ]
       },
       {
         "appID": "TEAMID.in.revathysupermarket.delivery",
-        "paths": ["/delivery/*"]
+        "paths": ["/delivery", "/delivery/*"]
       },
       {
         "appID": "TEAMID.in.revathysupermarket.staff",
-        "paths": ["/staff/*", "/admin/*"]
+        "paths": ["/staff", "/staff/*", "/admin", "/admin/*"]
       }
     ]
   },
@@ -22,5 +43,8 @@
       "TEAMID.in.revathysupermarket.delivery",
       "TEAMID.in.revathysupermarket.staff"
     ]
+  },
+  "appclips": {
+    "apps": ["TEAMID.in.revathysupermarket.customer.Clip"]
   }
 }

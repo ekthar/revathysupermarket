@@ -13,6 +13,8 @@ import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/favorite-button";
 import { tapScale, springs, durations, easings } from "@/lib/motion";
 import { useRoutePreload } from "@/lib/hooks/use-preload";
+import { haptic } from "@/lib/haptics";
+import { useProductQuickSheet } from "@/components/product-quick-sheet-provider";
 
 interface ProductCardProps {
   product: Product;
@@ -38,6 +40,16 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   // Preload product detail page on hover/touch intent
   const preload = useRoutePreload(productHref);
 
+  // Quick sheet for mobile — opens sheet instead of full page navigation
+  const quickSheet = useProductQuickSheet();
+  const handleMobileClick = useCallback((e: React.MouseEvent) => {
+    // Only intercept on mobile (coarse pointer / narrow viewport)
+    if (typeof window !== "undefined" && window.innerWidth < 768 && quickSheet) {
+      e.preventDefault();
+      quickSheet.openProduct(product);
+    }
+  }, [quickSheet, product]);
+
   // Horizontal list layout
   if (horizontal) {
     return (
@@ -59,7 +71,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             whileHover={{ scale: 1.05 }}
             className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-800"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} category={product.category} />
           </motion.div>
         </Link>
 
@@ -115,19 +127,23 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       <Link
         href={productHref}
         className={cn(outOfStock && "pointer-events-none")}
+        onClick={outOfStock ? undefined : handleMobileClick}
         onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
         onTouchStart={outOfStock ? undefined : preload.onTouchStart}
       >
-        <div className={cn(
-          "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
-          compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
-        )}>
+        <div
+          className={cn(
+            "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
+            compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
+          )}
+          style={{ viewTransitionName: `product-img-${product.id}` }}
+        >
           <motion.div
             whileHover={{ scale: 1.06 }}
             transition={{ duration: durations.slow, ease: easings.easeOutQuart }}
             className="h-full w-full"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} category={product.category} />
           </motion.div>
 
           {/* Single badge — top left */}
@@ -149,6 +165,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         <Link
           href={productHref}
           className={cn(outOfStock && "pointer-events-none")}
+          onClick={outOfStock ? undefined : handleMobileClick}
           onMouseEnter={outOfStock ? undefined : preload.onMouseEnter}
           onTouchStart={outOfStock ? undefined : preload.onTouchStart}
         >
@@ -228,20 +245,22 @@ function CartControls({ product, outOfStock, variant }: { product: Product; outO
   const handleAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (outOfStock) return;
     addItem(product);
-    if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-      navigator.vibrate(10);
-    }
+    haptic("light");
     flyToCart(product.image, e.currentTarget);
   }, [outOfStock, addItem, product, flyToCart]);
 
   const handleIncrement = useCallback(() => {
     if (cartItem && cartItem.quantity < product.stock) {
       updateQuantity(product.id, cartItem.quantity + 1);
+      haptic("light");
     }
   }, [cartItem, updateQuantity, product.id, product.stock]);
 
   const handleDecrement = useCallback(() => {
-    if (cartItem) updateQuantity(product.id, cartItem.quantity - 1);
+    if (cartItem) {
+      updateQuantity(product.id, cartItem.quantity - 1);
+      haptic("light");
+    }
   }, [cartItem, updateQuantity, product.id]);
 
   return (

@@ -27,7 +27,7 @@ export async function GET() {
       where: {
         order: {
           userId,
-          status: { notIn: ["CANCELLED", "RETURNED"] },
+          status: { notIn: ["CANCELLED"] },
           createdAt: { gte: sixtyDaysAgo },
         },
       },

@@ -104,6 +104,7 @@ export function InstallAppPrompt() {
       observer.disconnect();
       clearTimeout(timer);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const checkEngagement = useCallback(() => {
@@ -115,6 +116,7 @@ export function InstallAppPrompt() {
     if ((hasEnoughViews || hasEnoughTime) && (deferredPromptRef.current || isIOS)) {
       showPrompt();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isIOS]);
 
   const showPrompt = useCallback(() => {
@@ -140,6 +142,7 @@ export function InstallAppPrompt() {
       // iOS: can't trigger programmatic install — show instructions
       // The banner itself shows iOS instructions when isIOS is true
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleDismiss = useCallback(() => {
@@ -200,7 +203,7 @@ export function InstallAppPrompt() {
             {/* iOS instructions */}
             {isIOS && (
               <p className="mt-2 text-center text-[11px] text-neutral-400">
-                Tap <span className="inline-block translate-y-px">⎙</span> Share then "Add to Home Screen"
+                Tap <span className="inline-block translate-y-px">⎙</span> Share then &ldquo;Add to Home Screen&rdquo;
               </p>
             )}
           </div>

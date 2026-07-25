@@ -27,7 +27,7 @@ export async function canUseBiometric(): Promise<boolean> {
   if (!isNative) return false;
 
   try {
-    // @ts-ignore — only available in Capacitor native shell
+    // @ts-expect-error capacitor-native-biometric only in native shell
     const { NativeBiometric } = await import(
       /* webpackIgnore: true */ "capacitor-native-biometric"
     );
@@ -45,7 +45,7 @@ export async function getBiometricType(): Promise<BiometricType> {
   if (!isNative) return "none";
 
   try {
-    // @ts-ignore — only available in Capacitor native shell
+    // @ts-expect-error capacitor-native-biometric only in native shell
     const { NativeBiometric, BiometryType } = await import(
       /* webpackIgnore: true */ "capacitor-native-biometric"
     );
@@ -83,7 +83,7 @@ export async function authenticateWithBiometric(
   if (!isNative) return false;
 
   try {
-    // @ts-ignore — only available in Capacitor native shell
+    // @ts-expect-error capacitor-native-biometric only in native shell
     const { NativeBiometric } = await import(
       /* webpackIgnore: true */ "capacitor-native-biometric"
     );

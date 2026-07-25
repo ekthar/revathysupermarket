@@ -59,7 +59,7 @@ export async function GET() {
     }>();
 
     for (const item of orderItems) {
-      if (!item.product || !item.product.isActive || item.product.stock <= 0) continue;
+      if (!item.product || !item.product.isActive || item.product.stock <= 0 || !item.productId) continue;
 
       const existing = productMap.get(item.productId);
       if (existing) {

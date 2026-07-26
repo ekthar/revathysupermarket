@@ -46,7 +46,8 @@ export function ActiveOrderBanner() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed bottom-20 inset-x-4 z-[80] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
+        className="fixed inset-x-4 z-[80] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
+        style={{ bottom: "calc(var(--mobile-nav-height, 72px) + 0.75rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <Link
           href={`/track/${order.id}`}

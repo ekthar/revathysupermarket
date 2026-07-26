@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { unstable_cache } from "next/cache";
-import { ChevronRight, Zap } from "lucide-react";
+import { ChevronRight, Clock, Zap } from "lucide-react";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
 import { HeroSection } from "@/components/home/hero-section";
@@ -131,6 +131,21 @@ export default async function HomePage() {
     <main className="min-h-[100dvh] bg-background">
       {/* SEO structured data */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
+
+      {/* Location prompt — shown on first visit if no saved location */}
+      <LocationPrompt />
+
+      {/* ── Delivery Promise Bar (mobile only, Swiggy-style) ── */}
+      <div className="md:hidden px-4 pt-2 pb-1">
+        <div className="flex items-center gap-2 rounded-full bg-secondary-50 dark:bg-secondary-900/20 px-4 py-2">
+          <Clock className="h-3.5 w-3.5 text-secondary-600" />
+          <span className="text-caption font-bold text-secondary-700 dark:text-secondary-300">
+            Delivery in {settings.deliveryEstimateMin}–{settings.deliveryEstimateMax} min
+          </span>
+          <span className="text-caption text-neutral-400">·</span>
+          <span className="text-caption font-medium text-neutral-500">Free over ₹499</span>
+        </div>
+      </div>
 
       {/* ── Section 1: Hero ── */}
       <HeroSection

@@ -50,8 +50,8 @@ export const ProductQuickSheet = memo(function ProductQuickSheet({
 
           {/* Content */}
           <div className="overflow-y-auto overscroll-contain px-4 pb-[calc(5rem+var(--safe-bottom,0px))]">
-            {/* Image */}
-            <div className="relative aspect-[16/10] rounded-2xl overflow-hidden bg-neutral-50 dark:bg-neutral-800 mt-1">
+            {/* Image — larger, square */}
+            <div className="relative aspect-square rounded-2xl overflow-hidden bg-neutral-50 dark:bg-neutral-800 mt-1">
               <ProductImage src={product.image} alt={product.name} className="object-cover" />
               {product.discountPrice && (
                 <span className="absolute top-3 left-3 rounded-lg bg-neutral-900/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold text-white">
@@ -62,31 +62,42 @@ export const ProductQuickSheet = memo(function ProductQuickSheet({
 
             {/* Info */}
             <div className="mt-4">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-lg font-bold text-neutral-900 dark:text-white leading-snug">{product.name}</h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    {product.unit && (
-                      <span className="text-xs text-neutral-500 dark:text-neutral-400">{product.unit}</span>
-                    )}
-                    {product.avgRating && product.avgRating > 0 && (
-                      <div className="flex items-center gap-0.5">
-                        <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                        <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400">{product.avgRating.toFixed(1)}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className="text-xl font-black text-neutral-900 dark:text-white">{formatCurrency(product.discountPrice ?? product.price)}</span>
-                  {product.discountPrice && (
-                    <span className="block text-xs text-neutral-400 line-through">{formatCurrency(product.price)}</span>
-                  )}
-                </div>
+              {/* Product name */}
+              <h2 className="text-title font-bold text-neutral-900 dark:text-white leading-snug">{product.name}</h2>
+
+              {/* Unit / category + rating row */}
+              <div className="flex items-center gap-2 mt-1.5">
+                {product.unit && (
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">{product.unit}</span>
+                )}
+                {product.unit && product.category && (
+                  <span className="text-xs text-neutral-300 dark:text-neutral-600">·</span>
+                )}
+                {product.category && (
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">{product.category}</span>
+                )}
+                {product.avgRating && product.avgRating > 0 && (
+                  <>
+                    <span className="text-xs text-neutral-300 dark:text-neutral-600">·</span>
+                    <div className="flex items-center gap-0.5">
+                      <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
+                      <span className="text-xs font-bold text-neutral-600 dark:text-neutral-400">{product.avgRating.toFixed(1)}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
+              {/* Price prominently displayed */}
+              <div className="flex items-baseline gap-2 mt-3">
+                <span className="text-2xl font-black text-neutral-900 dark:text-white">{formatCurrency(product.discountPrice ?? product.price)}</span>
+                {product.discountPrice && (
+                  <span className="text-sm text-neutral-400 line-through">{formatCurrency(product.price)}</span>
+                )}
+              </div>
+
+              {/* Description — 2 lines */}
               {product.description && (
-                <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed line-clamp-3">
+                <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed line-clamp-2">
                   {product.description}
                 </p>
               )}
@@ -185,7 +196,7 @@ function SheetCartControls({ product, onClose }: { product: Product; onClose: ()
           whileTap={tapScale.primary}
           onClick={handleAdd}
           disabled={outOfStock}
-          className="flex items-center justify-center gap-2 h-12 w-full rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold text-sm disabled:opacity-40 press shadow-lg"
+          className="flex items-center justify-center gap-2 h-14 w-full rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-bold text-sm disabled:opacity-40 press shadow-lg"
         >
           <ShoppingBag className="h-4 w-4" />
           {outOfStock ? "Out of stock" : `Add to cart · ${formatCurrency(price)}`}

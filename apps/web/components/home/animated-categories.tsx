@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronRight } from "lucide-react";
 import {
   Apple,
@@ -15,7 +14,7 @@ import {
   ShoppingBag,
   type LucideIcon
 } from "lucide-react";
-import { memo, useMemo, type ComponentType, type ReactNode } from "react";
+import { memo, useMemo, type ComponentType } from "react";
 import { ScrollReveal, ScrollRevealItem } from "@/components/ui/gsap/scroll-reveal";
 import type { Product } from "@/lib/types";
 
@@ -95,29 +94,30 @@ export const AnimatedCategories = memo(function AnimatedCategories({
         </ScrollReveal>
       </section>
 
-      {/* Mobile categories grid */}
-      <section className="px-4 pt-5 md:hidden">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-title font-bold text-neutral-900 dark:text-white">What are you looking for?</h2>
+      {/* Mobile categories — horizontal scroll circles (Swiggy-style) */}
+      <section className="pt-4 md:hidden">
+        <div className="flex items-center justify-between px-4 mb-3">
+          <h2 className="text-title font-bold text-neutral-900 dark:text-white">Shop by Category</h2>
+        </div>
+        <div className="flex gap-3 overflow-x-auto no-scrollbar px-4 pb-2">
+          {categories.map((cat) => (
+            <Link
+              key={cat}
+              href={`/products?category=${encodeURIComponent(cat)}`}
+              className="flex flex-col items-center gap-1.5 shrink-0 w-[68px]"
+            >
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-secondary-50 dark:bg-secondary-900/30 text-secondary-600 dark:text-secondary-400">
+                {iconOverrides[cat] ? (
+                  <span className="text-xl leading-none">{iconOverrides[cat]}</span>
+                ) : (
+                  fallbackIcon(cat)
+                )}
+              </div>
+              <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-300 text-center leading-tight line-clamp-2 w-full">{cat}</span>
+            </Link>
+          ))}
         </div>
 
-        <ScrollReveal y={12} stagger={0.04} amount={0.2}>
-          <div className="grid grid-cols-3 xs:grid-cols-4 gap-2 sm:grid-cols-5">
-            {categories.map((cat) => (
-              <ScrollRevealItem key={cat}>
-                <Link
-                  href={`/products?category=${encodeURIComponent(cat)}`}
-                  className="flex flex-col items-center gap-1.5 rounded-xl bg-neutral-50 dark:bg-neutral-800 py-3 px-1 press hover:bg-neutral-100 dark:hover:bg-neutral-700 transition-colors"
-                >
-                  <span className="flex h-8 w-8 items-center justify-center text-neutral-600 dark:text-neutral-300">
-                    {fallbackIcon(cat)}
-                  </span>
-                  <span className="text-micro font-medium text-neutral-600 dark:text-neutral-300 text-center leading-tight line-clamp-1">{cat}</span>
-                </Link>
-              </ScrollRevealItem>
-            ))}
-          </div>
-        </ScrollReveal>
       </section>
     </>
   );

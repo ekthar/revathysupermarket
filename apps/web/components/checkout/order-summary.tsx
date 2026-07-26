@@ -129,7 +129,7 @@ export function OrderSummary({
 
       {/* Mobile sticky place-order bar */}
       <div
-        className="lg:hidden fixed inset-x-0 bottom-0 z-[55] border-t border-border bg-background/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,var(--safe-bottom))] shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.15)]"
+        className="lg:hidden fixed inset-x-0 bottom-0 z-[55] border-t border-border bg-background/95 backdrop-blur-md px-4 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom,0px))] shadow-[0_-8px_30px_-12px_rgba(0,0,0,0.15)]"
         data-hide-on-keyboard="true"
       >
         <div className="mx-auto max-w-lg">

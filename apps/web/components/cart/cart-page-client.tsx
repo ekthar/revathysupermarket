@@ -199,7 +199,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
         : { icon: "truck" as const, text: "Estimated delivery in ~30 min" };
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl bg-background px-4 pb-36 pt-5 md:pb-8">
+    <main className="mx-auto min-h-screen max-w-2xl bg-background px-4 pb-4 pt-5 md:pb-8">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-xl">
         <div className="flex items-center justify-between">

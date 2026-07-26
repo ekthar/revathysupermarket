@@ -52,7 +52,7 @@ export function ServiceWorkerRegister() {
     <button
       type="button"
       onClick={() => waitingWorker.postMessage({ type: "SKIP_WAITING" })}
-      className="fixed bottom-[calc(var(--mobile-nav-height)+var(--safe-bottom)+0.75rem)] left-1/2 z-[89] -translate-x-1/2 rounded-full bg-black px-4 py-2.5 text-sm font-bold text-white shadow-xl md:bottom-6"
+      className="fixed bottom-[calc(var(--mobile-nav-height,72px)+0.75rem+var(--safe-bottom,0px))] left-1/2 z-[75] -translate-x-1/2 rounded-full bg-black px-4 py-2.5 text-sm font-bold text-white shadow-xl md:bottom-6"
     >
       Update available · Reload
     </button>

@@ -166,7 +166,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>
               <div
                 id="main-content"
-                className="pb-safe route-scroll-container"
+                className="pb-nav route-scroll-container"
                 tabIndex={-1}
                 aria-live="polite"
                 aria-label="Page content"

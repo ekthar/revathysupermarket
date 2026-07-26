@@ -30,6 +30,13 @@ export function Footer({ storeName, address }: { storeName?: string; address?: s
     <footer className="border-t border-neutral-100 dark:border-neutral-800 mt-8 print:hidden">
       {/* Mobile: minimal — bottom nav handles navigation */}
       <div className="md:hidden py-5 px-4">
+        <div className="flex items-center justify-center gap-4 mb-2">
+          <Link href="/support" className="text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Help</Link>
+          <span className="text-neutral-300 dark:text-neutral-600">&middot;</span>
+          <Link href="/account" className="text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Account</Link>
+          <span className="text-neutral-300 dark:text-neutral-600">&middot;</span>
+          <Link href="/products" className="text-xs font-medium text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200">Shop</Link>
+        </div>
         <p className="text-xs text-neutral-500 dark:text-neutral-500 text-center">
           &copy; {new Date().getFullYear()} {name}
         </p>

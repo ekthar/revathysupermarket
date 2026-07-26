@@ -68,6 +68,8 @@ const VirtualProductList = memo(function VirtualProductList({
   isFetchingNextPage: boolean;
   loadMoreRef: React.RefObject<HTMLDivElement | null>;
 }) {
+  const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   // D5: Split items — first 8 above-the-fold, rest in LazyRender groups of 4
   const aboveFold = items.slice(0, 8);
   const belowFold = items.slice(8);
@@ -84,7 +86,7 @@ const VirtualProductList = memo(function VirtualProductList({
   return (
     <>
       <motion.div
-        initial="hidden"
+        initial={prefersReduced ? "visible" : "hidden"}
         animate="visible"
         variants={{
           hidden: {},
@@ -123,8 +125,8 @@ const VirtualProductList = memo(function VirtualProductList({
 
       {/* Infinite scroll trigger for fetching next page from server */}
       {hasNextPage ? (
-        <div ref={loadMoreRef} className="mt-6 min-h-[1px]">
-          {isFetchingNextPage && <ProductSkeletonGrid count={4} />}
+        <div ref={loadMoreRef} className="mt-6 min-h-[40px]">
+          <ProductSkeletonGrid count={4} />
         </div>
       ) : null}
     </>
@@ -289,14 +291,16 @@ export function ProductGrid({
   return (
     <section className="mx-auto max-w-7xl px-4 pb-8 pt-4 sm:px-6 sm:py-10 lg:px-8">
       {/* Compact sticky search bar — appears when main search scrolls away */}
-      <StickySearchBar
-        query={debouncedQuery}
-        category={category}
-        total={total}
-        observeRef={searchAreaRef}
-        onTap={scrollToSearch}
-        onOpenFilters={() => setFilterOpen(true)}
-      />
+      <div className="hidden md:block">
+        <StickySearchBar
+          query={debouncedQuery}
+          category={category}
+          total={total}
+          observeRef={searchAreaRef}
+          onTap={scrollToSearch}
+          onOpenFilters={() => setFilterOpen(true)}
+        />
+      </div>
 
       <div ref={searchAreaRef} className="rounded-xl bg-transparent md:grid md:grid-cols-[1.2fr_1fr_1fr] md:gap-4">
         <label className="relative">
@@ -385,7 +389,11 @@ export function ProductGrid({
 
       {isError ? (
         <div className="flex flex-col items-center justify-center py-16 gap-4 text-center">
-          <p className="text-body text-neutral-500 dark:text-neutral-400">Failed to load products. Please try again.</p>
+          <p className="text-body text-neutral-500 dark:text-neutral-400">
+            {typeof navigator !== "undefined" && !navigator.onLine
+              ? "You appear to be offline. Check your connection and try again."
+              : "Failed to load products. Please try again."}
+          </p>
           <button
             onClick={() => refetch()}
             className="px-6 py-2.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-sm font-bold transition-opacity hover:opacity-80"

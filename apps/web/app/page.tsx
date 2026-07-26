@@ -132,9 +132,6 @@ export default async function HomePage() {
       {/* SEO structured data */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
 
-      {/* Location prompt — shown on first visit if no saved location */}
-      <LocationPrompt />
-
       {/* ── Section 1: Hero ── */}
       <HeroSection
         storeName={settings.storeName}
@@ -148,6 +145,9 @@ export default async function HomePage() {
 
       {/* ── Section 2: Promo banners (if any) ── */}
       <PromoBanners banners={promoBanners} />
+
+      {/* Location prompt — shown on first visit if no saved location (deferred after hero) */}
+      <LocationPrompt />
 
       {/* ── Section 3: Recent Orders (hidden when empty) ── */}
       <RecentOrdersSection />

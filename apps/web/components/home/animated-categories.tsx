@@ -102,7 +102,7 @@ export const AnimatedCategories = memo(function AnimatedCategories({
         </div>
 
         <ScrollReveal y={12} stagger={0.04} amount={0.2}>
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+          <div className="grid grid-cols-3 xs:grid-cols-4 gap-2 sm:grid-cols-5">
             {categories.map((cat) => (
               <ScrollRevealItem key={cat}>
                 <Link

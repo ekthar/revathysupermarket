@@ -1,4 +1,4 @@
-const CACHE = "msm-supermarket-v9";
+const CACHE = "msm-supermarket-v10";
 const API_CACHE = "msm-api-cache-v2";
 const IMG_CACHE = "msm-images-v1";
 

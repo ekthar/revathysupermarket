@@ -55,6 +55,7 @@ export default async function manifest(): Promise<MetadataRoute.Manifest> {
     share_target: {
       action: "/products",
       method: "GET",
+      enctype: "application/x-www-form-urlencoded",
       params: {
         title: "q",
         text: "q",

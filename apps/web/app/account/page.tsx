@@ -33,7 +33,7 @@ export default async function AccountPage() {
   const formatWallet = (v: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v);
 
   return (
-    <main className="mx-auto min-h-[100dvh] max-w-lg space-y-4 bg-background px-4 pb-28 pt-6">
+    <main className="mx-auto min-h-[100dvh] max-w-lg space-y-4 bg-background px-4 pb-4 pt-6">
       {/* Profile card */}
       <div className="relative overflow-hidden rounded-2xl bg-neutral-900 dark:bg-neutral-800 p-5 text-white">
         <div className="flex items-center gap-3.5">

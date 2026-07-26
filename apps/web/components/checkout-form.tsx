@@ -485,7 +485,7 @@ export function CheckoutForm({
 
 
   return (
-    <form onSubmit={submit} className="pb-20 pt-4 md:pb-8">
+    <form onSubmit={submit} className="pb-4 pt-4 md:pb-8">
       {/* First order celebration */}
       <FirstOrderCelebration show={showCelebration} onDismiss={dismissCelebration} />
 

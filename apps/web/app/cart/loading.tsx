@@ -1,6 +1,6 @@
 export default function CartLoading() {
   return (
-    <div className="space-y-4 px-4 pt-4 pb-24">
+    <div className="space-y-4 px-4 pt-4 pb-4">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="relative h-10 w-10 overflow-hidden rounded-full bg-neutral-100 dark:bg-neutral-800">

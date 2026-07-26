@@ -115,7 +115,7 @@ export const ProductGridSkeleton = memo(function ProductGridSkeleton({
 // Full home page streaming skeleton (above-the-fold priority)
 export const HomePageSkeleton = memo(function HomePageSkeleton() {
   return (
-    <div className="space-y-1 pb-24">
+    <div className="space-y-1 pb-4">
       {/* Search bar - highest priority */}
       <div className="px-4 pt-3">
         <SkeletonPulse className="h-11 rounded-2xl" />
@@ -198,7 +198,7 @@ export const CartPageSkeleton = memo(function CartPageSkeleton() {
 // Product detail page skeleton
 export const ProductDetailSkeleton = memo(function ProductDetailSkeleton() {
   return (
-    <div className="mx-auto max-w-4xl px-4 pb-24 pt-4">
+    <div className="mx-auto max-w-4xl px-4 pb-4 pt-4">
       {/* Image */}
       <SkeletonPulse className="aspect-square w-full rounded-2xl md:aspect-[4/3]" />
       

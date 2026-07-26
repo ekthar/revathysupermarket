@@ -250,6 +250,13 @@ h1, h2, h3, h4, h5, h6, .font-display {
 /* Safe padding */
 .pt-safe { padding-top: var(--safe-top); }
 .pb-safe { padding-bottom: calc(var(--mobile-nav-height) + 1.5rem + var(--safe-bottom)); }
+/* Per-page bottom spacing utilities */
+/* For pages that show the bottom nav + possible floating cart bar */
+.pb-nav { padding-bottom: calc(var(--mobile-nav-height) + 0.75rem + var(--safe-bottom)); }
+/* For pages that show bottom nav AND have a fixed CTA above it */
+.pb-nav-cta { padding-bottom: calc(var(--mobile-nav-height) + 4.5rem + var(--safe-bottom)); }
+/* For pages where bottom nav is hidden (checkout, track, login) */
+.pb-safe-minimal { padding-bottom: calc(1rem + var(--safe-bottom)); }
 .px-safe { padding-left: max(1rem, var(--safe-left)); padding-right: max(1rem, var(--safe-right)); }
 .ios-safe-top { padding-top: max(0.75rem, var(--safe-top)); }
 .ios-safe-bottom { padding-bottom: max(0.75rem, var(--safe-bottom)); }
@@ -339,7 +346,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 html[data-keyboard-open] .pb-safe {
   padding-bottom: 1rem;
 }
-@media (min-width: 768px) { .pb-safe { padding-bottom: 0; } .pt-safe { padding-top: 0; } }
+@media (min-width: 768px) { .pb-safe { padding-bottom: 0; } .pb-nav { padding-bottom: 0; } .pb-nav-cta { padding-bottom: 0; } .pb-safe-minimal { padding-bottom: 0; } .pt-safe { padding-top: 0; } }
 /* Must appear after the (min-width: 768px) rule to take precedence for tablets with notches */
 @media (min-width: 768px) and (max-width: 1024px) { .pt-safe { padding-top: env(safe-area-inset-top, 0px); } }
 

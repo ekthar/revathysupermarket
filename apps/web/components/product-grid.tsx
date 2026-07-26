@@ -81,18 +81,21 @@ const VirtualProductList = memo(function VirtualProductList({
     chunks.push(belowFold.slice(i, i + 4));
   }
 
+  // Skip stagger animation on mobile for instant render
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
+
   return (
     <>
       <motion.div
-        initial="hidden"
+        initial={isMobile ? "visible" : "hidden"}
         animate="visible"
         variants={{
           hidden: {},
-          visible: { transition: { staggerChildren: 0.04 } }
+          visible: { transition: { staggerChildren: isMobile ? 0 : 0.04 } }
         }}
-        className="mt-5 grid grid-cols-[repeat(auto-fill,minmax(min(150px,45vw),1fr))] gap-2 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
+        className="mt-5 grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(min(150px,45vw),1fr))] gap-2 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
       >
-        {/* First 8 cards with staggered entrance */}
+        {/* First 8 cards with staggered entrance (desktop) or instant (mobile) */}
         {aboveFold.map((product) => (
           <motion.div
             key={product.id}
@@ -100,7 +103,7 @@ const VirtualProductList = memo(function VirtualProductList({
               hidden: { opacity: 0, y: 8, scale: 0.97 },
               visible: { opacity: 1, y: 0, scale: 1 }
             }}
-            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            transition={{ duration: isMobile ? 0 : 0.3, ease: [0.25, 0.1, 0.25, 1] }}
           >
             <ProductCard product={product} />
           </motion.div>

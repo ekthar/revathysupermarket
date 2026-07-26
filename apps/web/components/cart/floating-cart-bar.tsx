@@ -61,16 +61,16 @@ export function FloatingCartBar() {
               className="floating-cart-bar backdrop-blur-xl"
               aria-label={`View cart, ${totalItems} item${totalItems === 1 ? "" : "s"}, subtotal ${formatCurrency(subtotal)}`}
             >
-              {/* Leading: icon */}
+              {/* Leading: item count + names */}
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-emerald-500/20">
-                  <ShoppingBag className="h-4 w-4 text-emerald-400" />
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-white/20">
+                  <ShoppingBag className="h-4 w-4 text-white" />
                 </span>
                 <div className="min-w-0">
                   <p className="text-[13px] font-bold leading-tight text-white">
                     {totalItems} item{totalItems === 1 ? "" : "s"}
                   </p>
-                  <p className="text-[11px] font-medium text-white/60 truncate max-w-[140px]">
+                  <p className="text-[11px] font-medium text-white/70 truncate max-w-[140px]">
                     {items.slice(0, 2).map((i) => i.name).join(", ")}
                     {items.length > 2 ? ` +${items.length - 2}` : ""}
                   </p>
@@ -82,7 +82,7 @@ export function FloatingCartBar() {
                 <span className="text-sm font-black text-white tabular-nums">
                   {formatCurrency(subtotal)}
                 </span>
-                <ChevronRight className="h-4 w-4 text-white/70" />
+                <ChevronRight className="h-4 w-4 text-white/80" />
               </div>
             </Link>
           </motion.div>

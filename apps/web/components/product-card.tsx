@@ -132,10 +132,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         onTouchStart={outOfStock ? undefined : preload.onTouchStart}
       >
         <div
-          className={cn(
-            "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden",
-            compact ? "aspect-square rounded-t-2xl" : "aspect-[4/3.2] rounded-t-2xl"
-          )}
+          className="relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden aspect-square rounded-t-2xl"
           style={{ viewTransitionName: `product-img-${product.id}` }}
         >
           <motion.div

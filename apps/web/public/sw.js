@@ -1,4 +1,4 @@
-const CACHE = "msm-supermarket-v9";
+const CACHE = "msm-supermarket-v10";
 const API_CACHE = "msm-api-cache-v2";
 const IMG_CACHE = "msm-images-v1";
 
@@ -10,6 +10,11 @@ const STATIC_ASSETS = [
   "/icons/icon-maskable-512.png",
   "/icons/apple-touch-icon.png"
 ];
+
+// External image hosts that the SW will cache (must also be in CSP connect-src):
+// - images.unsplash.com (product/category photos)
+// - *.cloudinary.com (uploaded product images)
+// - *.supabase.co (storage bucket images)
 
 // Max cached API responses (LRU eviction)
 const MAX_API_ENTRIES = 80;
@@ -160,10 +165,21 @@ async function cacheFirstWithLimit(request, cacheName, maxEntries) {
     }
     return response;
   } catch {
-    // Return transparent 1x1 pixel as fallback for failed images
+    // Return a proper SVG placeholder for failed image fetches (CSP block, network error, etc.)
     return new Response(
-      "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E",
-      { headers: { "Content-Type": "image/svg+xml" } }
+      '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">' +
+        '<rect width="400" height="300" fill="#f0f0f0"/>' +
+        '<path d="M160 100h80v60h-80z" fill="none" stroke="#ccc" stroke-width="3"/>' +
+        '<circle cx="180" cy="118" r="6" fill="#ccc"/>' +
+        '<path d="M160 145l25-20 15 12 30-25 30 28v20h-100z" fill="#ccc"/>' +
+      '</svg>',
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "image/svg+xml",
+          "Cache-Control": "no-store"
+        }
+      }
     );
   }
 }

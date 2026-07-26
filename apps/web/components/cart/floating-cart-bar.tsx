@@ -42,7 +42,7 @@ export function FloatingCartBar() {
           className="fixed md:hidden left-4 right-4 z-[65] pointer-events-none"
           data-hide-on-keyboard="true"
           style={{
-            bottom: "calc(var(--mobile-nav-height, 82px) + 0.5rem + env(safe-area-inset-bottom, 0px))",
+            bottom: "calc(var(--mobile-nav-height, 82px) + 0.25rem + env(safe-area-inset-bottom, 0px))",
           }}
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

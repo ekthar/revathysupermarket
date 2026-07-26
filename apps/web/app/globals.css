@@ -160,7 +160,7 @@ html.dark {
   background: #0A0A0A;
 }
 
-*, *::before, *::after {
+button, a, [role="button"], summary, input[type="button"], input[type="submit"], label {
   touch-action: manipulation;
 }
 
@@ -169,7 +169,7 @@ img, video, svg {
 }
 
 /* Prevent auto-zoom on input focus (iOS zooms when font-size < 16px) */
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 768px) and (hover: none) and (pointer: coarse) {
   input[type="text"],
   input[type="email"],
   input[type="tel"],
@@ -249,7 +249,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
 
 /* Safe padding */
 .pt-safe { padding-top: var(--safe-top); }
-.pb-safe { padding-bottom: calc(var(--mobile-nav-height) + 1.5rem + var(--safe-bottom)); }
+.pb-safe { padding-bottom: calc(var(--mobile-nav-height) + 0.75rem + var(--safe-bottom)); }
 .px-safe { padding-left: max(1rem, var(--safe-left)); padding-right: max(1rem, var(--safe-right)); }
 .ios-safe-top { padding-top: max(0.75rem, var(--safe-top)); }
 .ios-safe-bottom { padding-bottom: max(0.75rem, var(--safe-bottom)); }
@@ -462,7 +462,7 @@ html[data-keyboard-open] .pb-safe {
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
-  padding: 0.6rem 0.85rem 0.6rem 0.6rem;
+  padding: 0.45rem 0.75rem 0.45rem 0.5rem;
   border-radius: 9999px;
   background: rgb(var(--color-primary));
   color: white;
@@ -497,6 +497,17 @@ html[data-keyboard-open] .pb-safe {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid hsl(var(--border) / 0.6);
+}
+.sticky-category-rail::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2.5rem;
+  background: linear-gradient(to right, transparent, hsl(var(--background)));
+  pointer-events: none;
+  z-index: 1;
 }
 .dark .sticky-category-rail {
   background: hsl(var(--background) / 0.88);

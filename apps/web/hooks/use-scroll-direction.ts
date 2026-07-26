@@ -23,7 +23,7 @@ interface UseScrollDirectionOptions {
  * - isAtTop: whether scroll is near the top (within startOffset)
  */
 export function useScrollDirection(options: UseScrollDirectionOptions = {}) {
-  const { threshold = 10, startOffset = 60 } = options;
+  const { threshold = 18, startOffset = 64 } = options;
   const [direction, setDirection] = useState<ScrollDirection>("idle");
   const [isAtTop, setIsAtTop] = useState(true);
   const lastScrollY = useRef(0);

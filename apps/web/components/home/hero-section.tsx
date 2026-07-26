@@ -139,7 +139,7 @@ export function HeroSection({
 
       {/* Mobile Hero — delivery ETA as hero-level information */}
       <section className="px-4 pt-3 pb-2 md:hidden">
-        <Link href={heroHref} className="block relative overflow-hidden rounded-2xl aspect-[2.1/1] press">
+        <Link href={heroHref} className="block relative overflow-hidden rounded-2xl aspect-[1.85/1] press">
           <Image
             src={heroImage}
             alt={heroTitle}

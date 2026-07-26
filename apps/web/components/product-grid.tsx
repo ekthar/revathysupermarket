@@ -123,7 +123,7 @@ const VirtualProductList = memo(function VirtualProductList({
 
       {/* Infinite scroll trigger for fetching next page from server */}
       {hasNextPage ? (
-        <div ref={loadMoreRef} className="mt-6">
+        <div ref={loadMoreRef} className="mt-6 min-h-[1px]">
           {isFetchingNextPage && <ProductSkeletonGrid count={4} />}
         </div>
       ) : null}
@@ -227,7 +227,7 @@ export function ProductGrid({
           fetchNextPage();
         }
       },
-      { threshold: 0.1 }
+      { threshold: 0, rootMargin: "200px" }
     );
     observer.observe(el);
     return () => observer.disconnect();

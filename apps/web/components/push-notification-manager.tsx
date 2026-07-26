@@ -117,7 +117,7 @@ export function PushNotificationManager() {
 
   return (
     <AnimatePresence>
-      {showPrompt && (
+      {showPrompt && typeof document !== "undefined" && !document.querySelector("[data-install-prompt]") && (
         <motion.div
           data-push-prompt
           initial={{ opacity: 0, y: 50, scale: 0.9 }}

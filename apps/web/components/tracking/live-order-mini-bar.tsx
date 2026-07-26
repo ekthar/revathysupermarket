@@ -101,7 +101,7 @@ export function LiveOrderMiniBar({ initialOrder = null }: { initialOrder?: Activ
     : "";
 
   return (
-    <div className="fixed z-[70] md:hidden" style={{ bottom: "calc(var(--mobile-nav-height, 64px) + 0.75rem + env(safe-area-inset-bottom, 0px))", right: "0.75rem" }}>
+    <div className="fixed z-[70] md:hidden" style={{ bottom: "calc(var(--mobile-nav-height, 72px) + 4rem + env(safe-area-inset-bottom, 0px))", right: "0.75rem" }}>
       <AnimatePresence mode="wait">
         {!expanded ? (
           /* ─── COLLAPSED BUBBLE ─── */

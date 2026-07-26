@@ -159,6 +159,7 @@ export function InstallAppPrompt() {
           exit={{ y: 100, opacity: 0 }}
           transition={springs.enter}
           className="fixed bottom-[calc(var(--mobile-nav-height,82px)+1rem+var(--safe-bottom,0px))] inset-x-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
+          data-install-prompt="true"
         >
           <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-xl shadow-neutral-900/10 dark:shadow-neutral-900/50 border border-neutral-100 dark:border-neutral-800 p-4 relative">
             {/* Dismiss button */}

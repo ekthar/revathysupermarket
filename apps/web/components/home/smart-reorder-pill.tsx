@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { RotateCcw, ShoppingCart, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { springs, tapScale } from "@/lib/motion";
-import { useCartActions } from "@/components/cart/cart-provider";
+import { useCartActions, useCartItemCount } from "@/components/cart/cart-provider";
 import { haptic } from "@/lib/haptics";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
@@ -41,6 +41,7 @@ type FrequentItem = {
 export function SmartReorderPill() {
   const { data: session } = useSession();
   const { addItems } = useCartActions();
+  const totalItems = useCartItemCount();
   const [items, setItems] = useState<FrequentItem[]>([]);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -117,7 +118,7 @@ export function SmartReorderPill() {
     sessionStorage.setItem("msm-reorder-dismissed", "1");
   }, []);
 
-  if (dismissed || !visible) return null;
+  if (dismissed || !visible || totalItems > 0) return null;
 
   const totalEstimate = items.reduce(
     (sum, item) => sum + (item.discountPrice ?? item.price) * item.avgQuantity,

@@ -19,7 +19,7 @@ import { useVelocityTracker } from "@/components/ui/gestures/use-velocity-tracke
  * Reduced motion: instant opacity cross-fade on back navigation.
  */
 
-const EDGE_ZONE = 20; // px from left edge to start swipe (narrower = fewer false positives)
+const EDGE_ZONE = 28; // px from left edge to start swipe (narrower = fewer false positives)
 const DISAMBIGUATION_DISTANCE = 20; // px before committing to horizontal swipe (increased for safety)
 const COMMIT_VELOCITY = 400; // px/s — fast swipe commits (raised threshold)
 const COMMIT_DISTANCE_RATIO = 0.4; // 40% of screen width → commits (raised from 35%)

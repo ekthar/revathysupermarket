@@ -117,6 +117,7 @@ export const AnimatedCategories = memo(function AnimatedCategories({
             </Link>
           ))}
         </div>
+
       </section>
     </>
   );

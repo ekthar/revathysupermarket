@@ -44,7 +44,7 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
   const quickSheet = useProductQuickSheet();
   const handleMobileClick = useCallback((e: React.MouseEvent) => {
     // Only intercept on mobile (coarse pointer / narrow viewport)
-    if (typeof window !== "undefined" && window.innerWidth < 768 && quickSheet) {
+    if (typeof window !== "undefined" && window.innerWidth < 768 && quickSheet?.openProduct) {
       e.preventDefault();
       quickSheet.openProduct(product);
     }

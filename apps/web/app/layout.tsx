@@ -171,7 +171,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 aria-live="polite"
                 aria-label="Page content"
               >
-              <div className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-2">
+              <div className="hidden md:block max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-2">
                 <Breadcrumbs />
               </div>
               <RouteTransition><SwipeBack>{children}</SwipeBack></RouteTransition></div>

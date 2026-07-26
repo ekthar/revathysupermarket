@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { springs } from "@/lib/motion";
+import { haptic } from "@/lib/haptics";
 
 export function ScrollToTop() {
   const [show, setShow] = useState(false);
@@ -43,7 +44,7 @@ export function ScrollToTop() {
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           transition={springs.enter}
           type="button"
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+          onClick={() => { haptic("light"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
           className="ios-glass fixed bottom-[calc(var(--mobile-nav-height,72px)+5rem+var(--safe-bottom,0px))] right-[max(1rem,var(--safe-right))] z-50 flex h-10 w-10 items-center justify-center rounded-full shadow-elevation-2 press md:bottom-8 md:right-8"
           aria-label="Scroll to top"
         >

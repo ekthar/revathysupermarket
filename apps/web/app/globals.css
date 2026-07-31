@@ -1534,11 +1534,6 @@ html[data-keyboard-open] [data-hide-on-keyboard="true"] {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Announcement bar dark mode */
-.dark .announcement-bar {
-  background: linear-gradient(to right, #1f2937, #111827, #1f2937);
-}
-
 /* Mega menu dark mode enhancement */
 .dark [data-mega-menu] {
   background: hsl(222 47% 7%);

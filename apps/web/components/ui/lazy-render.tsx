@@ -53,11 +53,21 @@ export function LazyRender({
     );
   }
 
-  // Placeholder with estimated height to prevent layout shift
+  // Placeholder with estimated height to prevent layout shift.
+  //
+  // NOTE: `display: contents` must never be applied to the placeholder. Such an
+  // element generates no box, so `minHeight` is ignored and it has zero size —
+  // which means the IntersectionObserver would never fire and the children
+  // would never render. Strip it defensively.
+  const placeholderClassName = className
+    ?.split(/\s+/)
+    .filter((token) => token !== "contents")
+    .join(" ");
+
   return (
     <div
       ref={ref}
-      className={className}
+      className={placeholderClassName}
       style={{ minHeight: height }}
       aria-hidden="true"
     />

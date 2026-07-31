@@ -13,7 +13,7 @@ import { ScrollProgress } from "@/components/ui/scroll-progress";
 import { ScrollToTop } from "@/components/ui/scroll-to-top";
 import { WelcomeOnboarding } from "@/components/onboarding/welcome-onboarding";
 import { CoachMarks } from "@/components/onboarding/coach-marks";
-import { AnnouncementBar } from "@/components/navigation/announcement-bar";
+
 import { getPublicShellSettings, getPublicStoreSettings } from "@/lib/store-settings";
 import { Inter_Tight, Manrope } from "next/font/google";
 import { Footer } from "@/components/footer";
@@ -160,7 +160,6 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             <WelcomeOnboarding />
             <CoachMarks />
             <AlarmOverlay />
-            <AnnouncementBar />
             <Header user={user} storeName={settings.storeName} storeAddress={settings.address} logoUrl={logoUrl} />
             <LiveOrderMiniBar />
             <Suspense fallback={<div className="min-h-screen" aria-hidden="true" />}>

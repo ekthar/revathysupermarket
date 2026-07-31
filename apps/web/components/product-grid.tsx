@@ -49,7 +49,7 @@ async function fetchProducts(params: {
   if (params.sort) searchParams.set("sort", params.sort);
   if (params.maxPrice < 350) searchParams.set("maxPrice", String(params.maxPrice));
   if (params.cursor) searchParams.set("cursor", params.cursor);
-  searchParams.set("limit", String(params.limit || 24));
+  searchParams.set("limit", String(params.limit || 100));
 
   const res = await fetch(`/api/products?${searchParams.toString()}`);
   if (!res.ok) throw new Error("Failed to fetch products");

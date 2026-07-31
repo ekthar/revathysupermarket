@@ -12,7 +12,7 @@ export async function GET(request: NextRequest) {
     const q = searchParams.get("q") || "";
     const sort = searchParams.get("sort") || "popularity";
     const cursor = searchParams.get("cursor") || undefined;
-    const limit = Math.min(Number(searchParams.get("limit")) || 24, 100);
+    const limit = Math.min(Number(searchParams.get("limit")) || 100, 500);
     const maxPrice = Number(searchParams.get("maxPrice")) || undefined;
 
     // Build Prisma where clause

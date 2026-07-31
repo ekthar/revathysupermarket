@@ -33,7 +33,7 @@ type ProductFilters = {
 };
 
 function getProducts(filters: ProductFilters = {}) {
-  const { category, q, sort, maxPrice, limit = 24 } = filters;
+  const { category, q, sort, maxPrice, limit = 100 } = filters;
   const cacheKey = `products:${category || "All"}:${q || ""}:${sort || "popularity"}:${maxPrice || "none"}:${limit}`;
 
   return unstable_cache(
@@ -141,7 +141,7 @@ export default async function ProductsPage({
 }) {
   const { category, q, sort } = await searchParams;
   const [{ items, nextCursor, total }, dbCategoryNames] = await Promise.all([
-    getProducts({ category, q, sort, limit: 24 }),
+    getProducts({ category, q, sort, limit: 100 }),
     getCategoryNames(),
   ]);
   const categoryNames = dbCategoryNames.length > 0 ? dbCategoryNames : demoCategories;

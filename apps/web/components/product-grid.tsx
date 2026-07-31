@@ -11,7 +11,6 @@ import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { ProductSkeletonGrid } from "@/components/ui/product-skeleton-grid";
 import { StickySearchBar } from "@/components/products/sticky-search-bar";
 import { EmptySearchState } from "@/components/ui/empty-states";
-import { LazyRender } from "@/components/ui/lazy-render";
 import { categories as demoCategories } from "@/lib/products";
 import type { Product } from "@/lib/types";
 import { prefetchProductImages, useVisibleRoutePrefetch } from "@/lib/hooks/use-preload";
@@ -70,18 +69,12 @@ const VirtualProductList = memo(function VirtualProductList({
 }) {
   const prefersReduced = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  // D5: Split items — first 8 above-the-fold, rest in LazyRender groups of 4
-  const aboveFold = items.slice(0, 8);
-  const belowFold = items.slice(8);
+  // First 8 items are above the fold — used for route prefetching and entrance stagger
+  const STAGGER_COUNT = 8;
+  const aboveFold = items.slice(0, STAGGER_COUNT);
 
   // Prefetch product detail routes for visible items (instant navigation)
   useVisibleRoutePrefetch(aboveFold);
-
-  // Chunk below-fold items into groups of 4 for LazyRender
-  const chunks: Product[][] = [];
-  for (let i = 0; i < belowFold.length; i += 4) {
-    chunks.push(belowFold.slice(i, i + 4));
-  }
 
   // Skip stagger animation on mobile for instant render
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
@@ -97,33 +90,26 @@ const VirtualProductList = memo(function VirtualProductList({
         }}
         className="mt-5 grid grid-cols-2 sm:grid-cols-[repeat(auto-fill,minmax(min(150px,45vw),1fr))] gap-2 sm:mt-8 sm:gap-4 md:grid-cols-3 lg:grid-cols-4"
       >
-        {/* First 8 cards with staggered entrance (desktop) or instant (mobile) */}
-        {aboveFold.map((product) => (
-          <motion.div
-            key={product.id}
-            variants={{
-              hidden: { opacity: 0, y: 8, scale: 0.97 },
-              visible: { opacity: 1, y: 0, scale: 1 }
-            }}
-            transition={{ duration: isMobile ? 0 : 0.3, ease: [0.25, 0.1, 0.25, 1] }}
-          >
-            <ProductCard product={product} />
-          </motion.div>
-        ))}
-
-        {/* Cards 9+ wrapped in LazyRender groups of 4 */}
-        {chunks.map((chunk, chunkIndex) => (
-          <LazyRender
-            key={`chunk-${chunkIndex}`}
-            className="contents"
-            height={320}
-            rootMargin="200px"
-          >
-            {chunk.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </LazyRender>
-        ))}
+        {/* Render every product. The first 8 get a staggered entrance (desktop
+            only); the rest render immediately so nothing is ever hidden behind
+            an observer that may never fire. Images below the fold are still
+            lazy-loaded by the browser via ProductCard's next/image. */}
+        {items.map((product, index) =>
+          index < STAGGER_COUNT ? (
+            <motion.div
+              key={product.id}
+              variants={{
+                hidden: { opacity: 0, y: 8, scale: 0.97 },
+                visible: { opacity: 1, y: 0, scale: 1 }
+              }}
+              transition={{ duration: isMobile ? 0 : 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            >
+              <ProductCard product={product} />
+            </motion.div>
+          ) : (
+            <ProductCard key={product.id} product={product} />
+          )
+        )}
       </motion.div>
 
       {/* Infinite scroll trigger for fetching next page from server */}

@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-008",
+  "type": "feat",
+  "description": "Phase 7 - Measurement: Add funnel analytics events, search analytics (zero-result tracking), RUM setup notes",
+  "status": "completed",
+  "steps": [
+    "Extend apps/web/lib/analytics/events.ts with new event types: CATEGORY_VIEWED, CART_VIEWED, CHECKOUT_STEP_COMPLETED (step: number, stepName: string), SEARCH_ZERO_RESULTS (query: string, category?: string), PRODUCT_LIST_VIEWED (source: string, count: number), VARIANT_SELECTED (productId, variantId, variantLabel), DELIVERY_SLOT_SELECTED, and FUNNEL_DROP_OFF (from: string, to: string).",
+    "Update apps/web/lib/analytics/index.ts AnalyticsEventMap to include the new event types with proper payload typings.",
+    "Add trackEvent calls at key funnel points: in the cart page client component (CART_VIEWED), in the checkout form (CHECKOUT_STEP_COMPLETED for each step), in the products page (PRODUCT_LIST_VIEWED).",
+    "In apps/web/components/search/global-search.tsx: Track SEARCH_ZERO_RESULTS when a search query returns 0 results. This provides the merchandising backlog mentioned in the plan.",
+    "In apps/web/app/products/[slug]/page.tsx or its client component: Track PRODUCT_VIEWED event with product details.",
+    "Create apps/web/lib/analytics/rum.ts with setup notes/documentation as code comments explaining: how to configure Sentry Performance for Real User Monitoring, how to segment by device class, and what Core Web Vitals metrics to track. Include a skeleton initRUM() function that would connect to Sentry's performance monitoring (already configured via @sentry/nextjs).",
+    "Update the existing analytics-events.test.ts to verify the new event constants are defined."
+  ],
+  "acceptance_criteria": [
+    "New analytics events defined in events.ts with proper types",
+    "AnalyticsEventMap updated with new event payloads",
+    "trackEvent calls added at cart, checkout, products list, search zero-results",
+    "SEARCH_ZERO_RESULTS tracked in global search",
+    "rum.ts file exists with RUM setup documentation and skeleton",
+    "Analytics events test updated for new constants",
+    "npx tsc --noEmit passes in apps/web"
+  ],
+  "verification": [
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "All 8 new analytics events added with typed payloads. trackEvent calls added in client components for cart, checkout steps, product detail, product list, search zero results, and category views. Created CategoryViewTracker client component since the category page is a server component. RUM skeleton at lib/analytics/rum.ts with comprehensive Sentry/web-vitals documentation. All 17 tests pass. TypeScript compiles cleanly."
+}

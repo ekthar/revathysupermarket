@@ -1,0 +1,33 @@
+{
+  "id": "FEAT-003",
+  "type": "feat",
+  "description": "Phase 2 - Variants and pack sizes: Add ProductVariant model, migration SQL, variant selector UI on PDP, cart keyed by variantId, feature-flagged",
+  "status": "completed",
+  "steps": [
+    "Add ProductVariant model to apps/web/prisma/schema.prisma with fields: id (cuid), productId, label (String), sku (String? @unique), price (Decimal 10,2), discountPrice (Decimal? 10,2), stock (Int default 0), unit (String), isDefault (Boolean default false), sortOrder (Int default 0), product relation (cascade delete), @@index([productId]). Add variants relation to Product model.",
+    "Create migration SQL file at apps/web/prisma/migrations/[timestamp]_add_product_variants/migration.sql that creates the ProductVariant table and adds the default variant back-fill (INSERT INTO ProductVariant from existing Product price/stock/unit for each product, marking isDefault=true).",
+    "Run npx prisma generate to update the Prisma client with the new model.",
+    "Add variantLabel (String?) field to OrderItem model in schema.prisma for denormalization.",
+    "Create a VariantSelector component at apps/web/components/product/variant-selector.tsx that shows pack-size pills/buttons when a product has multiple variants. Should use Framer Motion for selection transitions. Gate behind feature flag 'product_variants'.",
+    "Update apps/web/app/products/[slug]/page.tsx to fetch variants alongside the product (include variants in the prisma query), pass them to the client component.",
+    "Update ProductDetailClient (or create a wrapper) to render the VariantSelector when variants exist and flag is enabled. Selected variant updates displayed price.",
+    "Update apps/web/components/cart/cart-provider.tsx to support variant-aware cart items: add optional variantId and variantLabel to CartItem type. Cart key becomes productId+variantId when variant is present. Ensure backward compatibility (items without variantId still work).",
+    "Add the 'product_variants' feature flag definition to the feature flags system (prisma/feature-flags.ts if it exists, or document it)."
+  ],
+  "acceptance_criteria": [
+    "ProductVariant model exists in schema.prisma with correct fields and relations",
+    "Migration SQL file exists with CREATE TABLE and back-fill INSERT",
+    "OrderItem has variantLabel field",
+    "VariantSelector component exists and renders variant pills",
+    "CartItem type supports variantId and variantLabel",
+    "Cart provider keys items by productId+variantId when variant is present",
+    "Feature gated behind 'product_variants' flag",
+    "npx tsc --noEmit passes in apps/web after prisma generate"
+  ],
+  "verification": [
+    "Run npx prisma generate in apps/web",
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "All acceptance criteria met. prisma generate and tsc --noEmit pass. Updated cart-page-client.tsx to use variant-aware keys for updateQuantity and removeItem calls. Feature flag product_variants defaults to disabled. The variant selector renders only when flag is enabled and product has >1 variant."
+}

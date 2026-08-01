@@ -1,0 +1,29 @@
+{
+  "id": "FEAT-004",
+  "type": "feat",
+  "description": "Phase 3 - Performance: Replace GSAP ScrollReveal with Framer Motion whileInView, verify Recharts is admin-only, audit image sizes, tighten Lighthouse budgets",
+  "status": "completed",
+  "steps": [
+    "Create apps/web/components/ui/scroll-reveal-motion.tsx - a Framer Motion replacement for the GSAP ScrollReveal that uses whileInView, AnimatePresence, and the spring presets from lib/motion.ts. Should provide ScrollReveal and ScrollRevealItem exports matching the GSAP version's API.",
+    "Update apps/web/components/home/animated-categories.tsx to import from the new Framer Motion scroll-reveal instead of components/ui/gsap/scroll-reveal.",
+    "Update apps/web/components/home/animated-product-section.tsx to use Framer Motion whileInView for its section-level reveal instead of GSAP ScrollTrigger. Keep the product card animations using Framer Motion.",
+    "Note: Do NOT remove the GSAP lib or other GSAP components (AnimatedStoreName, HeroSection parallax, etc. are intentionally GSAP per AGENTS.md). Only replace ScrollReveal usage in home components with Framer Motion equivalents.",
+    "Verify Recharts imports are only in components/admin/ directory (already confirmed: admin-charts.tsx and revenue-chart.tsx only). Add a code comment in next.config.ts near the optimizePackageImports noting recharts is admin-only.",
+    "Audit and fix image 'sizes' attributes: check apps/web/components/product-card.tsx, apps/web/components/home/animated-categories.tsx, and the PDP for appropriate sizes props on Next.js Image components.",
+    "Update apps/web/lighthouserc.cjs: tighten performance score to 0.90, add a comment that these budgets are enforced by CI (Phase 0)."
+  ],
+  "acceptance_criteria": [
+    "New Framer Motion ScrollReveal component exists at components/ui/scroll-reveal-motion.tsx",
+    "animated-categories.tsx uses Framer Motion scroll reveal instead of GSAP",
+    "animated-product-section.tsx uses Framer Motion for section reveals",
+    "GSAP lib and other GSAP components (hero, store name, etc.) remain untouched",
+    "Recharts verified as admin-only (no customer-facing imports)",
+    "Lighthouse budget for performance raised to 0.90",
+    "npx tsc --noEmit passes in apps/web"
+  ],
+  "verification": [
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "All acceptance criteria met. tsc --noEmit passes clean. GSAP files untouched. Recharts confirmed admin-only (admin-charts.tsx, revenue-chart.tsx). ProductImage now accepts optional sizes prop for better responsive optimization. Lighthouse performance budget raised to 0.90."
+}

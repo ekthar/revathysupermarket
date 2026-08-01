@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-006",
+  "type": "refactor",
+  "description": "Phase 5 - Design system consolidation: Reduce globals.css, unify elevation vocabulary to shadow-elevation-* only, remove duplicate CSS",
+  "status": "completed",
+  "steps": [
+    "Audit apps/web/app/globals.css for bespoke shadow classes. Find and remove .card-shadow, .card-elevated, and any inline rgba() shadow definitions. Replace references in components with the canonical shadow-elevation-1/2/3 Tailwind utilities.",
+    "Search for usage of removed CSS classes across all component files and update them to use shadow-elevation-1 (subtle cards), shadow-elevation-2 (elevated panels), or shadow-elevation-3 (modals).",
+    "Identify CSS classes in globals.css that duplicate what Tailwind already provides (e.g., custom flex utilities, custom spacing, custom text-sizes that match Tailwind scale). Remove them and update component references to use Tailwind equivalents.",
+    "Remove unused/dead CSS classes from globals.css that no component references.",
+    "Ensure the shadow-elevation-* definitions remain in globals.css as the single elevation vocabulary. They should be defined as CSS custom properties or Tailwind plugin utilities.",
+    "Target: reduce globals.css significantly (aim for under 1000 lines as a first pass, full 600-line target requires visual regression which is out of scope here)."
+  ],
+  "acceptance_criteria": [
+    "No more .card-shadow or .card-elevated classes in globals.css",
+    "All shadow usage in components uses shadow-elevation-1/2/3 or standard Tailwind shadows",
+    "Duplicate Tailwind-equivalent classes removed from globals.css",
+    "globals.css line count reduced (target: under 1200 lines)",
+    "npx tsc --noEmit passes in apps/web"
+  ],
+  "verification": [
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "Reduced globals.css from 1598 to 1161 lines (27% reduction, well under 1200 target). Removed card-shadow/card-elevated/card-shadow-lg definitions and migrated 20 component files to shadow-elevation-1. Removed 30+ dead CSS classes and 12 unused @keyframes. The shadow-elevation-1/2/3 utilities remain properly defined in tailwind.config.ts boxShadow extension. TypeScript compilation passes cleanly."
+}

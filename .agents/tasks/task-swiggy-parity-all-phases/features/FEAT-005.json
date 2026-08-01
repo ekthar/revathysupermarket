@@ -1,0 +1,30 @@
+{
+  "id": "FEAT-005",
+  "type": "feat",
+  "description": "Phase 4 - Merchandising: Offers strip on homepage, time-of-day rails, promote Buy it again, brand rails, zero-result merchandising, PDP depth",
+  "status": "completed",
+  "steps": [
+    "Create apps/web/components/home/offers-strip.tsx - a horizontally scrollable strip showing active offers from the Offer model (title, badge, image). Fetched server-side. Add it to apps/web/app/page.tsx between PromoBanners and Recent Orders sections.",
+    "Create apps/web/components/home/time-of-day-rail.tsx - a product rail that changes title/content based on time of day. Morning (5am-11am): 'Breakfast Essentials' filtering dairy/beverages. Afternoon (11am-5pm): 'Lunch Prep' filtering vegetables/grocery. Evening (5pm-10pm): 'Dinner Tonight' filtering grocery/frozen/vegetables. Use a server component with category-based filtering.",
+    "Add the TimeOfDayRail to apps/web/app/page.tsx above the Trending section.",
+    "In apps/web/app/page.tsx, move the RecentOrdersSection + SmartReorderPill ABOVE categories section (promote 'Buy it again' higher in the feed for returning users).",
+    "Create apps/web/components/home/brand-rail.tsx - a horizontal scrollable rail showing distinct brands from the Product.brand field (already in schema). Query products grouped by brand, show brand names as pills/cards that link to /products?brand=X.",
+    "Add BrandRail to the homepage after the trending section.",
+    "Create apps/web/components/search/zero-result-suggestions.tsx - when search returns 0 results, show category entry points (link to /category/[slug] for each category) and popular products. Integrate into the global search sheet (apps/web/components/search/global-search.tsx) where the empty state currently lives.",
+    "In apps/web/app/products/[slug]/page.tsx: Add a section showing applicable offers for the product's category (query Offer model where categoryId matches or productId matches). Show delivery promise text (use store settings deliveryEstimateMin/Max)."
+  ],
+  "acceptance_criteria": [
+    "Offers strip component exists and renders on homepage",
+    "Time-of-day rail shows different content based on current hour",
+    "RecentOrdersSection and SmartReorderPill appear above categories on homepage",
+    "Brand rail shows distinct brands from DB",
+    "Zero-result search shows category entry points instead of dead end",
+    "PDP shows applicable offers and delivery promise",
+    "npx tsc --noEmit passes in apps/web"
+  ],
+  "verification": [
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "All components implemented as server components (except zero-result-suggestions which is client). TypeScript check passes cleanly. Used existing patterns (unstable_cache, prisma queries with .catch fallback, scrollbar-hide, rounded-2xl cards). Homepage layout reordered per spec: offers after hero, recent orders above categories, time-of-day rail between categories and trending, brand rail after trending."
+}

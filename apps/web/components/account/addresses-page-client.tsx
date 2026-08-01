@@ -154,7 +154,7 @@ export function AddressesPageClient({ addresses: initial }: { addresses: Address
                     <Home className="h-4 w-4 text-emerald-600 shrink-0" />
                     <span className="text-sm font-bold text-neutral-900 dark:text-white">{addr.label}</span>
                     {addr.isDefault && (
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-micro font-bold text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                         <CheckCircle2 className="h-3 w-3" /> Primary
                       </span>
                     )}
@@ -164,18 +164,18 @@ export function AddressesPageClient({ addresses: initial }: { addresses: Address
                   {addr.houseName}, {addr.street}, {addr.landmark} — {addr.pincode}
                 </p>
                 {(addr.customerName || addr.phone) && (
-                  <p className="mt-1 text-[11px] text-neutral-400 pl-6">{addr.customerName} {addr.phone && `· ${addr.phone}`}</p>
+                  <p className="mt-1 text-micro text-neutral-400 pl-6">{addr.customerName} {addr.phone && `· ${addr.phone}`}</p>
                 )}
                 <div className="mt-3 flex items-center gap-2 pl-6">
-                  <button type="button" onClick={() => startEdit(addr)} className="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1.5 text-[11px] font-bold text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600">
+                  <button type="button" onClick={() => startEdit(addr)} className="inline-flex items-center gap-1 rounded-lg bg-neutral-100 px-2.5 py-1.5 text-micro font-bold text-neutral-700 hover:bg-neutral-200 dark:bg-neutral-700 dark:text-neutral-200 dark:hover:bg-neutral-600">
                     <Edit3 className="h-3 w-3" /> Edit
                   </button>
                   {!addr.isDefault && (
                     <>
-                      <button type="button" onClick={() => makeDefault(addr.id)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-[11px] font-bold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400">
+                      <button type="button" onClick={() => makeDefault(addr.id)} className="inline-flex items-center gap-1 rounded-lg bg-emerald-50 px-2.5 py-1.5 text-micro font-bold text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-900/20 dark:text-emerald-400">
                         Set Default
                       </button>
-                      <button type="button" onClick={() => deleteAddress(addr.id)} className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-[11px] font-bold text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400">
+                      <button type="button" onClick={() => deleteAddress(addr.id)} className="inline-flex items-center gap-1 rounded-lg bg-red-50 px-2.5 py-1.5 text-micro font-bold text-red-600 hover:bg-red-100 dark:bg-red-900/20 dark:text-red-400">
                         <Trash2 className="h-3 w-3" /> Delete
                       </button>
                     </>
@@ -201,7 +201,7 @@ export function AddressesPageClient({ addresses: initial }: { addresses: Address
 function FormInput({ label, value, onChange, placeholder }: { label: string; value: string | number; onChange: (v: string) => void; placeholder?: string }) {
   return (
     <div>
-      <label className="block text-[11px] font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-1">{label}</label>
+      <label className="block text-micro font-bold uppercase tracking-wide text-neutral-500 dark:text-neutral-400 mb-1">{label}</label>
       <input type="text" value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} className="w-full rounded-lg border border-neutral-200 bg-neutral-50 px-3 py-2 text-sm text-neutral-900 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20 dark:border-neutral-600 dark:bg-neutral-700 dark:text-white" />
     </div>
   );

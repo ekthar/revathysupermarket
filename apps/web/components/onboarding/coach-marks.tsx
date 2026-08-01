@@ -151,7 +151,7 @@ export function CoachMarks() {
           </div>
 
           {/* Dismiss hint */}
-          <p className="mt-2.5 text-[10px] font-medium text-neutral-400 text-center group-hover:text-neutral-500 transition-colors">
+          <p className="mt-2.5 text-micro font-medium text-neutral-400 text-center group-hover:text-neutral-500 transition-colors">
             Tap to dismiss
           </p>
 

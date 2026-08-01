@@ -123,6 +123,30 @@ const config: Config = {
         sans: ["var(--font-sans)", "-apple-system", "BlinkMacSystemFont", '"SF Pro Text"', "system-ui", "sans-serif"],
         display: ["var(--font-display)", "-apple-system", "BlinkMacSystemFont", '"SF Pro Display"', "system-ui", "sans-serif"]
       },
+      // Semantic spacing on top of the default numeric scale. Page gutters and
+      // section rhythm were previously re-typed as raw values at every call site,
+      // so they drifted between pages.
+      spacing: {
+        gutter: "1rem",
+        "gutter-md": "1.5rem",
+        "gutter-lg": "2rem",
+        section: "2.5rem",
+        "section-lg": "3.5rem",
+        // Chrome heights, so layouts can reserve space without magic numbers.
+        header: "var(--mobile-header-height)",
+        "nav-height": "var(--mobile-nav-height)",
+        "touch-target": "var(--touch-target)"
+      },
+      // Named layers bound to the --z-* custom properties in globals.css, so
+      // component code can say `z-dialog` instead of `z-[90]`. See the LAYER
+      // LADDER comment in globals.css for the values between these names.
+      zIndex: {
+        sticky: "var(--z-sticky)",
+        floating: "var(--z-floating)",
+        navigation: "var(--z-navigation)",
+        toast: "var(--z-toast)",
+        dialog: "var(--z-dialog)"
+      },
       boxShadow: {
         "elevation-1": "0 1px 2px rgba(0, 0, 0, 0.03), 0 4px 16px rgba(0, 0, 0, 0.04)",
         "elevation-2": "0 2px 4px rgba(0, 0, 0, 0.03), 0 8px 24px rgba(0, 0, 0, 0.06)",

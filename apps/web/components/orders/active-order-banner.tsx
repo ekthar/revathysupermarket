@@ -46,7 +46,7 @@ export function ActiveOrderBanner() {
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: 100, opacity: 0 }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className="fixed inset-x-4 z-[80] sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
+        className="fixed inset-x-4 z-toast sm:bottom-6 sm:left-auto sm:right-6 sm:max-w-sm"
         style={{ bottom: "calc(var(--mobile-nav-height, 72px) + 0.75rem + env(safe-area-inset-bottom, 0px))" }}
       >
         <Link
@@ -65,7 +65,7 @@ export function ActiveOrderBanner() {
 
           {/* Info */}
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-white/60">
+            <p className="text-micro font-bold uppercase tracking-wider text-white/60">
               Order #{order.orderNumber}
             </p>
             <p className="text-sm font-bold text-white truncate">

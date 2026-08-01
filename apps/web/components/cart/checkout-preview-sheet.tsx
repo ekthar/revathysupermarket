@@ -83,7 +83,7 @@ export function CheckoutPreviewSheet({
                   <p className="text-xs font-semibold text-neutral-900 dark:text-white">
                     {savedAddress?.label || savedAddress?.area || "Add delivery address"}
                   </p>
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  <p className="text-micro text-neutral-500 dark:text-neutral-400">
                     {savedAddress ? "Deliver here" : "Required for delivery"}
                   </p>
                 </div>
@@ -97,7 +97,7 @@ export function CheckoutPreviewSheet({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-neutral-900 dark:text-white">~25-40 min delivery</p>
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                  <p className="text-micro text-neutral-500 dark:text-neutral-400">
                     {freeDelivery ? "Free delivery" : `Delivery fee: ${formatCurrency(deliveryFee)}`}
                   </p>
                 </div>
@@ -110,7 +110,7 @@ export function CheckoutPreviewSheet({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold text-neutral-900 dark:text-white">Cash on Delivery</p>
-                  <p className="text-[11px] text-neutral-500 dark:text-neutral-400">Pay when you receive</p>
+                  <p className="text-micro text-neutral-500 dark:text-neutral-400">Pay when you receive</p>
                 </div>
                 <ChevronRight className="h-4 w-4 text-neutral-300 shrink-0" />
               </div>
@@ -137,7 +137,7 @@ export function CheckoutPreviewSheet({
                 </Link>
               </motion.div>
 
-              <p className="text-center text-[11px] text-neutral-400 dark:text-neutral-500">
+              <p className="text-center text-micro text-neutral-400 dark:text-neutral-500">
                 Change address or payment method on the next screen
               </p>
             </div>

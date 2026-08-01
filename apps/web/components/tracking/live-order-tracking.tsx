@@ -220,7 +220,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-secondary-400 opacity-75" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-secondary-500" />
           </span>
-          <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-200">LIVE</span>
+          <span className="text-micro font-bold text-neutral-700 dark:text-neutral-200">LIVE</span>
         </div>
 
         {/* Call rider / placeholder */}
@@ -301,7 +301,7 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           {/* Status + ETA Hero */}
           <div className="flex items-center justify-between pb-4 border-b border-neutral-100 dark:border-neutral-800">
             <div className="flex-1 min-w-0">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-secondary-600 dark:text-secondary-400">
+              <p className="text-micro font-bold uppercase tracking-wider text-secondary-600 dark:text-secondary-400">
                 Order #{data.orderNumber}
               </p>
               <h2 className="mt-0.5 text-xl font-black text-neutral-900 dark:text-white">
@@ -426,13 +426,13 @@ export function LiveOrderTracking({ initialData }: { initialData: TrackingData }
           {/* ─── Delivery OTP ─── */}
           {data.deliveryOtp && !isDelivered && (
             <div className="rounded-2xl border-2 border-dashed border-secondary-300 bg-secondary-50/50 p-4 mb-4 text-center dark:border-secondary-700 dark:bg-secondary-900/20">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-secondary-600 dark:text-secondary-400">
+              <p className="text-micro font-bold uppercase tracking-widest text-secondary-600 dark:text-secondary-400">
                 Delivery PIN
               </p>
               <p className="mt-1 font-mono text-3xl font-black tracking-[0.3em] text-neutral-900 dark:text-white">
                 {data.deliveryOtp}
               </p>
-              <p className="mt-1 text-[11px] text-neutral-500">Share only with delivery partner</p>
+              <p className="mt-1 text-micro text-neutral-500">Share only with delivery partner</p>
             </div>
           )}
 

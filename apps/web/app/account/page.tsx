@@ -108,7 +108,7 @@ export default async function AccountPage() {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="px-4 pt-4 pb-1 text-[11px] font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
+    <p className="px-4 pt-4 pb-1 text-micro font-bold text-neutral-500 dark:text-neutral-400 uppercase tracking-widest">
       {children}
     </p>
   );
@@ -118,7 +118,7 @@ function Stat({ value, label }: { value: string | number; label: string }) {
   return (
     <div className="rounded-xl bg-white/10 px-2 py-2.5 text-center">
       <p className="text-sm font-bold leading-none tabular-nums">{value}</p>
-      <p className="mt-1 text-[10px] font-semibold uppercase tracking-wide text-white/60">{label}</p>
+      <p className="mt-1 text-micro font-semibold uppercase tracking-wide text-white/60">{label}</p>
     </div>
   );
 }

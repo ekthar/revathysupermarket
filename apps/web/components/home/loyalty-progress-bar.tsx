@@ -47,7 +47,7 @@ export function LoyaltyProgressBar({ points, nextRewardAt }: { points: number; n
             </div>
           </div>
           {nextTier && (
-            <span className="text-[10px] font-semibold text-neutral-500 dark:text-neutral-400">
+            <span className="text-micro font-semibold text-neutral-500 dark:text-neutral-400">
               {nextTier.min - points} to {nextTier.name}
             </span>
           )}
@@ -62,19 +62,19 @@ export function LoyaltyProgressBar({ points, nextRewardAt }: { points: number; n
             />
           </div>
           {nextTier && (
-            <span className="text-[10px] font-bold text-neutral-400">{nextTier.name}</span>
+            <span className="text-micro font-bold text-neutral-400">{nextTier.name}</span>
           )}
         </div>
 
         {/* Reward progress */}
         {remaining > 0 && (
-          <p className="mt-1.5 text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1.5 text-micro font-medium text-neutral-500 dark:text-neutral-400">
             <Gift className="inline h-3 w-3 -mt-0.5 mr-0.5" />
             {remaining} more points for ₹50 reward
           </p>
         )}
         {remaining === 0 && (
-          <p className="mt-1.5 text-[11px] font-bold text-green-600 dark:text-green-400">
+          <p className="mt-1.5 text-micro font-bold text-green-600 dark:text-green-400">
             🎉 Reward available! Redeem at checkout
           </p>
         )}

@@ -158,7 +158,7 @@ export function InstallAppPrompt() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={springs.enter}
-          className="fixed bottom-[calc(var(--mobile-nav-height,82px)+1rem+var(--safe-bottom,0px))] inset-x-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
+          className="fixed bottom-[calc(var(--mobile-nav-height,72px)+1rem+var(--safe-bottom,0px))] inset-x-4 z-50 md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
           data-install-prompt="true"
         >
           <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-xl shadow-neutral-900/10 dark:shadow-neutral-900/50 border border-neutral-100 dark:border-neutral-800 p-4 relative">
@@ -203,7 +203,7 @@ export function InstallAppPrompt() {
 
             {/* iOS instructions */}
             {isIOS && (
-              <p className="mt-2 text-center text-[11px] text-neutral-400">
+              <p className="mt-2 text-center text-micro text-neutral-400">
                 Tap <span className="inline-block translate-y-px">⎙</span> Share then &ldquo;Add to Home Screen&rdquo;
               </p>
             )}
@@ -218,7 +218,7 @@ function Benefit({ icon, text }: { icon: React.ReactNode; text: string }) {
   return (
     <div className="flex items-center gap-1.5 rounded-full bg-neutral-50 dark:bg-neutral-800 px-2.5 py-1">
       <span className="text-secondary-600 dark:text-secondary-400">{icon}</span>
-      <span className="text-[11px] font-semibold text-neutral-600 dark:text-neutral-300">{text}</span>
+      <span className="text-micro font-semibold text-neutral-600 dark:text-neutral-300">{text}</span>
     </div>
   );
 }

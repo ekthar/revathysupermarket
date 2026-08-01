@@ -289,19 +289,19 @@ function OfferCard({
           )}
 
           {/* Auto-applied text */}
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-micro text-muted-foreground">
             Auto-applied at checkout
           </p>
 
           {/* Bottom row: category badge + countdown */}
           <div className="mt-3 flex items-center flex-wrap gap-2">
             {offer.categoryId && catMap[offer.categoryId] && (
-              <span className="rounded-full bg-secondary-50 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 px-2.5 py-0.5 text-[11px] font-medium">
+              <span className="rounded-full bg-secondary-50 dark:bg-secondary-900/30 text-secondary-700 dark:text-secondary-300 px-2.5 py-0.5 text-micro font-medium">
                 {catMap[offer.categoryId]}
               </span>
             )}
             {offer.badge && (
-              <span className="rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2.5 py-0.5 text-[11px] font-medium">
+              <span className="rounded-full bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 px-2.5 py-0.5 text-micro font-medium">
                 {offer.badge}
               </span>
             )}

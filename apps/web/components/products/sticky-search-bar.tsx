@@ -81,7 +81,7 @@ export function StickySearchBar({
               aria-label="Filters"
             >
               <SlidersHorizontal className="h-3 w-3 text-white dark:text-neutral-900" />
-              <span className="text-[11px] font-bold text-white dark:text-neutral-900">{total}</span>
+              <span className="text-micro font-bold text-white dark:text-neutral-900">{total}</span>
             </button>
           </div>
         </motion.div>

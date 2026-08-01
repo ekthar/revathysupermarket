@@ -643,7 +643,7 @@ export function CheckoutForm({
                   <div key={item.label} className="flex flex-1 items-center min-w-0">
                     <div className="flex flex-col items-center gap-1 min-w-0 w-full">
                       <div
-                        className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold transition-colors ${
+                        className={`flex h-6 w-6 items-center justify-center rounded-full text-micro font-bold transition-colors ${
                           isDone
                             ? "bg-secondary-500 text-white"
                             : isActive
@@ -654,7 +654,7 @@ export function CheckoutForm({
                         {isDone ? "✓" : idx + 1}
                       </div>
                       <span
-                        className={`text-[10px] font-bold truncate max-w-full ${
+                        className={`text-micro font-bold truncate max-w-full ${
                           isDone || isActive ? "text-foreground" : "text-muted-foreground"
                         }`}
                       >
@@ -765,7 +765,7 @@ export function CheckoutForm({
                 <div className="flex items-center gap-2">
                   <h2 className="text-sm font-black text-neutral-900 dark:text-white">Offers & Rewards</h2>
                   {promoApplied && promoDiscount > 0 && (
-                    <span className="text-[10px] font-bold text-secondary-600 bg-secondary-50 dark:bg-secondary-900/20 px-2 py-0.5 rounded-full">
+                    <span className="text-micro font-bold text-secondary-600 bg-secondary-50 dark:bg-secondary-900/20 px-2 py-0.5 rounded-full">
                       1 coupon
                     </span>
                   )}

@@ -133,7 +133,7 @@ export function SmartReorderPill() {
           animate={{ y: 0, opacity: 1, scale: 1 }}
           exit={{ y: 20, opacity: 0, scale: 0.95 }}
           transition={springs.enter}
-          className="fixed bottom-[calc(var(--mobile-nav-height,82px)+4.5rem+var(--safe-bottom,0px))] inset-x-4 z-40 md:bottom-6 md:left-auto md:right-6 md:max-w-xs"
+          className="fixed bottom-[calc(var(--mobile-nav-height,72px)+4.5rem+var(--safe-bottom,0px))] inset-x-4 z-40 md:bottom-6 md:left-auto md:right-6 md:max-w-xs"
         >
           <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-xl shadow-neutral-900/10 dark:shadow-neutral-900/50 border border-neutral-100 dark:border-neutral-800 p-3 relative overflow-hidden">
             {/* Dismiss */}
@@ -161,7 +161,7 @@ export function SmartReorderPill() {
                   </div>
                 ))}
                 {items.length > 3 && (
-                  <div className="h-9 w-9 rounded-lg bg-neutral-200 dark:bg-neutral-700 border-2 border-white dark:border-neutral-900 flex items-center justify-center text-[10px] font-bold text-neutral-500">
+                  <div className="h-9 w-9 rounded-lg bg-neutral-200 dark:bg-neutral-700 border-2 border-white dark:border-neutral-900 flex items-center justify-center text-micro font-bold text-neutral-500">
                     +{items.length - 3}
                   </div>
                 )}
@@ -172,7 +172,7 @@ export function SmartReorderPill() {
                 <p className="text-xs font-bold text-neutral-900 dark:text-white">
                   {added ? "Added to cart!" : "Your usual"}
                 </p>
-                <p className="text-[11px] text-neutral-500 dark:text-neutral-400">
+                <p className="text-micro text-neutral-500 dark:text-neutral-400">
                   {added
                     ? `${items.length} items · ${formatCurrency(totalEstimate)}`
                     : `${items.length} items · ~${formatCurrency(totalEstimate)}`
@@ -187,7 +187,7 @@ export function SmartReorderPill() {
                   onClick={handleReorder}
                   disabled={loading}
                   whileTap={tapScale.subtle}
-                  className="flex h-9 items-center gap-1.5 rounded-xl bg-neutral-900 dark:bg-white px-3.5 text-[11px] font-bold text-white dark:text-neutral-900 shrink-0 disabled:opacity-50 press"
+                  className="flex h-9 items-center gap-1.5 rounded-xl bg-neutral-900 dark:bg-white px-3.5 text-micro font-bold text-white dark:text-neutral-900 shrink-0 disabled:opacity-50 press"
                 >
                   {loading ? (
                     <RotateCcw className="h-3 w-3 animate-spin" />

@@ -192,7 +192,7 @@ export function PermissionGate({ children }: { children: React.ReactNode }) {
               }`} />
             ))}
           </div>
-          <p className="mt-3 text-[11px] font-bold text-neutral-400 uppercase tracking-widest">
+          <p className="mt-3 text-micro font-bold text-neutral-400 uppercase tracking-widest">
             Step {currentStep + 1} of {permissions.length}
           </p>
         </div>
@@ -206,7 +206,7 @@ export function PermissionGate({ children }: { children: React.ReactNode }) {
             <h1 className="text-2xl font-black text-neutral-900 dark:text-white">{currentInfo.title}</h1>
             <p className="mt-3 text-sm text-neutral-500 dark:text-neutral-400 max-w-sm leading-relaxed">{currentInfo.description}</p>
             {currentPerm.required && (
-              <div className="mt-4 flex items-center gap-1.5 text-[11px] font-bold text-amber-600">
+              <div className="mt-4 flex items-center gap-1.5 text-micro font-bold text-amber-600">
                 <Shield className="h-3 w-3" /> Required for app functionality
               </div>
             )}

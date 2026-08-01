@@ -23,11 +23,11 @@ export function Toaster() {
         unstyled: true,
         classNames: {
           toast:
-            "font-sans flex items-center gap-2.5 rounded-2xl px-4 py-3 text-[13px] font-semibold text-white shadow-xl max-w-[min(92vw,22rem)] ios-toast-glass",
+            "font-sans flex items-center gap-2.5 rounded-2xl px-4 py-3 text-body font-semibold text-white shadow-xl max-w-[min(92vw,22rem)] ios-toast-glass",
           actionButton:
-            "ml-auto shrink-0 rounded-full bg-white/20 px-3 py-1 text-[11px] font-bold text-white hover:bg-white/30 transition-colors",
+            "ml-auto shrink-0 rounded-full bg-white/20 px-3 py-1 text-micro font-bold text-white hover:bg-white/30 transition-colors",
           cancelButton:
-            "ml-1 shrink-0 rounded-full px-2.5 py-1 text-[11px] font-bold text-white/70 hover:text-white transition-colors",
+            "ml-1 shrink-0 rounded-full px-2.5 py-1 text-micro font-bold text-white/70 hover:text-white transition-colors",
         },
       }}
     />

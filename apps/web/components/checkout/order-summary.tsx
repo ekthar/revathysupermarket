@@ -134,7 +134,7 @@ export function OrderSummary({
       >
         <div className="mx-auto max-w-lg">
           {helperText && !canSubmit && (
-            <p className="mb-2 text-center text-[11px] font-semibold text-amber-700 dark:text-amber-300">
+            <p className="mb-2 text-center text-micro font-semibold text-amber-700 dark:text-amber-300">
               {helperText}
               {minimumOrderValue > 0 && subtotal < minimumOrderValue && (
                 <>
@@ -148,7 +148,7 @@ export function OrderSummary({
           )}
           <div className="flex items-center gap-3">
             <div className="min-w-0">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total</p>
+              <p className="text-micro font-bold uppercase tracking-wider text-muted-foreground">Total</p>
               <motion.p
                 key={totalAmount}
                 initial={{ opacity: 0.6, y: 2 }}

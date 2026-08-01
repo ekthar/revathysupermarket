@@ -42,7 +42,7 @@ export function FloatingCartBar() {
           className="fixed md:hidden left-4 right-4 z-[65] pointer-events-none"
           data-hide-on-keyboard="true"
           style={{
-            bottom: "calc(var(--mobile-nav-height, 82px) + 0.25rem + env(safe-area-inset-bottom, 0px))",
+            bottom: "calc(var(--mobile-nav-height, 72px) + 0.25rem + env(safe-area-inset-bottom, 0px))",
           }}
           initial={{ opacity: 0, y: 16, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -67,10 +67,10 @@ export function FloatingCartBar() {
                   <ShoppingBag className="h-4 w-4 text-white" />
                 </span>
                 <div className="min-w-0">
-                  <p className="text-[13px] font-bold leading-tight text-white">
+                  <p className="text-body font-bold leading-tight text-white">
                     {totalItems} item{totalItems === 1 ? "" : "s"}
                   </p>
-                  <p className="text-[11px] font-medium text-white/70 truncate max-w-[140px]">
+                  <p className="text-micro font-medium text-white/70 truncate max-w-[140px]">
                     {items.slice(0, 2).map((i) => i.name).join(", ")}
                     {items.length > 2 ? ` +${items.length - 2}` : ""}
                   </p>

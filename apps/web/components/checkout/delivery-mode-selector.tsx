@@ -103,7 +103,7 @@ export function DeliveryModeSelector({
               <Zap className="h-3.5 w-3.5" />
               <span>Express</span>
             </div>
-            <span className={`text-[10px] font-semibold ${deliveryMode === "ASAP" ? "text-white/70 dark:text-neutral-900/60" : "text-neutral-500"}`}>
+            <span className={`text-micro font-semibold ${deliveryMode === "ASAP" ? "text-white/70 dark:text-neutral-900/60" : "text-neutral-500"}`}>
               ~25-40 min
             </span>
             {/* Recommended badge */}
@@ -129,7 +129,7 @@ export function DeliveryModeSelector({
               <Calendar className="h-3.5 w-3.5" />
               <span>Schedule</span>
             </div>
-            <span className={`text-[10px] font-semibold ${deliveryMode === "SCHEDULED" ? "text-white/70 dark:text-neutral-900/60" : "text-neutral-500"}`}>
+            <span className={`text-micro font-semibold ${deliveryMode === "SCHEDULED" ? "text-white/70 dark:text-neutral-900/60" : "text-neutral-500"}`}>
               Pick a time
             </span>
           </motion.button>

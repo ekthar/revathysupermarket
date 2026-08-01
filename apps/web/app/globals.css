@@ -109,6 +109,26 @@ html[data-nav-direction="none"]::view-transition-new(root) {
   --mobile-nav-height: 72px;
   --visual-viewport-height: 100dvh;
   --keyboard-inset: 0px;
+  /* ── LAYER LADDER ──────────────────────────────────────────────────────────
+     Named layers are available as Tailwind utilities (z-sticky, z-floating,
+     z-navigation, z-toast, z-dialog) via the zIndex block in tailwind.config.ts.
+
+     Values deliberately leave gaps, because several surfaces need to sit just
+     above or below a named layer:
+        40  sticky        sticky headers, category rails, search bar
+        45  .ios-floating-action
+        55  order summary affordances
+        60  floating      floating cart bar sits at 65, just above
+        70  navigation    mobile bottom nav, live order mini bar
+        75  service worker update prompt
+        80  toast         active order banner
+        85  coach marks
+        90  dialog        quick view / drawer overlays; sheets use 91-92
+        95  map pickers and location prompt (must clear sheets)
+       100  auth panels, onboarding, success celebrations
+       200+ native shells (permission gate, alarm overlay, map markers)
+       999  skip link and offline banner — always on top
+     Prefer a named layer. If you need an in-between value, add it here first. */
   --z-sticky: 40;
   --z-floating: 60;
   --z-navigation: 70;
@@ -1130,11 +1150,6 @@ img:not([decoding]) {
   0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; }
   100% { transform: translate(-50%, -50%) scale(1.5); opacity: 0; }
 }
-@keyframes rider-pulse {
-  0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.8; }
-  100% { transform: translate(-50%, -50%) scale(1.6); opacity: 0; }
-}
-
 /* Continuous pulsing ring around map markers */
 @keyframes map-pulse-ring {
   0% { transform: scale(1); opacity: 0.5; }
@@ -1164,13 +1179,9 @@ img:not([decoding]) {
 
 /* ===== PAGE TRANSITIONS ===== */
 
-@keyframes fadeIn {
-  from { opacity: 1; transform: none; }
-  to { opacity: 1; transform: none; }
-}
-.animate-fadeIn {
-  /* No animation — content appears instantly. Apple native apps don't fade between views. */
-}
+/* `@keyframes fadeIn` / `.animate-fadeIn` lived here as no-ops and duplicated the
+   `fadeIn` variant exported from lib/motion.ts. Removed — use the motion.ts
+   variant, which is the single source of truth for entrance animations. */
 
 /* Animated gradient shift for offers hero */
 @keyframes gradientShift {

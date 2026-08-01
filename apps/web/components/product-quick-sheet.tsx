@@ -54,7 +54,7 @@ export const ProductQuickSheet = memo(function ProductQuickSheet({
             <div className="relative aspect-square rounded-2xl overflow-hidden bg-neutral-50 dark:bg-neutral-800 mt-1">
               <ProductImage src={product.image} alt={product.name} className="object-cover" />
               {product.discountPrice && (
-                <span className="absolute top-3 left-3 rounded-lg bg-neutral-900/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold text-white">
+                <span className="absolute top-3 left-3 rounded-lg bg-neutral-900/90 backdrop-blur-sm px-2 py-1 text-micro font-bold text-white">
                   {Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
                 </span>
               )}

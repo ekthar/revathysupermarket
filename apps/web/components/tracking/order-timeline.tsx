@@ -154,7 +154,7 @@ export function OrderTimeline({ currentStatus, distanceKm, etaMinutes, updatedAt
             className="h-full rounded-full bg-secondary-500"
           />
         </div>
-        <span className="absolute right-0 -top-4 text-[10px] font-bold text-secondary-600 dark:text-secondary-400">
+        <span className="absolute right-0 -top-4 text-micro font-bold text-secondary-600 dark:text-secondary-400">
           {progressPercent}%
         </span>
       </div>

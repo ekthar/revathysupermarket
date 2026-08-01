@@ -140,8 +140,8 @@ export const Header = memo(function Header({
                 aria-label="Search products"
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate text-[13px]">Search...</span>
-                <kbd className="ml-auto hidden xl:inline-flex h-5 items-center rounded border border-neutral-200 dark:border-neutral-700 px-1.5 text-[10px] font-semibold text-neutral-400">
+                <span className="truncate text-body">Search...</span>
+                <kbd className="ml-auto hidden xl:inline-flex h-5 items-center rounded border border-neutral-200 dark:border-neutral-700 px-1.5 text-micro font-semibold text-neutral-400">
                   ⌘K
                 </kbd>
               </button>
@@ -241,7 +241,7 @@ function CartBadgeLink() {
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.5, opacity: 0 }}
             transition={springs.tap}
-            className="absolute -top-0.5 -right-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-[10px] font-black text-white dark:text-neutral-900 px-1 ring-2 ring-white dark:ring-neutral-950"
+            className="absolute -top-0.5 -right-0.5 flex h-[17px] min-w-[17px] items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-micro font-black text-white dark:text-neutral-900 px-1 ring-2 ring-white dark:ring-neutral-950"
           >
             {totalItems}
           </motion.span>
@@ -295,7 +295,7 @@ function LocationIndicator({ onOpenLocationPrompt, compact }: { onOpenLocationPr
         {location.area || location.pincode || "Location"}
       </span>
       {location.eta && (
-        <span className="flex items-center gap-0.5 text-[10px] font-bold text-secondary-600 dark:text-secondary-400">
+        <span className="flex items-center gap-0.5 text-micro font-bold text-secondary-600 dark:text-secondary-400">
           <Clock className="h-2.5 w-2.5" />
           {location.eta}
         </span>

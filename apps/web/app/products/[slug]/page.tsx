@@ -8,6 +8,8 @@ import { StructuredData } from "@/components/structured-data";
 import { productSchema, breadcrumbSchema } from "@/lib/structured-data";
 import { getProductBySlug } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
+import { getPublicStoreSettings } from "@/lib/store-settings";
+import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 import type { ProductVariantItem } from "@/components/product/variant-selector";
 import { safeProductImageUrl } from "@/lib/image";
@@ -101,6 +103,39 @@ async function getRelatedProducts(product: Product): Promise<Product[]> {
   return [];
 }
 
+async function getApplicableOffers(product: Product) {
+  // Find the category ID for this product
+  const category = await prisma.category.findFirst({
+    where: { name: product.category },
+    select: { id: true },
+  }).catch(() => null);
+
+  const categoryId = category?.id ?? null;
+  const now = new Date();
+
+  return prisma.offer.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { expiresAt: null },
+        { expiresAt: { gte: now } },
+      ],
+      AND: [
+        {
+          OR: [
+            ...(categoryId ? [{ categoryId }] : []),
+            { productId: product.id },
+            // Generic offers with no specific category/product target
+            { categoryId: null, productId: null },
+          ],
+        },
+      ],
+    },
+    select: { id: true, title: true, description: true, badge: true },
+    take: 4,
+  }).catch(() => []);
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
   const result = await getProduct(slug);
@@ -118,8 +153,12 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
   const result = await getProduct(slug);
   if (!result) notFound();
   const { product, variants } = result;
-  const related = await getRelatedProducts(product);
-  const variantsEnabled = await isFeatureEnabled("product_variants");
+  const [related, variantsEnabled, applicableOffers, settings] = await Promise.all([
+    getRelatedProducts(product),
+    isFeatureEnabled("product_variants"),
+    getApplicableOffers(product),
+    getPublicStoreSettings(),
+  ]);
 
   return (
     <main className="min-h-[100dvh] bg-background">
@@ -138,6 +177,52 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         product={product}
         variants={variantsEnabled ? variants : []}
       />
+
+      {/* Delivery promise */}
+      <section className="max-w-7xl mx-auto px-4 pb-4 pt-4 md:px-6 lg:px-8">
+        <div className="flex items-center gap-2 rounded-2xl bg-secondary-50 dark:bg-secondary-900/20 px-4 py-3">
+          <span className="text-lg">🚚</span>
+          <div>
+            <p className="text-sm font-bold text-foreground">
+              Delivery in {settings.deliveryEstimateMin}&ndash;{settings.deliveryEstimateMax} min
+            </p>
+            {settings.freeDeliveryThreshold > 0 && (
+              <p className="text-xs text-muted-foreground">
+                Free delivery on orders above {formatCurrency(settings.freeDeliveryThreshold)}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Applicable offers */}
+      {applicableOffers.length > 0 && (
+        <section className="max-w-7xl mx-auto px-4 pb-4 md:px-6 lg:px-8">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-2">
+            Available Offers
+          </h2>
+          <div className="space-y-2">
+            {applicableOffers.map((offer) => (
+              <div
+                key={offer.id}
+                className="flex items-start gap-3 rounded-2xl border border-border bg-card p-3"
+              >
+                {offer.badge && (
+                  <span className="shrink-0 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-black px-2.5 py-1 rounded-full">
+                    {offer.badge}
+                  </span>
+                )}
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-foreground">{offer.title}</p>
+                  {offer.description && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{offer.description}</p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Product Suggestions (Frequently Bought Together) */}
       <ProductSuggestions productSlug={slug} />

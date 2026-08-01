@@ -14,6 +14,7 @@ import { haptic } from "@/lib/haptics";
 import type { Product } from "@/lib/types";
 import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { VoiceSearchButton } from "@/components/search/voice-search-button";
+import { ZeroResultSuggestions } from "@/components/search/zero-result-suggestions";
 
 const HISTORY_KEY = "msm-search-history";
 
@@ -417,6 +418,13 @@ export function GlobalSearchSheet({
                 >
                   Search all products
                 </button>
+
+                {/* Zero-result suggestions: category entry points & popular products */}
+                <ZeroResultSuggestions
+                  categories={categories.map((c) => ({ name: c.name, slug: c.slug, icon: null }))}
+                  popularProducts={[]}
+                  onClose={handleClose}
+                />
               </div>
             ) : (
               <div className="space-y-1">

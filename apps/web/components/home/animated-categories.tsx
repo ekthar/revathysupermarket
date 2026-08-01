@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { memo, useState } from "react";
-import { ScrollReveal, ScrollRevealItem } from "@/components/ui/gsap/scroll-reveal";
+import { ScrollReveal, ScrollRevealItem } from "@/components/ui/scroll-reveal-motion";
 import { CATEGORY_ICON_FALLBACK, categoryColorForIndex } from "@/lib/category-icons";
 import { cn } from "@/lib/utils";
 

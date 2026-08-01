@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { useEffect, useRef } from "react";
-import { useGSAP } from "@gsap/react";
-import { gsap, ScrollTrigger, prefersReducedMotion } from "@/lib/gsap";
+import { useRef } from "react";
+import { motion, useReducedMotion } from "framer-motion";
+import { springs } from "@/lib/motion";
 import { ProductCard } from "@/components/product-card";
 import type { Product } from "@/lib/types";
 
@@ -34,122 +34,30 @@ export function AnimatedProductSection({
   hideHeader = false
 }: AnimatedProductSectionProps) {
   const sectionRef = useRef<HTMLDivElement>(null);
-  const headerRef = useRef<HTMLDivElement>(null);
-  const scrollTrackRef = useRef<HTMLDivElement>(null);
-  const gridRef = useRef<HTMLDivElement>(null);
+  const prefersReduced = useReducedMotion();
 
-  useGSAP(
-    () => {
-      if (prefersReducedMotion()) return;
-
-      const ctx = gsap.context(() => {
-        // Header subtle reveal — never fully invisible
-        if (headerRef.current) {
-          gsap.fromTo(headerRef.current,
-            { opacity: 0.5, y: 8 },
-            {
-              opacity: 1,
-              y: 0,
-              duration: 0.5,
-              ease: "power2.out",
-              immediateRender: false,
-              scrollTrigger: {
-                trigger: headerRef.current,
-                start: "top 85%",
-                toggleActions: "play none none none",
-                once: true
-              }
-            }
-          );
-        }
-
-        // Stagger items in scroll track (mobile horizontal)
-        if (scrollTrackRef.current) {
-          const items = scrollTrackRef.current.querySelectorAll<HTMLElement>(".product-scroll-item");
-          if (items.length > 0) {
-            gsap.fromTo(items,
-              { opacity: 0.4, y: 8 },
-              {
-                opacity: 1,
-                y: 0,
-                duration: 0.35,
-                stagger: 0.03,
-                ease: "power2.out",
-                immediateRender: false,
-                scrollTrigger: {
-                  trigger: scrollTrackRef.current,
-                  start: "top 90%",
-                  toggleActions: "play none none none",
-                  once: true
-                }
-              }
-            );
-          }
-        }
-
-        // Stagger grid items
-        if (gridRef.current) {
-          const items = gridRef.current.querySelectorAll<HTMLElement>(".product-grid-item");
-          if (items.length > 0) {
-            gsap.fromTo(items,
-              { opacity: 0.4, y: 10 },
-              {
-                opacity: 1,
-                y: 0,
-                duration: 0.4,
-                stagger: 0.04,
-                ease: "power2.out",
-                immediateRender: false,
-                scrollTrigger: {
-                  trigger: gridRef.current,
-                  start: "top 85%",
-                  toggleActions: "play none none none",
-                  once: true
-                }
-              }
-            );
-          }
-        }
-      }, sectionRef.current!);
-
-      return () => ctx.revert();
-    },
-    { scope: sectionRef }
-  );
-
-  // A8: Refresh ScrollTrigger when cv-auto section enters viewport
-  // Pre-refresh with generous margin so animations are ready before visible
-  useEffect(() => {
-    const el = sectionRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            // Small delay to ensure content-visibility has rendered content
-            requestAnimationFrame(() => {
-              ScrollTrigger.refresh();
-            });
-            observer.disconnect();
-            break;
-          }
-        }
-      },
-      { rootMargin: "300px" } // Increased from 100px — refresh BEFORE user reaches section
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  // Shared whileInView transition settings
+  const revealInitial = prefersReduced ? undefined : { opacity: 0.4, y: 12 };
+  const revealAnimate = { opacity: 1, y: 0 };
+  const viewportOnce = { once: true, amount: 0.15 as const };
 
   return (
-    <section
+    <motion.section
       ref={sectionRef}
+      initial={prefersReduced ? undefined : { opacity: 0, y: 40 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.1 }}
+      transition={springs.enter}
       className={`pt-8 md:pt-12 overflow-hidden ${desktopOnly ? "hidden md:block" : ""}`}
     >
       {!hideHeader && (
-        <div ref={headerRef} className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
+        <motion.div
+          initial={revealInitial}
+          whileInView={revealAnimate}
+          viewport={viewportOnce}
+          transition={springs.enter}
+          className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8"
+        >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               {icon}
@@ -163,7 +71,7 @@ export function AnimatedProductSection({
           {subtitle && (
             <p className="mt-1 text-xs md:text-sm text-neutral-500 dark:text-neutral-400">{subtitle}</p>
           )}
-        </div>
+        </motion.div>
       )}
 
       {/* Category filter pills */}
@@ -191,31 +99,54 @@ export function AnimatedProductSection({
       {/* Scroll layout (mobile horizontal) */}
       {(layout === "scroll" || layout === "mixed") && (
         <div className={`mt-4 pb-2 ${layout === "mixed" ? "md:hidden" : ""}`}>
-          <div ref={scrollTrackRef} className="wheel-scroll px-4 md:px-6 lg:px-8">
-            {products.map((p) => (
-              <div
+          <motion.div
+            initial={revealInitial}
+            whileInView={revealAnimate}
+            viewport={viewportOnce}
+            transition={springs.enter}
+            className="wheel-scroll px-4 md:px-6 lg:px-8"
+          >
+            {products.map((p, idx) => (
+              <motion.div
                 key={p.id}
                 className="product-scroll-item wheel-scroll-item w-[clamp(140px,42vw,155px)] sm:w-[170px] md:w-[200px]"
+                initial={prefersReduced ? undefined : { opacity: 0.4, y: 8 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ ...springs.enter, delay: idx * 0.03 }}
               >
                 <ProductCard product={p} compact />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Grid layout (desktop) */}
       {(layout === "grid" || layout === "mixed") && (
         <div className={`max-w-7xl mx-auto px-4 md:px-6 lg:px-8 mt-4 ${layout === "mixed" ? "hidden md:block" : ""}`}>
-          <div ref={gridRef} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
-            {products.map((p) => (
-              <div key={p.id} className="product-grid-item">
+          <motion.div
+            initial={revealInitial}
+            whileInView={revealAnimate}
+            viewport={viewportOnce}
+            transition={springs.enter}
+            className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4"
+          >
+            {products.map((p, idx) => (
+              <motion.div
+                key={p.id}
+                className="product-grid-item"
+                initial={prefersReduced ? undefined : { opacity: 0.4, y: 10 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ ...springs.enter, delay: idx * 0.04 }}
+              >
                 <ProductCard product={p} />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       )}
-    </section>
+    </motion.section>
   );
 }

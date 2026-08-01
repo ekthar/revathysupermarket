@@ -30,7 +30,7 @@ const contentSecurityPolicy = [
 const nextConfig: NextConfig = {
   serverExternalPackages: ['@prisma/client', 'bcrypt'],
   experimental: {
-    optimizePackageImports: ["lucide-react", "recharts", "framer-motion"],
+    optimizePackageImports: ["lucide-react", "recharts", "framer-motion"], // recharts is admin-only (admin-charts.tsx, revenue-chart.tsx)
   },
   webpack: (config, { isServer }) => {
     // Capacitor native plugins only exist inside the native shell, not in the

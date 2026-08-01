@@ -112,7 +112,7 @@ export function ProductDetailClient({ product, variants = [] }: ProductDetailCli
             transition={springs.enter}
             className="h-full w-full"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" sizes="100vw" />
           </motion.div>
         </div>
 
@@ -137,7 +137,7 @@ export function ProductDetailClient({ product, variants = [] }: ProductDetailCli
             animate={{ opacity: 1, x: 0 }}
             className="sticky top-24 rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900 aspect-square"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" sizes="(max-width: 1024px) 50vw, 540px" />
             {hasDiscount && (
               <span className="absolute top-4 left-4 bg-orange-500 text-white text-caption font-bold px-3 py-1.5 rounded-full shadow-lg">
                 -{Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)}% OFF

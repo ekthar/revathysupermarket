@@ -15,7 +15,8 @@ module.exports = {
     },
     assert: {
       assertions: {
-        "categories:performance": ["error", { minScore: 0.85 }],
+        // Performance budgets enforced by CI (Phase 0)
+        "categories:performance": ["error", { minScore: 0.90 }],
         "categories:accessibility": ["error", { minScore: 0.95 }],
         "cumulative-layout-shift": ["error", { maxNumericValue: 0.05 }],
         "largest-contentful-paint": ["error", { maxNumericValue: 2500 }],

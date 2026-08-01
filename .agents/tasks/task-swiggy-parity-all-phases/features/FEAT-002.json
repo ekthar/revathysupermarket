@@ -2,7 +2,7 @@
   "id": "FEAT-002",
   "type": "fix",
   "description": "Phase 1 - Stop shipping demo data: Make database lookup primary in PDP, fix related products from DB, fix generateStaticParams, audit fallback patterns",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "In apps/web/app/products/[slug]/page.tsx: Rewrite getProduct() so database lookup is PRIMARY. Only fall back to demo data when process.env.NEXT_PUBLIC_USE_DEMO_DATA is explicitly 'true'. Currently static data wins over DB data.",
     "In apps/web/app/products/[slug]/page.tsx: Fix related products to query DB (same category, exclude self, respect isActive, limit 6) instead of always using the static products array.",
@@ -23,5 +23,5 @@
     "Run npx tsc --noEmit in apps/web and confirm it passes"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "All changes verified with npx tsc --noEmit (exit 0). Dynamic import used for demo products in related products fallback to avoid top-level import of the products array in PDP. The useDemoData const is module-level so it evaluates at build/startup time from process.env."
 }

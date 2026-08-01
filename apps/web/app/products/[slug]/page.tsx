@@ -9,20 +9,22 @@ import { productSchema, breadcrumbSchema } from "@/lib/structured-data";
 import { getProductBySlug } from "@/lib/products";
 import { prisma } from "@/lib/prisma";
 import type { Product } from "@/lib/types";
+import type { ProductVariantItem } from "@/components/product/variant-selector";
 import { safeProductImageUrl } from "@/lib/image";
 import { SITE } from "@/lib/constants";
+import { isFeatureEnabled } from "@/lib/feature-flags";
 
 const useDemoData = process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true";
 
-async function getProduct(slug: string): Promise<Product | undefined> {
+async function getProduct(slug: string): Promise<{ product: Product; variants: ProductVariantItem[] } | undefined> {
   // Database lookup is primary
   const dbProduct = await prisma.product.findUnique({
     where: { slug },
-    include: { category: true }
+    include: { category: true, variants: { orderBy: { sortOrder: "asc" } } }
   }).catch(() => null);
 
   if (dbProduct) {
-    return {
+    const product: Product = {
       id: dbProduct.id,
       slug: dbProduct.slug,
       name: dbProduct.name,
@@ -37,12 +39,21 @@ async function getProduct(slug: string): Promise<Product | undefined> {
       isFeatured: dbProduct.isFeatured,
       createdAt: dbProduct.createdAt.toISOString()
     };
+    const variants: ProductVariantItem[] = dbProduct.variants.map((v) => ({
+      id: v.id,
+      label: v.label,
+      price: Number(v.price),
+      discountPrice: v.discountPrice ? Number(v.discountPrice) : undefined,
+      stock: v.stock,
+      unit: v.unit,
+    }));
+    return { product, variants };
   }
 
   // Fall back to demo data only when explicitly enabled
   if (useDemoData) {
     const staticProduct = getProductBySlug(slug);
-    if (staticProduct) return staticProduct;
+    if (staticProduct) return { product: staticProduct, variants: [] };
   }
 
   return undefined;
@@ -92,8 +103,9 @@ async function getRelatedProducts(product: Product): Promise<Product[]> {
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
-  const product = await getProduct(slug);
-  if (!product) return {};
+  const result = await getProduct(slug);
+  if (!result) return {};
+  const { product } = result;
   return {
     title: product.name,
     description: product.description,
@@ -103,9 +115,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = await getProduct(slug);
-  if (!product) notFound();
+  const result = await getProduct(slug);
+  if (!result) notFound();
+  const { product, variants } = result;
   const related = await getRelatedProducts(product);
+  const variantsEnabled = await isFeatureEnabled("product_variants");
 
   return (
     <main className="min-h-[100dvh] bg-background">
@@ -120,7 +134,10 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         ]}
       />
 
-      <ProductDetailClient product={product} />
+      <ProductDetailClient
+        product={product}
+        variants={variantsEnabled ? variants : []}
+      />
 
       {/* Product Suggestions (Frequently Bought Together) */}
       <ProductSuggestions productSlug={slug} />

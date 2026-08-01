@@ -162,7 +162,8 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
   }
 
   const handleRemove = useCallback((item: CartItem) => {
-    removeItem(item.id);
+    const key = item.variantId ? `${item.id}::${item.variantId}` : item.id;
+    removeItem(key);
     haptic("light");
     sonnerToast(`Removed ${item.name}`, {
       action: {
@@ -263,7 +264,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                   <div className="flex h-9 shrink-0 items-center overflow-hidden rounded-full bg-neutral-900 dark:bg-white">
                     <motion.button
                       type="button"
-                      onClick={() => { updateQuantity(item.id, item.quantity - 1); haptic("light"); }}
+                      onClick={() => { updateQuantity(item.variantId ? `${item.id}::${item.variantId}` : item.id, item.quantity - 1); haptic("light"); }}
                       whileTap={{ scale: 1.3 }}
                       transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
@@ -282,7 +283,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                     </motion.span>
                     <motion.button
                       type="button"
-                      onClick={() => { updateQuantity(item.id, item.quantity + 1); haptic("light"); }}
+                      onClick={() => { updateQuantity(item.variantId ? `${item.id}::${item.variantId}` : item.id, item.quantity + 1); haptic("light"); }}
                       whileTap={{ scale: 1.3 }}
                       transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"

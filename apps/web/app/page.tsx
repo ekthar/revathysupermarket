@@ -4,17 +4,19 @@ import { ChevronRight, Clock, Zap } from "lucide-react";
 import { PromoBanners } from "@/components/home/promo-banners";
 import { RecentOrdersSection } from "@/components/home/recent-orders-section";
 import { HeroSection } from "@/components/home/hero-section";
-import { AnimatedCategories } from "@/components/home/animated-categories";
+import { HomeSearch } from "@/components/home/home-search";
+import { getTrendingSearchTerms } from "@/lib/trending-searches";
+import { AnimatedCategories, type CategoryTile } from "@/components/home/animated-categories";
 import { AnimatedProductSection } from "@/components/home/animated-product-section";
 import { LocationPrompt } from "@/components/location-prompt";
 import { StructuredData } from "@/components/structured-data";
 import { organizationSchema, websiteSchema } from "@/lib/structured-data";
 import { categories as demoCategories, products } from "@/lib/products";
+import { formatCurrency, slugify } from "@/lib/utils";
 import { prisma } from "@/lib/prisma";
 import { getPublicStoreSettings } from "@/lib/store-settings";
 import { getFeatureFlag } from "@/lib/feature-flags";
 import type { Product } from "@/lib/types";
-import { auth } from "@/auth";
 import { LazyRender } from "@/components/ui/lazy-render";
 import { SmartReorderPill } from "@/components/home/smart-reorder-pill";
 
@@ -52,7 +54,15 @@ const getHomepageProducts = unstable_cache(
 const getHomepageCategories = unstable_cache(
   async () => prisma.category.findMany({
     orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
-    select: { name: true, image: true, icon: true }
+    select: {
+      name: true,
+      slug: true,
+      image: true,
+      icon: true,
+      // Real catalogue count. Deriving this from the 24 homepage products (as we
+      // used to) under-reported every category.
+      _count: { select: { products: { where: { isActive: true } } } }
+    }
   }).catch(() => []),
   ["homepage-categories"],
   { revalidate: 60, tags: ["homepage", "categories"] }
@@ -90,13 +100,13 @@ export default async function HomePage() {
     );
   }
 
-  const session = await auth();
-  const [settings, banner, dbProducts, dbCategories, promoBanners] = await Promise.all([
+  const [settings, banner, dbProducts, dbCategories, promoBanners, trendingTerms] = await Promise.all([
     getPublicStoreSettings(),
     getHomepageBanner(),
     getHomepageProducts(),
     getHomepageCategories(),
     getPromoBanners(),
+    getTrendingSearchTerms().catch(() => [] as string[]),
   ]);
 
   const allProducts: Product[] = dbProducts.length > 0
@@ -110,15 +120,22 @@ export default async function HomePage() {
       }))
     : products;
 
-  const categories: readonly string[] = dbCategories.length > 0
-    ? dbCategories.map((c) => c.name)
-    : demoCategories;
-  const categoryImages: Record<string, string> = dbCategories.length > 0
-    ? Object.fromEntries(dbCategories.filter((c) => c.image).map((c) => [c.name, c.image as string]))
-    : demoCategoryImages;
-  const categoryIcons: Record<string, string> = dbCategories.length > 0
-    ? Object.fromEntries(dbCategories.filter((c) => c.icon).map((c) => [c.name, c.icon as string]))
-    : {};
+  const categoryTiles: CategoryTile[] = dbCategories.length > 0
+    ? dbCategories.map((c) => ({
+        name: c.name,
+        slug: c.slug,
+        image: c.image,
+        icon: c.icon,
+        count: c._count.products
+      }))
+    : demoCategories.map((name) => ({
+        name,
+        slug: slugify(name),
+        image: demoCategoryImages[name] ?? null,
+        icon: null,
+        count: products.filter((p) => p.category === name).length
+      }));
+  const categories: readonly string[] = categoryTiles.map((c) => c.name);
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);
   const offers = allProducts.filter((p) => p.discountPrice).slice(0, 8);
@@ -132,9 +149,6 @@ export default async function HomePage() {
       {/* SEO structured data */}
       <StructuredData data={[organizationSchema(), websiteSchema()]} />
 
-      {/* Location prompt — shown on first visit if no saved location */}
-      <LocationPrompt />
-
       {/* ── Delivery Promise Bar (mobile only, Swiggy-style) ── */}
       <div className="md:hidden px-4 pt-2 pb-1">
         <div className="flex items-center gap-2 rounded-full bg-secondary-50 dark:bg-secondary-900/20 px-4 py-2">
@@ -142,10 +156,19 @@ export default async function HomePage() {
           <span className="text-caption font-bold text-secondary-700 dark:text-secondary-300">
             Delivery in {settings.deliveryEstimateMin}–{settings.deliveryEstimateMax} min
           </span>
-          <span className="text-caption text-neutral-400">·</span>
-          <span className="text-caption font-medium text-neutral-500">Free over ₹499</span>
+          {settings.freeDeliveryThreshold > 0 && (
+            <>
+              <span className="text-caption text-neutral-400">·</span>
+              <span className="text-caption font-medium text-neutral-500">
+                Free over {formatCurrency(settings.freeDeliveryThreshold)}
+              </span>
+            </>
+          )}
         </div>
       </div>
+
+      {/* ── Search: top-of-fold, sticky under the header ── */}
+      <HomeSearch suggestions={trendingTerms} />
 
       {/* ── Section 1: Hero ── */}
       <HeroSection
@@ -161,19 +184,15 @@ export default async function HomePage() {
       {/* ── Section 2: Promo banners (if any) ── */}
       <PromoBanners banners={promoBanners} />
 
-      {/* Location prompt — shown on first visit if no saved location (deferred after hero) */}
+      {/* Location prompt — shown on first visit if no saved location.
+          Deferred until after the hero so it never competes with first paint. */}
       <LocationPrompt />
 
       {/* ── Section 3: Recent Orders (hidden when empty) ── */}
       <RecentOrdersSection />
 
       {/* ── Section 4: Categories ── */}
-      <AnimatedCategories
-        categories={categories}
-        categoryImages={categoryImages}
-        categoryIcons={categoryIcons}
-        allProducts={allProducts}
-      />
+      <AnimatedCategories categories={categoryTiles} />
 
       {/* ── Section 5: Trending Products ── */}
       <div className="cv-auto">

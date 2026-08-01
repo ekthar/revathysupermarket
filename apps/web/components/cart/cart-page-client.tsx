@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, Minus, Plus, Trash2, Tag, Truck } from "lucide-react";
+import { ArrowLeft, ArrowRight, Minus, Plus, Trash2, Tag, Truck } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast as sonnerToast } from "sonner";
@@ -14,15 +14,8 @@ import { haptic } from "@/lib/haptics";
 import { useTranslations } from "next-intl";
 import type { CartItem } from "@/lib/types";
 import { CheckoutPreviewSheet } from "@/components/cart/checkout-preview-sheet";
-
-type StoreConfig = {
-  gstRatePercent: number;
-  deliveryFee: number;
-  freeDeliveryThreshold: number;
-  minimumOrderValue: number;
-  storeName: string;
-  gstin: string;
-};
+import { FreeDeliveryProgress } from "@/components/cart/free-delivery-progress";
+import { DEFAULT_STORE_CONFIG, type StoreConfig } from "@/lib/use-store-config";
 
 export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig }) {
   const { items, subtotal, removeItem, updateQuantity, addItem } = useCart();
@@ -34,14 +27,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
   const [promoDescription, setPromoDescription] = useState("");
   const [promoLoading, setPromoLoading] = useState(false);
   const [promoError, setPromoError] = useState("");
-  const [config, setConfig] = useState<StoreConfig>(initialConfig ?? {
-    gstRatePercent: 0,
-    deliveryFee: 40,
-    freeDeliveryThreshold: 500,
-    minimumOrderValue: 99,
-    storeName: "",
-    gstin: ""
-  });
+  const [config, setConfig] = useState<StoreConfig>(initialConfig ?? DEFAULT_STORE_CONFIG);
   const [configLoading, setConfigLoading] = useState(!initialConfig);
 
   // Fetch store settings on mount (fallback if initialConfig not provided)
@@ -65,6 +51,15 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
 
   const totalAmount = subtotal - promoDiscount + deliveryFee;
   const belowMinimum = subtotal < config.minimumOrderValue && items.length > 0;
+
+  // Total savings = per-item discounts + coupon + waived delivery. Surfacing this
+  // in the sticky bar is the single most persuasive number on the page.
+  const productSavings = items.reduce(
+    (sum, item) => sum + (item.discountPrice ? (item.price - item.discountPrice) * item.quantity : 0),
+    0
+  );
+  const deliverySavings = qualifiesFreeDelivery ? config.deliveryFee : 0;
+  const totalSavings = productSavings + promoDiscount + deliverySavings;
 
   // Re-validate promo when subtotal changes
   const validatingPromoRef = useRef(false);
@@ -189,17 +184,27 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
     );
   }
 
-  // Smart contextual message — ONE banner, shows the most relevant info
+  // Smart contextual message — ONE banner.
+  //
+  // Free-delivery progress deliberately lives in the sticky summary bar now, so
+  // this banner only carries what the bar doesn't: the minimum-order blocker and
+  // the delivery estimate (read from settings rather than a hardcoded "~30 min").
+  const etaText =
+    config.deliveryEstimateMin && config.deliveryEstimateMax
+      ? `Estimated delivery in ${config.deliveryEstimateMin}–${config.deliveryEstimateMax} min`
+      : "Delivery estimate available at checkout";
+
   const contextMessage = belowMinimum
-    ? { icon: "warn" as const, text: `Add ${formatCurrency(config.minimumOrderValue - subtotal)} more to place order (min ${formatCurrency(config.minimumOrderValue)})` }
-    : !qualifiesFreeDelivery && config.freeDeliveryThreshold > 0 && (config.freeDeliveryThreshold - subtotal) <= 100
-      ? { icon: "truck" as const, text: `Add ${formatCurrency(config.freeDeliveryThreshold - subtotal)} more for free delivery` }
-      : qualifiesFreeDelivery
-        ? { icon: "truck" as const, text: "Free delivery · Estimated ~30 min" }
-        : { icon: "truck" as const, text: "Estimated delivery in ~30 min" };
+    ? {
+        icon: "warn" as const,
+        text: `Add ${formatCurrency(config.minimumOrderValue - subtotal)} more to place order (min ${formatCurrency(config.minimumOrderValue)})`
+      }
+    : { icon: "truck" as const, text: etaText };
 
   return (
-    <main className="mx-auto min-h-screen max-w-2xl bg-background px-4 pb-4 pt-5 md:pb-8">
+    // pb-44 on mobile clears the taller sticky summary bar; the bar becomes
+    // static (md:relative) from the md breakpoint up.
+    <main className="mx-auto min-h-screen max-w-2xl bg-background px-4 pb-44 pt-5 md:pb-8">
       {/* Sticky Header */}
       <div className="sticky top-0 z-30 -mx-4 bg-background/90 px-4 py-3 backdrop-blur-xl">
         <div className="flex items-center justify-between">
@@ -397,30 +402,65 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
         )}
       </div>
 
-      {/* Fixed bottom checkout button */}
-      <div className="ios-floating-action md:relative md:bottom-0 md:left-auto md:right-auto md:mt-5 md:p-0">
-        <motion.div whileTap={tapScale.subtle} transition={springs.enter}>
-          <Link
-            href={belowMinimum ? "#" : "/checkout"}
-            onClick={(e) => {
-              if (belowMinimum) { e.preventDefault(); return; }
-              // On mobile: open preview sheet instead of navigating
-              if (typeof window !== "undefined" && window.innerWidth < 768) {
-                e.preventDefault();
-                setCheckoutSheetOpen(true);
-                haptic("medium");
-              }
-            }}
-            className={`mx-auto flex h-[52px] max-w-md items-center justify-between rounded-2xl px-5 press ${
-              belowMinimum
-                ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-400 cursor-not-allowed"
-                : "bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 shadow-lg"
-            }`}
-          >
-            <span className="text-sm font-bold">{belowMinimum ? "Add more items" : t("checkout")}</span>
-            <span className="text-sm font-black tabular-nums">{formatCurrency(totalAmount)}</span>
-          </Link>
-        </motion.div>
+      {/* Sticky bill summary + CTA.
+          The running total and the free-delivery nudge stay thumb-reachable at
+          all times instead of only being visible once the customer scrolls to
+          the bill block. */}
+      <div className="ios-floating-action md:relative md:bottom-0 md:left-auto md:right-auto md:mt-5">
+        <div className="mx-auto max-w-md overflow-hidden rounded-2xl border border-border bg-card/95 shadow-premium backdrop-blur-xl">
+          {/* Free-delivery progress / unlocked ribbon */}
+          <FreeDeliveryProgress
+            subtotal={subtotal}
+            threshold={config.freeDeliveryThreshold}
+            variant="bar"
+          />
+
+          <div className="flex items-center gap-3 p-3">
+            <div className="min-w-0 flex-1">
+              <p className="text-micro font-semibold text-muted-foreground">
+                Total
+                {totalSavings > 0 && (
+                  <span className="ml-1 text-secondary-600 dark:text-secondary-400">
+                    · saving {formatCurrency(totalSavings)}
+                  </span>
+                )}
+              </p>
+              <motion.p
+                key={totalAmount}
+                initial={{ opacity: 0.6, y: -2 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={springs.snappy}
+                className="text-title font-black tabular-nums text-foreground"
+              >
+                {formatCurrency(totalAmount)}
+              </motion.p>
+            </div>
+
+            <motion.div whileTap={belowMinimum ? undefined : tapScale.subtle} transition={springs.enter}>
+              <Link
+                href={belowMinimum ? "#" : "/checkout"}
+                aria-disabled={belowMinimum || undefined}
+                onClick={(e) => {
+                  if (belowMinimum) { e.preventDefault(); return; }
+                  // On mobile: open preview sheet instead of navigating
+                  if (typeof window !== "undefined" && window.innerWidth < 768) {
+                    e.preventDefault();
+                    setCheckoutSheetOpen(true);
+                    haptic("medium");
+                  }
+                }}
+                className={`press flex h-12 items-center justify-center gap-1.5 rounded-xl px-5 text-sm font-bold ${
+                  belowMinimum
+                    ? "cursor-not-allowed bg-neutral-200 text-neutral-500 dark:bg-neutral-700 dark:text-neutral-400"
+                    : "bg-neutral-900 text-white shadow-lg dark:bg-white dark:text-neutral-900"
+                }`}
+              >
+                {belowMinimum ? "Add more items" : t("checkout")}
+                {!belowMinimum && <ArrowRight className="h-4 w-4" />}
+              </Link>
+            </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* Checkout preview sheet (mobile only) */}

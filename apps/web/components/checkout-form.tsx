@@ -27,7 +27,16 @@ import { TipSelector } from "@/components/checkout/tip-selector";
 import { DeliveryInstructions } from "@/components/checkout/delivery-instructions";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { RazorpayButton } from "@/components/checkout/razorpay-button";
+import { CheckoutSection } from "@/components/checkout/checkout-section";
 
+
+/** Human labels for the collapsed payment step summary. */
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  COD: "Cash on delivery",
+  UPI_ON_DELIVERY: "UPI on delivery",
+  WALLET: "Wallet balance",
+  CARD: "Card / online payment",
+};
 
 type CheckoutState = {
   customerName: string;
@@ -163,7 +172,9 @@ export function CheckoutForm({
   const [addressNotCovered, setAddressNotCovered] = useState(false);
   const [tipAmount, setTipAmount] = useState(0);
   const [deliveryInstructions, setDeliveryInstructions] = useState("");
+  const [addressOpen, setAddressOpen] = useState(true);
   const [deliveryOptionsOpen, setDeliveryOptionsOpen] = useState(true);
+  const [paymentOpen, setPaymentOpen] = useState(true);
   const [offersSectionOpen, setOffersSectionOpen] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [razorpayOrderId, setRazorpayOrderId] = useState("");
@@ -216,6 +227,34 @@ export function CheckoutForm({
   const isOutsideRadius = distance !== null && distance > deliveryRadiusKm;
   const locationOk = distance !== null && !isOutsideRadius;
   const canSubmit = items.length > 0 && locationOk && !addressNotCovered && !isSubmitting && subtotal >= minimumOrderValue && (deliveryMode === "ASAP" || Boolean(deliverySlotId));
+
+  // ─── Step completion ────────────────────────────────────────────────────────
+  // Hoisted out of the JSX so both the progress indicator and the collapsible
+  // sections read from one source of truth.
+  const addressDone = Boolean(form.customerName && form.phone && form.houseName && form.pincode && locationOk);
+  const deliveryDone = deliveryMode === "ASAP" || Boolean(deliverySlotId);
+  const paymentDone = Boolean(form.paymentMethod);
+
+  // Collapse the address panel the first time it becomes valid, then leave it
+  // alone — re-collapsing on every keystroke would fight the customer.
+  const addressAutoCollapsed = useRef(false);
+  useEffect(() => {
+    if (addressDone && !addressAutoCollapsed.current) {
+      addressAutoCollapsed.current = true;
+      setAddressOpen(false);
+    }
+  }, [addressDone]);
+
+  const addressSummary = [form.houseName, form.street, form.pincode]
+    .filter(Boolean)
+    .join(", ");
+
+  const deliverySummary =
+    deliveryMode === "ASAP"
+      ? `As soon as possible · ${deliveryEstimateMin}–${deliveryEstimateMax} min`
+      : deliverySlotId
+        ? "Scheduled slot selected"
+        : undefined;
 
   useEffect(() => {
     if (!allowScheduledDelivery) setDeliverySlotId("");
@@ -587,9 +626,6 @@ export function CheckoutForm({
 
       {/* Step Progression Indicator — reflects real progress */}
       {(() => {
-        const addressDone = Boolean(form.customerName && form.phone && form.houseName && form.pincode && locationOk);
-        const deliveryDone = deliveryMode === "ASAP" || Boolean(deliverySlotId);
-        const paymentDone = Boolean(form.paymentMethod);
         const steps = [
           { label: "Address", done: addressDone },
           { label: "Delivery", done: deliveryDone },
@@ -667,66 +703,54 @@ export function CheckoutForm({
             )}
           </div>
 
-          {/* Delivery Address (step 1) */}
-          <AddressSelector
-            form={form}
-            onUpdate={(name, value) => update(name as keyof CheckoutState, value)}
-            onFormPatch={handleFormPatch}
-            savedAddresses={savedAddresses}
-            locationState={locationState}
-            onLocationStateChange={setLocationState}
-            locationOk={locationOk}
-            isOutsideRadius={isOutsideRadius}
-            distance={distance}
-            deliveryRadiusKm={deliveryRadiusKm}
-          />
+          {/* Delivery Address (step 1) — collapses to a summary once valid */}
+          <CheckoutSection
+            step={1}
+            title="Delivery Address"
+            complete={addressDone}
+            summary={addressSummary || undefined}
+            open={addressOpen}
+            onToggle={setAddressOpen}
+          >
+            <AddressSelector
+              form={form}
+              onUpdate={(name, value) => update(name as keyof CheckoutState, value)}
+              onFormPatch={handleFormPatch}
+              savedAddresses={savedAddresses}
+              locationState={locationState}
+              onLocationStateChange={setLocationState}
+              locationOk={locationOk}
+              isOutsideRadius={isOutsideRadius}
+              distance={distance}
+              deliveryRadiusKm={deliveryRadiusKm}
+            />
+          </CheckoutSection>
 
-          {/* Delivery Options Accordion */}
-          <section className="rounded-2xl border border-neutral-100 bg-card dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setDeliveryOptionsOpen(!deliveryOptionsOpen)}
-              aria-expanded={deliveryOptionsOpen}
-              aria-controls="delivery-options-panel"
-              className="flex w-full items-center justify-between px-4 py-3 text-left"
-            >
-              <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery Options</h2>
-              <motion.div
-                animate={{ rotate: deliveryOptionsOpen ? 180 : 0 }}
-                transition={springs.snappy}
-              >
-                <svg className="h-4 w-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-              </motion.div>
-            </button>
-            <AnimatePresence>
-              {deliveryOptionsOpen && (
-                <motion.div
-                  id="delivery-options-panel"
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={springs.snappy}
-                  className="overflow-hidden"
-                >
-                  <div className="px-4 pb-4 space-y-4">
-                    <DeliveryModeSelector
-                      deliveryMode={deliveryMode}
-                      onModeChange={setDeliveryMode}
-                      deliverySlotId={deliverySlotId}
-                      onSlotChange={setDeliverySlotId}
-                      scheduledEnabled={allowScheduledDelivery}
-                      instantEnabled={allowInstantDelivery}
-                    />
-                    {tipEnabled && <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />}
-                    <DeliveryInstructions
-                      instructions={deliveryInstructions}
-                      onInstructionsChange={setDeliveryInstructions}
-                    />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </section>
+          {/* Delivery Options (step 2) */}
+          <CheckoutSection
+            step={2}
+            title="Delivery Options"
+            complete={deliveryDone}
+            summary={deliverySummary}
+            open={deliveryOptionsOpen}
+            onToggle={setDeliveryOptionsOpen}
+          >
+            <div className="space-y-4">
+              <DeliveryModeSelector
+                deliveryMode={deliveryMode}
+                onModeChange={setDeliveryMode}
+                deliverySlotId={deliverySlotId}
+                onSlotChange={setDeliverySlotId}
+                scheduledEnabled={allowScheduledDelivery}
+                instantEnabled={allowInstantDelivery}
+              />
+              {tipEnabled && <TipSelector tipAmount={tipAmount} onTipChange={setTipAmount} />}
+              <DeliveryInstructions
+                instructions={deliveryInstructions}
+                onInstructionsChange={setDeliveryInstructions}
+              />
+            </div>
+          </CheckoutSection>
 
           {/* Offers and Rewards - Collapsible */}
           {rewardsEnabled && (
@@ -800,17 +824,26 @@ export function CheckoutForm({
             </section>
           )}
 
-          {/* Payment Method */}
-          <PaymentMethodSelector
-            paymentMethod={form.paymentMethod}
-            onMethodChange={(method) => update("paymentMethod", method)}
-            walletBalance={walletBalance}
-            walletLoading={walletLoading}
-            totalAmount={totalAmount}
-            codEnabled={codEnabled}
-            upiOnDeliveryEnabled={upiOnDeliveryEnabled}
-            razorpayEnabled={razorpayEnabled}
-          />
+          {/* Payment Method (step 3) */}
+          <CheckoutSection
+            step={3}
+            title="Payment Method"
+            complete={paymentDone}
+            summary={PAYMENT_METHOD_LABELS[form.paymentMethod] ?? undefined}
+            open={paymentOpen}
+            onToggle={setPaymentOpen}
+          >
+            <PaymentMethodSelector
+              paymentMethod={form.paymentMethod}
+              onMethodChange={(method) => update("paymentMethod", method)}
+              walletBalance={walletBalance}
+              walletLoading={walletLoading}
+              totalAmount={totalAmount}
+              codEnabled={codEnabled}
+              upiOnDeliveryEnabled={upiOnDeliveryEnabled}
+              razorpayEnabled={razorpayEnabled}
+            />
+          </CheckoutSection>
         </div>
 
 

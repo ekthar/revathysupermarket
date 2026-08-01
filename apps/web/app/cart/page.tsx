@@ -16,7 +16,9 @@ export default async function CartPage() {
     freeDeliveryThreshold: settings.freeDeliveryThreshold,
     minimumOrderValue: settings.minimumOrderValue,
     storeName: settings.storeName,
-    gstin: settings.gstin
+    gstin: settings.gstin,
+    deliveryEstimateMin: settings.deliveryEstimateMin,
+    deliveryEstimateMax: settings.deliveryEstimateMax
   };
 
   return <CartPageClient initialConfig={initialConfig} />;

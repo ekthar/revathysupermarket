@@ -13,7 +13,11 @@ export async function GET() {
       freeDeliveryThreshold: settings.freeDeliveryThreshold,
       minimumOrderValue: settings.minimumOrderValue,
       storeName: settings.storeName,
-      gstin: settings.gstin
+      gstin: settings.gstin,
+      // Delivery estimate powers the per-card ETA chip, which renders in client
+      // components (product grids, search rows) with no server props available.
+      deliveryEstimateMin: settings.deliveryEstimateMin,
+      deliveryEstimateMax: settings.deliveryEstimateMax
     }, { headers: getCacheHeaders("settings") });
   } catch {
     return NextResponse.json({
@@ -22,7 +26,9 @@ export async function GET() {
       freeDeliveryThreshold: 500,
       minimumOrderValue: 99,
       storeName: "",
-      gstin: ""
+      gstin: "",
+      deliveryEstimateMin: 25,
+      deliveryEstimateMax: 45
     }, { headers: getCacheHeaders("settings") });
   }
 }

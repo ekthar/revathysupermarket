@@ -165,9 +165,30 @@ model User {
   reconciledCollections  DeliveryCollection[]    @relation("CollectionReconciler")
   deliveryAdjustments    DeliveryAdjustment[]
   reviews                Review[]
+  stockAlerts            StockAlert[]
   referralCode           String?                 @unique
   createdAt              DateTime                @default(now())
   updatedAt              DateTime                @updatedAt
+}
+
+/// Restock notification request ("Notify me when back in stock").
+/// Captures demand for out-of-stock products that would otherwise be lost when a
+/// customer hits a sold-out card and leaves.
+model StockAlert {
+  id         String    @id @default(cuid())
+  productId  String
+  userId     String
+  /// Set when the restock notification has been dispatched. Null = still waiting.
+  notifiedAt DateTime?
+  createdAt  DateTime  @default(now())
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// One outstanding alert per customer per product.
+  @@unique([productId, userId])
+  @@index([productId])
+  @@index([userId])
+  @@index([notifiedAt])
 }
 
 model OtpToken {
@@ -306,6 +327,7 @@ model Product {
   orderItems    OrderItem[]
   favorites     Favorite[]
   reviews       Review[]
+  stockAlerts   StockAlert[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 

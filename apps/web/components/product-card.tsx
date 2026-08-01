@@ -9,6 +9,8 @@ import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { formatCurrency } from "@/lib/utils";
 import type { Product } from "@/lib/types";
 import { ProductImage } from "@/components/product-image";
+import { DeliveryEtaChip } from "@/components/delivery-eta-chip";
+import { NotifyMeButton } from "@/components/notify-me-button";
 import { cn } from "@/lib/utils";
 import { FavoriteButton } from "@/components/favorite-button";
 import { tapScale, springs, durations, easings } from "@/lib/motion";
@@ -56,10 +58,8 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
       <motion.article
         whileTap={tapScale.gentle}
         transition={springs.snappy}
-        className={cn(
-          "product-list-card hover-lift",
-          outOfStock && "opacity-50"
-        )}
+        aria-disabled={outOfStock || undefined}
+        className="product-list-card hover-lift"
       >
         <Link
           href={productHref}
@@ -69,7 +69,10 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         >
           <motion.div
             whileHover={{ scale: 1.05 }}
-            className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-800"
+            className={cn(
+              "h-16 w-16 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-800",
+              outOfStock && "opacity-40 saturate-50"
+            )}
           >
             <ProductImage src={product.image} alt={product.name} className="object-cover" priority={priority} category={product.category} />
           </motion.div>
@@ -104,7 +107,11 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         </div>
 
         <div className="shrink-0">
-          <CartControls product={product} outOfStock={outOfStock} variant="horizontal" />
+          {outOfStock ? (
+            <NotifyMeButton productId={product.id} productName={product.name} />
+          ) : (
+            <CartControls product={product} outOfStock={outOfStock} variant="horizontal" />
+          )}
         </div>
       </motion.article>
     );
@@ -118,10 +125,8 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
     <motion.article
       whileTap={tapScale.subtle}
       transition={springs.snappy}
-      className={cn(
-        "group relative overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 dark:border dark:border-neutral-800 product-card-animated shadow-elevation-1",
-        outOfStock && "opacity-50"
-      )}
+      aria-disabled={outOfStock || undefined}
+      className="group relative overflow-hidden rounded-2xl bg-white dark:bg-neutral-900 dark:border dark:border-neutral-800 product-card-animated shadow-elevation-1"
     >
       {/* Image section */}
       <Link
@@ -132,7 +137,13 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
         onTouchStart={outOfStock ? undefined : preload.onTouchStart}
       >
         <div
-          className="relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden aspect-square rounded-t-2xl"
+          className={cn(
+            "relative bg-neutral-50 dark:bg-neutral-800 overflow-hidden aspect-square rounded-t-2xl",
+            // Dim only the imagery for sold-out items. Dimming the whole card
+            // (the previous `opacity-50`) pushed the name and price below WCAG
+            // contrast, making the card unreadable rather than just unavailable.
+            outOfStock && "opacity-40 saturate-50"
+          )}
           style={{ viewTransitionName: `product-img-${product.id}` }}
         >
           <motion.div
@@ -145,9 +156,22 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
 
           {/* Single badge — top left */}
           {badge && (
-            <span className="absolute top-2.5 left-2.5 z-10 rounded-lg bg-neutral-900/90 backdrop-blur-sm px-2 py-1 text-[10px] font-bold text-white">
-              {badge}
+            <span
+              className={cn(
+                "absolute top-2.5 left-2.5 z-10 rounded-lg px-2 py-1 text-micro font-bold backdrop-blur-sm",
+                badge.tone === "discount"
+                  ? "bg-secondary-500 text-white"
+                  : "bg-neutral-900/90 text-white"
+              )}
+            >
+              {badge.label}
             </span>
+          )}
+
+          {/* Delivery ETA — bottom left. Overlaid on the image so it cannot
+              change card height and break grid rhythm. */}
+          {!outOfStock && (
+            <DeliveryEtaChip className="absolute bottom-2 left-2 z-10 shadow-sm" />
           )}
 
           {/* Favorite button — top right */}
@@ -177,12 +201,12 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
               <span className="text-micro text-neutral-500 dark:text-neutral-400 font-medium">{product.unit}</span>
             )}
             {!outOfStock && product.stock > 0 && product.stock <= 5 && (
-              <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+              <span className="text-micro font-bold text-amber-700 dark:text-amber-400">
                 {product.unit ? "·" : ""} Only {product.stock} left
               </span>
             )}
             {outOfStock && (
-              <span className="text-[10px] font-bold text-neutral-500">Out of stock</span>
+              <span className="text-micro font-bold text-neutral-600 dark:text-neutral-400">Out of stock</span>
             )}
           </div>
 
@@ -207,8 +231,14 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
             )}
           </div>
 
-          {/* Cart control — isolated to prevent parent re-render */}
-          <CartControls product={product} outOfStock={outOfStock} variant="grid" />
+          {/* Cart control — isolated to prevent parent re-render.
+              Sold-out cards offer restock notification instead of a dead button,
+              which captures demand we would otherwise discard. */}
+          {outOfStock ? (
+            <NotifyMeButton productId={product.id} productName={product.name} compact />
+          ) : (
+            <CartControls product={product} outOfStock={outOfStock} variant="grid" />
+          )}
         </div>
       </div>
     </motion.article>
@@ -217,17 +247,22 @@ export const ProductCard = memo(function ProductCard({ product, compact = false,
 
 // ─── Badge Logic ──────────────────────────────────────────────────────────────
 // Priority: discount > featured > new (only ONE badge per card)
-function getBadge(product: Product): string | null {
+//
+// `tone` exists so savings can shout in brand green while informational badges
+// stay neutral. A discount rendered in the same grey as "New" reads as metadata.
+type CardBadge = { label: string; tone: "discount" | "neutral" };
+
+function getBadge(product: Product): CardBadge | null {
   if (product.discountPrice) {
     const pct = Math.round(((product.price - product.discountPrice) / product.price) * 100);
-    return `${pct}% OFF`;
+    return { label: `${pct}% OFF`, tone: "discount" };
   }
   if (product.isFeatured) {
-    return "Staff Pick";
+    return { label: "Staff Pick", tone: "neutral" };
   }
   const isNew = product.createdAt && new Date(product.createdAt) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
   if (isNew) {
-    return "New";
+    return { label: "New", tone: "neutral" };
   }
   return null;
 }

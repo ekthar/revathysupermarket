@@ -80,7 +80,7 @@ export function FavoritesClient({ products: initialProducts }: { products: Favor
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -100, transition: { duration: 0.2 } }}
-              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-neutral-900 card-shadow"
+              className="flex items-center gap-3 p-3 rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1"
             >
               <Link href={`/products/${product.slug}`} className="shrink-0">
                 <div className="h-16 w-16 rounded-xl overflow-hidden bg-neutral-50 dark:bg-neutral-800">

@@ -754,7 +754,7 @@ export function CheckoutForm({
 
           {/* Offers and Rewards - Collapsible */}
           {rewardsEnabled && (
-            <section className="rounded-2xl border border-neutral-100 bg-card dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
+            <section className="rounded-2xl border border-neutral-100 bg-card dark:border-neutral-800 dark:bg-neutral-900 shadow-elevation-1 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setOffersSectionOpen(!offersSectionOpen)}

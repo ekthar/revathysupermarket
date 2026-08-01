@@ -208,7 +208,7 @@ export function ProductReviews({
 
   return (
     <section className="max-w-7xl mx-auto px-4 pb-10 pt-8 md:px-6 lg:px-8">
-      <div className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900">
+      <div className="rounded-2xl bg-white p-5 shadow-elevation-1 dark:bg-neutral-900">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>

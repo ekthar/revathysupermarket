@@ -34,7 +34,7 @@ export function TipSelector({ tipAmount, onTipChange }: TipSelectorProps) {
   }
 
   return (
-    <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
+    <section className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-elevation-1 dark:border-neutral-800 dark:bg-neutral-900">
       <div className="flex items-center gap-2">
         <span className="text-xl" role="img" aria-label="Delivery rider">
           🛵

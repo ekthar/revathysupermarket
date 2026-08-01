@@ -53,7 +53,7 @@ export function OrderBill({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...springs.enter, delay: 0.5 }}
-      className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900 print:shadow-none print:border print:border-neutral-200"
+      className="rounded-2xl bg-white p-5 shadow-elevation-1 dark:bg-neutral-900 print:shadow-none print:border print:border-neutral-200"
     >
       {/* Header */}
       <div className="flex items-center justify-between mb-4">

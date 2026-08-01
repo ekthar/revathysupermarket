@@ -232,8 +232,7 @@ button, a, input, select, textarea, summary {
   }
   .product-card-animated,
   .wheel-scroll-item,
-  .hover-lift,
-  .category-card-animated {
+  .hover-lift {
     transition: none !important;
   }
 }
@@ -330,21 +329,7 @@ h1, h2, h3, h4, h5, h6, .font-display {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
-.ios-map-placeholder {
-  min-height: 15rem;
-  border-radius: 2rem;
-  background:
-    linear-gradient(135deg, rgba(var(--shadow-color), 0.10), rgba(255, 255, 255, 0.35)),
-    radial-gradient(circle at 22% 28%, rgba(var(--color-secondary), 0.32), transparent 4rem),
-    #e8edf2;
-  overflow: hidden;
-}
-.dark .ios-map-placeholder {
-  background:
-    linear-gradient(135deg, rgba(var(--shadow-color), 0.40), rgba(30, 41, 59, 0.35)),
-    radial-gradient(circle at 22% 28%, rgba(var(--color-secondary), 0.2), transparent 4rem),
-    hsl(222 47% 9%);
-}
+
 .ios-native-scroll {
   overscroll-behavior: contain;
 }
@@ -370,76 +355,9 @@ html[data-keyboard-open] .pb-safe {
 /* Must appear after the (min-width: 768px) rule to take precedence for tablets with notches */
 @media (min-width: 768px) and (max-width: 1024px) { .pt-safe { padding-top: env(safe-area-inset-top, 0px); } }
 
-/* Premium card shadow */
-.card-shadow {
-  box-shadow: 0 12px 35px -24px rgba(var(--shadow-color), 0.35);
-}
-.dark .card-shadow {
-  box-shadow: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
-  border: 1px solid rgba(255,255,255,0.06);
-}
 
-.card-shadow-lg {
-  box-shadow: 0 2px 8px rgba(var(--shadow-color), 0.04), 0 8px 24px rgba(var(--shadow-color), 0.06);
-}
-.dark .card-shadow-lg {
-  box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 8px 24px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.08);
-}
 
-/* Elevated card - used for product cards and modals */
-.card-elevated {
-  box-shadow: 0 18px 40px -30px rgba(var(--shadow-color), 0.45);
-  border: 1px solid rgba(var(--shadow-color), 0.04);
-}
-.dark .card-elevated {
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.4), 0 10px 15px -3px rgba(0,0,0,0.3);
-  border: 1px solid rgba(255,255,255,0.08);
-}
 
-/* Green gradient CTA button */
-.btn-gradient-green {
-  background: linear-gradient(135deg, rgb(var(--color-primary)), #262626);
-  color: white;
-  font-weight: 700;
-  border-radius: 1rem;
-  box-shadow: 0 16px 28px -18px rgba(var(--shadow-color), 0.65);
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.btn-gradient-green:hover {
-  box-shadow: 0 20px 32px -18px rgba(var(--shadow-color), 0.75);
-}
-.btn-gradient-green:active {
-  transform: scale(0.97);
-  box-shadow: 0 2px 8px -2px rgba(var(--shadow-color), 0.3);
-}
-
-/* Glass morphism panels */
-.glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  transform: translateZ(0);
-}
-.dark .glass-card {
-  background: rgba(var(--shadow-color), 0.85);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-/* Pill button - rounded capsule style */
-.pill-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1.25rem;
-  border-radius: 9999px;
-  font-size: 0.8125rem;
-  font-weight: 700;
-  transition: all 0.2s ease;
-}
 
 /* Show All floating pill */
 .show-all-pill {
@@ -463,24 +381,7 @@ html[data-keyboard-open] .pb-safe {
   transform: translateY(0px) scale(0.97);
 }
 
-/* Category card with gradient overlay */
-.category-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.25rem;
-  aspect-ratio: 1 / 1.1;
-  transition: transform 0.2s ease;
-}
-.category-card:hover { transform: translateY(-2px); }
 
-/* Promo gradient cards */
-.promo-card {
-  position: relative;
-  overflow: hidden;
-  border-radius: 1.5rem;
-  padding: 1.5rem;
-  min-height: 200px;
-}
 
 /* Floating cart bar */
 .floating-cart-bar {
@@ -507,10 +408,7 @@ html[data-keyboard-open] .pb-safe {
   box-shadow: 0 4px 16px -4px rgba(0,0,0,0.6);
 }
 
-/* Soft enter for tab routes — NO animation, instant (Apple native feel) */
-.route-soft-enter {
-  /* Content appears instantly — no flash, no animation */
-}
+
 
 /* Sticky category rail */
 .sticky-category-rail {
@@ -648,12 +546,7 @@ html[data-keyboard-open] .pb-safe {
 }
 .pulse-ring { animation: pulseRing 1.5s infinite; }
 
-/* Fade-in animation — starts at 85% opacity, NOT 0 (prevents flash) */
-@keyframes fadeInUp {
-  from { opacity: 0.85; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.animate-fade-in-up { animation: fadeInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
 
 /* Lazy render fade — subtle content appearance */
 @keyframes lazyFadeIn {
@@ -668,12 +561,7 @@ html[data-keyboard-open] .pb-safe {
   100% { opacity: 0; transform: translateY(80vh) rotate(720deg) scale(0.5); }
 }
 
-/* Scale-in animation */
-@keyframes scaleIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
-}
-.animate-scale-in { animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+
 
 /* ===== ENHANCED ANIMATIONS ===== */
 
@@ -681,53 +569,6 @@ html[data-keyboard-open] .pb-safe {
 @keyframes shimmer {
   100% { transform: translateX(100%); }
 }
-
-/* Bounce number animation for quantity stepper */
-@keyframes bounceNumber {
-  0% { transform: scale(1); }
-  30% { transform: scale(1.4); }
-  50% { transform: scale(0.9); }
-  70% { transform: scale(1.1); }
-  100% { transform: scale(1); }
-}
-.animate-bounce-number { animation: bounceNumber 0.35s cubic-bezier(0.34, 1.56, 0.64, 1); }
-
-/* Float/bob animation for floating elements */
-@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-8px); }
-}
-.animate-float { animation: float 3s ease-in-out infinite; }
-
-/* Gentle pulse for notification badges */
-@keyframes gentlePulse {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.1); }
-}
-.animate-gentle-pulse { animation: gentlePulse 2s ease-in-out infinite; }
-
-/* Elastic pop for buttons/pills */
-@keyframes elasticPop {
-  0% { transform: scale(0.3); opacity: 0; }
-  50% { transform: scale(1.05); }
-  70% { transform: scale(0.95); }
-  100% { transform: scale(1); opacity: 1; }
-}
-.animate-elastic-pop { animation: elasticPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-
-/* Slide in from left (for section headers) */
-@keyframes slideInLeft {
-  from { transform: translateX(-24px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-.animate-slide-in-left { animation: slideInLeft 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-/* Slide in from right */
-@keyframes slideInRight {
-  from { transform: translateX(24px); opacity: 0; }
-  to { transform: translateX(0); opacity: 1; }
-}
-.animate-slide-in-right { animation: slideInRight 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
 /* Hover lift with enhanced shadow */
 .hover-lift {
@@ -739,15 +580,7 @@ html[data-keyboard-open] .pb-safe {
   box-shadow: 0 12px 28px -8px rgba(0,0,0,0.12), 0 4px 12px -4px rgba(0,0,0,0.06);
 }
 
-/* Category card hover with tilt */
-.category-card-animated {
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
-  transform: translateZ(0);
-}
-.category-card-animated:hover {
-  transform: translateY(-6px) translateZ(0);
-  box-shadow: 0 16px 40px -12px rgba(0,0,0,0.15);
-}
+
 
 /* Product card hover for desktop */
 .product-card-animated {
@@ -763,29 +596,7 @@ html[data-keyboard-open] .pb-safe {
   transform: scale(0.97) translateZ(0);
 }
 
-/* Smooth scroll snap with elastic feel */
-.scroll-x-elastic {
-  overflow-x: auto;
-  scroll-snap-type: x mandatory;
-  overscroll-behavior-x: contain;
-  scroll-behavior: smooth;
-}
-.scroll-x-elastic > * { scroll-snap-align: start; }
 
-/* Ripple effect */
-.ripple {
-  position: relative;
-  overflow: hidden;
-}
-.ripple::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(0,0,0,0.06) 0%, transparent 60%);
-  opacity: 0;
-  transition: opacity 0.3s;
-}
-.ripple:active::after { opacity: 1; }
 
 /* ===== WHEEL-LIKE SCROLL ===== */
 /* Creates a carousel/wheel scrolling effect with momentum */
@@ -832,12 +643,6 @@ html[data-keyboard-open] .pb-safe {
 
 /* ===== DARK MODE GLOBAL FIXES ===== */
 
-/* Toast position fix for mobile */
-.safe-toast-stack {
-  top: env(safe-area-inset-top, 12px);
-  padding-top: 12px;
-}
-
 /* iOS-native toast glass — dark translucent pill */
 .ios-toast-glass {
   background: rgba(28, 28, 30, 0.88);
@@ -853,10 +658,7 @@ html[data-keyboard-open] .pb-safe {
   .ios-toast-glass { background: rgba(28, 28, 30, 0.97); }
 }
 
-/* Fix promo card in dark */
-.dark .promo-card {
-  border: 1px solid rgba(255,255,255,0.06);
-}
+
 
 /* Customer dashboard dark mode */
 .dark .bg-slate-50\/50 { background: rgba(30, 41, 59, 0.5); }
@@ -903,11 +705,7 @@ html[data-keyboard-open] .pb-safe {
   }
 }
 
-/* Category card dark mode fix */
-.dark .category-card {
-  border: 1px solid rgba(255,255,255,0.08);
-  background-color: hsl(222 47% 12%) !important;
-}
+
 
 /* ===== GPU ACCELERATION UTILITIES ===== */
 /* Force GPU compositing for smoother animations on interactive elements */
@@ -933,16 +731,14 @@ html[data-keyboard-open] .pb-safe {
 /* During active touch interaction, promote to own layer for jank-free 120fps */
 @media (pointer: coarse) {
   .press:active,
-  .product-card-animated:active,
-  .category-card-animated:active {
+  .product-card-animated:active {
     will-change: transform;
   }
 }
 
 /* Scrollable containers: hint the browser to optimize for scroll performance */
 .wheel-scroll,
-.scroll-x,
-[data-scroll-container] {
+.scroll-x {
   will-change: scroll-position;
   -webkit-overflow-scrolling: touch;
 }
@@ -1051,21 +847,6 @@ img:not([decoding]) {
 
 /* ===== ACCESSIBILITY: FOCUS IMPROVEMENTS ===== */
 
-/* Ensure all interactive elements have visible focus ring */
-.focus-ring:focus-visible {
-  outline: 3px solid hsl(var(--ring) / 0.5);
-  outline-offset: 2px;
-  border-radius: var(--radius);
-}
-
-/* Larger touch targets for mobile (minimum 44x44px per WCAG 2.5.8) */
-@media (pointer: coarse) {
-  .touch-target {
-    min-height: 44px;
-    min-width: 44px;
-  }
-}
-
 /* ===== FORM ACCESSIBILITY ===== */
 
 /* Validation error announcement styling */
@@ -1098,52 +879,15 @@ img:not([decoding]) {
  * Key principle: use fluid widths (clamp, min, %) instead of fixed pixels.
  */
 
-/* Horizontal scroll container with fade indicators (admin data tables) */
-.scroll-x-container {
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scrollbar-width: thin;
-  scroll-behavior: smooth;
-}
-
-/* Fade gradient on scroll edges to indicate more content */
-.scroll-x-fade {
-  position: relative;
-}
-.scroll-x-fade::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 2rem;
-  background: linear-gradient(to right, transparent, hsl(var(--background)));
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-.scroll-x-fade[data-can-scroll-right="true"]::after {
-  opacity: 1;
-}
-
 /* Ensure no horizontal overflow on the viewport at 320px */
 @media (max-width: 360px) {
   /* Ensure product cards don't push out */
   .product-card-animated { max-width: 100%; }
 }
 
-/* Tablet-specific: footer and sidebar adjustments */
-@media (min-width: 768px) and (max-width: 1023px) {
-  /* 2-column footer on tablets instead of cramped 4-col */
-  .footer-grid { grid-template-columns: repeat(2, 1fr) !important; }
-}
 
-/* Safe text wrapping for very long words (addresses, order numbers) */
-.break-anywhere {
-  overflow-wrap: anywhere;
-  word-break: break-word;
-  hyphens: auto;
-}
+
+
 
 /* Delivery map marker pulse animations (moved from per-mount <style> injection) */
 @keyframes map-pulse {
@@ -1169,13 +913,7 @@ img:not([decoding]) {
   animation: rider-drop-in 0.7s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
 }
 
-/* Fluid container that respects safe areas and never overflows */
-.fluid-container {
-  width: 100%;
-  max-width: min(100vw - 2rem, var(--max-content-width, 80rem));
-  margin-inline: auto;
-  padding-inline: max(1rem, env(safe-area-inset-left, 0px));
-}
+
 
 /* ===== PAGE TRANSITIONS ===== */
 
@@ -1229,9 +967,7 @@ img:not([decoding]) {
 }
 
 /* Scroll containers */
-.product-grid,
-.scroll-x-container,
-[data-scroll-container] {
+.wheel-scroll {
   touch-action: pan-y;
   -webkit-overflow-scrolling: touch;
 }
@@ -1258,14 +994,7 @@ button, a, [role="button"], .press {
   }
 }
 
-/* Smooth scrolling for product grids */
-.product-grid {
-  scroll-behavior: smooth;
-  scroll-snap-type: x proximity;
-}
-.product-grid > * {
-  scroll-snap-align: start;
-}
+
 
 /* ===== PLAN 3+4: NATIVE FEEL ENHANCEMENTS ===== */
 
@@ -1278,48 +1007,7 @@ button, a, [role="button"], .press {
   isolation: isolate;
 }
 
-/* Skeleton show-delay: don't flash on fast connections (Plan 4) */
-.skeleton-delayed {
-  animation: skeletonFadeIn 200ms 150ms both;
-}
-@keyframes skeletonFadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
 
-/* Materialize animation for glass surfaces (Plan 3 §12) */
-@keyframes materialize {
-  from {
-    backdrop-filter: blur(0px);
-    transform: scale(0.98);
-    opacity: 0;
-  }
-  to {
-    backdrop-filter: blur(22px);
-    transform: scale(1);
-    opacity: 1;
-  }
-}
-.material-enter {
-  animation: materialize 300ms cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
-}
-
-/* Scroll-edge mask: fade instead of hard border (Plan 3 §12) */
-.scroll-edge-mask {
-  mask-image: linear-gradient(
-    to bottom,
-    transparent 0px,
-    black 8px,
-    black calc(100% - 8px),
-    transparent 100%
-  );
-}
-
-/* Glass text: heavier weight for legibility over blur (Plan 3 §12) */
-.glass-text {
-  font-weight: 600;
-  letter-spacing: 0.005em;
-}
 
 /* Touch disambiguation: delay :active on scrollable items (Plan 4) */
 @media (pointer: coarse) {
@@ -1351,8 +1039,6 @@ a,
 
 /* Disable text selection on cards, nav items, and other non-text interactive surfaces */
 .product-card-animated,
-.category-card,
-.category-card-animated,
 .wheel-scroll-item,
 .ios-bottom-bar,
 .ios-glass,
@@ -1420,113 +1106,6 @@ html[data-keyboard-open] [data-hide-on-keyboard="true"] {
   }
 }
 
-/* iOS-style momentum scrolling with rubber-band at edges */
-.ios-scroll {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
-  scroll-behavior: smooth;
-}
-
-/* Apple's "vibrancy" effect — text over blurred backgrounds */
-.ios-vibrancy {
-  color: rgba(0, 0, 0, 0.85);
-  font-weight: 600;
-}
-.dark .ios-vibrancy {
-  color: rgba(255, 255, 255, 0.9);
-}
-
-/* iOS separator line (1px hairline with device pixel ratio) */
-.ios-separator {
-  border: none;
-  height: 0.5px;
-  background: rgba(60, 60, 67, 0.12);
-}
-.dark .ios-separator {
-  background: rgba(84, 84, 88, 0.36);
-}
-
-/* Apple's grouped list cell (Settings.app style) */
-.ios-cell {
-  display: flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 11px 16px;
-  background: white;
-  transition: background-color 80ms ease;
-}
-.ios-cell:active {
-  background-color: rgba(0, 0, 0, 0.04);
-}
-.dark .ios-cell {
-  background: hsl(0 0% 10%);
-}
-.dark .ios-cell:active {
-  background-color: rgba(255, 255, 255, 0.04);
-}
-
-/* Apple's system background layers */
-.ios-bg-primary { background: #FFFFFF; }
-.ios-bg-secondary { background: #F2F2F7; }
-.ios-bg-tertiary { background: #FFFFFF; }
-.dark .ios-bg-primary { background: #000000; }
-.dark .ios-bg-secondary { background: #1C1C1E; }
-.dark .ios-bg-tertiary { background: #2C2C2E; }
-
-/* iOS large title style (like iOS Settings header) */
-.ios-large-title {
-  font-size: 34px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  line-height: 1.18;
-}
-
-/* iOS body text */
-.ios-body {
-  font-size: 17px;
-  line-height: 1.47;
-  letter-spacing: -0.01em;
-}
-
-/* iOS caption */
-.ios-caption {
-  font-size: 12px;
-  line-height: 1.33;
-  letter-spacing: 0;
-  color: rgba(60, 60, 67, 0.6);
-}
-.dark .ios-caption {
-  color: rgba(235, 235, 245, 0.6);
-}
-
-/* Apple's exact shadow for floating elements (Cards, Popovers) */
-.ios-shadow-card {
-  box-shadow:
-    0 0 0 0.5px rgba(0, 0, 0, 0.04),
-    0 2px 8px rgba(0, 0, 0, 0.04),
-    0 8px 24px rgba(0, 0, 0, 0.06);
-}
-.dark .ios-shadow-card {
-  box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 2px 8px rgba(0, 0, 0, 0.3),
-    0 8px 24px rgba(0, 0, 0, 0.4);
-}
-
-/* Apple's exact shadow for elevated elements (Sheets, Modals) */
-.ios-shadow-elevated {
-  box-shadow:
-    0 0 0 0.5px rgba(0, 0, 0, 0.04),
-    0 4px 16px rgba(0, 0, 0, 0.08),
-    0 24px 64px rgba(0, 0, 0, 0.12);
-}
-.dark .ios-shadow-elevated {
-  box-shadow:
-    0 0 0 0.5px rgba(255, 255, 255, 0.06),
-    0 4px 16px rgba(0, 0, 0, 0.4),
-    0 24px 64px rgba(0, 0, 0, 0.5);
-}
-
 /* Zero-flash guarantee: elements are visible until GSAP explicitly sets them.
    GSAP's immediateRender:false means they stay visible until ScrollTrigger fires. */
 
@@ -1545,11 +1124,7 @@ html[data-keyboard-open] [data-hide-on-keyboard="true"] {
   border-color: rgba(255, 255, 255, 0.06);
 }
 
-/* Mega menu dark mode enhancement */
-.dark [data-mega-menu] {
-  background: hsl(222 47% 7%);
-  border-color: rgba(255, 255, 255, 0.08);
-}
+
 
 /* Breadcrumb dark mode */
 .dark nav[aria-label="Breadcrumb"] a {
@@ -1564,22 +1139,11 @@ html[data-keyboard-open] [data-hide-on-keyboard="true"] {
   background: hsl(222 47% 9%);
 }
 
-/* Coach marks dark mode */
-.dark [data-coach-mark] {
-  background: hsl(222 47% 9%);
-  border-color: rgba(255, 255, 255, 0.08);
-}
 
-/* Login panel dark mode adjustments */
-.dark .login-feature-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.08);
-}
 
-/* Onboarding overlay dark mode */
-.dark [data-onboarding-overlay] {
-  background: rgba(0, 0, 0, 0.8);
-}
+
+
+
 
 /* Enhanced scrollbar for dark mode */
 .dark ::-webkit-scrollbar-thumb {

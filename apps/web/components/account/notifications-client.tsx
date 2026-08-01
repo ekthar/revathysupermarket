@@ -56,7 +56,7 @@ function NotifRow({ notif, onMarkRead, onClear, index }: { notif: Notification; 
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: 24 }}
       transition={{ delay: index * 0.03 }}
-      className={`rounded-2xl p-4 ${notif.read ? "bg-white dark:bg-neutral-900" : "bg-primary/5 dark:bg-primary/10 border border-primary/10"} card-shadow`}
+      className={`rounded-2xl p-4 ${notif.read ? "bg-white dark:bg-neutral-900" : "bg-primary/5 dark:bg-primary/10 border border-primary/10"} shadow-elevation-1`}
     >
       <div className="flex gap-3">
         <div className={`h-9 w-9 rounded-xl ${typeConfig.bg} flex items-center justify-center shrink-0`}>

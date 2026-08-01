@@ -85,7 +85,7 @@ export function DeliveryModeSelector({
   const currentDateSlots = groupedSlots.get(selectedDate) ?? [];
 
   return (
-    <section className="rounded-2xl border border-neutral-100 bg-white p-4 card-shadow dark:border-neutral-800 dark:bg-neutral-900">
+    <section className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-elevation-1 dark:border-neutral-800 dark:bg-neutral-900">
       <h2 className="text-sm font-black text-neutral-900 dark:text-white">Delivery time</h2>
       <div className="mt-3 grid grid-cols-2 gap-2">
         {instantEnabled && (

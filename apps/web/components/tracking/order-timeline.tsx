@@ -130,7 +130,7 @@ export function OrderTimeline({ currentStatus, distanceKm, etaMinutes, updatedAt
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ ...springs.enter, delay: 0.45 }}
-      className="rounded-2xl bg-white p-5 card-shadow dark:bg-neutral-900"
+      className="rounded-2xl bg-white p-5 shadow-elevation-1 dark:bg-neutral-900"
     >
       <div className="flex items-center justify-between mb-3">
         <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">

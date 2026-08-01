@@ -14,6 +14,9 @@ import { haptic } from "@/lib/haptics";
 import type { Product } from "@/lib/types";
 import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { VoiceSearchButton } from "@/components/search/voice-search-button";
+import { ZeroResultSuggestions } from "@/components/search/zero-result-suggestions";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 const HISTORY_KEY = "msm-search-history";
 
@@ -70,6 +73,7 @@ export function GlobalSearchSheet({
   const [history, setHistory] = useState<string[]>([]);
   const [trending, setTrending] = useState<string[]>([]);
   const [categories, setCategories] = useState<CategorySuggestion[]>([]);
+  const [popularProducts, setPopularProducts] = useState<SearchProduct[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const trimmed = query.trim();
@@ -79,7 +83,9 @@ export function GlobalSearchSheet({
     if (open) {
       setHistory(loadHistory());
       setQuery(initialQuery);
-      // Focus after drawer animation settles (~320ms spring)
+      // Focus the search input after the drawer animation settles (~320ms spring).
+      // Vaul (built on Radix Dialog) handles focus trapping and focus restoration
+      // automatically - when the drawer closes, focus returns to the trigger element.
       const t = setTimeout(() => inputRef.current?.focus(), 350);
       return () => clearTimeout(t);
     }
@@ -95,10 +101,11 @@ export function GlobalSearchSheet({
     let cancelled = false;
     fetch("/api/search/trending")
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { terms?: string[]; categories?: CategorySuggestion[] } | null) => {
+      .then((data: { terms?: string[]; categories?: CategorySuggestion[]; popularProducts?: SearchProduct[] } | null) => {
         if (cancelled || !data) return;
         if (Array.isArray(data.terms)) setTrending(data.terms);
         if (Array.isArray(data.categories)) setCategories(data.categories);
+        if (Array.isArray(data.popularProducts)) setPopularProducts(data.popularProducts);
       })
       .catch(() => {});
     return () => {
@@ -129,6 +136,10 @@ export function GlobalSearchSheet({
         if (!res.ok) throw new Error("search failed");
         const data = (await res.json()) as { items: SearchProduct[]; suggestions?: string[] };
         setResults(data.items ?? []);
+        // Track zero results for search analytics backlog
+        if ((data.items ?? []).length === 0) {
+          trackEvent(ANALYTICS_EVENTS.SEARCH_ZERO_RESULTS, { query: trimmed });
+        }
         // The products API returns fuzzy near-misses when the exact match count is
         // low — surface them as "Did you mean" rather than discarding them.
         setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);
@@ -238,6 +249,11 @@ export function GlobalSearchSheet({
     <Drawer.Root open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-dialog bg-black/45 backdrop-blur-sm" />
+        {/* Vaul's Drawer.Content is built on Radix Dialog, which provides:
+            - Focus trapping: Tab cycles within the drawer while open
+            - Focus restoration: focus returns to the trigger element on close
+            - Escape key handling: closes the drawer
+            No additional focus-trap library is needed. */}
         <Drawer.Content className="fixed inset-x-0 bottom-0 top-[8%] z-[91] flex flex-col rounded-t-3xl bg-background outline-none shadow-2xl">
           <div className="flex justify-center pt-3 pb-1">
             <div className="h-1 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700" />
@@ -403,7 +419,7 @@ export function GlobalSearchSheet({
                         onClick={() => setQuery(suggestion)}
                         className="flex h-10 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-caption font-semibold text-foreground press"
                       >
-                        <Sparkles className="h-3 w-3 text-amber-500" />
+                        <Sparkles className="h-3 w-3 text-amber-600" />
                         {suggestion}
                       </button>
                     ))}
@@ -417,6 +433,13 @@ export function GlobalSearchSheet({
                 >
                   Search all products
                 </button>
+
+                {/* Zero-result suggestions: category entry points & popular products */}
+                <ZeroResultSuggestions
+                  categories={categories.map((c) => ({ name: c.name, slug: c.slug, icon: null }))}
+                  popularProducts={popularProducts as unknown as Product[]}
+                  onClose={handleClose}
+                />
               </div>
             ) : (
               <div className="space-y-1">

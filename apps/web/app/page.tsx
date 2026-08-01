@@ -19,6 +19,11 @@ import { getFeatureFlag } from "@/lib/feature-flags";
 import type { Product } from "@/lib/types";
 import { LazyRender } from "@/components/ui/lazy-render";
 import { SmartReorderPill } from "@/components/home/smart-reorder-pill";
+import { OffersStrip } from "@/components/home/offers-strip";
+import { TimeOfDayRail } from "@/components/home/time-of-day-rail";
+import { BrandRail } from "@/components/home/brand-rail";
+
+const useDemoData = process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true";
 
 
 export const revalidate = 60;
@@ -68,6 +73,37 @@ const getHomepageCategories = unstable_cache(
   { revalidate: 60, tags: ["homepage", "categories"] }
 );
 
+const getActiveOffers = unstable_cache(
+  async () => prisma.offer.findMany({
+    where: {
+      isActive: true,
+      OR: [
+        { expiresAt: null },
+        { expiresAt: { gte: new Date() } },
+      ],
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, title: true, description: true, badge: true, image: true, categoryId: true },
+    take: 6,
+  }).catch(() => []),
+  ["homepage-offers"],
+  { revalidate: 60, tags: ["homepage", "offers"] }
+);
+
+const getDistinctBrands = unstable_cache(
+  async () => {
+    const rows = await prisma.product.findMany({
+      where: { isActive: true, brand: { not: null } },
+      select: { brand: true },
+      distinct: ["brand"],
+      orderBy: { brand: "asc" },
+    }).catch(() => []);
+    return rows.map((r) => r.brand).filter((b): b is string => b !== null);
+  },
+  ["homepage-brands"],
+  { revalidate: 60, tags: ["homepage", "products"] }
+);
+
 const demoCategoryImages: Record<string, string> = {
   Fruits: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=200&h=200&fit=crop",
   Vegetables: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=200&h=200&fit=crop",
@@ -100,13 +136,15 @@ export default async function HomePage() {
     );
   }
 
-  const [settings, banner, dbProducts, dbCategories, promoBanners, trendingTerms] = await Promise.all([
+  const [settings, banner, dbProducts, dbCategories, promoBanners, trendingTerms, activeOffers, brands] = await Promise.all([
     getPublicStoreSettings(),
     getHomepageBanner(),
     getHomepageProducts(),
     getHomepageCategories(),
     getPromoBanners(),
     getTrendingSearchTerms().catch(() => [] as string[]),
+    getActiveOffers(),
+    getDistinctBrands(),
   ]);
 
   const allProducts: Product[] = dbProducts.length > 0
@@ -118,7 +156,7 @@ export default async function HomePage() {
         image: p.image, description: p.description, stock: p.stock,
         popularity: p.popularity, unit: p.unit, isFeatured: p.isFeatured
       }))
-    : products;
+    : (useDemoData ? products : []);
 
   const categoryTiles: CategoryTile[] = dbCategories.length > 0
     ? dbCategories.map((c) => ({
@@ -128,13 +166,13 @@ export default async function HomePage() {
         icon: c.icon,
         count: c._count.products
       }))
-    : demoCategories.map((name) => ({
+    : (useDemoData ? demoCategories.map((name) => ({
         name,
         slug: slugify(name),
         image: demoCategoryImages[name] ?? null,
         icon: null,
         count: products.filter((p) => p.category === name).length
-      }));
+      })) : []);
   const categories: readonly string[] = categoryTiles.map((c) => c.name);
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);
@@ -181,20 +219,29 @@ export default async function HomePage() {
         deliveryEstimateMax={settings.deliveryEstimateMax}
       />
 
-      {/* ── Section 2: Promo banners (if any) ── */}
+      {/* ── Section 2: Offers Strip (after hero) ── */}
+      <OffersStrip offers={activeOffers} />
+
+      {/* ── Section 3: Promo banners (if any) ── */}
       <PromoBanners banners={promoBanners} />
 
       {/* Location prompt — shown on first visit if no saved location.
           Deferred until after the hero so it never competes with first paint. */}
       <LocationPrompt />
 
-      {/* ── Section 3: Recent Orders (hidden when empty) ── */}
+      {/* ── Section 4: Recent Orders (promoted higher for returning users) ── */}
       <RecentOrdersSection />
 
-      {/* ── Section 4: Categories ── */}
+      {/* Smart Reorder Pill — floating 'Your Usual' for returning users */}
+      <SmartReorderPill />
+
+      {/* ── Section 5: Categories ── */}
       <AnimatedCategories categories={categoryTiles} />
 
-      {/* ── Section 5: Trending Products ── */}
+      {/* ── Section 6: Time of Day Rail ── */}
+      <TimeOfDayRail products={allProducts} />
+
+      {/* ── Section 7: Trending Products ── */}
       <div className="cv-auto">
         <AnimatedProductSection
           title="Trending This Week"
@@ -207,7 +254,10 @@ export default async function HomePage() {
         />
       </div>
 
-      {/* ── Section 6: On Sale (only when discounts exist) ── */}
+      {/* ── Section 8: Brand Rail ── */}
+      <BrandRail brands={brands} />
+
+      {/* ── Section 9: On Sale (only when discounts exist) ── */}
       {offers.length > 0 && (
         <LazyRender height={400} rootMargin="300px" className="cv-auto">
           <AnimatedProductSection
@@ -220,7 +270,7 @@ export default async function HomePage() {
         </LazyRender>
       )}
 
-      {/* ── Section 7: Browse All CTA ── */}
+      {/* ── Section 10: Browse All CTA ── */}
       <section className="max-w-7xl mx-auto px-4 md:px-6 lg:px-8 pt-10 md:pt-14 pb-8 md:pb-10">
         <div className="flex flex-col items-center text-center">
           <p className="text-sm font-semibold text-neutral-500 dark:text-neutral-400">
@@ -235,8 +285,6 @@ export default async function HomePage() {
           </Link>
         </div>
       </section>
-      {/* Smart Reorder Pill — floating 'Your Usual' for returning users */}
-      <SmartReorderPill />
     </main>
   );
 }

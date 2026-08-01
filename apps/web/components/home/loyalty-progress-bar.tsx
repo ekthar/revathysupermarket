@@ -47,7 +47,7 @@ export function LoyaltyProgressBar({ points, nextRewardAt }: { points: number; n
             </div>
           </div>
           {nextTier && (
-            <span className="text-micro font-semibold text-neutral-500 dark:text-neutral-400">
+            <span className="text-micro font-semibold text-neutral-600 dark:text-neutral-400">
               {nextTier.min - points} to {nextTier.name}
             </span>
           )}
@@ -68,7 +68,7 @@ export function LoyaltyProgressBar({ points, nextRewardAt }: { points: number; n
 
         {/* Reward progress */}
         {remaining > 0 && (
-          <p className="mt-1.5 text-micro font-medium text-neutral-500 dark:text-neutral-400">
+          <p className="mt-1.5 text-micro font-medium text-neutral-600 dark:text-neutral-400">
             <Gift className="inline h-3 w-3 -mt-0.5 mr-0.5" />
             {remaining} more points for ₹50 reward
           </p>

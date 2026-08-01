@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Heart, Minus, Plus, Share2, ShoppingBag, Star, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { springs, tapScale } from "@/lib/motion";
 import { useStoreConfig } from "@/lib/use-store-config";
 import { formatCurrency } from "@/lib/utils";
@@ -13,23 +13,70 @@ import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { ProductImage } from "@/components/product-image";
 import { nativeShare } from "@/lib/native-share";
 import { haptic } from "@/lib/haptics";
+import { VariantSelector } from "@/components/product/variant-selector";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
+import type { ProductVariantItem } from "@/components/product/variant-selector";
 import type { Product } from "@/lib/types";
 
-export function ProductDetailClient({ product }: { product: Product }) {
+type ProductDetailClientProps = {
+  product: Product;
+  variants?: ProductVariantItem[];
+};
+
+export function ProductDetailClient({ product, variants = [] }: ProductDetailClientProps) {
   const { addItem, items, updateQuantity } = useCart();
   const { showToast } = useToast();
   const storeConfig = useStoreConfig();
   const [liked, setLiked] = useState(false);
   const { flyToCart } = useFlyToCart();
-  const cartItem = items.find((i) => i.id === product.id);
-  const price = product.discountPrice ?? product.price;
-  const outOfStock = product.stock <= 0;
+
+  // Variant selection state: prefer isDefault variant (if in stock), then first in-stock by sortOrder
+  const defaultVariant =
+    variants.find((v) => v.isDefault && v.stock > 0) ??
+    variants.find((v) => v.stock > 0) ??
+    variants[0];
+  const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>(
+    defaultVariant?.id
+  );
+  const selectedVariant = variants.find((v) => v.id === selectedVariantId);
+
+  // Track PRODUCT_VIEWED on mount
+  useEffect(() => {
+    trackEvent(ANALYTICS_EVENTS.PRODUCT_VIEWED, {
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      price: product.discountPrice ?? product.price,
+      slug: product.slug,
+    });
+  }, [product.id, product.name, product.category, product.discountPrice, product.price, product.slug]);
+
+  // Resolve prices based on selected variant (fallback to product if no variants)
+  const displayPrice = selectedVariant?.discountPrice ?? selectedVariant?.price ?? product.discountPrice ?? product.price;
+  const displayOriginalPrice = selectedVariant ? selectedVariant.price : product.price;
+  const hasDiscount = selectedVariant
+    ? !!(selectedVariant.discountPrice && selectedVariant.discountPrice < selectedVariant.price)
+    : !!(product.discountPrice && product.discountPrice < product.price);
+  const stock = selectedVariant?.stock ?? product.stock;
+  const outOfStock = stock <= 0;
+
+  // Cart keying: use variantId when variants are present
+  const cartItemKey = selectedVariantId ? `${product.id}::${selectedVariantId}` : product.id;
+  const cartItem = items.find((i) => {
+    const key = i.variantId ? `${i.id}::${i.variantId}` : i.id;
+    return key === cartItemKey;
+  });
 
   function handleAdd(e?: React.MouseEvent<HTMLButtonElement>) {
     if (outOfStock) return;
-    addItem(product);
+    // Build a product with variant-specific price/stock for the cart
+    const productForCart: Product = selectedVariant
+      ? { ...product, price: selectedVariant.price, discountPrice: selectedVariant.discountPrice, stock: selectedVariant.stock, unit: selectedVariant.unit }
+      : product;
+    addItem(productForCart, 1, selectedVariantId, selectedVariant?.label);
     haptic("medium");
-    showToast(`Added ${product.name}`, "success");
+    showToast(`Added ${product.name}${selectedVariant ? ` (${selectedVariant.label})` : ""}`, "success");
     if (e?.currentTarget) {
       flyToCart(product.image, e.currentTarget);
     }
@@ -81,18 +128,18 @@ export function ProductDetailClient({ product }: { product: Product }) {
             transition={springs.enter}
             className="h-full w-full"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" />
+            <ProductImage src={product.image} alt={product.name} className="object-cover" sizes="100vw" />
           </motion.div>
         </div>
 
         {/* Discount badge */}
-        {product.discountPrice && (
+        {hasDiscount && (
           <motion.span
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             className="absolute bottom-4 left-4 bg-orange-500 text-white text-caption font-bold px-3 py-1.5 rounded-full shadow-lg"
           >
-            -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
+            -{Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)}% OFF
           </motion.span>
         )}
       </div>
@@ -106,10 +153,10 @@ export function ProductDetailClient({ product }: { product: Product }) {
             animate={{ opacity: 1, x: 0 }}
             className="sticky top-24 rounded-3xl overflow-hidden bg-slate-50 dark:bg-slate-900 aspect-square"
           >
-            <ProductImage src={product.image} alt={product.name} className="object-cover" />
-            {product.discountPrice && (
+            <ProductImage src={product.image} alt={product.name} className="object-cover" sizes="(max-width: 1024px) 50vw, 540px" />
+            {hasDiscount && (
               <span className="absolute top-4 left-4 bg-orange-500 text-white text-caption font-bold px-3 py-1.5 rounded-full shadow-lg">
-                -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}% OFF
+                -{Math.round(((displayOriginalPrice - displayPrice) / displayOriginalPrice) * 100)}% OFF
               </span>
             )}
           </motion.div>
@@ -138,15 +185,27 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
             {/* Price */}
             <div className="mt-6 flex items-baseline gap-3">
-              <span className="text-3xl font-black text-slate-900 dark:text-white">{formatCurrency(price)}</span>
-              {product.discountPrice && (
-                <span className="text-lg text-slate-400 line-through">{formatCurrency(product.price)}</span>
+              <span className="text-3xl font-black text-slate-900 dark:text-white">{formatCurrency(displayPrice)}</span>
+              {hasDiscount && (
+                <span className="text-lg text-slate-400 line-through">{formatCurrency(displayOriginalPrice)}</span>
               )}
             </div>
 
+            {/* Variant Selector */}
+            {variants.length > 1 && (
+              <div className="mt-4">
+                <p className="text-caption font-semibold text-slate-600 dark:text-slate-400 mb-2">Pack size</p>
+                <VariantSelector
+                  variants={variants}
+                  selectedVariantId={selectedVariantId ?? ""}
+                  onSelect={setSelectedVariantId}
+                />
+              </div>
+            )}
+
             {/* Stock */}
-            <p className={`mt-2 text-body font-semibold ${outOfStock ? "text-red-500" : product.stock <= 5 ? "text-amber-600" : "text-primary"}`}>
-              {outOfStock ? "Out of stock" : product.stock <= 5 ? `Only ${product.stock} left` : `${product.stock} in stock`}
+            <p className={`mt-2 text-body font-semibold ${outOfStock ? "text-red-500" : stock <= 5 ? "text-amber-600" : "text-primary"}`}>
+              {outOfStock ? "Out of stock" : stock <= 5 ? `Only ${stock} left` : `${stock} in stock`}
             </p>
 
             {/* Delivery info */}
@@ -172,7 +231,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                     className="flex items-center gap-4"
                   >
                     <div className="flex items-center h-12 rounded-full bg-primary overflow-hidden">
-                      <button onClick={() => updateQuantity(product.id, cartItem.quantity - 1)} className="w-12 h-full flex items-center justify-center text-white">
+                      <button onClick={() => updateQuantity(cartItemKey, cartItem.quantity - 1)} className="w-12 h-full flex items-center justify-center text-white">
                         <Minus className="h-4 w-4" />
                       </button>
                       <motion.span
@@ -184,12 +243,12 @@ export function ProductDetailClient({ product }: { product: Product }) {
                       >
                         {cartItem.quantity}
                       </motion.span>
-                      <button onClick={() => updateQuantity(product.id, cartItem.quantity + 1)} className="w-12 h-full flex items-center justify-center text-white">
+                      <button onClick={() => updateQuantity(cartItemKey, cartItem.quantity + 1)} className="w-12 h-full flex items-center justify-center text-white">
                         <Plus className="h-4 w-4" />
                       </button>
                     </div>
                     <span className="text-body font-semibold text-slate-600 dark:text-slate-400">
-                      {formatCurrency(price * cartItem.quantity)} total
+                      {formatCurrency(displayPrice * cartItem.quantity)} total
                     </span>
                   </motion.div>
                 ) : (
@@ -233,11 +292,23 @@ export function ProductDetailClient({ product }: { product: Product }) {
 
           {/* Price */}
           <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-2xl font-black text-slate-900 dark:text-white">{formatCurrency(price)}</span>
-            {product.discountPrice && (
-              <span className="text-sm text-slate-400 line-through">{formatCurrency(product.price)}</span>
+            <span className="text-2xl font-black text-slate-900 dark:text-white">{formatCurrency(displayPrice)}</span>
+            {hasDiscount && (
+              <span className="text-sm text-slate-400 line-through">{formatCurrency(displayOriginalPrice)}</span>
             )}
           </div>
+
+          {/* Variant Selector - mobile */}
+          {variants.length > 1 && (
+            <div className="mt-3">
+              <p className="text-caption font-semibold text-slate-600 dark:text-slate-400 mb-2">Pack size</p>
+              <VariantSelector
+                variants={variants}
+                selectedVariantId={selectedVariantId ?? ""}
+                onSelect={setSelectedVariantId}
+              />
+            </div>
+          )}
 
           {/* Delivery */}
           <div className="mt-4 flex items-center gap-2.5 rounded-xl bg-slate-50 dark:bg-slate-900 p-3">
@@ -262,18 +333,18 @@ export function ProductDetailClient({ product }: { product: Product }) {
                 className="flex items-center justify-between gap-2"
               >
                 <div className="flex items-center h-11 rounded-full bg-black overflow-hidden">
-                  <button type="button" onClick={() => updateQuantity(product.id, cartItem.quantity - 1)} className="w-10 h-full flex items-center justify-center text-white press" aria-label="Decrease">
+                  <button type="button" onClick={() => updateQuantity(cartItemKey, cartItem.quantity - 1)} className="w-10 h-full flex items-center justify-center text-white press" aria-label="Decrease">
                     <Minus className="h-3.5 w-3.5" />
                   </button>
                   <motion.span key={cartItem.quantity} initial={{ scale: 1.3 }} animate={{ scale: 1 }} transition={springs.tap} className="w-7 text-center text-body font-bold text-white tabular-nums">
                     {cartItem.quantity}
                   </motion.span>
-                  <button type="button" onClick={() => updateQuantity(product.id, cartItem.quantity + 1)} className="w-10 h-full flex items-center justify-center text-white press" aria-label="Increase">
+                  <button type="button" onClick={() => updateQuantity(cartItemKey, cartItem.quantity + 1)} className="w-10 h-full flex items-center justify-center text-white press" aria-label="Increase">
                     <Plus className="h-3.5 w-3.5" />
                   </button>
                 </div>
                 <Link href="/cart" className="h-11 flex-1 px-4 flex items-center justify-center rounded-full bg-secondary-600 text-white text-body font-bold press">
-                  View cart · {formatCurrency(price * cartItem.quantity)}
+                  View cart · {formatCurrency(displayPrice * cartItem.quantity)}
                 </Link>
               </motion.div>
             ) : (
@@ -289,7 +360,7 @@ export function ProductDetailClient({ product }: { product: Product }) {
                 className="flex items-center justify-center gap-2 h-12 w-full rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold text-body disabled:opacity-40 press shadow-lg"
               >
                 <ShoppingBag className="h-4 w-4" />
-                {outOfStock ? "Out of stock" : `Add to cart · ${formatCurrency(price)}`}
+                {outOfStock ? "Out of stock" : `Add to cart · ${formatCurrency(displayPrice)}`}
               </motion.button>
             )}
           </AnimatePresence>

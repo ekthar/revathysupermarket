@@ -86,7 +86,7 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
         </button>
       </div>
       {/* Notifications Section */}
-      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 overflow-hidden">
         <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">Notifications</p>
 
         <SettingToggle
@@ -141,7 +141,7 @@ export function SettingsClient({ settings: initial }: SettingsProps) {
       </div>
 
       {/* About Section */}
-      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 overflow-hidden">
         <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">About</p>
         <div className="px-4 py-3 border-t border-neutral-50 dark:border-neutral-800">
           <div className="flex justify-between items-center">

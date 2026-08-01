@@ -1,0 +1,27 @@
+{
+  "id": "FEAT-002",
+  "type": "fix",
+  "description": "Phase 1 - Stop shipping demo data: Make database lookup primary in PDP, fix related products from DB, fix generateStaticParams, audit fallback patterns",
+  "status": "completed",
+  "steps": [
+    "In apps/web/app/products/[slug]/page.tsx: Rewrite getProduct() so database lookup is PRIMARY. Only fall back to demo data when process.env.NEXT_PUBLIC_USE_DEMO_DATA is explicitly 'true'. Currently static data wins over DB data.",
+    "In apps/web/app/products/[slug]/page.tsx: Fix related products to query DB (same category, exclude self, respect isActive, limit 6) instead of always using the static products array.",
+    "In apps/web/app/products/[slug]/page.tsx: Replace generateStaticParams() that prerenders from demo products array. Either query real DB categories/products or remove it entirely in favor of ISR (dynamic rendering with revalidation).",
+    "In apps/web/app/products/page.tsx: The fallback to fallbackProducts is acceptable as a dev-only path, but gate it behind NEXT_PUBLIC_USE_DEMO_DATA check. Same for the categories fallback.",
+    "In apps/web/app/api/products/route.ts: Gate the fallback to static products behind NEXT_PUBLIC_USE_DEMO_DATA. Without the flag, return empty results instead of demo data.",
+    "In apps/web/app/page.tsx: The homepage already properly uses DB-first with demo fallback pattern. Gate the demo fallback on NEXT_PUBLIC_USE_DEMO_DATA.",
+    "Ensure all changes maintain backward compatibility - the demo data is still usable in dev environments when the flag is set."
+  ],
+  "acceptance_criteria": [
+    "PDP getProduct() checks database FIRST, demo data only as dev fallback behind NEXT_PUBLIC_USE_DEMO_DATA",
+    "Related products on PDP come from DB query (same category, exclude self, isActive true)",
+    "generateStaticParams is either removed or queries real data",
+    "All fallback-to-demo-data sites are gated by NEXT_PUBLIC_USE_DEMO_DATA",
+    "npx tsc --noEmit passes in apps/web"
+  ],
+  "verification": [
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "All changes verified with npx tsc --noEmit (exit 0). Dynamic import used for demo products in related products fallback to avoid top-level import of the products array in PDP. The useDemoData const is module-level so it evaluates at build/startup time from process.env."
+}

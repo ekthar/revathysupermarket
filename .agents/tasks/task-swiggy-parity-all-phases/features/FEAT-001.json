@@ -1,0 +1,26 @@
+{
+  "id": "FEAT-001",
+  "type": "chore",
+  "description": "Phase 0 - Enforcement foundation: CI workflow, Lighthouse wiring, axe-core accessibility testing, regression test, and LHCI URL expansion",
+  "status": "completed",
+  "steps": [
+    "Create .github/workflows/ci.yml that triggers on pull_request and runs: tsc --noEmit, eslint, npm test, playwright test, and lhci autorun. Use proper Node.js setup with caching. The workflow should work in the apps/web directory.",
+    "Update apps/web/lighthouserc.cjs to extend the URLs array to include /category/fruits (representative slug), /cart, and /products/robusta-banana (representative product slug).",
+    "Install @axe-core/playwright as a devDependency in apps/web.",
+    "Create a new Playwright test file apps/web/tests/ui/accessibility.spec.ts that uses @axe-core/playwright to assert zero serious/critical violations on /, /products, /cart pages.",
+    "Create a new test file apps/web/tests/product-count-regression.test.ts that asserts the API response from /api/products returns items matching the reported total (regression for the render bug)."
+  ],
+  "acceptance_criteria": [
+    "ci.yml exists at .github/workflows/ci.yml with proper job steps",
+    "lighthouserc.cjs URLs include /category/fruits, /cart, /products/robusta-banana",
+    "@axe-core/playwright is in devDependencies",
+    "Accessibility Playwright spec exists and would catch serious violations",
+    "Product count regression test exists",
+    "npx tsc --noEmit passes in apps/web"
+  ],
+  "verification": [
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "Pre-existing test failure in tests/security.test.ts (Upstash rate limiting config not set in env) - unrelated to this change. All new tests pass. tsc --noEmit passes cleanly."
+}

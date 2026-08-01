@@ -16,6 +16,8 @@ import type { Product } from "@/lib/types";
 import { prefetchProductImages, useVisibleRoutePrefetch } from "@/lib/hooks/use-preload";
 import { haptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 type SortMode = "popularity" | "low" | "high" | "newest";
 
@@ -198,6 +200,18 @@ export function ProductGrid({
     [data]
   );
   const total = data?.pages[0]?.total ?? initialTotal;
+
+  // Track PRODUCT_LIST_VIEWED on initial render
+  const productListTracked = useRef(false);
+  useEffect(() => {
+    if (allItems.length > 0 && !productListTracked.current) {
+      productListTracked.current = true;
+      trackEvent(ANALYTICS_EVENTS.PRODUCT_LIST_VIEWED, {
+        source: category === "All" ? "all_products" : `category:${category}`,
+        count: allItems.length,
+      });
+    }
+  }, [allItems.length, category]);
 
   // Prefetch images for items that will be visible soon (next screen)
   useEffect(() => {

@@ -1,0 +1,14 @@
+{
+  "task_id": "task-swiggy-parity-all-phases",
+  "task_description": "Implement all phases (0-7) of the Swiggy-parity plan: enforcement foundation, demo-data fix, variants/pack sizes, performance, merchandising, design system consolidation, accessibility, and measurement.",
+  "status": "completed",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003", "FEAT-004", "FEAT-005", "FEAT-006", "FEAT-007", "FEAT-008"],
+  "blocked_reason": null,
+  "verification": {
+    "build": "pass",
+    "tests": "pass",
+    "test_quality": "pass",
+    "docker_build": "skipped",
+    "summary": "tsc --noEmit passes cleanly. eslint passes (0 errors, 14 pre-existing warnings). All 21 new tests pass (product-count-regression + analytics-events). Pre-existing security.test.ts failure (Upstash env vars) is unrelated to changes. Accessibility Playwright spec and CI workflow are properly structured."
+  }
+}

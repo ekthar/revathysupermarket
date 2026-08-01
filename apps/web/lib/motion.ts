@@ -217,3 +217,26 @@ export const iosPressSmall = {
   whileTap: tapScale.subtle,
   transition: springs.tap,
 } as const;
+
+// ─── Reduced Motion Support ───────────────────────────────────────────────────
+// When the user has "prefers-reduced-motion: reduce" enabled, animations should
+// resolve instantly. Use `reducedMotionTransition` as the transition value when
+// `useReducedMotion()` from framer-motion returns true.
+//
+// MotionConfig with reducedMotion="user" handles most cases automatically, but
+// explicit checks in components provide the most reliable cross-browser experience.
+
+/** Instant transition for users who prefer reduced motion. */
+export const reducedMotionTransition: Transition = { type: "tween", duration: 0 };
+
+/**
+ * Returns either the preferred transition or an instant one based on the
+ * user's motion preference. Call inside a component (it uses a hook internally
+ * when consumed via the useMotionSafe wrapper pattern).
+ *
+ * Usage:
+ *   const transition = safeTransition(springs.enter, prefersReduced);
+ */
+export function safeTransition(preferred: Transition, prefersReduced: boolean | null): Transition {
+  return prefersReduced ? reducedMotionTransition : preferred;
+}

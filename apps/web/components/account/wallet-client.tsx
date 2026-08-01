@@ -79,7 +79,7 @@ export function WalletClient({ balance, totalCredits, totalDebits, transactions 
       </motion.div>
 
       {/* How it works */}
-      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow p-4">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 p-4">
         <p className="text-caption font-semibold text-neutral-400 uppercase tracking-wide mb-3">How it works</p>
         <div className="space-y-2.5">
           <div className="flex items-start gap-3">
@@ -104,7 +104,7 @@ export function WalletClient({ balance, totalCredits, totalDebits, transactions 
       </div>
 
       {/* Transaction History */}
-      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow overflow-hidden">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 overflow-hidden">
         <p className="px-4 pt-4 pb-2 text-caption font-semibold text-neutral-400 uppercase tracking-wide">
           Transaction History
         </p>

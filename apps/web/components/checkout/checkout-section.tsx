@@ -35,7 +35,7 @@ export function CheckoutSection({
   const panelId = `checkout-section-${step}`;
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-card card-shadow dark:border-neutral-800 dark:bg-neutral-900">
+    <section className="overflow-hidden rounded-2xl border border-neutral-100 bg-card shadow-elevation-1 dark:border-neutral-800 dark:bg-neutral-900">
       <button
         type="button"
         onClick={() => onToggle(!open)}

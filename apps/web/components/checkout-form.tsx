@@ -28,6 +28,8 @@ import { DeliveryInstructions } from "@/components/checkout/delivery-instruction
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { RazorpayButton } from "@/components/checkout/razorpay-button";
 import { CheckoutSection } from "@/components/checkout/checkout-section";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 
 /** Human labels for the collapsed payment step summary. */
@@ -242,12 +244,31 @@ export function CheckoutForm({
     if (addressDone && !addressAutoCollapsed.current) {
       addressAutoCollapsed.current = true;
       setAddressOpen(false);
+      trackEvent(ANALYTICS_EVENTS.CHECKOUT_STEP_COMPLETED, { step: 1, stepName: "address" });
     }
   }, [addressDone]);
 
   const addressSummary = [form.houseName, form.street, form.pincode]
     .filter(Boolean)
     .join(", ");
+
+  // Track delivery step completion
+  const deliveryStepTracked = useRef(false);
+  useEffect(() => {
+    if (deliveryDone && !deliveryStepTracked.current) {
+      deliveryStepTracked.current = true;
+      trackEvent(ANALYTICS_EVENTS.CHECKOUT_STEP_COMPLETED, { step: 2, stepName: "delivery" });
+    }
+  }, [deliveryDone]);
+
+  // Track payment step completion
+  const paymentStepTracked = useRef(false);
+  useEffect(() => {
+    if (paymentDone && !paymentStepTracked.current) {
+      paymentStepTracked.current = true;
+      trackEvent(ANALYTICS_EVENTS.CHECKOUT_STEP_COMPLETED, { step: 3, stepName: "payment" });
+    }
+  }, [paymentDone]);
 
   const deliverySummary =
     deliveryMode === "ASAP"
@@ -458,7 +479,9 @@ export function CheckoutForm({
             productId: item.id,
             name: item.name,
             quantity: item.quantity,
-            price: item.discountPrice ?? item.price
+            price: item.discountPrice ?? item.price,
+            variantId: item.variantId || undefined,
+            variantLabel: item.variantLabel || undefined,
           })),
           deliveryMode,
           deliverySlotId: deliveryMode === "SCHEDULED" ? deliverySlotId : undefined,
@@ -754,7 +777,7 @@ export function CheckoutForm({
 
           {/* Offers and Rewards - Collapsible */}
           {rewardsEnabled && (
-            <section className="rounded-2xl border border-neutral-100 bg-card dark:border-neutral-800 dark:bg-neutral-900 card-shadow overflow-hidden">
+            <section className="rounded-2xl border border-neutral-100 bg-card dark:border-neutral-800 dark:bg-neutral-900 shadow-elevation-1 overflow-hidden">
               <button
                 type="button"
                 onClick={() => setOffersSectionOpen(!offersSectionOpen)}

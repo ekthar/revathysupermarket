@@ -238,6 +238,12 @@ export const featureFlags: Array<{
     enabled: false,
     config: { provider: "posthog", projectApiKey: "", host: "https://app.posthog.com" },
   },
+  {
+    id: "ff_product_variants",
+    key: "product_variants",
+    enabled: false,
+    config: Prisma.JsonNull,
+  },
 ];
 
 /**

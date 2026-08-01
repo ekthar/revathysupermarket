@@ -137,7 +137,7 @@ export function CheckoutPreviewSheet({
                 </Link>
               </motion.div>
 
-              <p className="text-center text-micro text-neutral-400 dark:text-neutral-500">
+              <p className="text-center text-micro text-neutral-500 dark:text-neutral-500">
                 Change address or payment method on the next screen
               </p>
             </div>

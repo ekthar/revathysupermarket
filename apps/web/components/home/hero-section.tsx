@@ -165,7 +165,7 @@ export function HeroSection({
               {deliveryEstimateMin}–{deliveryEstimateMax} min
             </span>
           </div>
-          <div className="flex items-center gap-3 text-caption font-semibold text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center gap-3 text-caption font-semibold text-neutral-600 dark:text-neutral-400">
             <span>Free over ₹499</span>
             <span className="h-3 w-px bg-neutral-200 dark:bg-neutral-700" />
             <span>COD & UPI</span>

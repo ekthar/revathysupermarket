@@ -34,6 +34,7 @@ export const ProductImage = memo(function ProductImage({
   className,
   priority,
   category,
+  sizes = "(max-width: 768px) 50vw, 25vw",
 }: {
   src?: string | null;
   alt: string;
@@ -41,6 +42,8 @@ export const ProductImage = memo(function ProductImage({
   priority?: boolean;
   /** Product category — used for content-aware color placeholder */
   category?: string;
+  /** Responsive sizes hint for Next.js Image optimization */
+  sizes?: string;
 }) {
   const [currentSrc, setCurrentSrc] = useState(() => safeProductImageUrl(src));
   const [loaded, setLoaded] = useState(false);
@@ -103,7 +106,7 @@ export const ProductImage = memo(function ProductImage({
             src={currentSrc}
             alt={alt}
             fill
-            sizes="(max-width: 768px) 50vw, 25vw"
+            sizes={sizes}
             className={cn(
               "object-cover transition-all duration-300 ease-out",
               loaded

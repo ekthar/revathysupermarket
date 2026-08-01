@@ -16,6 +16,8 @@ import type { CartItem } from "@/lib/types";
 import { CheckoutPreviewSheet } from "@/components/cart/checkout-preview-sheet";
 import { FreeDeliveryProgress } from "@/components/cart/free-delivery-progress";
 import { DEFAULT_STORE_CONFIG, type StoreConfig } from "@/lib/use-store-config";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig }) {
   const { items, subtotal, removeItem, updateQuantity, addItem } = useCart();
@@ -39,6 +41,18 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
       .catch(() => {})
       .finally(() => setConfigLoading(false));
   }, [initialConfig]);
+
+  // Track CART_VIEWED event after hydration (items load from localStorage)
+  const cartViewedRef = useRef(false);
+  useEffect(() => {
+    if (items.length > 0 && !cartViewedRef.current) {
+      cartViewedRef.current = true;
+      trackEvent(ANALYTICS_EVENTS.CART_VIEWED, {
+        itemCount: items.length,
+        cartTotal: subtotal,
+      });
+    }
+  }, [items.length, subtotal]);
 
   // Calculate dynamic values
   const qualifiesFreeDelivery = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold;
@@ -162,7 +176,8 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
   }
 
   const handleRemove = useCallback((item: CartItem) => {
-    removeItem(item.id);
+    const key = item.variantId ? `${item.id}::${item.variantId}` : item.id;
+    removeItem(key);
     haptic("light");
     sonnerToast(`Removed ${item.name}`, {
       action: {
@@ -263,7 +278,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                   <div className="flex h-9 shrink-0 items-center overflow-hidden rounded-full bg-neutral-900 dark:bg-white">
                     <motion.button
                       type="button"
-                      onClick={() => { updateQuantity(item.id, item.quantity - 1); haptic("light"); }}
+                      onClick={() => { updateQuantity(item.variantId ? `${item.id}::${item.variantId}` : item.id, item.quantity - 1); haptic("light"); }}
                       whileTap={{ scale: 1.3 }}
                       transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"
@@ -282,7 +297,7 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
                     </motion.span>
                     <motion.button
                       type="button"
-                      onClick={() => { updateQuantity(item.id, item.quantity + 1); haptic("light"); }}
+                      onClick={() => { updateQuantity(item.variantId ? `${item.id}::${item.variantId}` : item.id, item.quantity + 1); haptic("light"); }}
                       whileTap={{ scale: 1.3 }}
                       transition={springs.tap}
                       className="w-9 h-full flex items-center justify-center text-white dark:text-neutral-900 hover:bg-white/10 dark:hover:bg-black/10 transition-colors press"

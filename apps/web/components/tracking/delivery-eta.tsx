@@ -45,7 +45,7 @@ export function DeliveryEtaTracking({
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={springs.layout}
-        className={`rounded-2xl bg-white p-5 text-center card-shadow dark:bg-neutral-900 ${className}`}
+        className={`rounded-2xl bg-white p-5 text-center shadow-elevation-1 dark:bg-neutral-900 ${className}`}
       >
         <p className="text-caption font-bold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
           Arriving in

@@ -4,10 +4,11 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { toast as sonnerToast } from "sonner";
 import type { CartItem, Product } from "@/lib/types";
 import { cartSyncQueue } from "@/lib/cart-sync";
+import { SRAnnounceProvider, useAnnounce } from "@/components/ui/sr-announce";
 
 type CartActions = {
-  addItem: (product: Product, quantity?: number) => void;
-  addItems: (products: Array<Product & { quantity?: number }>) => void;
+  addItem: (product: Product, quantity?: number, variantId?: string, variantLabel?: string) => void;
+  addItems: (products: Array<Product & { quantity?: number; variantId?: string; variantLabel?: string }>) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   clearCart: () => void;
@@ -35,6 +36,11 @@ const CartStoreContext = createContext<CartStore | null>(null);
 
 const CART_STORAGE_KEY = "msm-cart-v1";
 
+/** Compute a unique cart key for an item: `productId::variantId` or just `productId`. */
+function cartKey(item: { id: string; variantId?: string }): string {
+  return item.variantId ? `${item.id}::${item.variantId}` : item.id;
+}
+
 /** Joins product names into a natural list: "A", "A and B", "A, B and C". */
 function listNames(names: string[]): string {
   if (names.length === 1) return names[0];
@@ -46,10 +52,19 @@ function listNames(names: string[]): string {
 // persisted to localStorage synchronously. No server-side sync required.
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <SRAnnounceProvider>
+      <CartProviderInner>{children}</CartProviderInner>
+    </SRAnnounceProvider>
+  );
+}
+
+function CartProviderInner({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const listenersRef = useRef<Set<() => void>>(new Set());
   const itemsRef = useRef<CartItem[]>(items);
+  const announce = useAnnounce();
 
   // Keep ref in sync
   itemsRef.current = items;
@@ -95,18 +110,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
+        const variantIds = snapshot
+          .map((item) => item.variantId)
+          .filter((id): id is string => !!id);
         const res = await fetch("/api/cart/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ids: snapshot.map((item) => item.id) }),
+          body: JSON.stringify({
+            ids: snapshot.map((item) => item.id),
+            variantIds: variantIds.length > 0 ? variantIds : undefined,
+          }),
         });
         if (!res.ok || cancelled) return;
         const data = (await res.json()) as {
           items: Array<{ id: string; name: string; stock: number; price: number; discountPrice: number | null; isActive: boolean }>;
+          variants?: Array<{ id: string; productId: string; label: string; stock: number; price: number; discountPrice: number | null }>;
         };
         if (cancelled) return;
 
         const fresh = new Map(data.items.map((p) => [p.id, p]));
+        const freshVariants = new Map((data.variants ?? []).map((v) => [v.id, v]));
         const removed: string[] = [];
         const reduced: string[] = [];
 
@@ -114,22 +137,42 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           const next: CartItem[] = [];
           for (const item of current) {
             const server = fresh.get(item.id);
-            // Missing, deactivated, or fully out of stock → drop it.
+            // Missing, deactivated, or fully out of stock at product level -> drop.
             if (!server || !server.isActive || server.stock <= 0) {
               removed.push(item.name);
               continue;
             }
+
+            // Check variant-level stock when the item has a variantId
+            let effectiveStock = server.stock;
+            let effectivePrice = server.price;
+            let effectiveDiscountPrice = server.discountPrice ?? undefined;
+
+            if (item.variantId) {
+              const variant = freshVariants.get(item.variantId);
+              if (variant) {
+                effectiveStock = variant.stock;
+                effectivePrice = variant.price;
+                effectiveDiscountPrice = variant.discountPrice ?? undefined;
+              }
+              // If variant not found (deleted), drop the item
+              if (!variant || variant.stock <= 0) {
+                removed.push(item.name);
+                continue;
+              }
+            }
+
             let quantity = item.quantity;
-            if (quantity > server.stock) {
-              quantity = server.stock;
+            if (quantity > effectiveStock) {
+              quantity = effectiveStock;
               reduced.push(item.name);
             }
             next.push({
               ...item,
               quantity,
-              stock: server.stock,
-              price: server.price,
-              discountPrice: server.discountPrice ?? undefined,
+              stock: effectiveStock,
+              price: effectivePrice,
+              discountPrice: effectiveDiscountPrice,
             });
           }
           return next;
@@ -164,34 +207,38 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }), []);
 
   // Stable action references that never change identity
-  const addItem = useCallback((product: Product, quantity = 1) => {
+  const addItem = useCallback((product: Product, quantity = 1, variantId?: string, variantLabel?: string) => {
     // Never add a sold-out product to the cart.
     const max = product.stock ?? 0;
     if (max <= 0) return;
+    const key = variantId ? `${product.id}::${variantId}` : product.id;
     setItems((current) => {
-      const existing = current.find((item) => item.id === product.id);
+      const existing = current.find((item) => cartKey(item) === key);
       if (existing) {
         // Refresh the stored stock/price ceiling and clamp to available stock.
         return current.map((item) =>
-          item.id === product.id
+          cartKey(item) === key
             ? { ...item, stock: max, price: product.price, discountPrice: product.discountPrice, quantity: Math.min(item.quantity + quantity, max) }
             : item
         );
       }
-      return [...current, { ...product, quantity: Math.min(quantity, max) }];
+      return [...current, { ...product, quantity: Math.min(quantity, max), variantId, variantLabel }];
     });
+    // Screen reader announcement
+    announce(`Added ${product.name} to cart`);
     // Background sync
     cartSyncQueue.push({ type: "add", productId: product.id, quantity });
-  }, []);
+  }, [announce]);
 
-  const addItems = useCallback((productsToAdd: Array<Product & { quantity?: number }>) => {
+  const addItems = useCallback((productsToAdd: Array<Product & { quantity?: number; variantId?: string; variantLabel?: string }>) => {
     setItems((current) => {
       const next = [...current];
       for (const product of productsToAdd) {
         const max = product.stock ?? 0;
         if (max <= 0) continue; // skip sold-out items (e.g. during reorder)
         const quantity = product.quantity ?? 1;
-        const existingIndex = next.findIndex((item) => item.id === product.id);
+        const key = product.variantId ? `${product.id}::${product.variantId}` : product.id;
+        const existingIndex = next.findIndex((item) => cartKey(item) === key);
         if (existingIndex >= 0) {
           next[existingIndex] = { ...next[existingIndex], stock: max, quantity: Math.min(next[existingIndex].quantity + quantity, max) };
         } else {
@@ -203,24 +250,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeItem = useCallback((id: string) => {
-    setItems((current) => current.filter((item) => item.id !== id));
-    cartSyncQueue.push({ type: "remove", productId: id });
-  }, []);
+    // Capture name before removing for screen reader announcement
+    const item = itemsRef.current.find((i) => cartKey(i) === id);
+    setItems((current) => current.filter((i) => cartKey(i) !== id));
+    if (item) announce(`Removed ${item.name} from cart`);
+    cartSyncQueue.push({ type: "remove", productId: id.split("::")[0] });
+  }, [announce]);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
+    const item = itemsRef.current.find((i) => cartKey(i) === id);
     if (quantity <= 0) {
-      setItems((current) => current.filter((item) => item.id !== id));
-      cartSyncQueue.push({ type: "remove", productId: id });
+      setItems((current) => current.filter((i) => cartKey(i) !== id));
+      if (item) announce(`Removed ${item.name} from cart`);
+      cartSyncQueue.push({ type: "remove", productId: id.split("::")[0] });
       return;
     }
-    setItems((current) => current.map((item) => {
-      if (item.id !== id) return item;
+    setItems((current) => current.map((i) => {
+      if (cartKey(i) !== id) return i;
       // Clamp to the last-known available stock so a shopper can't exceed it.
-      const max = item.stock ?? Infinity;
-      return { ...item, quantity: Math.min(quantity, max) };
+      const max = i.stock ?? Infinity;
+      return { ...i, quantity: Math.min(quantity, max) };
     }));
-    cartSyncQueue.push({ type: "update", productId: id, quantity });
-  }, []);
+    if (item) announce(`${item.name} quantity updated to ${quantity}`);
+    cartSyncQueue.push({ type: "update", productId: id.split("::")[0], quantity });
+  }, [announce]);
 
   const clearCart = useCallback(() => {
     setItems([]);
@@ -281,13 +334,15 @@ export function useCartItemCount() {
 }
 
 // Granular per-item subscription - only re-renders when THIS specific item changes
-export function useCartItem(productId: string): CartItem | undefined {
+export function useCartItem(productId: string, variantId?: string): CartItem | undefined {
   const store = useContext(CartStoreContext);
   if (!store) throw new Error("useCartItem must be used inside CartProvider");
 
+  const key = variantId ? `${productId}::${variantId}` : productId;
+
   const getSnapshot = useCallback(() => {
-    return store.getState().find((item) => item.id === productId);
-  }, [store, productId]);
+    return store.getState().find((item) => cartKey(item) === key);
+  }, [store, key]);
 
   // Use useSyncExternalStore for optimal subscription
   const item = useSyncExternalStore(

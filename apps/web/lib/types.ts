@@ -41,4 +41,6 @@ export type Product = {
 
 export type CartItem = Product & {
   quantity: number;
+  variantId?: string;
+  variantLabel?: string;
 };

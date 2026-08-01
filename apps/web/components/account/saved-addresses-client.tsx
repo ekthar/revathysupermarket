@@ -51,7 +51,7 @@ export function SavedAddressesClient({ addresses: initialAddresses }: { addresse
   }
 
   return (
-    <section className="mt-5 rounded-xl bg-white dark:bg-neutral-900 card-shadow p-4">
+    <section className="mt-5 rounded-xl bg-white dark:bg-neutral-900 shadow-elevation-1 p-4">
       <div className="flex items-center gap-2.5 mb-4">
         <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
           <MapPin className="h-4 w-4 text-primary" />

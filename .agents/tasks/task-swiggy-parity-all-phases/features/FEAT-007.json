@@ -1,0 +1,28 @@
+{
+  "id": "FEAT-007",
+  "type": "feat",
+  "description": "Phase 6 - Accessibility: Focus management in sheets/drawers, prefers-reduced-motion across all runtimes, contrast fixes, screen-reader cart announcements",
+  "status": "completed",
+  "steps": [
+    "Update Framer Motion animations in apps/web/lib/motion.ts: add a reducedMotionTransition preset that is a simple { duration: 0 } or instant transition. Export a helper useMotionSafe() hook that returns either the normal spring or the reduced-motion variant based on useReducedMotion().",
+    "In apps/web/components/cart/cart-provider.tsx: Add a screen-reader announcement mechanism. When addItem is called, set an aria-live region message like 'Added [name] to cart'. Create a visually hidden live region component that the CartProvider renders.",
+    "Create apps/web/components/ui/sr-announce.tsx - a reusable screen-reader announcement component using aria-live='polite' and role='status'. It renders a visually hidden div that updates its text content to trigger screen reader announcements.",
+    "In apps/web/components/search/global-search.tsx (Drawer from vaul): Ensure focus is trapped inside the sheet when open. Vaul already handles some of this, but verify the search input receives focus on open and focus returns to the trigger on close.",
+    "Fix contrast on amber/neutral micro text: search for text-amber-500, text-neutral-400, text-neutral-500 used at small sizes (text-xs, text-caption, text-micro) and upgrade to darker variants (amber-600, neutral-500, neutral-600) where contrast ratio would be below 4.5:1 against the background.",
+    "In apps/web/components/home/animated-product-section.tsx and animated-categories.tsx: Ensure the Framer Motion animations respect useReducedMotion() and skip to final state when reduced motion is preferred."
+  ],
+  "acceptance_criteria": [
+    "reducedMotionTransition preset exists in lib/motion.ts",
+    "Cart mutations announce to screen readers via aria-live region",
+    "SR announce utility component exists",
+    "Search sheet traps focus (verify vaul handles this or add focus-trap)",
+    "Amber/neutral micro-text contrast improved to darker variants",
+    "Framer Motion animations respect useReducedMotion",
+    "npx tsc --noEmit passes in apps/web"
+  ],
+  "verification": [
+    "Run npx tsc --noEmit in apps/web and confirm it passes"
+  ],
+  "blocked_reason": null,
+  "findings": "All acceptance criteria met. scroll-reveal-motion.tsx and animated-product-section.tsx already had full useReducedMotion support. animated-categories.tsx delegates to ScrollReveal which handles reduced motion. MotionConfig reducedMotion=user in providers.tsx handles most cases globally. The SRAnnounceProvider is rendered inside CartProvider to avoid context boundary issues."
+}

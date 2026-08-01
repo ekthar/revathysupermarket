@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getTrendingSearchTerms, FALLBACK_TRENDING_TERMS } from "@/lib/trending-searches";
 import { getCategoryNav } from "@/lib/categories";
 import { getCacheHeaders } from "@/lib/api-cache-headers";
+import { prisma } from "@/lib/prisma";
 
 // GET /api/search/trending — bootstrap data for the search sheet.
 //
@@ -11,18 +12,54 @@ import { getCacheHeaders } from "@/lib/api-cache-headers";
 // server props to receive either through.
 export async function GET() {
   try {
-    const [terms, nav] = await Promise.all([getTrendingSearchTerms(), getCategoryNav()]);
+    const [terms, nav, popularProducts] = await Promise.all([
+      getTrendingSearchTerms(),
+      getCategoryNav(),
+      prisma.product.findMany({
+        where: { isActive: true, stock: { gt: 0 } },
+        orderBy: { popularity: "desc" },
+        take: 4,
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          image: true,
+          price: true,
+          discountPrice: true,
+          stock: true,
+          unit: true,
+          popularity: true,
+          isFeatured: true,
+          description: true,
+          category: { select: { name: true } },
+        },
+      }).catch(() => []),
+    ]);
 
     return NextResponse.json(
       {
         terms,
         categories: nav.map((category) => ({ name: category.name, slug: category.slug })),
+        popularProducts: popularProducts.map((p) => ({
+          id: p.id,
+          slug: p.slug,
+          name: p.name,
+          image: p.image,
+          price: Number(p.price),
+          discountPrice: p.discountPrice ? Number(p.discountPrice) : undefined,
+          stock: p.stock,
+          unit: p.unit,
+          popularity: p.popularity,
+          isFeatured: p.isFeatured,
+          description: p.description,
+          category: p.category.name,
+        })),
       },
       { headers: getCacheHeaders("products") }
     );
   } catch {
     return NextResponse.json(
-      { terms: FALLBACK_TRENDING_TERMS, categories: [] },
+      { terms: FALLBACK_TRENDING_TERMS, categories: [], popularProducts: [] },
       { headers: getCacheHeaders("products") }
     );
   }

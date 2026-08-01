@@ -204,7 +204,7 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
   return (
     <div className="space-y-5">
       {/* Avatar Section */}
-      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow p-5">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 p-5">
         <p className="text-caption font-semibold text-neutral-400 uppercase tracking-wide mb-4">Profile Photo</p>
 
         <div className="flex items-center gap-4">
@@ -260,7 +260,7 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
       </div>
 
       {/* Profile Form */}
-      <form onSubmit={saveProfile} className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow p-5 space-y-4">
+      <form onSubmit={saveProfile} className="rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 p-5 space-y-4">
         <p className="text-caption font-semibold text-neutral-400 uppercase tracking-wide">Personal Info</p>
 
         <div>
@@ -350,7 +350,7 @@ export function ProfileEditClient({ user: initialUser }: ProfileEditProps) {
       </form>
 
       {/* Link Google */}
-      <div className="rounded-2xl bg-white dark:bg-neutral-900 card-shadow p-5">
+      <div className="rounded-2xl bg-white dark:bg-neutral-900 shadow-elevation-1 p-5">
         <p className="text-caption font-semibold text-neutral-400 uppercase tracking-wide mb-3">Connected Accounts</p>
         <button
           type="button"

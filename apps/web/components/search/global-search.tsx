@@ -15,6 +15,8 @@ import type { Product } from "@/lib/types";
 import { useFlyToCart } from "@/components/ui/fly-to-cart";
 import { VoiceSearchButton } from "@/components/search/voice-search-button";
 import { ZeroResultSuggestions } from "@/components/search/zero-result-suggestions";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 const HISTORY_KEY = "msm-search-history";
 
@@ -132,6 +134,10 @@ export function GlobalSearchSheet({
         if (!res.ok) throw new Error("search failed");
         const data = (await res.json()) as { items: SearchProduct[]; suggestions?: string[] };
         setResults(data.items ?? []);
+        // Track zero results for search analytics backlog
+        if ((data.items ?? []).length === 0) {
+          trackEvent(ANALYTICS_EVENTS.SEARCH_ZERO_RESULTS, { query: trimmed });
+        }
         // The products API returns fuzzy near-misses when the exact match count is
         // low — surface them as "Did you mean" rather than discarding them.
         setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : []);

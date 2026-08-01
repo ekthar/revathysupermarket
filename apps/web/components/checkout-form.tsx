@@ -28,6 +28,8 @@ import { DeliveryInstructions } from "@/components/checkout/delivery-instruction
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { RazorpayButton } from "@/components/checkout/razorpay-button";
 import { CheckoutSection } from "@/components/checkout/checkout-section";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 
 /** Human labels for the collapsed payment step summary. */
@@ -242,12 +244,31 @@ export function CheckoutForm({
     if (addressDone && !addressAutoCollapsed.current) {
       addressAutoCollapsed.current = true;
       setAddressOpen(false);
+      trackEvent(ANALYTICS_EVENTS.CHECKOUT_STEP_COMPLETED, { step: 1, stepName: "address" });
     }
   }, [addressDone]);
 
   const addressSummary = [form.houseName, form.street, form.pincode]
     .filter(Boolean)
     .join(", ");
+
+  // Track delivery step completion
+  const deliveryStepTracked = useRef(false);
+  useEffect(() => {
+    if (deliveryDone && !deliveryStepTracked.current) {
+      deliveryStepTracked.current = true;
+      trackEvent(ANALYTICS_EVENTS.CHECKOUT_STEP_COMPLETED, { step: 2, stepName: "delivery" });
+    }
+  }, [deliveryDone]);
+
+  // Track payment step completion
+  const paymentStepTracked = useRef(false);
+  useEffect(() => {
+    if (paymentDone && !paymentStepTracked.current) {
+      paymentStepTracked.current = true;
+      trackEvent(ANALYTICS_EVENTS.CHECKOUT_STEP_COMPLETED, { step: 3, stepName: "payment" });
+    }
+  }, [paymentDone]);
 
   const deliverySummary =
     deliveryMode === "ASAP"

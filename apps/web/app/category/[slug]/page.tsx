@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
 import { CategoryRail } from "@/components/category/category-rail";
+import { CategoryViewTracker } from "@/components/category/category-view-tracker";
 import { ProductCard } from "@/components/product-card";
 import { EmptySearchState } from "@/components/ui/empty-states";
 import { getCategoryNav, getCategoryPageData } from "@/lib/categories";
@@ -47,6 +48,12 @@ export default async function CategoryPage({ params, searchParams }: PageProps) 
 
   return (
     <main className="min-h-[100dvh] bg-background">
+      {/* Track category view for analytics */}
+      <CategoryViewTracker
+        categoryName={category.name}
+        categorySlug={category.slug}
+        productCount={total}
+      />
       {/* Two-pane browse: persistent L1 rail + L2/product pane */}
       <div className="mx-auto flex max-w-7xl items-start">
         <CategoryRail items={nav} activeSlug={category.slug} />

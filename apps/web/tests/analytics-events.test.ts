@@ -33,9 +33,20 @@ test("ANALYTICS_EVENTS contains all required event names", () => {
   assert.equal(ANALYTICS_EVENTS.PROMO_CODE_APPLIED, "promo_code_applied");
 });
 
-test("ANALYTICS_EVENTS has exactly 9 events defined", () => {
+test("ANALYTICS_EVENTS contains new funnel and measurement events", () => {
+  assert.equal(ANALYTICS_EVENTS.CATEGORY_VIEWED, "category_viewed");
+  assert.equal(ANALYTICS_EVENTS.CART_VIEWED, "cart_viewed");
+  assert.equal(ANALYTICS_EVENTS.CHECKOUT_STEP_COMPLETED, "checkout_step_completed");
+  assert.equal(ANALYTICS_EVENTS.SEARCH_ZERO_RESULTS, "search_zero_results");
+  assert.equal(ANALYTICS_EVENTS.PRODUCT_LIST_VIEWED, "product_list_viewed");
+  assert.equal(ANALYTICS_EVENTS.VARIANT_SELECTED, "variant_selected");
+  assert.equal(ANALYTICS_EVENTS.DELIVERY_SLOT_SELECTED, "delivery_slot_selected");
+  assert.equal(ANALYTICS_EVENTS.FUNNEL_DROP_OFF, "funnel_drop_off");
+});
+
+test("ANALYTICS_EVENTS has exactly 17 events defined", () => {
   const eventCount = Object.keys(ANALYTICS_EVENTS).length;
-  assert.equal(eventCount, 9);
+  assert.equal(eventCount, 17);
 });
 
 test("ANALYTICS_EVENTS values are all unique strings", () => {

@@ -16,6 +16,8 @@ import type { CartItem } from "@/lib/types";
 import { CheckoutPreviewSheet } from "@/components/cart/checkout-preview-sheet";
 import { FreeDeliveryProgress } from "@/components/cart/free-delivery-progress";
 import { DEFAULT_STORE_CONFIG, type StoreConfig } from "@/lib/use-store-config";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 
 export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig }) {
   const { items, subtotal, removeItem, updateQuantity, addItem } = useCart();
@@ -39,6 +41,16 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
       .catch(() => {})
       .finally(() => setConfigLoading(false));
   }, [initialConfig]);
+
+  // Track CART_VIEWED event on mount
+  useEffect(() => {
+    if (items.length > 0) {
+      trackEvent(ANALYTICS_EVENTS.CART_VIEWED, {
+        itemCount: items.length,
+        cartTotal: subtotal,
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Calculate dynamic values
   const qualifiesFreeDelivery = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold;

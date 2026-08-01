@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { ArrowLeft, Heart, Minus, Plus, Share2, ShoppingBag, Star, Truck } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { springs, tapScale } from "@/lib/motion";
 import { useStoreConfig } from "@/lib/use-store-config";
 import { formatCurrency } from "@/lib/utils";
@@ -14,6 +14,8 @@ import { ProductImage } from "@/components/product-image";
 import { nativeShare } from "@/lib/native-share";
 import { haptic } from "@/lib/haptics";
 import { VariantSelector } from "@/components/product/variant-selector";
+import { trackEvent } from "@/lib/analytics";
+import { ANALYTICS_EVENTS } from "@/lib/analytics/events";
 import type { ProductVariantItem } from "@/components/product/variant-selector";
 import type { Product } from "@/lib/types";
 
@@ -35,6 +37,17 @@ export function ProductDetailClient({ product, variants = [] }: ProductDetailCli
     defaultVariant?.id
   );
   const selectedVariant = variants.find((v) => v.id === selectedVariantId);
+
+  // Track PRODUCT_VIEWED on mount
+  useEffect(() => {
+    trackEvent(ANALYTICS_EVENTS.PRODUCT_VIEWED, {
+      productId: product.id,
+      productName: product.name,
+      category: product.category,
+      price: product.discountPrice ?? product.price,
+      slug: product.slug,
+    });
+  }, [product.id, product.name, product.category, product.discountPrice, product.price, product.slug]);
 
   // Resolve prices based on selected variant (fallback to product if no variants)
   const displayPrice = selectedVariant?.discountPrice ?? selectedVariant?.price ?? product.discountPrice ?? product.price;

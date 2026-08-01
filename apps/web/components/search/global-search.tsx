@@ -73,6 +73,7 @@ export function GlobalSearchSheet({
   const [history, setHistory] = useState<string[]>([]);
   const [trending, setTrending] = useState<string[]>([]);
   const [categories, setCategories] = useState<CategorySuggestion[]>([]);
+  const [popularProducts, setPopularProducts] = useState<SearchProduct[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
   const trimmed = query.trim();
@@ -100,10 +101,11 @@ export function GlobalSearchSheet({
     let cancelled = false;
     fetch("/api/search/trending")
       .then((res) => (res.ok ? res.json() : null))
-      .then((data: { terms?: string[]; categories?: CategorySuggestion[] } | null) => {
+      .then((data: { terms?: string[]; categories?: CategorySuggestion[]; popularProducts?: SearchProduct[] } | null) => {
         if (cancelled || !data) return;
         if (Array.isArray(data.terms)) setTrending(data.terms);
         if (Array.isArray(data.categories)) setCategories(data.categories);
+        if (Array.isArray(data.popularProducts)) setPopularProducts(data.popularProducts);
       })
       .catch(() => {});
     return () => {
@@ -435,7 +437,7 @@ export function GlobalSearchSheet({
                 {/* Zero-result suggestions: category entry points & popular products */}
                 <ZeroResultSuggestions
                   categories={categories.map((c) => ({ name: c.name, slug: c.slug, icon: null }))}
-                  popularProducts={[]}
+                  popularProducts={popularProducts as unknown as Product[]}
                   onClose={handleClose}
                 />
               </div>

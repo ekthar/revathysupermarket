@@ -31,8 +31,11 @@ export function ProductDetailClient({ product, variants = [] }: ProductDetailCli
   const [liked, setLiked] = useState(false);
   const { flyToCart } = useFlyToCart();
 
-  // Variant selection state
-  const defaultVariant = variants.find((v) => v.stock > 0) ?? variants[0];
+  // Variant selection state: prefer isDefault variant (if in stock), then first in-stock by sortOrder
+  const defaultVariant =
+    variants.find((v) => v.isDefault && v.stock > 0) ??
+    variants.find((v) => v.stock > 0) ??
+    variants[0];
   const [selectedVariantId, setSelectedVariantId] = useState<string | undefined>(
     defaultVariant?.id
   );

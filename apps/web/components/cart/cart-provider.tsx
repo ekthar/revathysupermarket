@@ -110,18 +110,26 @@ function CartProviderInner({ children }: { children: React.ReactNode }) {
 
     (async () => {
       try {
+        const variantIds = snapshot
+          .map((item) => item.variantId)
+          .filter((id): id is string => !!id);
         const res = await fetch("/api/cart/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ids: snapshot.map((item) => item.id) }),
+          body: JSON.stringify({
+            ids: snapshot.map((item) => item.id),
+            variantIds: variantIds.length > 0 ? variantIds : undefined,
+          }),
         });
         if (!res.ok || cancelled) return;
         const data = (await res.json()) as {
           items: Array<{ id: string; name: string; stock: number; price: number; discountPrice: number | null; isActive: boolean }>;
+          variants?: Array<{ id: string; productId: string; label: string; stock: number; price: number; discountPrice: number | null }>;
         };
         if (cancelled) return;
 
         const fresh = new Map(data.items.map((p) => [p.id, p]));
+        const freshVariants = new Map((data.variants ?? []).map((v) => [v.id, v]));
         const removed: string[] = [];
         const reduced: string[] = [];
 
@@ -129,22 +137,42 @@ function CartProviderInner({ children }: { children: React.ReactNode }) {
           const next: CartItem[] = [];
           for (const item of current) {
             const server = fresh.get(item.id);
-            // Missing, deactivated, or fully out of stock → drop it.
+            // Missing, deactivated, or fully out of stock at product level -> drop.
             if (!server || !server.isActive || server.stock <= 0) {
               removed.push(item.name);
               continue;
             }
+
+            // Check variant-level stock when the item has a variantId
+            let effectiveStock = server.stock;
+            let effectivePrice = server.price;
+            let effectiveDiscountPrice = server.discountPrice ?? undefined;
+
+            if (item.variantId) {
+              const variant = freshVariants.get(item.variantId);
+              if (variant) {
+                effectiveStock = variant.stock;
+                effectivePrice = variant.price;
+                effectiveDiscountPrice = variant.discountPrice ?? undefined;
+              }
+              // If variant not found (deleted), drop the item
+              if (!variant || variant.stock <= 0) {
+                removed.push(item.name);
+                continue;
+              }
+            }
+
             let quantity = item.quantity;
-            if (quantity > server.stock) {
-              quantity = server.stock;
+            if (quantity > effectiveStock) {
+              quantity = effectiveStock;
               reduced.push(item.name);
             }
             next.push({
               ...item,
               quantity,
-              stock: server.stock,
-              price: server.price,
-              discountPrice: server.discountPrice ?? undefined,
+              stock: effectiveStock,
+              price: effectivePrice,
+              discountPrice: effectiveDiscountPrice,
             });
           }
           return next;

@@ -10,6 +10,7 @@ export type ProductVariantItem = {
   discountPrice?: number;
   stock: number;
   unit: string;
+  isDefault?: boolean;
 };
 
 type VariantSelectorProps = {

@@ -48,6 +48,7 @@ async function getProduct(slug: string): Promise<{ product: Product; variants: P
       discountPrice: v.discountPrice ? Number(v.discountPrice) : undefined,
       stock: v.stock,
       unit: v.unit,
+      isDefault: v.isDefault,
     }));
     return { product, variants };
   }

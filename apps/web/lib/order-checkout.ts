@@ -42,7 +42,7 @@ export async function createAuthoritativeOrder({
   const productById = new Map(products.map((product) => [product.id, product]));
   const items = data.items.map((item) => {
     const product = productById.get(item.productId)!;
-    return { product, quantity: item.quantity, unitPrice: Number(product.discountPrice ?? product.price) };
+    return { product, quantity: item.quantity, unitPrice: Number(product.discountPrice ?? product.price), variantLabel: item.variantLabel };
   });
   const subtotal = items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
   if (subtotal < settings.minimumOrderValue) throw new Error("MINIMUM_ORDER");
@@ -163,7 +163,7 @@ export async function createAuthoritativeOrder({
         loyaltyPointsRedeemed: pointsRedeemed,
         tipAmount: data.tipAmount ?? 0,
         deliveryInstructions: data.deliveryInstructions ?? null,
-        items: { create: items.map((item) => ({ productId: item.product.id, name: item.product.name, quantity: item.quantity, price: item.unitPrice, gstRate: item.product.gstRate ?? settings.gstRatePercent })) },
+        items: { create: items.map((item) => ({ productId: item.product.id, name: item.product.name, quantity: item.quantity, price: item.unitPrice, gstRate: item.product.gstRate ?? settings.gstRatePercent, variantLabel: item.variantLabel ?? null })) },
         statusEvents: { create: { status: "ORDER_RECEIVED", note: "Order submitted online." } }
       },
       include: { items: true }

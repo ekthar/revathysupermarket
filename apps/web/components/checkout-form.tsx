@@ -479,7 +479,9 @@ export function CheckoutForm({
             productId: item.id,
             name: item.name,
             quantity: item.quantity,
-            price: item.discountPrice ?? item.price
+            price: item.discountPrice ?? item.price,
+            variantId: item.variantId || undefined,
+            variantLabel: item.variantLabel || undefined,
           })),
           deliveryMode,
           deliverySlotId: deliveryMode === "SCHEDULED" ? deliverySlotId : undefined,

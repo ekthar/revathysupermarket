@@ -42,15 +42,17 @@ export function CartPageClient({ initialConfig }: { initialConfig?: StoreConfig 
       .finally(() => setConfigLoading(false));
   }, [initialConfig]);
 
-  // Track CART_VIEWED event on mount
+  // Track CART_VIEWED event after hydration (items load from localStorage)
+  const cartViewedRef = useRef(false);
   useEffect(() => {
-    if (items.length > 0) {
+    if (items.length > 0 && !cartViewedRef.current) {
+      cartViewedRef.current = true;
       trackEvent(ANALYTICS_EVENTS.CART_VIEWED, {
         itemCount: items.length,
         cartTotal: subtotal,
       });
     }
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [items.length, subtotal]);
 
   // Calculate dynamic values
   const qualifiesFreeDelivery = config.freeDeliveryThreshold > 0 && subtotal >= config.freeDeliveryThreshold;

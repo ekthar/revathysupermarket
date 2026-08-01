@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { formatCurrency } from "@/lib/utils";
@@ -41,7 +44,14 @@ function getTimeSlotKey(): string {
 }
 
 export function TimeOfDayRail({ products }: { products: Product[] }) {
-  const slotKey = getTimeSlotKey();
+  const [slotKey, setSlotKey] = useState<string | null>(null);
+
+  useEffect(() => {
+    setSlotKey(getTimeSlotKey());
+  }, []);
+
+  if (!slotKey) return null;
+
   const slot = TIME_SLOTS[slotKey];
 
   const filtered = products

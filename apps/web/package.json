@@ -86,6 +86,7 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.12.1",
     "@capacitor/cli": "^7.6.7",
     "@lhci/cli": "^0.15.1",
     "@playwright/test": "^1.61.0",

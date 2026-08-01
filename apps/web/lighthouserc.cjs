@@ -6,7 +6,10 @@ module.exports = {
       url: [
         "http://127.0.0.1:3000/",
         "http://127.0.0.1:3000/products",
-        "http://127.0.0.1:3000/login"
+        "http://127.0.0.1:3000/login",
+        "http://127.0.0.1:3000/category/fruits",
+        "http://127.0.0.1:3000/cart",
+        "http://127.0.0.1:3000/products/robusta-banana"
       ],
       numberOfRuns: 2
     },

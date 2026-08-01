@@ -20,6 +20,8 @@ import type { Product } from "@/lib/types";
 import { LazyRender } from "@/components/ui/lazy-render";
 import { SmartReorderPill } from "@/components/home/smart-reorder-pill";
 
+const useDemoData = process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true";
+
 
 export const revalidate = 60;
 
@@ -118,7 +120,7 @@ export default async function HomePage() {
         image: p.image, description: p.description, stock: p.stock,
         popularity: p.popularity, unit: p.unit, isFeatured: p.isFeatured
       }))
-    : products;
+    : (useDemoData ? products : []);
 
   const categoryTiles: CategoryTile[] = dbCategories.length > 0
     ? dbCategories.map((c) => ({
@@ -128,13 +130,13 @@ export default async function HomePage() {
         icon: c.icon,
         count: c._count.products
       }))
-    : demoCategories.map((name) => ({
+    : (useDemoData ? demoCategories.map((name) => ({
         name,
         slug: slugify(name),
         image: demoCategoryImages[name] ?? null,
         icon: null,
         count: products.filter((p) => p.category === name).length
-      }));
+      })) : []);
   const categories: readonly string[] = categoryTiles.map((c) => c.name);
 
   const trending = [...allProducts].sort((a, b) => b.popularity - a.popularity).slice(0, 12);

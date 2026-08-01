@@ -7,6 +7,8 @@ import { products as fallbackProducts, categories as demoCategories } from "@/li
 import type { Product } from "@/lib/types";
 import { SITE } from "@/lib/constants";
 
+const useDemoData = process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true";
+
 const getCategoryNames = unstable_cache(
   async () => {
     const rows = await prisma.category.findMany({
@@ -105,7 +107,11 @@ function getProducts(filters: ProductFilters = {}) {
         return { items, nextCursor, total: dbTotal };
       }
 
-      // Fallback to static products
+      // Fallback to static products only when demo data is enabled
+      if (!useDemoData) {
+        return { items: [], nextCursor: null, total: 0 };
+      }
+
       let filtered = fallbackProducts;
       if (category && category !== "All") {
         filtered = filtered.filter((p) => p.category === category);
@@ -144,7 +150,7 @@ export default async function ProductsPage({
     getProducts({ category, q, sort, limit: 100 }),
     getCategoryNames(),
   ]);
-  const categoryNames = dbCategoryNames.length > 0 ? dbCategoryNames : demoCategories;
+  const categoryNames = dbCategoryNames.length > 0 ? dbCategoryNames : (useDemoData ? demoCategories : []);
   const initialCategory = category || "All";
   return (
     <main className="min-h-[100dvh] bg-background">

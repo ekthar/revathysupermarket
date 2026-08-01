@@ -5,6 +5,8 @@ import type { Product } from "@/lib/types";
 import { rankResults } from "@/lib/search/relevance";
 import { getCacheHeaders } from "@/lib/api-cache-headers";
 
+const useDemoData = process.env.NEXT_PUBLIC_USE_DEMO_DATA === "true";
+
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = request.nextUrl;
@@ -166,7 +168,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ items: baseItems, nextCursor, total }, { headers: getCacheHeaders("products") });
     }
 
-    // Fallback to static products with filtering
+    // Fallback to static products with filtering (only when demo data is enabled)
+    if (!useDemoData) {
+      return NextResponse.json({ items: [], nextCursor: null, total: 0 }, { headers: getCacheHeaders("products") });
+    }
+
     let filtered = fallbackProducts;
     if (category && category !== "All") {
       filtered = filtered.filter((p) => p.category === category);

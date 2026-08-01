@@ -80,7 +80,9 @@ export function GlobalSearchSheet({
     if (open) {
       setHistory(loadHistory());
       setQuery(initialQuery);
-      // Focus after drawer animation settles (~320ms spring)
+      // Focus the search input after the drawer animation settles (~320ms spring).
+      // Vaul (built on Radix Dialog) handles focus trapping and focus restoration
+      // automatically - when the drawer closes, focus returns to the trigger element.
       const t = setTimeout(() => inputRef.current?.focus(), 350);
       return () => clearTimeout(t);
     }
@@ -239,6 +241,11 @@ export function GlobalSearchSheet({
     <Drawer.Root open={open} onOpenChange={(isOpen) => { if (!isOpen) handleClose(); }}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 z-dialog bg-black/45 backdrop-blur-sm" />
+        {/* Vaul's Drawer.Content is built on Radix Dialog, which provides:
+            - Focus trapping: Tab cycles within the drawer while open
+            - Focus restoration: focus returns to the trigger element on close
+            - Escape key handling: closes the drawer
+            No additional focus-trap library is needed. */}
         <Drawer.Content className="fixed inset-x-0 bottom-0 top-[8%] z-[91] flex flex-col rounded-t-3xl bg-background outline-none shadow-2xl">
           <div className="flex justify-center pt-3 pb-1">
             <div className="h-1 w-10 rounded-full bg-neutral-200 dark:bg-neutral-700" />
@@ -404,7 +411,7 @@ export function GlobalSearchSheet({
                         onClick={() => setQuery(suggestion)}
                         className="flex h-10 items-center gap-1.5 rounded-full border border-border bg-card px-4 text-caption font-semibold text-foreground press"
                       >
-                        <Sparkles className="h-3 w-3 text-amber-500" />
+                        <Sparkles className="h-3 w-3 text-amber-600" />
                         {suggestion}
                       </button>
                     ))}

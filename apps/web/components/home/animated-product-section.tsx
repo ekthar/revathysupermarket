@@ -69,7 +69,7 @@ export function AnimatedProductSection({
             </Link>
           </div>
           {subtitle && (
-            <p className="mt-1 text-xs md:text-sm text-neutral-500 dark:text-neutral-400">{subtitle}</p>
+            <p className="mt-1 text-xs md:text-sm text-neutral-600 dark:text-neutral-400">{subtitle}</p>
           )}
         </motion.div>
       )}

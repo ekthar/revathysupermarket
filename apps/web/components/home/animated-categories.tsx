@@ -106,7 +106,7 @@ export const AnimatedCategories = memo(function AnimatedCategories({
                   <CategoryThumb tile={tile} index={index} shape="squircle" sizePx={72} />
                   <div className="text-center">
                     <p className="text-body font-bold text-neutral-800 dark:text-white">{tile.name}</p>
-                    <p className="text-caption text-neutral-500 dark:text-neutral-400 mt-0.5">
+                    <p className="text-caption text-neutral-600 dark:text-neutral-400 mt-0.5">
                       {tile.count} {tile.count === 1 ? "Product" : "Products"}
                     </p>
                   </div>

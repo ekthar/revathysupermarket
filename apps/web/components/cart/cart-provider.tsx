@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { toast as sonnerToast } from "sonner";
 import type { CartItem, Product } from "@/lib/types";
 import { cartSyncQueue } from "@/lib/cart-sync";
+import { SRAnnounceProvider, useAnnounce } from "@/components/ui/sr-announce";
 
 type CartActions = {
   addItem: (product: Product, quantity?: number, variantId?: string, variantLabel?: string) => void;
@@ -51,10 +52,19 @@ function listNames(names: string[]): string {
 // persisted to localStorage synchronously. No server-side sync required.
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  return (
+    <SRAnnounceProvider>
+      <CartProviderInner>{children}</CartProviderInner>
+    </SRAnnounceProvider>
+  );
+}
+
+function CartProviderInner({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [hydrated, setHydrated] = useState(false);
   const listenersRef = useRef<Set<() => void>>(new Set());
   const itemsRef = useRef<CartItem[]>(items);
+  const announce = useAnnounce();
 
   // Keep ref in sync
   itemsRef.current = items;
@@ -186,9 +196,11 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       }
       return [...current, { ...product, quantity: Math.min(quantity, max), variantId, variantLabel }];
     });
+    // Screen reader announcement
+    announce(`Added ${product.name} to cart`);
     // Background sync
     cartSyncQueue.push({ type: "add", productId: product.id, quantity });
-  }, []);
+  }, [announce]);
 
   const addItems = useCallback((productsToAdd: Array<Product & { quantity?: number; variantId?: string; variantLabel?: string }>) => {
     setItems((current) => {
@@ -210,24 +222,30 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const removeItem = useCallback((id: string) => {
-    setItems((current) => current.filter((item) => cartKey(item) !== id));
+    // Capture name before removing for screen reader announcement
+    const item = itemsRef.current.find((i) => cartKey(i) === id);
+    setItems((current) => current.filter((i) => cartKey(i) !== id));
+    if (item) announce(`Removed ${item.name} from cart`);
     cartSyncQueue.push({ type: "remove", productId: id.split("::")[0] });
-  }, []);
+  }, [announce]);
 
   const updateQuantity = useCallback((id: string, quantity: number) => {
+    const item = itemsRef.current.find((i) => cartKey(i) === id);
     if (quantity <= 0) {
-      setItems((current) => current.filter((item) => cartKey(item) !== id));
+      setItems((current) => current.filter((i) => cartKey(i) !== id));
+      if (item) announce(`Removed ${item.name} from cart`);
       cartSyncQueue.push({ type: "remove", productId: id.split("::")[0] });
       return;
     }
-    setItems((current) => current.map((item) => {
-      if (cartKey(item) !== id) return item;
+    setItems((current) => current.map((i) => {
+      if (cartKey(i) !== id) return i;
       // Clamp to the last-known available stock so a shopper can't exceed it.
-      const max = item.stock ?? Infinity;
-      return { ...item, quantity: Math.min(quantity, max) };
+      const max = i.stock ?? Infinity;
+      return { ...i, quantity: Math.min(quantity, max) };
     }));
+    if (item) announce(`${item.name} quantity updated to ${quantity}`);
     cartSyncQueue.push({ type: "update", productId: id.split("::")[0], quantity });
-  }, []);
+  }, [announce]);
 
   const clearCart = useCallback(() => {
     setItems([]);
